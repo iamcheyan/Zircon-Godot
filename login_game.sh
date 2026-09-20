@@ -24,6 +24,31 @@ if [ "${1:-}" = "all" ]; then
     KILL_ALL=1
 fi
 
+# 只清理由本次脚本启动的服务端；外部已运行的服务端不接管、不关闭。
+SERVER_PID=""
+SERVER_STARTED_BY_SCRIPT=0
+cleanup_started_server() {
+    if [ "$SERVER_STARTED_BY_SCRIPT" != "1" ] || [ -z "$SERVER_PID" ]; then
+        return
+    fi
+    if kill -0 "$SERVER_PID" 2>/dev/null; then
+        echo ""
+        echo "  关闭本次启动的服务端 (PID $SERVER_PID)..."
+        kill -TERM "$SERVER_PID" 2>/dev/null || true
+        for _ in $(seq 1 10); do
+            kill -0 "$SERVER_PID" 2>/dev/null || break
+            sleep 1
+        done
+        if kill -0 "$SERVER_PID" 2>/dev/null; then
+            echo "  服务端未正常退出，强制结束"
+            kill -KILL "$SERVER_PID" 2>/dev/null || true
+        fi
+    fi
+}
+trap cleanup_started_server EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 cd "$ROOT"
 
 echo "══════════════════════════════════════"
@@ -119,6 +144,7 @@ else
     cd "$SERVER_DIR"
     setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
     SERVER_PID=$!
+    SERVER_STARTED_BY_SCRIPT=1
     echo "  服务器 PID: $SERVER_PID"
 
     # 等待服务器就绪

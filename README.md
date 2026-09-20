@@ -73,6 +73,8 @@ Use `all` to clean stale processes, rebuild, restart the server, and launch the 
 
 The normal local endpoint is `127.0.0.1:7000`. `ServerCore` expects `Server.ini`, `Database/`, and `Map/` in its runtime directory.
 
+When the launcher starts the server itself, closing the Godot client also shuts down that server. A server that was already running before the launcher starts is left untouched.
+
 To launch the client directly:
 
 ```bash

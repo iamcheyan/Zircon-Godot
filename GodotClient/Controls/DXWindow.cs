@@ -106,7 +106,7 @@ public abstract partial class DXWindow : DXControl
                     TooltipText = Lang.CommonControlClose,
                     Location = new Vector2I(Mathf.Max(0, (int)Size.X - 30), 3),
                 };
-                DefaultCloseButton.MouseClick += (_, _) => Visible = false;
+                DefaultCloseButton.MouseClick += (_, _) => WindowManager.Close(this);
                 AddControl(DefaultCloseButton);
             }
         }

@@ -185,6 +185,7 @@ public partial class UITestScene : Control
         // 自检: 打印关键信息
         SelfCheck(win, btn1, btn2);
         if (hud != null) AuditHud(hud);
+        if (_uiAudit) AuditDisabledInputGuard();
         if (_uiAudit) AuditItemGridPropagation();
         if (_uiAudit) AuditInventorySaleMode();
         if (_uiAudit) AuditInventoryParity();
@@ -254,6 +255,25 @@ public partial class UITestScene : Control
         GD.Print(layout && clicked
             ? $"[UIHudAudit] PASS panel={hud.Size} buttons=9 click=hit"
             : $"[UIHudAudit] FAIL panel={hud.Size} character={hud.CharacterButton.Position} click={clicked}");
+    }
+
+    private static void AuditDisabledInputGuard()
+    {
+        var button = new DXButton
+        {
+            Text = "disabled",
+            Size = new Vector2I(80, 24),
+            CanBePressed = false,
+        };
+        int clicks = 0;
+        button.MouseClick += (_, _) => clicks++;
+        button._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true });
+        button._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false });
+        button._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true });
+        bool pass = clicks == 0 && !button.Pressed;
+        GD.Print(pass
+            ? "[UIDisabledInputAudit] PASS disabled buttons consume left/right input without click"
+            : $"[UIDisabledInputAudit] FAIL clicks={clicks} pressed={button.Pressed}");
     }
 
     private static void AuditItemGridPropagation()

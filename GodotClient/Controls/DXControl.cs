@@ -237,7 +237,15 @@ public partial class DXControl : Control
 
     public override void _GuiInput(InputEvent e)
     {
-        if (!IsEnabled) return;
+        if (!IsEnabled)
+        {
+            // 禁用控件仍占据自己的命中区域，不能让点击穿透到下面的地图、
+            // 窗口或另一个按钮；否则灰色按钮会表现成“点了没反应”，实际
+            // 却可能触发了不相关的游戏操作。
+            if (e is InputEventMouseButton or InputEventMouseMotion)
+                AcceptEvent();
+            return;
+        }
 
         if (e is InputEventMouseButton mb)
         {

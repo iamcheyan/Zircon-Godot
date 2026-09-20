@@ -101,7 +101,8 @@ public partial class DXButton : DXImageControl
     {
         // 不可用按钮仍需要接收并吞掉鼠标事件，避免事件继续落到窗口/地图，
         // 但绝不能触发基类 MouseClick（例如灰掉的购买/修理按钮）。
-        if (e is InputEventMouseButton blocked && blocked.ButtonIndex == MouseButton.Left
+        if (e is InputEventMouseButton blocked
+            && blocked.ButtonIndex is MouseButton.Left or MouseButton.Right
             && !CanBePressed)
         {
             AcceptEvent();

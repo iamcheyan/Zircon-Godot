@@ -133,13 +133,17 @@ public partial class CompanionDialog : DXWindow
     private DXVScrollBar BuildBonusPanel()
     {
         var scroll = new DXVScrollBar { Location = new Vector2I(194, 1), Size = new Vector2I(14, 298), VisibleSize = 298, Change = 57, HideWhenNoScroll = true };
-        scroll.ValueChanged += (o, e) => RefreshBonusRows(); _bonusPanel.AddControl(scroll);
+        _bonusPanel.AddControl(scroll);
         foreach (int level in new[] { 3, 5, 7, 10, 11, 13, 15 })
         {
             var row = new DXLabel { Text = string.Format(Lang.CompanionNotObtainedLabel, level), FontSize = 9, TextColour = Colors.White, DrawOutline = true, OutlineColour = Colors.Black, Size = new Vector2I(185, 52), Location = new Vector2I(4, 5 + _bonusRows.Count * 57), IsControl = false };
             row.SetMeta("level", level); _bonusPanel.AddControl(row); _bonusRows.Add(row);
         }
-        scroll.MaxValue = _bonusRows.Count * 57 + 15; return scroll;
+        // MaxValue 会立即校正 Value 并发出 ValueChanged；先完成行和滚动范围
+        // 初始化，再连接回调，避免构造阶段通过尚未赋值的 _bonusScroll 刷新。
+        scroll.MaxValue = _bonusRows.Count * 57 + 15;
+        scroll.ValueChanged += (o, e) => RefreshBonusRows();
+        return scroll;
     }
 
     private void RefreshBonusRows()

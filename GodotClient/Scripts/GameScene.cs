@@ -9939,6 +9939,12 @@ public partial class GameScene : Control
         if (@event is not InputEventKey key || !key.Pressed) return;
         if (_net?.Connection?.Connected != true) return;
 
+        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
+        // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车
+        // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+            return;
+
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
@@ -9966,12 +9972,8 @@ public partial class GameScene : Control
             }
         }
 
-        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。窗口或原生
-        // 文本编辑器获得焦点时，必须把按键留给它们，否则在按键设置窗口里
-        // 录入的键会先触发游戏技能/移动，文本框中的空格、字母也会被当成
-        // 全局快捷键。聊天框在上面已单独处理，这里覆盖其余所有输入控件。
-        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
-            return;
+        // 有其它可见窗口时，全局游戏快捷键也必须停止，避免窗口内的自定义
+        // 控件在没有原生焦点时仍被游戏快捷键抢占。
         if (WindowManager.OpenWindows.Any(window => window != null && window.Visible))
             return;
 

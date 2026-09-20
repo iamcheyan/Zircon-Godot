@@ -9966,6 +9966,15 @@ public partial class GameScene : Control
             }
         }
 
+        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。窗口或原生
+        // 文本编辑器获得焦点时，必须把按键留给它们，否则在按键设置窗口里
+        // 录入的键会先触发游戏技能/移动，文本框中的空格、字母也会被当成
+        // 全局快捷键。聊天框在上面已单独处理，这里覆盖其余所有输入控件。
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+            return;
+        if (WindowManager.OpenWindows.Any(window => window != null && window.Visible))
+            return;
+
         // 原版键位表分发：窗口、技能、物品、移动和战斗动作统一走这里。
         KeyBindAction bind = KeyBindManager.GetAction(key);
         if (bind != KeyBindAction.None)

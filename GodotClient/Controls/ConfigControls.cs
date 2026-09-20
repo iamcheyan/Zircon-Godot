@@ -37,7 +37,7 @@ public sealed partial class ConfigCheckBox : DXControl
 
     public override void _GuiInput(InputEvent e)
     {
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+        if (IsEnabled && e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
         {
             Checked = !Checked;
             AcceptEvent();
@@ -98,6 +98,11 @@ public sealed partial class ConfigSoundBar : DXControl
 
     public override void _GuiInput(InputEvent e)
     {
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } mb)
         {
             _dragging = mb.Pressed;

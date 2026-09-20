@@ -233,7 +233,11 @@ public abstract partial class DXWindow : DXControl
 
     public override void _GuiInput(InputEvent e)
     {
-        if (!IsEnabled) return;
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
 
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {

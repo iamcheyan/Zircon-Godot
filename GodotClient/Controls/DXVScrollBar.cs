@@ -44,9 +44,7 @@ public partial class DXVScrollBar : DXControl
         {
             if (_maxValue == value) return;
             _maxValue = value;
-            if (Value + VisibleSize > MaxValue)
-                Value = MaxValue - VisibleSize;
-            UpdateScrollBar();
+            OnValueChanged();
             MaxValueChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -59,7 +57,7 @@ public partial class DXVScrollBar : DXControl
         {
             if (_minValue == value) return;
             _minValue = value;
-            UpdateScrollBar();
+            OnValueChanged();
             MinValueChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -72,7 +70,7 @@ public partial class DXVScrollBar : DXControl
         {
             if (_visibleSize == value) return;
             _visibleSize = value;
-            UpdateScrollBar();
+            OnValueChanged();
             VisibleSizeChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -173,8 +171,13 @@ public partial class DXVScrollBar : DXControl
         DownButton.Enabled = Value < MaxValue - VisibleSize;
         PositionBar.Enabled = MaxValue - MinValue > VisibleSize;
 
-        if (MaxValue - MinValue - VisibleSize != 0)
-            PositionBar.Location = new Vector2I(UpButton.Location.X, 16 + (int)(ScrollHeight * (Value / (float)(MaxValue - MinValue - VisibleSize))));
+        int range = MaxValue - MinValue - VisibleSize;
+        // 动态窗口可能暂时只有一行高度，不能让滑块位置计算除以 0；
+        // 没有可滚动范围时保留在轨道起点并由 Enabled=false 屏蔽拖动。
+        if (range > 0 && ScrollHeight > 0)
+            PositionBar.Location = new Vector2I(UpButton.Location.X, 16 + (int)(ScrollHeight * ((Value - MinValue) / (float)range)));
+        else
+            PositionBar.Location = new Vector2I(UpButton.Location.X, 16);
 
         if (HideWhenNoScroll)
             Visible = UpButton.Enabled || DownButton.Enabled;
@@ -182,8 +185,9 @@ public partial class DXVScrollBar : DXControl
 
     private void PositionBarMoving(object sender, EventArgs e)
     {
-        if (MaxValue - MinValue - VisibleSize == 0) return;
-        Value = (int)Math.Round((PositionBar.Location.Y - 16) * (MaxValue - MinValue - VisibleSize) / (float)ScrollHeight);
+        int range = MaxValue - MinValue - VisibleSize;
+        if (range <= 0 || ScrollHeight <= 0) return;
+        Value = MinValue + (int)Math.Round((PositionBar.Location.Y - 16) * range / (float)ScrollHeight);
     }
 
     public void DoMouseWheel(object sender, MouseWheelEventArgs e)

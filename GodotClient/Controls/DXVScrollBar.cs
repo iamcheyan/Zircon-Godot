@@ -26,14 +26,16 @@ public partial class DXVScrollBar : DXControl
     /// <summary>Value 越界时回钳 (照原版 OnValueChanged 首行语义)</summary>
     private void OnValueChanged()
     {
+        int previous = _value;
         int clamped = Math.Max(MinValue, Math.Min(MaxValue - VisibleSize, Value));
-        if (Value != clamped)
-        {
-            Value = clamped;
-            return;
-        }
+        if (Value != clamped) _value = clamped;
         UpdateScrollBar();
-        ValueChanged?.Invoke(this, EventArgs.Empty);
+        // Max/Min/VisibleSize 的动态更新也会经过这里，但列表控件通常在
+        // 重建行时才设置 MaxValue。只有实际滚动位置变化才通知订阅者，
+        // 避免“重建列表 -> MaxValue -> ValueChanged -> 再次重建”的递归，
+        // 以及因此留下已 QueueFree 的控件引用。
+        if (previous != _value)
+            ValueChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private int _maxValue;

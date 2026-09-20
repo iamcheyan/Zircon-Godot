@@ -126,6 +126,7 @@ public partial class CommunicationDialog : DXWindow
             if (!string.IsNullOrWhiteSpace(_friendInput.Text))
             {
                 GameScene.Game?.SendFriendAdd(_friendInput.Text.Trim());
+                _body.RemoveControl(_friendInput);
                 _friendInput.QueueFree();
                 _friendInput = null;
             }
@@ -342,10 +343,19 @@ public partial class CommunicationDialog : DXWindow
             if (child is not Node node) continue;
             if (node == _messageScroll || node == _readMessageScroll)
             {
-                _body.RemoveChild(node);
+                // 同时从 Godot 节点树和 DXControl.Controls 逻辑树移除；
+                // 只 RemoveChild 会留下已脱离场景的控件引用，下一次 UI 树
+                // 遍历/换页访问它时会报 disposed object。
+                if (node is DXControl scrollControl) _body.RemoveControl(scrollControl);
+                else _body.RemoveChild(node);
                 if (node is CanvasItem item) item.Visible = false;
             }
-            else node.QueueFree();
+            else
+            {
+                if (node is DXControl control) _body.RemoveControl(control);
+                else _body.RemoveChild(node);
+                node.QueueFree();
+            }
         }
         _detail = null;
         _readGrid = null;
@@ -354,6 +364,7 @@ public partial class CommunicationDialog : DXWindow
         _message = null;
         if (_friendInput != null)
         {
+            _body.RemoveControl(_friendInput);
             _friendInput.QueueFree();
             _friendInput = null;
         }
@@ -495,7 +506,12 @@ public partial class CommunicationDialog : DXWindow
             var input = new DXTextInput { Location = new Vector2I(151, 10), Size = new Vector2I(122, 18), MaxLength = Globals.MaxCharacterNameLength };
             _body.AddControl(input);
             input.GrabFocus();
-            input.TextSubmitted += value => { if (!string.IsNullOrWhiteSpace(value)) GameScene.Game?.SendBlockAdd(value.Trim()); input.QueueFree(); };
+            input.TextSubmitted += value =>
+            {
+                if (!string.IsNullOrWhiteSpace(value)) GameScene.Game?.SendBlockAdd(value.Trim());
+                _body.RemoveControl(input);
+                input.QueueFree();
+            };
         }
         void RemoveSelectedBlock(object sender, EventArgs args)
         {
@@ -551,7 +567,11 @@ public partial class CommunicationDialog : DXWindow
         if (_page != 0 || _body == null) return;
         foreach (var child in _body.GetChildren().OfType<Node>())
         {
-            if (child is DXControl control && control != _friendStatus && control != _friendFilter && control != _friendInput) control.QueueFree();
+            if (child is DXControl control && control != _friendStatus && control != _friendFilter && control != _friendInput)
+            {
+                _body.RemoveControl(control);
+                control.QueueFree();
+            }
         }
         var visible = _friends.Where(x => _friendStateFilter == 0 || (_friendStateFilter == 1 ? x.State != OnlineState.Offline : x.State == OnlineState.Offline)).ToList();
         int offset = _scroll?.Value ?? 0;
@@ -579,7 +599,13 @@ public partial class CommunicationDialog : DXWindow
     private void RebuildReceived()
     {
         _pageBackground.Index = 202;
-        foreach (var child in _body.GetChildren()) if (child is Node node) node.QueueFree();
+        foreach (var child in _body.GetChildren())
+        {
+            if (child is not Node node) continue;
+            if (node is DXControl control) _body.RemoveControl(control);
+            else _body.RemoveChild(node);
+            node.QueueFree();
+        }
         AddBodyHeader(Lang.CommunicationDialogReceivedTabCategoryLabel, 15, 5, 50);
         AddBodyHeader(Lang.CommunicationDialogReceivedTabTitleLabel, 65, 5, 140);
         AddBodyHeader(Lang.CommunicationDateLabel, 200, 5, 65);
@@ -607,7 +633,13 @@ public partial class CommunicationDialog : DXWindow
             UnreadChanged?.Invoke(HasUnread);
             GameScene.Game?.SendMailOpened(index);
         }
-        foreach (var child in _body.GetChildren()) if (child is Node node) node.QueueFree();
+        foreach (var child in _body.GetChildren())
+        {
+            if (child is not Node node) continue;
+            if (node is DXControl control) _body.RemoveControl(control);
+            else _body.RemoveChild(node);
+            node.QueueFree();
+        }
         _scroll.Visible = false;
         AddBodyLabel(string.Format(Lang.CommunicationUi198Label, mail.Sender), 15, 8, 9, Colors.White);
         AddBodyLabel(string.Format(Lang.CommunicationUi199Label, mail.Subject), 15, 27, 9, Colors.White);

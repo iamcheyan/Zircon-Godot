@@ -589,7 +589,10 @@ public sealed partial class NPCAdvancedPanel : DXControl
         if (_retrieveList == null) return;
         foreach (var child in _retrieveList.GetChildren())
         {
-            if (child is Node node) node.QueueFree();
+            if (child is not Node node) continue;
+            if (node is DXControl control) _retrieveList.RemoveControl(control);
+            else _retrieveList.RemoveChild(node);
+            node.QueueFree();
         }
         _retrieveScroll.MaxValue = Mathf.Max(_retrieveScroll.VisibleSize, _refines.Count * 43);
         if (_retrieveButton != null) _retrieveButton.Enabled = _retrieveSelected >= 0 && _retrieveSelected < _refines.Count;

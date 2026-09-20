@@ -362,7 +362,12 @@ public partial class QuestDialog : DXWindow
 
     private void RefreshDetail()
     {
-        foreach (var child in _detailPanel.GetChildren().OfType<Node>()) child.QueueFree();
+        foreach (var child in _detailPanel.GetChildren().OfType<Node>())
+        {
+            if (child is DXControl control) _detailPanel.RemoveControl(control);
+            else _detailPanel.RemoveChild(child);
+            child.QueueFree();
+        }
         if (_page == 3) return;
         var tracker = new DXCheckButton(string.Empty) { Location = new Vector2I(255, 8), Size = new Vector2I(18, 18), Checked = GameScene.Game?.QuestTrackerVisible ?? true };
         tracker.Changed += (s, e) => GameScene.Game?.SetQuestTrackerVisible(tracker.Checked);

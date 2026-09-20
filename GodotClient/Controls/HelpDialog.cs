@@ -175,9 +175,19 @@ public partial class HelpDialog : DXWindow
     private void ShowHelp(HelpInfo info)
     {
         foreach (var child in _pageMenu.GetChildren())
-            if (child is Node node) node.QueueFree();
+        {
+            if (child is not Node node) continue;
+            if (node is DXControl control) _pageMenu.RemoveControl(control);
+            else _pageMenu.RemoveChild(node);
+            node.QueueFree();
+        }
         foreach (var child in _content.GetChildren())
-            if (child is Node node && node != _contentScroll) node.QueueFree();
+        {
+            if (child is not Node node || node == _contentScroll) continue;
+            if (node is DXControl control) _content.RemoveControl(control);
+            else _content.RemoveChild(node);
+            node.QueueFree();
+        }
         _contentTitle = null;
         _contentText = null;
 

@@ -405,7 +405,8 @@ public partial class GameStoreDialog : DXWindow
         foreach (var child in _topPanel.GetChildren())
         {
             if (child is not Node node) continue;
-            _topPanel.RemoveChild(node);
+            if (node is DXControl control) _topPanel.RemoveControl(control);
+            else _topPanel.RemoveChild(node);
             node.QueueFree();
         }
         _topRows.Clear();

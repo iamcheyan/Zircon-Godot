@@ -152,7 +152,10 @@ public partial class MagicDialog : DXWindow
         _tabPageStart = Math.Clamp(_tabPageStart, 0, Math.Max(0, _tabOrder.Count - TabCapacity));
 
         foreach (var button in _schoolButtons.Values)
+        {
+            RemoveControl(button);
             button.QueueFree();
+        }
         _schoolButtons.Clear();
 
         if (grouped.Count == 0) return;

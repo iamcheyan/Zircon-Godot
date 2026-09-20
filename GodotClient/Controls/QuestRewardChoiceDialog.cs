@@ -17,7 +17,12 @@ public sealed partial class QuestRewardChoiceDialog : DXWindow
     public void Open(QuestInfo quest, IEnumerable<QuestReward> rewards)
     {
         foreach (var child in GetChildren())
-            if (child is Node node) node.QueueFree();
+        {
+            if (child is not Node node) continue;
+            if (node is DXControl control) RemoveControl(control);
+            else RemoveChild(node);
+            node.QueueFree();
+        }
 
         var title = new DXLabel { Text = Lang.QuestRewardChoiceSelectLabel, FontSize = 11, Location = new Vector2I(20, 35), Size = new Vector2I(300, 25) };
         AddControl(title);

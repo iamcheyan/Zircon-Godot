@@ -90,7 +90,12 @@ public partial class GuildDialog : DXWindow
 
     private void RefreshRows()
     {
-        foreach (var child in _content.GetChildren().OfType<Node>()) child.QueueFree();
+        foreach (var child in _content.GetChildren().OfType<Node>())
+        {
+            if (child is DXControl control) _content.RemoveControl(control);
+            else _content.RemoveChild(child);
+            child.QueueFree();
+        }
         _rows.Clear();
         _storageGrid = null;
         // 成员页按像素滚动；仓库页按网格行滚动。两者不能共用同一个

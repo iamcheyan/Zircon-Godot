@@ -236,14 +236,18 @@ public partial class GuildDialog : DXWindow
 
     public void ShowInvite(string name, string guildName)
     {
-        _guildInvitePanel?.QueueFree();
+        if (_guildInvitePanel != null)
+        {
+            RemoveControl(_guildInvitePanel);
+            _guildInvitePanel.QueueFree();
+        }
         _guildInvitePanel = new DXControl { Location = new Vector2I(45, 185), Size = new Vector2I(350, 70), BackColour = new Color(0.04f, .025f, .02f, .98f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
         _guildInvitePanel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 邀请你加入行会：{guildName ?? Lang.GroupUnknownLabel}", FontSize = 10, Location = new Vector2I(8, 7), Size = new Vector2I(334, 22), IsControl = false });
         var accept = new DXButton { Text = Lang.GroupAcceptLabel, FontSize = 9, Size = new Vector2I(80, 23), Location = new Vector2I(82, 38), LibraryFile = LibraryFile.Interface, Index = -1 };
-        accept.MouseClick += (o, e) => { GameScene.Game?.SendGuildResponse(guildName, true); _guildInvitePanel.QueueFree(); _guildInvitePanel = null; };
+        accept.MouseClick += (o, e) => { GameScene.Game?.SendGuildResponse(guildName, true); RemoveControl(_guildInvitePanel); _guildInvitePanel.QueueFree(); _guildInvitePanel = null; };
         _guildInvitePanel.AddControl(accept);
         var reject = new DXButton { Text = Lang.GroupDeclineLabel, FontSize = 9, Size = new Vector2I(80, 23), Location = new Vector2I(188, 38), LibraryFile = LibraryFile.Interface, Index = -1 };
-        reject.MouseClick += (o, e) => { GameScene.Game?.SendGuildResponse(guildName, false); _guildInvitePanel.QueueFree(); _guildInvitePanel = null; };
+        reject.MouseClick += (o, e) => { GameScene.Game?.SendGuildResponse(guildName, false); RemoveControl(_guildInvitePanel); _guildInvitePanel.QueueFree(); _guildInvitePanel = null; };
         _guildInvitePanel.AddControl(reject);
         AddControl(_guildInvitePanel);
     }
@@ -527,9 +531,9 @@ public partial class GuildDialog : DXWindow
         var panel = new DXControl { Location = new Vector2I(45, 185), Size = new Vector2I(350, 70), BackColour = new Color(0.04f, .025f, .02f, .98f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
         panel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 向你求婚", FontSize = 10, Location = new Vector2I(8, 7), Size = new Vector2I(334, 22), IsControl = false });
         var yes = new DXButton { Text = Lang.GroupAcceptLabel, Size = new Vector2I(70, 24), Location = new Vector2I(80, 38), Index = -1 };
-        yes.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(true); panel.QueueFree(); };
+        yes.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(true); RemoveControl(panel); panel.QueueFree(); };
         var no = new DXButton { Text = Lang.GroupDeclineLabel, Size = new Vector2I(70, 24), Location = new Vector2I(190, 38), Index = -1 };
-        no.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(false); panel.QueueFree(); };
+        no.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(false); RemoveControl(panel); panel.QueueFree(); };
         panel.AddControl(yes); panel.AddControl(no); AddControl(panel);
     }
     public void ApplyGuildUpdate(S.GuildUpdate packet)

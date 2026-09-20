@@ -137,14 +137,18 @@ public partial class GroupDialog : DXWindow
 
     public void ShowInvite(string name)
     {
-        _invitePanel?.QueueFree();
+        if (_invitePanel != null)
+        {
+            RemoveControl(_invitePanel);
+            _invitePanel.QueueFree();
+        }
         _invitePanel = new DXControl { Location = new Vector2I(12, 165), Size = new Vector2I(216, 48), BackColour = new Color(0.05f, 0.03f, 0.02f, .96f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
         _invitePanel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 邀请你组队", FontSize = 9, Location = new Vector2I(6, 4), Size = new Vector2I(204, 18), IsControl = false });
         var accept = new DXButton { Text = Lang.GroupAcceptLabel, FontSize = 9, Size = new Vector2I(70, 20), Location = new Vector2I(24, 25), LibraryFile = LibraryFile.Interface, Index = -1 };
-        accept.MouseClick += (o, e) => { GameScene.Game?.SendGroupResponse(name, true); _invitePanel.QueueFree(); _invitePanel = null; };
+        accept.MouseClick += (o, e) => { GameScene.Game?.SendGroupResponse(name, true); RemoveControl(_invitePanel); _invitePanel.QueueFree(); _invitePanel = null; };
         _invitePanel.AddControl(accept);
         var reject = new DXButton { Text = Lang.GroupDeclineLabel, FontSize = 9, Size = new Vector2I(70, 20), Location = new Vector2I(120, 25), LibraryFile = LibraryFile.Interface, Index = -1 };
-        reject.MouseClick += (o, e) => { GameScene.Game?.SendGroupResponse(name, false); _invitePanel.QueueFree(); _invitePanel = null; };
+        reject.MouseClick += (o, e) => { GameScene.Game?.SendGroupResponse(name, false); RemoveControl(_invitePanel); _invitePanel.QueueFree(); _invitePanel = null; };
         _invitePanel.AddControl(reject);
         AddControl(_invitePanel);
     }

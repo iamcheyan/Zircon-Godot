@@ -77,9 +77,9 @@ public partial class TradeDialog : DXWindow
         var panel = new DXControl { Location = new Vector2I(12, 36), Size = new Vector2I(300, 72), BackColour = new Color(.05f, .03f, .02f, .98f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
         panel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 请求交易", Location = new Vector2I(8, 7), Size = new Vector2I(280, 20), IsControl = false });
         var yes = new DXButton { Text = Lang.GroupAcceptLabel, Location = new Vector2I(60, 38), Size = new Vector2I(70, 24), Index = -1 };
-        yes.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(true); panel.QueueFree(); };
+        yes.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(true); RemoveControl(panel); panel.QueueFree(); };
         var no = new DXButton { Text = Lang.GroupDeclineLabel, Location = new Vector2I(170, 38), Size = new Vector2I(70, 24), Index = -1 };
-        no.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(false); panel.QueueFree(); };
+        no.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(false); RemoveControl(panel); panel.QueueFree(); };
         panel.AddControl(yes); panel.AddControl(no); AddControl(panel);
     }
     public void SetOtherItem(ClientUserItem item)

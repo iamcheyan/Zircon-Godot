@@ -81,10 +81,16 @@ public partial class QuestTrackerDialog : DXWindow
     public void PopulateQuests(IEnumerable<ClientUserQuest> quests)
     {
         foreach (var line in Lines)
+        {
+            TextPanel.RemoveControl(line);
             line.QueueFree();
+        }
         Lines.Clear();
         foreach (var icon in _icons)
+        {
+            TextPanel.RemoveControl(icon);
             icon.QueueFree();
+        }
         _icons.Clear();
 
         if (!TrackingEnabled || quests == null)

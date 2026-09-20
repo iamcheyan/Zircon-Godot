@@ -101,7 +101,12 @@ public partial class ConfigDialog : DXWindow
         _currentTab = tab;
         _scroll = null;
         foreach (var child in _page.GetChildren())
-            if (child is Node node) node.Free();
+        {
+            if (child is not Node node) continue;
+            if (node is DXControl control) _page.RemoveControl(control);
+            else _page.RemoveChild(node);
+            node.QueueFree();
+        }
         _content = new DXControl { Size = new Vector2I(348, 0), IsControl = false };
         _page.AddControl(_content);
         if (tab == 0) BuildGraphicsPage();

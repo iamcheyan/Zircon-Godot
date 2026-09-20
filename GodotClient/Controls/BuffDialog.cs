@@ -41,7 +41,10 @@ public partial class BuffDialog : DXWindow
         foreach (Control child in GetChildren())
         {
             if (child is DXImageControl)
+            {
+                if (child is DXControl control) RemoveControl(control);
                 child.QueueFree();
+            }
         }
         _currentBuffs.Clear();
 

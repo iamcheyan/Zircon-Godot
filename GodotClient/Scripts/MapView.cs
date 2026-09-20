@@ -22,7 +22,7 @@ public partial class MapView : Node2D
 
     const int CellWidth = 48;
     const int CellHeight = 32;
-    private const float WorldScale = 2f;
+    private const float WorldScale = 1f;
 
     // 当前视野中心（玩家位置）
     public int CenterX = 0;

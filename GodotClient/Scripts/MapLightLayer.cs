@@ -10,7 +10,7 @@ namespace ZirconClient.Scripts;
 // 采用 Godot 2D 的轻量叠加实现，保持原版 LightSetting 的主要视觉语义。
 public partial class MapLightLayer : Node2D
 {
-    private const float WorldScale = 2f;
+    private const float WorldScale = 1f;
     // 最低黑夜环境光设为 0.25f (25% 柔和月夜亮度，舒适不伤眼)
     private const float NightAmbient = 0.25f;
     private const float TwilightAmbient = 100f / 255f;

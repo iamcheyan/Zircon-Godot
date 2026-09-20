@@ -23,7 +23,7 @@ public partial class GameScene : Control
     /// </summary>
     internal static float UiScale { get; private set; } = 2f;
     private const float UiScaleBaseHeight = 768f;
-    private const float WorldScale = 2f;
+    private const float WorldScale = 1f;
     private const string UiAuditArgument = "--ui-layout-audit";
     private Vector2 _lastHudViewport;
     private float _lastHudScale;

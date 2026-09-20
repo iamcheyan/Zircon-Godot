@@ -10,7 +10,7 @@ namespace ZirconClient.Scripts;
 // 雨509(水花510-514)、雪500、雾550、闪电540。
 public partial class MapWeatherLayer : Node2D
 {
-    private const float WorldScale = 2f;
+    private const float WorldScale = 1f;
     private readonly List<WeatherParticle> _particles = new();
     private readonly RandomNumberGenerator _rng = new();
     private ZlLibrary _library;

@@ -61,7 +61,7 @@ public partial class MagicDialog : DXWindow
 
         var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => Visible = false;
+        close.MouseClick += (o, e) => WindowManager.Close(this);
         AddControl(close);
 
         AddControl(new DXLabel

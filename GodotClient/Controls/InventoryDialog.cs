@@ -72,7 +72,7 @@ public partial class InventoryDialog : DXWindow
             Index = 15,
         };
         CloseButton.Location = new Vector2I((int)Size.X - (int)CloseButton.Size.X - 3, 3);
-        CloseButton.MouseClick += (o, e) => Visible = false;
+        CloseButton.MouseClick += (o, e) => WindowManager.Close(this);
         AddControl(CloseButton);
 
         Grid = new DXItemGrid

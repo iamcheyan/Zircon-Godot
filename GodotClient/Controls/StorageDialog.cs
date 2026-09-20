@@ -63,7 +63,7 @@ public partial class StorageDialog : DXWindow
             Index = 15,
         };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => { CancelLinks(); Visible = false; };
+        close.MouseClick += (o, e) => { CancelLinks(); WindowManager.Close(this); };
         AddControl(close);
 
         SortButton = new DXButton

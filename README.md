@@ -113,6 +113,7 @@ screenshots/     Committed evidence from client runs
 - [`docs/notes/`](docs/notes/) — architecture decisions and validation records
 - [`docs/REMOTE_SERVER_AND_CLIENT_SETUP.md`](docs/REMOTE_SERVER_AND_CLIENT_SETUP.md) — remote deployment notes
 - [`docs/MAGIC_FULL_AUDIT.md`](docs/MAGIC_FULL_AUDIT.md) — magic and effect audit
+- [`docs/UPSTREAM_SYNC_POLICY.md`](docs/UPSTREAM_SYNC_POLICY.md) — upstream review and selective-porting policy
 - [Mir3-Research](../Mir3-Research) — original-client reverse engineering, resource decoding, map audits, and Web research tools
 
 Changes involving login, game entry, maps, rendering, conversion, or index conventions require behavioral validation, not compilation alone. Keep generated runtime assets outside Git where possible. Commit messages follow the repository's Chinese convention.

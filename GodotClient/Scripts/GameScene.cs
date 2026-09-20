@@ -1017,9 +1017,11 @@ public partial class GameScene : Control
             {
                 if (_net?.Connection?.Connected != true) return;
                 if (!CanPlayerMove()) return;
-                _player?.BeginMove(dir, distance, _playerHorse != HorseType.None);
-                _canRun = true; // 原版 AttemptAction(Moving) 后立即允许下一次 Run
-                _net.Connection.Enqueue(new C.Move { Direction = dir, Distance = Math.Max(1, distance) });
+                // 点击目标后的追击必须和普通鼠标移动共用同一条预测/插值管线。
+                // 旧实现这里只调用 BeginMove 后直接发 C.Move，服务端回包前
+                // 角色只有走路贴图却没有移动时间轴，回包到达后又重新跳起插值，
+                // 于是表现为卡顿、回拉和“飘”向目标。
+                SendMouseMove(dir, distance, distance >= 2);
             },
             () => ComputeAttackIntervalMs(Globals.AttackDelay, PlayerStats[Stat.AttackSpeed],
                 Globals.ASpeedRate, BagWeight > _playerStats[Stat.BagWeight],

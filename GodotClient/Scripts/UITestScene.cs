@@ -481,7 +481,9 @@ public partial class UITestScene : Control
             }
             var plain = new ClientUserItem(info, 2);
             string plainText = GameScene.BuildItemHoverCore(plain);
-            bool plainOk = plainText.StartsWith(info.ItemName) && plainText.Contains($"Type: {info.ItemType}");
+            // 悬停文本跟随当前语言；旧断言写死英文，中文/日文运行时会被误报为失败。
+            bool plainOk = plainText.StartsWith(info.Local() ?? info.ItemName)
+                && (plainText.Contains("类型:") || plainText.Contains("Type:") || plainText.Contains("タイプ:"));
             var partInfo = Globals.ItemInfoList?.Binding.FirstOrDefault(x => x?.ItemEffect == ItemEffect.ItemPart);
             bool partOk = true;
             if (partInfo != null)
@@ -492,7 +494,9 @@ public partial class UITestScene : Control
                     Flags = UserItemFlags.Expirable | UserItemFlags.Locked,
                 };
                 string partText = GameScene.BuildItemHoverCore(partItem);
-                partOk = partText.Contains(" - [Part]") && partText.Contains("Expires in ") && partText.Contains("Locked:");
+                partOk = partText.Contains("[部件]") || partText.Contains("[Part]") || partText.Contains("[パーツ]");
+                partOk &= partText.Contains("过期于") || partText.Contains("Expires in") || partText.Contains("有効期限");
+                partOk &= partText.Contains("已锁定") || partText.Contains("Locked") || partText.Contains("ロック");
             }
             bool raritySuperior = GameScene.HoverRarityColour(Rarity.Superior).G > .8f;
             bool rarityElite = GameScene.HoverRarityColour(Rarity.Elite).B > .8f;

@@ -57,12 +57,11 @@ public partial class DXButton : DXImageControl
             };
             AddChild(_label);
             // 自绘控件不走 Godot 布局管线，FullRect 锚点不会随 Size 更新而
-            // 重算子标签尺寸；必须显式同步 Size，否则 VAlign=Center 的居中
-            // 计算用了错误尺寸，文字会整体偏移（下拉框值左移/按钮文字偏上）。
+            // 重算子标签尺寸；使用锚点即可随父控件尺寸更新，不能再同时
+            // 写 Size，否则 Godot 会警告 opposite anchors 与手动尺寸冲突，
+            // 并可能造成按钮文字在不同缩放下偏移。
             _label.SetAnchorsPreset(Control.LayoutPreset.FullRect);
             _label.MouseFilter = MouseFilterEnum.Ignore;
-            _label.Size = Size;
-            Resized += () => _label.Size = Size;
         }
     }
 
@@ -100,6 +99,14 @@ public partial class DXButton : DXImageControl
 
     public override void _GuiInput(InputEvent e)
     {
+        // 不可用按钮仍需要接收并吞掉鼠标事件，避免事件继续落到窗口/地图，
+        // 但绝不能触发基类 MouseClick（例如灰掉的购买/修理按钮）。
+        if (e is InputEventMouseButton blocked && blocked.ButtonIndex == MouseButton.Left
+            && !CanBePressed)
+        {
+            AcceptEvent();
+            return;
+        }
         base._GuiInput(e);
 
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
@@ -116,6 +123,15 @@ public partial class DXButton : DXImageControl
                 QueueRedraw();
             }
         }
+    }
+
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        // Godot 的 GuiInput 在鼠标移出控件后可能收不到 release；基类会复位
+        // IsPressed，但按钮自己的三态标记也必须同步复位，否则按钮会永久显示按下。
+        if (Pressed && !Input.IsMouseButtonPressed(MouseButton.Left))
+            Pressed = false;
     }
 
     private bool _pressed;

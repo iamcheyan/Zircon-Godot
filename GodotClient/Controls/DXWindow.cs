@@ -190,7 +190,9 @@ public abstract partial class DXWindow : DXControl
 
     private void ApplyResize()
     {
-        Vector2 delta = GetGlobalMousePosition() - _resizeStartMouse;
+        // GetGlobalMousePosition 返回视口坐标，而窗口 Size/Position 使用 UI
+        // 逻辑坐标；高 DPI 或 CanvasLayer 缩放时必须换回逻辑位移。
+        Vector2 delta = (GetGlobalMousePosition() - _resizeStartMouse) / GameScene.UiScale;
         Vector2I nPos = _resizeStartPos;
         Vector2I nSize = _resizeStartSize;
         // HUD 窗口挂在 _uiLayer (CanvasLayer) 上, Position/Size 是逻辑坐标,

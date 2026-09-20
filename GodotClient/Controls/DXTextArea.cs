@@ -10,6 +10,7 @@ namespace ZirconClient.Controls;
 public sealed partial class DXTextArea : DXControl
 {
     private readonly TextEdit _edit;
+    private bool _focusWhenReady;
     private int _maxLength;
     private int _fontSize = 10;
 
@@ -74,7 +75,26 @@ public sealed partial class DXTextArea : DXControl
         Resized += ResizeEditor;
     }
 
-    public new void GrabFocus() => _edit.GrabFocus();
+    public new void GrabFocus()
+    {
+        if (!IsInsideTree())
+        {
+            _focusWhenReady = true;
+            return;
+        }
+
+        _edit.GrabFocus();
+    }
+
+    public override void _Ready()
+    {
+        base._Ready();
+        if (_focusWhenReady)
+        {
+            _focusWhenReady = false;
+            _edit.GrabFocus();
+        }
+    }
 
     private void ResizeEditor()
     {

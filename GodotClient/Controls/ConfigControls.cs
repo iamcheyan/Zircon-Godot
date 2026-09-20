@@ -114,6 +114,15 @@ public sealed partial class ConfigSoundBar : DXControl
         base._GuiInput(e);
     }
 
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        // 拖到音量条外再松开时，GuiInput 可能收不到 release；不清除会导致
+        // 后续任意鼠标移动继续改音量。
+        if (_dragging && !Input.IsMouseButtonPressed(MouseButton.Left))
+            _dragging = false;
+    }
+
     private void UpdateValueFromMouse()
     {
         Value = Mathf.RoundToInt(Mathf.Clamp((GetLocalMousePosition().X - 20f) / 155f, 0f, 1f) * 100f);

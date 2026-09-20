@@ -61,6 +61,7 @@ public sealed partial class DXTextInput : DXControl
     /// <summary>原版 Constants.PrimaryColour(198,166,99) 的输入框默认边框色。</summary>
     public static readonly Color DefaultBorderColour = new(.55f, .4f, .18f);
     private readonly LineEdit _edit;
+    private bool _focusWhenReady;
     private int _fontSize = 10;
     public event Action<string> TextChanged;
     public event Action<string> TextSubmitted;
@@ -107,7 +108,30 @@ public sealed partial class DXTextInput : DXControl
     /// <summary>包装的 LineEdit 是否拥有键盘焦点。</summary>
     public new bool HasFocus => _edit.HasFocus();
 
-    public new void GrabFocus() => _edit.GrabFocus();
+    public new void GrabFocus()
+    {
+        // Dialogs are assembled in their constructor, before WindowManager adds
+        // them to the scene tree. Godot cannot focus a child at that point;
+        // remember the request and apply it from _Ready instead of emitting
+        // "!is_inside_tree()" errors (and losing the intended keyboard focus).
+        if (!IsInsideTree())
+        {
+            _focusWhenReady = true;
+            return;
+        }
+
+        _edit.GrabFocus();
+    }
+
+    public override void _Ready()
+    {
+        base._Ready();
+        if (_focusWhenReady)
+        {
+            _focusWhenReady = false;
+            _edit.GrabFocus();
+        }
+    }
     public new void ReleaseFocus() => _edit.ReleaseFocus();
 
     public DXTextInput()

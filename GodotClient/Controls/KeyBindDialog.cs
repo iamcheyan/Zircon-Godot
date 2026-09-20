@@ -85,6 +85,11 @@ public sealed partial class KeyBindDialog : DXWindow
 
     public override void _GuiInput(InputEvent e)
     {
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion or InputEventKey) AcceptEvent();
+            return;
+        }
         if (e is InputEventKey key && key.Pressed && _selected >= 0 && _selected < KeyBindManager.KeyBinds.Count)
         {
             var bind = KeyBindManager.KeyBinds[_selected];

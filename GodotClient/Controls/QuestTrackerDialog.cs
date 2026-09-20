@@ -65,6 +65,11 @@ public partial class QuestTrackerDialog : DXWindow
 
     public override void _GuiInput(InputEvent @event)
     {
+        if (!IsEnabled)
+        {
+            if (@event is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         base._GuiInput(@event);
         if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.WheelUp && mb.Pressed)
             ScrollBar.Value -= ScrollBar.Change;

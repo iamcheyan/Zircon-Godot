@@ -139,6 +139,11 @@ public partial class BeltDialog : DXWindow
 
     public override void _GuiInput(InputEvent e)
     {
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         if (e is InputEventMouseButton button && button.ButtonIndex == MouseButton.Left)
         {
             if (button.Pressed && button.Position.X >= Size.X - 10 && button.Position.Y >= Size.Y - 10)

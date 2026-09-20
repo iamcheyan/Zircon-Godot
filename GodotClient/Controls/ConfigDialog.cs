@@ -50,6 +50,11 @@ public partial class ConfigDialog : DXWindow
 
     public override void _GuiInput(InputEvent e)
     {
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         // HasTitle=false 时 DXWindow 不支持拖拽；这里允许在标题栏区域
         // （y < 37，即标签栏上方的装饰框区域）拖拽移动窗口。
         if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)

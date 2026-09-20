@@ -458,7 +458,11 @@ public partial class DXItemCell : DXControl
             // 原版 DXItemCell.OnMouseClick 的前置顺序：货币已拿起时，
             // 物品格不能抢走地图的“丢弃数量”点击；观察和检查格也完全不操作。
             if (Locked || GameScene.Game?.CurrencyPickedUp == true || GameScene.Game?.IsObserver == true ||
-                GridType == GridType.Inspect) return;
+                GridType == GridType.Inspect)
+            {
+                AcceptEvent();
+                return;
+            }
             // 原版先由 DXControl 派发 MouseDown/MouseClick，再执行物品格自己的
             // 移动/使用逻辑。礼包、宝箱、寄售和邮件附件都依赖这个事件。
             // 按下时基类只派发 MouseDown，抬起时才派发一次 MouseClick，

@@ -172,6 +172,11 @@ public sealed partial class DXColourPalette : DXControl
 
     public override void _GuiInput(InputEvent e)
     {
+        if (!IsEnabled)
+        {
+            if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         base._GuiInput(e);
         if (e is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {

@@ -83,6 +83,11 @@ public sealed partial class NPCTextControl : DXControl
 
     public override void _GuiInput(InputEvent @event)
     {
+        if (!IsEnabled)
+        {
+            if (@event is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
         if (@event is InputEventMouseMotion motion)
         {
             int hovered = -1;

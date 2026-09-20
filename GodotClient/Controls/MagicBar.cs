@@ -173,6 +173,14 @@ public partial class MagicBar : Control
 
     public override void _Process(double delta)
     {
+        base._Process(delta);
+        // 松开发生在技能栏外时不会再收到 GuiInput release；若不复位，
+        // 后续移动会继续拖拽技能栏，表现为技能栏“粘住鼠标”。
+        if (_pressed && !Input.IsMouseButtonPressed(MouseButton.Left))
+        {
+            _pressed = false;
+            _dragging = false;
+        }
         if (Visible) QueueRedraw();
     }
 

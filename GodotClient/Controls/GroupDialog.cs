@@ -222,7 +222,11 @@ public partial class GroupDialog : DXWindow
 
     private void OpenLfgEditor()
     {
-        _lfgDialog?.QueueFree();
+        if (_lfgDialog != null)
+        {
+            WindowManager.Close(_lfgDialog);
+            _lfgDialog = null;
+        }
         var own = _lfg.FirstOrDefault(x => x != null && x.LeaderName == GameScene.Game?.StartInfo?.Name);
         _lfgDialog = new GroupLfgInputDialog(own, (enabled, name, type, count) =>
         {

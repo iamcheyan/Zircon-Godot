@@ -34,6 +34,7 @@ public static class MirSkin
         }
         string[] candidates =
         {
+            "/home/tetsuya/mir3ei/Data/",
             "/home/tetsuya/development/Zircon/Debug/Client/Data/",
             "/home/tetsuya/development/zircon/Debug/Client/Data/",
         };

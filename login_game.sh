@@ -19,6 +19,7 @@ if [ -f "$SERVER_DIR/Server.ini" ]; then
 elif [ "$(uname)" = "Darwin" ]; then
     PORT=7001
 fi
+KILL_ALL=0
 if [ "${1:-}" = "all" ]; then
     KILL_ALL=1
 fi
@@ -116,7 +117,7 @@ if [ "$KILL_ALL" = "0" ] && [ "$PORT_OPEN" = "1" ]; then
     echo "  服务器已在运行 (端口 $PORT 监听中)，跳过启动"
 else
     cd "$SERVER_DIR"
-    nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 &
+    setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
     SERVER_PID=$!
     echo "  服务器 PID: $SERVER_PID"
 

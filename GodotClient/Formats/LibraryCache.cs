@@ -18,9 +18,7 @@ public static class LibraryCache
     public static void Init()
     {
         if (DataPath != null) return;
-        string projectDir = ProjectSettings.GlobalizePath("res://");
-        DataPath = Path.GetFullPath(Path.Combine(projectDir, "..", "Debug", "Client", "Data"))
-                   + Path.DirectorySeparatorChar;
+        DataPath = ZirconClient.Controls.MirSkin.DataPath;
     }
 
     public static ZlLibrary Get(LibraryFile file)

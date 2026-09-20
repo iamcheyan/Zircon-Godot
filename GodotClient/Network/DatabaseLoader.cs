@@ -23,6 +23,10 @@ public static class DatabaseLoader
             string projectDir = ProjectSettings.GlobalizePath("res://");
             string root = Path.GetFullPath(Path.Combine(projectDir, "..", "Debug", "Client", "Data"))
                 + Path.DirectorySeparatorChar;
+            if (!File.Exists(Path.Combine(root, "System.db")) && Directory.Exists("/home/tetsuya/mir3ei/Data"))
+            {
+                root = "/home/tetsuya/mir3ei/Data" + Path.DirectorySeparatorChar;
+            }
 
             GD.Print($"[DB] 加载 System.db 从: {root}");
 

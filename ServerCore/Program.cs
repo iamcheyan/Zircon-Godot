@@ -1,4 +1,4 @@
-﻿using Library;
+using Library;
 using Server.Envir;
 using System;
 using System.Linq;
@@ -47,7 +47,11 @@ namespace Server
             while (SEnvir.EnvirThread != null)
             {
                 var command = Console.ReadLine();
-
+                if (command == null)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    continue;
+                }
             }
 
             ConfigReader.Save(typeof(Config).Assembly);

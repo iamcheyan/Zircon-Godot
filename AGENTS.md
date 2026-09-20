@@ -24,10 +24,17 @@
 
 3. **Mir3-Research 环境变量约定**（工具脚本依赖）：
    ```bash
-   export MIR3_EI_ROOT=/home/tetsuya/NAS/TMP/EI传奇3.0客户端
+   export MIR3_EI_ROOT=/home/tetsuya/mir3ei
    export MIR3_MUD3_ROOT=/home/tetsuya/NAS/TMP/Mud3
    export MIR3_ZIRCON_ROOT=/home/tetsuya/development/Zircon
    ```
+
+## 客户端与一键启动
+
+所有客户端运行资源统一存放于 `/home/tetsuya/mir3ei`（NVMe 本地高速存储，无网络延迟）：
+- 启动游戏：`cd /home/tetsuya/mir3ei && ./login_game.sh`（或 `./start.sh`）
+- 重启全套：`cd /home/tetsuya/mir3ei && ./login_game.sh all`
+- 资源软链：`Zircon/Debug/Client` -> `/home/tetsuya/mir3ei`
 
 ## 测试账号
 

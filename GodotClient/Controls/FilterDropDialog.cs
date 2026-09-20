@@ -104,6 +104,9 @@ public sealed partial class DXTextInput : DXControl
         }
     }
 
+    /// <summary>包装的 LineEdit 是否拥有键盘焦点。</summary>
+    public new bool HasFocus => _edit.HasFocus();
+
     public new void GrabFocus() => _edit.GrabFocus();
     public new void ReleaseFocus() => _edit.ReleaseFocus();
 

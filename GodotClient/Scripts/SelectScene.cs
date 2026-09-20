@@ -431,7 +431,9 @@ public partial class SelectScene : Control
         _skinPanel = new DXControl
         {
             Size = new Vector2I(320, 425),
-            Position = new Vector2((viewport.X / 2f - 320f) / 2f, (viewport.Y - 425) / 2f),
+            // 角色列表面板按逻辑画布居中；旧公式又除了一次 2，
+            // 导致 1024 宽画布下 x=96 而不是 x=352，视觉和点击区域整体偏左。
+            Position = new Vector2((viewport.X - 320f) / 2f, (viewport.Y - 425) / 2f),
         };
         // 角色列表面板也要挂到缩放层，否则窗口放大时它不跟随缩放。
         _uiLayer.AddChild(_skinPanel);

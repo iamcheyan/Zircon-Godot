@@ -52,6 +52,16 @@
 | 第 4 步 | 逐 packet 接入移动、攻击、背包、技能和完整 UI | ⏳ 进行中 |
 | 第 5 步 | 远程服务器部署、Web 客户端和长期运行 | 💤 后续阶段 |
 
+## 游戏截图
+
+以下截图来自 Godot 客户端实际运行：
+
+![Gameplay: companion and combat](screenshots/gameplay_companion_combat.jpg)
+
+![Gameplay: network debug overlay](screenshots/gameplay_network_debug.jpg)
+
+![Gameplay: windowed combat](screenshots/gameplay_windowed_combat.png)
+
 ## 环境与构建
 
 需要 .NET 10 SDK 和 Godot 4.x .NET 版。Windows 原客户端/编辑器还需要 WinForms、DevExpress 和 DirectX 依赖。

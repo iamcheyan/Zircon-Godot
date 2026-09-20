@@ -841,6 +841,9 @@ public partial class GameScene : Control
     // 0 = 未锁定(可发包); >0 = 锁定到该时刻。用 double 而非 DateTime 避免
     // 每帧分配。锁定期内 MouseWalker 不再发新移动, 消除预判与回包重叠。
     private double _moveServerLockUntilMs;
+    // 服务器回包通常早于贴图移动完成。不同外观的走路帧表有 600/800/1000ms
+    // 等时长，不能只等回包，否则下一步会重置上一段插值，表现为回拉、飘移。
+    private double _moveVisualLockUntilMs;
     private bool _runningTestStarted;
     private bool _interactionAuditStarted;
     private int _interactionInspectSent;
@@ -989,7 +992,8 @@ public partial class GameScene : Control
         BlockLeftMouseMovement,
         () => Input.IsKeyPressed(Key.Ctrl) && _combatController?.MouseObject?.Type == ObjectRenderer.Kind.Player,
         // ServerTime 门控: 锁定期内 MouseWalker 不发新移动, 等服务端回包。
-        () => Godot.Time.GetTicksMsec() < _moveServerLockUntilMs,
+        () => Godot.Time.GetTicksMsec() < _moveServerLockUntilMs
+            || Godot.Time.GetTicksMsec() < _moveVisualLockUntilMs,
         // CanMove 阻挡判定的权威起点 = _playerLocation(原版 User.CurrentLocation)。
         () => _playerLocation);
         AddChild(_mouseWalker);
@@ -2130,6 +2134,7 @@ public partial class GameScene : Control
         ClearMovementEffect(packet.ObjectID);
         if (_otherPlayers.TryGetValue(packet.ObjectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = packet.Direction;
             player.CellX = packet.Location.X;
             player.CellY = packet.Location.Y;
@@ -2922,6 +2927,7 @@ public partial class GameScene : Control
 
         if (_otherPlayers.TryGetValue(objectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = dir;
             player.CellX = loc.X;
             player.CellY = loc.Y;
@@ -2949,6 +2955,7 @@ public partial class GameScene : Control
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = p.Direction;
             player.PlayHarvest();
         }
@@ -2987,6 +2994,7 @@ public partial class GameScene : Control
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = p.Direction;
             player.BeginMove(p.Direction, Math.Max(1, p.Distance), player.Horse != HorseType.None, false);
             player.PlayDash(p.Magic);
@@ -3006,6 +3014,7 @@ public partial class GameScene : Control
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = p.Direction;
             player.PlayPushed();
         }
@@ -3022,6 +3031,7 @@ public partial class GameScene : Control
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {
+            player.StopRemoteMovement();
             player.Direction = p.Direction;
             player.PlayMining();
         }
@@ -3048,9 +3058,13 @@ public partial class GameScene : Control
                     ApplyAuthoritativePlayerLocation(loc, p.Slow);
             }
         }
-            else if (_otherPlayers.TryGetValue(objectID, out var player))
-            {
-                player.Direction = dir; player.PlayCombat(magic);
+        else if (_otherPlayers.TryGetValue(objectID, out var player))
+        {
+            player.StopRemoteMovement();
+            player.CellX = loc.X;
+            player.CellY = loc.Y;
+            player.Direction = dir; player.PlayCombat(magic);
+            UpdateOtherPlayerPosition(player);
         }
         else if (_objects.TryGetValue(objectID, out var ob))
             {
@@ -3105,7 +3119,11 @@ public partial class GameScene : Control
         }
         else if (_otherPlayers.TryGetValue(objectID, out var player))
         {
+            player.StopRemoteMovement();
+            player.CellX = loc.X;
+            player.CellY = loc.Y;
             player.Direction = dir; player.PlayRangeAttack();
+            UpdateOtherPlayerPosition(player);
         }
         else if (_objects.TryGetValue(objectID, out var ob))
         {
@@ -3153,6 +3171,7 @@ public partial class GameScene : Control
     {
         if (_player == null) return;
         _moveServerLockUntilMs = 0;  // 权威位置应用即解锁, 覆盖所有纠正路径
+        _moveVisualLockUntilMs = 0;
         _playerLocation = loc;
         _pendingDistance = 1;
         _moveFrameCount = 1;
@@ -7820,6 +7839,7 @@ public partial class GameScene : Control
         // 右键只是请求跑步，最终动作必须以服务器接受的移动距离为准。
         _player.BeginMove(dir, distance, _playerHorse != HorseType.None, distance >= 2);
         _moveDurationMs = Math.Max(1.0, _player.MovementDurationMs);
+        _moveVisualLockUntilMs = Godot.Time.GetTicksMsec() + _moveDurationMs;
         _mapView.CameraOffset = new Vector2(
             (x - _moveFrom.X) * 48f,
             (y - _moveFrom.Y) * 32f);
@@ -7908,6 +7928,11 @@ public partial class GameScene : Control
         bool offline = AutoLoginArgs.OfflineMovementTest;
         if (!offline && _net?.Connection?.Connected != true) return;
         distance = Math.Max(1, distance);
+        // 战斗追击等非 MouseWalker 调用方也必须遵守同一条视觉时间轴。
+        // 若上一段仍在移动，重启它会先把角色拉回上一格终点，再开始下一段。
+        double now = Godot.Time.GetTicksMsec();
+        if (_moveFrameCount > 1 && now < _moveVisualLockUntilMs)
+            return;
         // 原版 UserObject.AttemptAction(Moving) → SetAction(Moving) 立即把
         // CurrentLocation 跳到预测终点并启动 MovingOffSet 插值; 回包(S.ObjectMove)
         // 正常只解锁+设 Slow, 不重 SetAction, 故无双重视觉/回拉。
@@ -7930,6 +7955,7 @@ public partial class GameScene : Control
         _player.BeginMove(direction, distance, _playerHorse != HorseType.None,
             running && distance >= 2);
         _moveDurationMs = Math.Max(1.0, _player.MovementDurationMs);
+        _moveVisualLockUntilMs = now + _moveDurationMs;
         _mapView.CameraOffset = new Vector2(
             (predicted.X - _moveFrom.X) * 48f,
             (predicted.Y - _moveFrom.Y) * 32f);
@@ -7951,7 +7977,7 @@ public partial class GameScene : Control
             _net.Connection.Enqueue(new C.Move { Direction = direction, Distance = distance });
             // 原版 AttemptAction 末尾 ServerTime = Now.AddSeconds(5): 锁住直到回包。
             // 5 秒是容错上限, 正常回包几十毫秒就解锁; 超时仍解锁避免永久卡死。
-            _moveServerLockUntilMs = Godot.Time.GetTicksMsec() + 5000.0;
+            _moveServerLockUntilMs = now + 5000.0;
         }
         // 原版 UserObject.AttemptAction(Moving) 在发包后立即允许下一段 Run。
         _canRun = true;
@@ -8345,6 +8371,7 @@ public partial class GameScene : Control
             if (k <= 0.0)
             {
                 _moveFrameCount = 1;
+                _moveVisualLockUntilMs = 0;
                 // 原版进入 Standing 时，只有右键已松开才清 CanRun。
                 // 连续按住右键时必须保留 true，下一段才会从 Walking 升到 Running。
                 _canRun = IsRunInputHeld();

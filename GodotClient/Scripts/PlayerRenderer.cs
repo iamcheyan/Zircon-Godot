@@ -132,6 +132,7 @@ public partial class PlayerRenderer : Node2D
     private System.Drawing.Point _remoteMoveFrom;
     private double _remoteMoveStartMs;
     private int _remoteMoveTargetX, _remoteMoveTargetY;
+    private readonly Queue<(System.Drawing.Point To, MirDirection Direction, int Distance, bool Mounted)> _remoteMoveQueue = new();
 
     private const int CellWidth = 48;
     private const int CellHeight = 32;
@@ -580,6 +581,17 @@ public partial class PlayerRenderer : Node2D
     // 其他玩家的移动回包：权威坐标立即到终点，画面从起点平滑回拉。
     public void StartMove(System.Drawing.Point to, MirDirection direction, int distance, bool mounted)
     {
+        distance = Math.Max(1, distance);
+        if (_remoteMoving)
+        {
+            _remoteMoveQueue.Enqueue((to, direction, distance, mounted));
+            return;
+        }
+        StartRemoteMove(to, direction, distance, mounted);
+    }
+
+    private void StartRemoteMove(System.Drawing.Point to, MirDirection direction, int distance, bool mounted)
+    {
         _remoteMoveFrom = new System.Drawing.Point(CellX, CellY);
         _remoteMoveTargetX = to.X;
         _remoteMoveTargetY = to.Y;
@@ -771,9 +783,27 @@ public partial class PlayerRenderer : Node2D
                 _remoteMoving = false;
                 OffsetX = 0f;
                 OffsetY = 0f;
-                PlayStandingForState();
+                if (_remoteMoveQueue.Count > 0)
+                {
+                    var next = _remoteMoveQueue.Dequeue();
+                    StartRemoteMove(next.To, next.Direction, next.Distance, next.Mounted);
+                }
+                else if (Animation is MirAnimation.Walking or MirAnimation.Running
+                    or MirAnimation.HorseWalking or MirAnimation.HorseRunning
+                    or MirAnimation.CreepWalkSlow or MirAnimation.CreepWalkFast)
+                {
+                    PlayStandingForState();
+                }
             }
         }
+    }
+
+    public void StopRemoteMovement()
+    {
+        _remoteMoveQueue.Clear();
+        _remoteMoving = false;
+        OffsetX = 0f;
+        OffsetY = 0f;
     }
 
     private SoundIndex GetAttackSound()

@@ -122,7 +122,7 @@ public partial class CharacterDialog : DXWindow
             Index = 15,
         };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => Visible = false;
+        close.MouseClick += (o, e) => WindowManager.Close(this);
         AddControl(close);
 
         AddTab(Lang.CharacterCharacterTabLabel, 0, 110);

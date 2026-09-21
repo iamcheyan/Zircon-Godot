@@ -200,9 +200,6 @@ public partial class DXControl : Control
     public override void _Ready()
     {
         base._Ready();
-        // 旧版素材是像素画。显式锁定最近邻采样，避免某个父节点或
-        // 运行时窗口缩放把 ZL/UI 贴图切回线性过滤而产生发虚边缘。
-        TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         MouseEntered += OnMouseEntered;
         MouseExited += OnMouseExited;
         // 拖拽/按住状态需要全局释放捕获: 鼠标在控件外松开时 GuiInput 不再到达本控件,

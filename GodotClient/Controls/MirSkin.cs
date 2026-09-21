@@ -181,6 +181,7 @@ public static class MirSkin
             var font = new FontFile();
             if (font.LoadDynamicFont(path) == Error.Ok)
             {
+                ConfigurePixelFont(font);
                 _font = font;
                 LoadFusionLatinFallback(projectDir);
                 if (_fontFallbacks.Count > 0)
@@ -203,9 +204,20 @@ public static class MirSkin
         if (!File.Exists(path)) return;
         var latin = new FontFile();
         if (latin.LoadDynamicFont(path) == Error.Ok)
+        {
+            ConfigurePixelFont(latin);
             _fontFallbacks.Add(latin);
+        }
         else
             latin.Dispose();
+    }
+
+    private static void ConfigurePixelFont(FontFile font)
+    {
+        // Fusion Pixel 是按固定像素网格设计的；Godot 默认的灰度抗锯齿和
+        // 亚像素定位会给笔画加入半透明边缘，放在老游戏 UI 上会显得发糊。
+        font.Antialiasing = TextServer.FontAntialiasing.None;
+        font.SubpixelPositioning = TextServer.SubpixelPositioning.Disabled;
     }
 
     /// <summary>

@@ -40,20 +40,24 @@ public partial class DXLabel : DXControl
         var font = MirSkin.GetFont();
         if (font == null) return;
 
-        var lines = GetLines();
-        Vector2 textSize = MirSkin.MeasureText(lines.Count == 0 ? string.Empty : lines[0], FontSize);
-        Vector2 pos = TextPadding;
+        float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+        if (canvasScale < 0.01f) canvasScale = 1f;
+        var lines = GetLines(Size.X * canvasScale);
+        Vector2 textSize = MirSkin.MeasureTextPhysical(lines.Count == 0 ? string.Empty : lines[0], FontSize);
+        Vector2 pos = (Vector2)TextPadding * canvasScale;
 
-        if (Align == HorizontalAlignment.Center) pos.X = TextPadding.X + (Size.X - textSize.X - TextPadding.X * 2) / 2f;
-        else if (Align == HorizontalAlignment.Right) pos.X = Size.X - textSize.X - TextPadding.X;
+        float physicalWidth = Size.X * canvasScale;
+        float physicalHeight = Size.Y * canvasScale;
+        if (Align == HorizontalAlignment.Center) pos.X = TextPadding.X * canvasScale + (physicalWidth - textSize.X - TextPadding.X * canvasScale * 2) / 2f;
+        else if (Align == HorizontalAlignment.Right) pos.X = physicalWidth - textSize.X - TextPadding.X * canvasScale;
         float lineHeight = textSize.Y;
         // GetStringSize().Y 是 Godot 实际使用的行高，垂直布局和逐行绘制
         // 必须使用同一个口径。之前这里改用 ascent+descent 计算 blockHeight，
         // 但逐行仍使用 lineHeight，导致按钮/标签的居中基线不一致。
-        float ascent = font.GetAscent(MirSkin.ScaledSize(FontSize));
+        float ascent = font.GetAscent(MirSkin.PhysicalSize(FontSize));
         float blockHeight = lineHeight * lines.Count;
-        if (VAlign == VerticalAlignment.Center) pos.Y = TextPadding.Y + (Size.Y - blockHeight - TextPadding.Y * 2) / 2f;
-        else if (VAlign == VerticalAlignment.Bottom) pos.Y = Size.Y - blockHeight - TextPadding.Y;
+        if (VAlign == VerticalAlignment.Center) pos.Y = TextPadding.Y * canvasScale + (physicalHeight - blockHeight - TextPadding.Y * canvasScale * 2) / 2f;
+        else if (VAlign == VerticalAlignment.Bottom) pos.Y = physicalHeight - blockHeight - TextPadding.Y * canvasScale;
 
         Color colour = IsEnabled ? TextColour : new Color(TextColour, 0.5f);
 
@@ -62,12 +66,15 @@ public partial class DXLabel : DXControl
         // 表现为文本偏高。这里把基线 Y 下移 ascent，使视觉位置与旧版一致。
         // （ascent 已在上面居中计算时定义）
 
-        for (int i = 0; i < lines.Count; i++)
+        DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
+        try
         {
+            for (int i = 0; i < lines.Count; i++)
+            {
             // 旧版 DXLabel 的文字贴图最终落在整数像素上。保留小数位置会
             // 让 CJK 字形经过半像素采样，尤其在低分辨率窗口中看起来发糊。
-            Vector2 linePos = new(Mathf.Round(pos.X), Mathf.Round(pos.Y + i * lineHeight + ascent));
-            int drawSize = MirSkin.ScaledSize(FontSize);
+                Vector2 linePos = new(Mathf.Round(pos.X), Mathf.Round(pos.Y + i * lineHeight + ascent));
+                int drawSize = MirSkin.PhysicalSize(FontSize);
             if (DrawOutline)
                 // 原版是四次相邻 1px 偏移绘制，不是 Godot 的 4px 外扩描边。
                 // 外扩 4px 会吞掉小字号笔画并造成截图中的重影/模糊。
@@ -75,13 +82,15 @@ public partial class DXLabel : DXControl
             else if (DrawShadow)
                 DrawStringOutline(font, linePos + new Vector2(1, 1), lines[i], HorizontalAlignment.Left, -1, drawSize, 1, new Color(0, 0, 0, 0.7f));
             DrawString(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, colour);
-            if (DrawUnderline)
-                DrawLine(new Vector2(linePos.X, linePos.Y + drawSize + 1),
-                    new Vector2(linePos.X + textSize.X, linePos.Y + drawSize + 1), colour, 1f);
+                if (DrawUnderline)
+                    DrawLine(new Vector2(linePos.X, linePos.Y + drawSize + 1),
+                        new Vector2(linePos.X + textSize.X, linePos.Y + drawSize + 1), colour, 1f);
+            }
         }
+        finally { DrawSetTransform(Vector2.Zero, 0f, Vector2.One); }
     }
 
-    private List<string> GetLines()
+    private List<string> GetLines(float availableWidth)
     {
         var result = new List<string>();
         foreach (var source in (Text ?? string.Empty).Replace("\r", string.Empty).Split('\n'))
@@ -95,7 +104,7 @@ public partial class DXLabel : DXControl
             foreach (char ch in source)
             {
                 string candidate = line + ch;
-                if (line.Length > 0 && MirSkin.MeasureText(candidate, FontSize).X > Size.X)
+                if (line.Length > 0 && MirSkin.MeasureTextPhysical(candidate, FontSize).X > availableWidth)
                 {
                     result.Add(line);
                     line = ch.ToString();

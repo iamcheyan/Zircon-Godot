@@ -238,6 +238,17 @@ public static class MirSkin
 
     public static int ScaledSize(float size) => ScaledSize(Mathf.RoundToInt(size));
 
+    /// <summary>像素字体在屏幕上的固定字号，不随 UI CanvasLayer 缩放。</summary>
+    public static int PhysicalSize(int size)
+        => size <= 13 ? 12 : size <= 18 ? 16 : 24;
+
+    public static Vector2 MeasureTextPhysical(string text, int fontSize)
+    {
+        var font = GetFont();
+        if (font == null || string.IsNullOrEmpty(text)) return Vector2.Zero;
+        return font.GetStringSize(text, HorizontalAlignment.Left, -1, PhysicalSize(fontSize));
+    }
+
 
     public static Vector2 MeasureText(string text, int fontSize)
     {

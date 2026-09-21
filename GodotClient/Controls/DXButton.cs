@@ -56,13 +56,26 @@ public partial class DXButton : DXImageControl
                 TextColour = TextColour,
             };
             AddChild(_label);
-            // 自绘控件不走 Godot 布局管线，FullRect 锚点不会随 Size 更新而
-            // 重算子标签尺寸；使用锚点即可随父控件尺寸更新，不能再同时
-            // 写 Size，否则 Godot 会警告 opposite anchors 与手动尺寸冲突，
-            // 并可能造成按钮文字在不同缩放下偏移。
-            _label.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            // 自绘控件不走 Godot 的容器布局管线。只设置 FullRect 锚点时，
+            // 在按钮已经入树或尺寸后来变化的情况下，子标签的实际 Size
+            // 可能仍停留在旧值，导致文字相对按钮背景向左偏移。
+            SyncLabelRect();
             _label.MouseFilter = MouseFilterEnum.Ignore;
         }
+    }
+
+    public override void _Notification(int what)
+    {
+        base._Notification(what);
+        if (what == NotificationResized)
+            SyncLabelRect();
+    }
+
+    private void SyncLabelRect()
+    {
+        if (_label == null) return;
+        _label.Position = Vector2.Zero;
+        _label.Size = Size;
     }
 
     private int _fontSize = 12;

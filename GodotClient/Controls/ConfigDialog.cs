@@ -175,7 +175,6 @@ public partial class ConfigDialog : DXWindow
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
         });
-        fullScreen.Enabled = false;
         display.AddOption("全屏显示", fullScreen);
         var borderless = Check("无边框窗口", false, value =>
         {
@@ -183,7 +182,6 @@ public partial class ConfigDialog : DXWindow
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
         });
-        borderless.Enabled = false;
         display.AddOption("无边框窗口", borderless);
 
         var pipeline = new ConfigSelect();
@@ -193,18 +191,21 @@ public partial class ConfigDialog : DXWindow
 
         var resolution = new ConfigSelect();
         // 档位 = 常用分辨率 + 当前窗口尺寸（去重排序），保证当前值总能匹配显示
-        // 当前测试：逻辑设计基准 1024x768，实际窗口为整数 2 倍。
-        var resolutions = new List<Vector2I> { ClientSettings.FixedDebugGameSize };
-        var current = ClientSettings.FixedDebugGameSize;
+        var resolutions = new List<Vector2I>
+        {
+            new(1024, 768), new(1280, 960), new(1280, 1024),
+            new(1600, 1200), new(1920, 1440), ClientSettings.GameSize
+        }.Distinct().ToList();
+        var current = ClientSettings.GameSize;
         foreach (var size in resolutions)
             resolution.AddItem($"{size.X} x {size.Y}");
-        // 当前阶段固定基准；解除锁定后这里再恢复为实际窗口尺寸匹配。
+        // 当前分辨率由配置和窗口参数决定。
         resolution.SelectItem($"{current.X} x {current.Y}");
         resolution.SelectedChanged += (s, e) =>
         {
             string[] parts = resolution.SelectedItem.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 3 || !int.TryParse(parts[0], out int width) || !int.TryParse(parts[2], out int height)) return;
-            ClientSettings.GameSize = ClientSettings.FixedDebugGameSize;
+            ClientSettings.GameSize = new Vector2I(width, height);
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
         };

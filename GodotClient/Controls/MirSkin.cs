@@ -53,6 +53,10 @@ public static class MirSkin
     private static FontFile _font;
     private static readonly List<Font> _fontFallbacks = new();
     private static bool _fontFailed;
+    private static float _uiScale = 1f;
+
+    /// <summary>界面缩放倍率；像素字体用反向倍率保持屏幕上的物理字号不变。</summary>
+    public static void SetUiScale(float scale) => _uiScale = Mathf.Max(1f, scale);
 
     public static ZlLibrary GetLibrary(LibraryFile file)
     {
@@ -228,9 +232,8 @@ public static class MirSkin
     /// </summary>
     public static int ScaledSize(int size)
     {
-        if (size <= 13) return 12;
-        if (size <= 18) return 16;
-        return 24;
+        int physicalSize = size <= 13 ? 12 : size <= 18 ? 16 : 24;
+        return Mathf.Max(1, Mathf.RoundToInt(physicalSize / _uiScale));
     }
 
     public static int ScaledSize(float size) => ScaledSize(Mathf.RoundToInt(size));

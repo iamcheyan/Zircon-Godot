@@ -4,24 +4,24 @@
 
 ## 当前约定
 
-当前测试整数 2 倍显示：逻辑画布仍使用原版设计基准，实际窗口为：
+当前测试自适应界面缩放：逻辑画布保持原版设计基准，窗口尺寸恢复可调；字体保持固定物理字号：
 
 ```text
-2048×1536
+1024×768 逻辑画布，窗口尺寸随显示器/配置变化
 ```
 
 固定逻辑位于：
 
-- `GodotClient/Scripts/ClientSettings.cs`：`FixedDebugGameSize`
-- `GodotClient/Controls/ConfigDialog.cs`：分辨率下拉暂时只显示 `2048 x 1536`
+- `GodotClient/Scripts/ClientSettings.cs`：逻辑画布 `FixedDebugLogicalSize`
+- `GodotClient/Controls/ConfigDialog.cs`：分辨率下拉恢复常用 4:3 档位
 
-逻辑设计画布是 `1024×768`，实际窗口是 `2048×1536`。即使用户配置文件 `user://Zircon.ini` 里残留其它值，启动时也会覆盖为 `2048×1536` 窗口；启动参数 `--window=WxH` 在这个阶段同样不会改变校准基准。Godot 使用 viewport stretch 进行整数 2 倍显示，避免非整数拉伸。
+逻辑设计画布是 `1024×768`，界面按窗口尺寸等比缩放；字体单独保持固定字号，不随界面倍率放大。启动参数 `--window=WxH` 可指定测试窗口，裸 `--window` 使用主显示器约 75% 尺寸。
 
 ## 解除条件
 
 完成以下工作后再解除固定窗口锁定：
 
-1. 在逻辑 `1024×768`、实际 `2048×1536` 下完成主界面、背包、角色、设置、菜单、快捷栏和小地图的布局校准。
+1. 在 1024×768、1280×960、1600×1200 和全屏模式下分别确认界面缩放与固定字号的可读性。
 2. 实机确认文字基线、贴图边缘、窗口边界和鼠标命中区域没有缩放偏差。
 3. 恢复分辨率下拉的多档列表，并重新验证 16:9、16:10 和 5:4 窗口比例。
 
@@ -35,4 +35,4 @@ dotnet build GodotClient/ZirconClient.csproj --no-incremental
 
 在本机 Hyprland 环境下，推荐通过 `/home/tetsuya/mir3ei/login_game.sh` 或
 `start.sh` 启动。脚本会等待 `ZirconClient` 窗口创建完成，将它移动到第一个显示器，
-设为浮动并调整为 `2048×1536`；非 Hyprland 环境保持原来的前台启动流程。
+设为浮动但保留客户端自身窗口尺寸；非 Hyprland 环境保持原来的前台启动流程。

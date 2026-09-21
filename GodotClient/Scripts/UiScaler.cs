@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using ZirconClient.Controls;
 
 namespace ZirconClient.Scripts;
 
@@ -54,6 +55,7 @@ public static class UiScaler
         GD.Print($"[UiScaler] force={force ?? "<null>"}");
         if (!string.IsNullOrEmpty(force) && float.TryParse(force, out float forced) && forced > 0f)
             scale = forced;
+        MirSkin.SetUiScale(scale);
         Vector2 offset = (vp - new Vector2(BaseWidth, BaseHeight) * scale) / 2f;
         offset.X = Mathf.Max(offset.X, 0f);
         offset.Y = Mathf.Max(offset.Y, 0f);

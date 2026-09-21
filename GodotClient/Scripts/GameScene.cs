@@ -4550,6 +4550,7 @@ public partial class GameScene : Control
         }
         if (_uiLayer != null && IsInstanceValid(_uiLayer))
             _uiLayer.Transform = Transform2D.Identity.Scaled(Vector2.One * UiScale);
+        MirSkin.SetUiScale(UiScale);
     }
 
     /// <summary>

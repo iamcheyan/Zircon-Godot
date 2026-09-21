@@ -7,10 +7,7 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
-    // 当前测试：逻辑画布 1024x768，实际窗口使用整数 2 倍。
-    // 字体和 UI 先按逻辑像素绘制，再由 Godot 以整数倍显示。
     public static readonly Vector2I FixedDebugLogicalSize = new(1024, 768);
-    public static readonly Vector2I FixedDebugGameSize = new(2048, 1536);
     private const string WindowTitle = "ZirconClient";
     private static bool _loaded;
     private static bool _windowArgsApplied;
@@ -194,11 +191,6 @@ public static class ClientSettings
         VSync = Read(file, "Graphics", nameof(VSync), VSync);
         LimitFPS = Read(file, "Graphics", nameof(LimitFPS), LimitFPS);
         GameSize = ReadVector2I(file, "Graphics", nameof(GameSize), GameSize);
-        // 当前阶段固定使用主显示器原生尺寸，避免旧 ini 中的 1920x1080
-        // 让窗口被裁剪/缩放，干扰 UI 校准。
-        GameSize = FixedDebugGameSize;
-        FullScreen = false;
-        Borderless = false;
         DefaultMonitor = 0;
         DefaultMonitor = Read(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         RenderingPipeline = Read(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
@@ -332,8 +324,15 @@ public static class ClientSettings
             Borderless = false;
             if (!_windowArgsApplied)
             {
-                // UI 校准期间无论是否传入 --window=WxH，都固定到当前基准。
-                GameSize = FixedDebugGameSize;
+                GameSize = AutoLoginArgs.WindowSize;
+                if (GameSize == Vector2I.Zero)
+                {
+                    Vector2I screen = DisplayServer.GetName() == "headless"
+                        ? new Vector2I(1024, 768)
+                        : DisplayServer.ScreenGetSize(DefaultMonitor);
+                    GameSize = new Vector2I(Mathf.Max(1024, Mathf.RoundToInt(screen.X * .75f)),
+                        Mathf.Max(768, Mathf.RoundToInt(screen.Y * .75f)));
+                }
                 _windowArgsApplied = true;
                 GD.Print($"[Display] --window 初始尺寸: {GameSize.X}x{GameSize.Y}");
             }
@@ -346,10 +345,15 @@ public static class ClientSettings
         if (DefaultMonitor >= 0 && DefaultMonitor < DisplayServer.GetScreenCount())
             DisplayServer.WindowSetCurrentScreen(DefaultMonitor);
 
-        // UI 校准阶段固定使用原版设计窗口，不让桌面或显示器对画面做二次放大。
-        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-        GameSize = FixedDebugGameSize;
-        DisplayServer.WindowSetSize(FixedDebugGameSize);
+        DisplayServer.WindowSetMode(FullScreen ? DisplayServer.WindowMode.Fullscreen : DisplayServer.WindowMode.Windowed);
+        if (!FullScreen)
+        {
+            GameSize = new Vector2I(Mathf.Max(1024, GameSize.X), Mathf.Max(768, GameSize.Y));
+            DisplayServer.WindowSetSize(GameSize);
+        }
+        var actualSize = DisplayServer.WindowGetSize();
+        float uiScale = Mathf.Clamp(Mathf.Min(actualSize.X / 1024f, actualSize.Y / 768f), 1f, 2f);
+        ZirconClient.Controls.MirSkin.SetUiScale(uiScale);
         UpdateWindowTitle();
 
         Engine.MaxFps = LimitFPS ? 60 : 0;

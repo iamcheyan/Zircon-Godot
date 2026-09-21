@@ -47,12 +47,11 @@ public partial class DXLabel : DXControl
         if (Align == HorizontalAlignment.Center) pos.X = TextPadding.X + (Size.X - textSize.X - TextPadding.X * 2) / 2f;
         else if (Align == HorizontalAlignment.Right) pos.X = Size.X - textSize.X - TextPadding.X;
         float lineHeight = textSize.Y;
-        // 居中基准用"字形高度"而非完整行高：GetStringSize 的 Y 含
-        // ascent+descent+内部行距，直接用它算居中会让文字视觉偏上。
-        // 这里用 ascent+descent 作为文字块真实高度，行距保持 lineHeight。
+        // GetStringSize().Y 是 Godot 实际使用的行高，垂直布局和逐行绘制
+        // 必须使用同一个口径。之前这里改用 ascent+descent 计算 blockHeight，
+        // 但逐行仍使用 lineHeight，导致按钮/标签的居中基线不一致。
         float ascent = font.GetAscent(MirSkin.ScaledSize(FontSize));
-        float descent = Mathf.Max(1f, font.GetDescent(MirSkin.ScaledSize(FontSize)));
-        float blockHeight = (ascent + descent) * lines.Count;
+        float blockHeight = lineHeight * lines.Count;
         if (VAlign == VerticalAlignment.Center) pos.Y = TextPadding.Y + (Size.Y - blockHeight - TextPadding.Y * 2) / 2f;
         else if (VAlign == VerticalAlignment.Bottom) pos.Y = Size.Y - blockHeight - TextPadding.Y;
 
@@ -65,12 +64,16 @@ public partial class DXLabel : DXControl
 
         for (int i = 0; i < lines.Count; i++)
         {
-            Vector2 linePos = new(pos.X, pos.Y + i * lineHeight + ascent);
+            // 旧版 DXLabel 的文字贴图最终落在整数像素上。保留小数位置会
+            // 让 CJK 字形经过半像素采样，尤其在低分辨率窗口中看起来发糊。
+            Vector2 linePos = new(Mathf.Round(pos.X), Mathf.Round(pos.Y + i * lineHeight + ascent));
             int drawSize = MirSkin.ScaledSize(FontSize);
             if (DrawOutline)
-                DrawStringOutline(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, 4, OutlineColour);
+                // 原版是四次相邻 1px 偏移绘制，不是 Godot 的 4px 外扩描边。
+                // 外扩 4px 会吞掉小字号笔画并造成截图中的重影/模糊。
+                DrawStringOutline(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, 1, OutlineColour);
             else if (DrawShadow)
-                DrawStringOutline(font, linePos + new Vector2(1, 1), lines[i], HorizontalAlignment.Left, -1, drawSize, 2, new Color(0, 0, 0, 0.7f));
+                DrawStringOutline(font, linePos + new Vector2(1, 1), lines[i], HorizontalAlignment.Left, -1, drawSize, 1, new Color(0, 0, 0, 0.7f));
             DrawString(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, colour);
             if (DrawUnderline)
                 DrawLine(new Vector2(linePos.X, linePos.Y + drawSize + 1),

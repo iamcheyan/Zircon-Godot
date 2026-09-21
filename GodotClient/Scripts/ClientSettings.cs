@@ -7,8 +7,8 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
-    // 临时调试基准：当前主显示器为 1280x1024，UI 调整阶段禁止分辨率漂移。
-    // 完成 1280x1024 下的 UI 校准后，再恢复为可选/自适应分辨率。
+    // 临时调试基准：当前主显示器为 1280x1024，UI 调整阶段禁止桌面窗口管理器
+    // 改变 viewport。使用真正全屏，避免顶栏/边框把客户区压成 1276x994。
     public static readonly Vector2I FixedDebugGameSize = new(1280, 1024);
     private static bool _loaded;
     private static bool _windowArgsApplied;
@@ -195,6 +195,9 @@ public static class ClientSettings
         // 当前阶段固定使用主显示器原生尺寸，避免旧 ini 中的 1920x1080
         // 让窗口被裁剪/缩放，干扰 UI 校准。
         GameSize = FixedDebugGameSize;
+        FullScreen = true;
+        Borderless = true;
+        DefaultMonitor = 0;
         DefaultMonitor = Read(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         RenderingPipeline = Read(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
         SmoothMove = Read(file, "Graphics", nameof(SmoothMove), SmoothMove);
@@ -323,8 +326,8 @@ public static class ClientSettings
         // 通过 GameSize 真正调整窗口，不能每次 Apply 都重写用户刚选的尺寸。
         if (AutoLoginArgs.Window)
         {
-            FullScreen = false;
-            Borderless = false;
+            FullScreen = true;
+            Borderless = true;
             if (!_windowArgsApplied)
             {
                 // UI 校准期间无论是否传入 --window=WxH，都固定到当前基准。
@@ -341,15 +344,10 @@ public static class ClientSettings
         if (DefaultMonitor >= 0 && DefaultMonitor < DisplayServer.GetScreenCount())
             DisplayServer.WindowSetCurrentScreen(DefaultMonitor);
 
-        if (FullScreen)
-            DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
-        else
-        {
-            DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-            var targetSize = FixedDebugGameSize;
-            GameSize = targetSize;
-            DisplayServer.WindowSetSize(targetSize);
-        }
+        // UI 校准阶段固定使用主显示器原生全屏，避免 Hyprland 工作区/顶栏
+        // 改变客户区大小。窗口尺寸仍保留为 1280x1024 作为 viewport 基准。
+        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
+        GameSize = FixedDebugGameSize;
 
         Engine.MaxFps = LimitFPS ? 60 : 0;
         Input.MouseMode = ClipMouse ? Input.MouseModeEnum.Confined : Input.MouseModeEnum.Visible;

@@ -4,7 +4,7 @@
 
 ## 当前约定
 
-当前主显示器为 `1280×1024`。在 UI 全面校准完成前，Godot 客户端暂时把窗口和 UI 实机验证分辨率固定为：
+当前主显示器为 `1280×1024`。在 UI 全面校准完成前，Godot 客户端暂时使用主显示器原生全屏，UI 实机验证分辨率固定为：
 
 ```text
 1280×1024
@@ -15,11 +15,11 @@
 - `GodotClient/Scripts/ClientSettings.cs`：`FixedDebugGameSize`
 - `GodotClient/Controls/ConfigDialog.cs`：分辨率下拉暂时只显示 `1280 x 1024`
 
-即使用户配置文件 `user://Zircon.ini` 里残留 `1920×1080`，启动时也会覆盖为 `1280×1024`；启动参数 `--window=WxH` 在这个阶段同样不会改变校准基准。这样可以避免窗口超出 `1280×1024` 主显示器后被桌面裁剪或缩放，影响 UI 位置和文字清晰度判断。
+即使用户配置文件 `user://Zircon.ini` 里残留其它值，启动时也会覆盖为主显示器 `1280×1024` 全屏；启动参数 `--window=WxH` 在这个阶段同样不会改变校准基准。这样可以避免窗口被桌面顶栏、边框或 Hyprland 工作区压缩后再缩放，影响 UI 位置和文字清晰度判断。
 
 ## 解除条件
 
-完成以下工作后再解除固定：
+完成以下工作后再解除固定全屏锁定：
 
 1. 在 `1280×1024` 下完成主界面、背包、角色、设置、菜单、快捷栏和小地图的布局校准。
 2. 实机确认文字基线、贴图边缘、窗口边界和鼠标命中区域没有缩放偏差。
@@ -32,3 +32,7 @@
 ```bash
 dotnet build GodotClient/ZirconClient.csproj --no-incremental
 ```
+
+在本机 Hyprland 环境下，推荐通过 `/home/tetsuya/mir3ei/login_game.sh` 或
+`start.sh` 启动。脚本会等待 `ZirconClient` 窗口创建完成，将它移动到第一个显示器，
+然后执行全屏；非 Hyprland 环境保持原来的前台启动流程。

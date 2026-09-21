@@ -169,12 +169,14 @@ public partial class ConfigDialog : DXWindow
     private void BuildGraphicsPage()
     {
         var display = new ConfigSectionPanel("显示", 7);
-        display.AddOption("全屏显示", Check("全屏显示", ClientSettings.FullScreen, value =>
+        var fullScreen = Check("全屏显示", true, value =>
         {
             ClientSettings.FullScreen = value;
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
-        }));
+        });
+        fullScreen.Enabled = false;
+        display.AddOption("全屏显示", fullScreen);
         display.AddOption("无边框窗口", Check("无边框窗口", ClientSettings.Borderless, value =>
         {
             ClientSettings.Borderless = value;

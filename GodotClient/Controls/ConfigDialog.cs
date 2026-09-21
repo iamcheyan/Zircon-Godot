@@ -169,7 +169,7 @@ public partial class ConfigDialog : DXWindow
     private void BuildGraphicsPage()
     {
         var display = new ConfigSectionPanel("显示", 7);
-        var fullScreen = Check("全屏显示", true, value =>
+        var fullScreen = Check("全屏显示", false, value =>
         {
             ClientSettings.FullScreen = value;
             ClientSettings.Save();
@@ -177,12 +177,14 @@ public partial class ConfigDialog : DXWindow
         });
         fullScreen.Enabled = false;
         display.AddOption("全屏显示", fullScreen);
-        display.AddOption("无边框窗口", Check("无边框窗口", ClientSettings.Borderless, value =>
+        var borderless = Check("无边框窗口", false, value =>
         {
             ClientSettings.Borderless = value;
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
-        }));
+        });
+        borderless.Enabled = false;
+        display.AddOption("无边框窗口", borderless);
 
         var pipeline = new ConfigSelect();
         pipeline.AddItem("Forward Plus");
@@ -191,7 +193,7 @@ public partial class ConfigDialog : DXWindow
 
         var resolution = new ConfigSelect();
         // 档位 = 常用分辨率 + 当前窗口尺寸（去重排序），保证当前值总能匹配显示
-        // UI 校准阶段固定为主显示器原生 1280x1024；完成校准后再恢复多档分辨率。
+        // UI 校准阶段固定为原版设计基准 1024x768；完成校准后再恢复多档分辨率。
         var resolutions = new List<Vector2I> { ClientSettings.FixedDebugGameSize };
         var current = ClientSettings.FixedDebugGameSize;
         foreach (var size in resolutions)

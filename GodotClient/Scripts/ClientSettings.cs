@@ -7,9 +7,8 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
-    // 临时调试基准：当前主显示器为 1280x1024，UI 调整阶段禁止桌面窗口管理器
-    // 改变 viewport。使用真正全屏，避免顶栏/边框把客户区压成 1276x994。
-    public static readonly Vector2I FixedDebugGameSize = new(1280, 1024);
+    // 临时调试基准：使用原版设计画布，不做任何显示器放大或缩放。
+    public static readonly Vector2I FixedDebugGameSize = new(1024, 768);
     private static bool _loaded;
     private static bool _windowArgsApplied;
 
@@ -195,8 +194,8 @@ public static class ClientSettings
         // 当前阶段固定使用主显示器原生尺寸，避免旧 ini 中的 1920x1080
         // 让窗口被裁剪/缩放，干扰 UI 校准。
         GameSize = FixedDebugGameSize;
-        FullScreen = true;
-        Borderless = true;
+        FullScreen = false;
+        Borderless = false;
         DefaultMonitor = 0;
         DefaultMonitor = Read(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         RenderingPipeline = Read(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
@@ -326,8 +325,8 @@ public static class ClientSettings
         // 通过 GameSize 真正调整窗口，不能每次 Apply 都重写用户刚选的尺寸。
         if (AutoLoginArgs.Window)
         {
-            FullScreen = true;
-            Borderless = true;
+            FullScreen = false;
+            Borderless = false;
             if (!_windowArgsApplied)
             {
                 // UI 校准期间无论是否传入 --window=WxH，都固定到当前基准。
@@ -344,10 +343,10 @@ public static class ClientSettings
         if (DefaultMonitor >= 0 && DefaultMonitor < DisplayServer.GetScreenCount())
             DisplayServer.WindowSetCurrentScreen(DefaultMonitor);
 
-        // UI 校准阶段固定使用主显示器原生全屏，避免 Hyprland 工作区/顶栏
-        // 改变客户区大小。窗口尺寸仍保留为 1280x1024 作为 viewport 基准。
-        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
+        // UI 校准阶段固定使用原版设计窗口，不让桌面或显示器对画面做二次放大。
+        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
         GameSize = FixedDebugGameSize;
+        DisplayServer.WindowSetSize(FixedDebugGameSize);
 
         Engine.MaxFps = LimitFPS ? 60 : 0;
         Input.MouseMode = ClipMouse ? Input.MouseModeEnum.Confined : Input.MouseModeEnum.Visible;

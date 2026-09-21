@@ -193,7 +193,7 @@ public partial class ConfigDialog : DXWindow
 
         var resolution = new ConfigSelect();
         // 档位 = 常用分辨率 + 当前窗口尺寸（去重排序），保证当前值总能匹配显示
-        // 方案一：直接使用原版设计基准 1024x768，不在 Godot 内做整数倍放大。
+        // 当前测试：逻辑设计基准 1024x768，实际窗口为整数 2 倍。
         var resolutions = new List<Vector2I> { ClientSettings.FixedDebugGameSize };
         var current = ClientSettings.FixedDebugGameSize;
         foreach (var size in resolutions)

@@ -7,9 +7,10 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
-    // 方案一临时调试基准：直接使用原版 1024x768 设计画布和窗口。
-    // 由桌面/窗口管理器负责外部缩放，不在 Godot 内做整数倍放大。
-    public static readonly Vector2I FixedDebugGameSize = new(1024, 768);
+    // 当前测试：逻辑画布 1024x768，实际窗口使用整数 2 倍。
+    // 字体和 UI 先按逻辑像素绘制，再由 Godot 以整数倍显示。
+    public static readonly Vector2I FixedDebugLogicalSize = new(1024, 768);
+    public static readonly Vector2I FixedDebugGameSize = new(2048, 1536);
     private const string WindowTitle = "ZirconClient";
     private static bool _loaded;
     private static bool _windowArgsApplied;

@@ -921,6 +921,8 @@ public partial class GameScene : Control
 
     public override void _Ready()
     {
+        // 世界素材保持像素边缘清晰；文字由 DXLabel 单独使用字体绘制。
+        TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         ClientSettings.Load();
         KeyBindManager.Load();
         // Web 编辑器 overlay（UI/ui_overlay.json）：启动加载，之后 CreateHud 布局

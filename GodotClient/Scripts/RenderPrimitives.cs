@@ -128,7 +128,9 @@ internal static class RenderPrimitives
         if (string.IsNullOrWhiteSpace(text)) return;
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
         if (font == null) return;
-        int drawSize = MirSkin.ScaledSize(size);
+        // 世界对象不挂在 UI 缩放层；这里不能使用 UI 的反向缩放字号，
+        // 否则窗口变大后角色名会被错误缩小。世界名称直接使用固定屏幕字号。
+        int drawSize = MirSkin.PhysicalSize((int)size);
         Vector2 extent = font.GetStringSize(text, HorizontalAlignment.Left, -1, drawSize);
         Vector2 p = baseline - new Vector2(extent.X * 0.5f, 0f);
         canvas.DrawString(font, p + new Vector2(1f, 1f), text,
@@ -144,7 +146,7 @@ internal static class RenderPrimitives
     public static float OriginalNameBaseline(float size = 9f)
     {
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
-        float drawSize = MirSkin.ScaledSize(size);
+        float drawSize = MirSkin.PhysicalSize((int)size);
         float height = font?.GetHeight((int)drawSize) ?? drawSize;
         return -(32f - height) / 2f - 6f + height;
     }

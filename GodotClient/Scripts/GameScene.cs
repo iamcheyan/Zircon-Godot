@@ -1918,7 +1918,21 @@ public partial class GameScene : Control
         switch (action)
         {
             case KeyBindAction.MapMiniWindow:
-                _miniMap.Visible = !_miniMap.Visible;
+                // 原版是三态：显示不透明 -> 半透明 -> 隐藏 -> 显示不透明。
+                if (!_miniMap.Visible)
+                {
+                    _miniMap.ResetTransparencyForKeyBind();
+                    _miniMap.Visible = true;
+                }
+                else if (Mathf.IsEqualApprox(_miniMap.Opacity, 1f))
+                {
+                    _miniMap.ToggleTransparencyForKeyBind();
+                }
+                else
+                {
+                    _miniMap.Visible = false;
+                    _miniMap.ResetTransparencyForKeyBind();
+                }
                 break;
             case KeyBindAction.MapBigWindow:
                 if (_bigMap.Visible) _bigMap.Visible = false;
@@ -1934,8 +1948,7 @@ public partial class GameScene : Control
                 CyclePetMode();
                 break;
             case KeyBindAction.CharacterWindow:
-                _characterDialog?.ShowOwn();
-                WindowManager.Toggle(_characterDialog, _uiLayer);
+                ToggleCharacterWindow();
                 break;
             case KeyBindAction.InventoryWindow:
                 WindowManager.Toggle(_inventoryDialog, _uiLayer);
@@ -1976,6 +1989,7 @@ public partial class GameScene : Control
                 break;
             case KeyBindAction.BlockListWindow:
                 WindowManager.Toggle(_communicationDialog, _uiLayer);
+                if (_communicationDialog.Visible) _communicationDialog.ShowBlockPage();
                 break;
             case KeyBindAction.QuestLogWindow:
                 WindowManager.Toggle(_questDialog, _uiLayer);
@@ -2036,7 +2050,8 @@ public partial class GameScene : Control
                 WindowManager.Toggle(_communicationDialog, _uiLayer);
                 break;
             case KeyBindAction.MailSendWindow:
-                WindowManager.Open(_communicationDialog, _uiLayer);
+                WindowManager.Toggle(_communicationDialog, _uiLayer);
+                if (_communicationDialog.Visible) _communicationDialog.ShowSendPage();
                 break;
             case KeyBindAction.ChatOptionsWindow:
                 WindowManager.Toggle(_chatOptionsDialog, _uiLayer);
@@ -2057,6 +2072,19 @@ public partial class GameScene : Control
                 GD.Print($"[Game] 键位 {action} 尚无对应动作");
                 break;
         }
+    }
+
+    private void ToggleCharacterWindow()
+    {
+        if (_characterDialog == null) return;
+        if (_characterDialog.Visible)
+        {
+            WindowManager.Close(_characterDialog);
+            return;
+        }
+
+        _characterDialog.ShowOwn();
+        WindowManager.Open(_characterDialog, _uiLayer);
     }
 
     private void OnObjectMove(uint objectID, MirDirection dir, System.Drawing.Point loc, int distance,
@@ -4476,8 +4504,7 @@ public partial class GameScene : Control
         // M9: 主面板功能按钮 -> 对话框开关
         _mainPanel.CharacterButton.MouseClick += (o, e) =>
         {
-            _characterDialog.ShowOwn();
-            WindowManager.Toggle(_characterDialog, _uiLayer);
+            ToggleCharacterWindow();
         };
         _mainPanel.InventoryButton.MouseClick += (o, e) => WindowManager.Toggle(_inventoryDialog, _uiLayer);
         _inventoryDialog.WalletButton.MouseClick += (o, e) =>
@@ -9955,7 +9982,7 @@ public partial class GameScene : Control
 
     public override void _Input(InputEvent @event)
     {
-        if (@event is not InputEventKey key || !key.Pressed) return;
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
         if (_net?.Connection?.Connected != true) return;
 
         // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生

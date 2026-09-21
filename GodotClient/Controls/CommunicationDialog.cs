@@ -389,6 +389,9 @@ public partial class CommunicationDialog : DXWindow
         else BuildBlockPage();
     }
 
+    public void ShowBlockPage() => ShowPage(3);
+    public void ShowSendPage() => ShowPage(2);
+
     public void MailSendResult()
     {
         // 服务端顺序是 MailSend -> ItemsChanged。带附件时，首个回包只表示

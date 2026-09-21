@@ -451,6 +451,15 @@ public partial class MiniMapDialog : DXWindow
         ApplyOpacityToMapLayers();
     }
 
+    public void ToggleTransparencyForKeyBind() => ToggleTransparency();
+
+    public void ResetTransparencyForKeyBind()
+    {
+        IsTransparent = false;
+        Opacity = 1F;
+        ApplyOpacityToMapLayers();
+    }
+
     private void ApplyOpacityToMapLayers()
     {
         float opacity = Opacity;

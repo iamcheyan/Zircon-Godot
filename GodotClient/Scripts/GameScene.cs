@@ -1048,7 +1048,8 @@ public partial class GameScene : Control
             SendTurn,
             ClearMagicLock,
             () => _moveFrameCount > 1,
-            GetRunSteps);
+            GetRunSteps,
+            GetTargetRunSteps);
         AddChild(_combatController);
         _combatController.ZIndex = 200;  // 高亮框画在物体之上
         UpdateViewRange();
@@ -7998,6 +7999,19 @@ public partial class GameScene : Control
         int steps = cooldownOk && _canRun && bagOk && wearOk ? 2 : 1;
         if (steps == 1 && IsRunInputHeld())
             GD.Print($"[RunDebug] BLOCKED canRun={_canRun} cooldownOk={cooldownOk} bag={BagWeight}/{_playerStats[Stat.BagWeight]} wear={WearWeight}/{_playerStats[Stat.WearWeight]}");
+        if (steps > 1 && _playerHorse != Library.HorseType.None) steps++;
+        return steps;
+    }
+
+    private int GetTargetRunSteps()
+    {
+        // 点击怪物后的自动追击由目标状态维持，不要求右键继续按住。
+        // 第一段由 CombatController 固定走一格；从第二段开始只检查原版
+        // 跑步条件（冷却、负重、坐骑），否则仍退回一格移动。
+        bool cooldownOk = Godot.Time.GetTicksMsec() >= _runCooldownUntilMs;
+        bool bagOk = BagWeight <= _playerStats[Stat.BagWeight];
+        bool wearOk = WearWeight <= _playerStats[Stat.WearWeight];
+        int steps = cooldownOk && bagOk && wearOk ? 2 : 1;
         if (steps > 1 && _playerHorse != Library.HorseType.None) steps++;
         return steps;
     }

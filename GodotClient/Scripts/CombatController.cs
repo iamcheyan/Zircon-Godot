@@ -64,6 +64,8 @@ public partial class CombatController : Node2D
     private readonly Func<bool> _isPlayerMoving;
     // 目标追击沿用原版的“第一段走、后续可跑”节奏。
     private readonly Func<int> _getRunSteps;
+    // 目标追击不依赖右键是否按住；左键点怪后，第一段走完即可进入跑步。
+    private readonly Func<int> _getTargetRunSteps;
     private bool _targetMoveStarted;
 
     public bool Enabled = true;
@@ -176,7 +178,8 @@ public partial class CombatController : Node2D
         Action<MirDirection> sendTurn = null,
         Action clearMagicLock = null,
         Func<bool> isPlayerMoving = null,
-        Func<int> getRunSteps = null)
+        Func<int> getRunSteps = null,
+        Func<int> getTargetRunSteps = null)
     {
         _mapView = mapView;
         _getObjects = getObjects;
@@ -200,6 +203,7 @@ public partial class CombatController : Node2D
         _clearMagicLock = clearMagicLock;
         _isPlayerMoving = isPlayerMoving;
         _getRunSteps = getRunSteps;
+        _getTargetRunSteps = getTargetRunSteps;
         SetProcessAlways();
     }
 
@@ -312,7 +316,9 @@ public partial class CombatController : Node2D
         // （walk 帧表 Delays 之和）。之前 120ms 的追击节奏相对原版是
         // 5 倍 C.Move 发包量：服务端限速但客户端每次都会重启走动画、
         // 松开鼠标后 DelayedAction 队列还会幽灵走位，必须按 MoveTime 节拍。
-        int distance = _targetMoveStarted ? Math.Max(1, _getRunSteps?.Invoke() ?? 1) : 1;
+        int distance = _targetMoveStarted
+            ? Math.Max(1, _getTargetRunSteps?.Invoke() ?? _getRunSteps?.Invoke() ?? 1)
+            : 1;
         // 追击只能停在目标相邻格，不能把两格跑步请求直接送进目标所在格。
         int targetDistance = Functions.Distance(new System.Drawing.Point(TargetObject.CellX, TargetObject.CellY), playerCell);
         distance = Math.Min(distance, Math.Max(1, targetDistance - 1));

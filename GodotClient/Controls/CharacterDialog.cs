@@ -97,7 +97,11 @@ public partial class CharacterDialog : DXWindow
     {
         // 原版 CharacterDialog 继承 DXImageControl，不绘制通用标题栏。
         HasTitle = false;
-        Movable = true;
+        // 角色面板没有标题栏，且装备格/纸娃娃覆盖了大量区域。
+        // 背景若穿透鼠标，点击空白区会让 DXWindow 进入通用拖动；
+        // 松开时若落在装备格子上，根窗口收不到 MouseUp，就会一直粘住光标。
+        // 角色面板保持固定位置，避免把普通点击误判为窗口拖动。
+        Movable = false;
         Text = Lang.CharacterCharacterTabLabel;
         Size = _inspectMode ? InspectSize : OwnSize;
 
@@ -107,7 +111,7 @@ public partial class CharacterDialog : DXWindow
             Index = 110,
             FixedSize = true,
             Size = Size,
-            MouseFilter = MouseFilterEnum.Ignore,
+            MouseFilter = MouseFilterEnum.Stop,
         };
         AddControl(_background);
 

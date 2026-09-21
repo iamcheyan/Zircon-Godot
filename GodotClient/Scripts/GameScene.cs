@@ -1046,7 +1046,9 @@ public partial class GameScene : Control
             () => _mouseWalker?.AutoRun == true,
             () => _pendingMagicPacket != null,
             SendTurn,
-            ClearMagicLock);
+            ClearMagicLock,
+            () => _moveFrameCount > 1,
+            GetRunSteps);
         AddChild(_combatController);
         _combatController.ZIndex = 200;  // 高亮框画在物体之上
         UpdateViewRange();

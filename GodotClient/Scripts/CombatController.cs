@@ -60,6 +60,11 @@ public partial class CombatController : Node2D
     // 追击被阻挡时的原地转向（原版 AttemptAction(Standing)）。
     private readonly Action<MirDirection> _sendTurn;
     private readonly Action _clearMagicLock;
+    // 预测坐标会在发包时先切到下一格；攻击必须等视觉移动完成，不能只看逻辑格距。
+    private readonly Func<bool> _isPlayerMoving;
+    // 目标追击沿用原版的“第一段走、后续可跑”节奏。
+    private readonly Func<int> _getRunSteps;
+    private bool _targetMoveStarted;
 
     public bool Enabled = true;
 
@@ -140,7 +145,11 @@ public partial class CombatController : Node2D
     /// </summary>
     public void RemoveObjectReference(uint objectId)
     {
-        if (TargetObject?.ObjectID == objectId) TargetObject = null;
+        if (TargetObject?.ObjectID == objectId)
+        {
+            TargetObject = null;
+            _targetMoveStarted = false;
+        }
         if (MouseObject?.ObjectID == objectId) MouseObject = null;
         _nextAttackMs = 0;
         QueueRedraw();
@@ -165,7 +174,9 @@ public partial class CombatController : Node2D
         Func<bool> isAutoRun = null,
         Func<bool> isMagicPending = null,
         Action<MirDirection> sendTurn = null,
-        Action clearMagicLock = null)
+        Action clearMagicLock = null,
+        Func<bool> isPlayerMoving = null,
+        Func<int> getRunSteps = null)
     {
         _mapView = mapView;
         _getObjects = getObjects;
@@ -187,6 +198,8 @@ public partial class CombatController : Node2D
         _isMagicPending = isMagicPending;
         _sendTurn = sendTurn;
         _clearMagicLock = clearMagicLock;
+        _isPlayerMoving = isPlayerMoving;
+        _getRunSteps = getRunSteps;
         SetProcessAlways();
     }
 
@@ -221,6 +234,7 @@ public partial class CombatController : Node2D
                 || shift)
             && Functions.Distance(new System.Drawing.Point(TargetObject.CellX, TargetObject.CellY),
                 playerCell) == 1
+            && _isPlayerMoving?.Invoke() != true
             && now >= _nextAttackMs && _isMounted?.Invoke() != true)
         {
             _sendAttack(Functions.DirectionFromPoint(playerCell,
@@ -256,6 +270,7 @@ public partial class CombatController : Node2D
         if (TargetObject == null || !IsInstanceValid(TargetObject))
         {
             TargetObject = null;
+            _targetMoveStarted = false;
             return;
         }
         // D15：目标死亡保留选中（尸体高亮），等 ObjectRemove / 自身死亡 /
@@ -297,7 +312,16 @@ public partial class CombatController : Node2D
         // （walk 帧表 Delays 之和）。之前 120ms 的追击节奏相对原版是
         // 5 倍 C.Move 发包量：服务端限速但客户端每次都会重启走动画、
         // 松开鼠标后 DelayedAction 队列还会幽灵走位，必须按 MoveTime 节拍。
-        _sendMove?.Invoke(dir, 1);
+        int distance = _targetMoveStarted ? Math.Max(1, _getRunSteps?.Invoke() ?? 1) : 1;
+        // 追击只能停在目标相邻格，不能把两格跑步请求直接送进目标所在格。
+        int targetDistance = Functions.Distance(new System.Drawing.Point(TargetObject.CellX, TargetObject.CellY), playerCell);
+        distance = Math.Min(distance, Math.Max(1, targetDistance - 1));
+        // A multi-cell request is only valid when every intermediate cell is clear.
+        // If the run segment is blocked, fall back to the original one-cell chase.
+        if (distance > 1 && !CanMoveDistance(playerCell, dir, distance))
+            distance = 1;
+        _sendMove?.Invoke(dir, distance);
+        _targetMoveStarted = true;
         _nextAttackMs = now + Globals.MoveTime.TotalMilliseconds;
     }
 
@@ -350,6 +374,8 @@ public partial class CombatController : Node2D
                     QueueRedraw();
                     return;
                 }
+                if (TargetObject != hit)
+                    _targetMoveStarted = false;
                 TargetObject = hit;
                 GD.Print($"[Combat] 选中目标: {hit.DisplayName} ObjectID={hit.ObjectID}");
 
@@ -393,6 +419,7 @@ public partial class CombatController : Node2D
                     && TargetObject?.Type == ObjectRenderer.Kind.Monster)
                 {
                     TargetObject = null;
+                    _targetMoveStarted = false;
                     _clearMagicLock?.Invoke();
                 }
             }
@@ -440,6 +467,17 @@ public partial class CombatController : Node2D
             return false;
         return !_mapView.Map.Cells[next.X, next.Y].Flag
             && !(_cellBlocked?.Invoke(next.X, next.Y) ?? false);
+    }
+
+    private bool CanMoveDistance(System.Drawing.Point from, MirDirection direction, int distance)
+    {
+        var current = from;
+        for (int i = 0; i < distance; i++)
+        {
+            if (!CanStep(current, direction)) return false;
+            current = Functions.Move(current, direction, 1);
+        }
+        return true;
     }
 
     /// <summary>鼠标位置下方最近的可点物体 (怪物/NPC/物品), 1 格内才算命中。</summary>

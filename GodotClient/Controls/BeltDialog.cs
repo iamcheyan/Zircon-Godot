@@ -83,7 +83,10 @@ public partial class BeltDialog : DXWindow
             Location = new Vector2I(9, 6),
             GridType = GridType.Belt,
             GridPadding = 0,
-            Border = false,
+            BackColour = new Color(0.094f, 0.047f, 0.047f, 1f),
+            Border = true,
+            BorderColour = new Color(0.39f, 0.325f, 0.196f, 1f),
+            ShowCellDividers = true,
         };
         AddControl(Grid);
         RefreshGridLayout();

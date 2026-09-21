@@ -96,6 +96,8 @@ public partial class DXItemGrid : DXControl
         }
     }
     public bool Linked;
+    /// <summary>原版腰带网格的固定槽位分隔线。</summary>
+    public bool ShowCellDividers;
     public bool AllowLink;
     private bool _readOnly;
     public bool ReadOnly
@@ -197,6 +199,20 @@ public partial class DXItemGrid : DXControl
         foreach (var cell in Cells)
         {
             cell?.RefreshItem();
+        }
+    }
+
+    public override void _Draw()
+    {
+        base._Draw();
+        if (!ShowCellDividers || Cells == null || GridSize.X <= 1) return;
+
+        float step = DXItemCell.CellWidth - 1 + (GridPadding * 2);
+        var colour = new Color(0.39f, 0.325f, 0.196f, 0.95f);
+        for (int x = 1; x < GridSize.X; x++)
+        {
+            float lineX = x * step;
+            DrawLine(new Vector2(lineX, 1), new Vector2(lineX, Size.Y - 2), colour, 1f);
         }
     }
 }

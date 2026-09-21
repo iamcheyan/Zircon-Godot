@@ -10,6 +10,7 @@ public static class ClientSettings
     // 方案一临时调试基准：直接使用原版 1024x768 设计画布和窗口。
     // 由桌面/窗口管理器负责外部缩放，不在 Godot 内做整数倍放大。
     public static readonly Vector2I FixedDebugGameSize = new(1024, 768);
+    private const string WindowTitle = "ZirconClient";
     private static bool _loaded;
     private static bool _windowArgsApplied;
 
@@ -348,9 +349,18 @@ public static class ClientSettings
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
         GameSize = FixedDebugGameSize;
         DisplayServer.WindowSetSize(FixedDebugGameSize);
+        UpdateWindowTitle();
 
         Engine.MaxFps = LimitFPS ? 60 : 0;
         Input.MouseMode = ClipMouse ? Input.MouseModeEnum.Confined : Input.MouseModeEnum.Visible;
+    }
+
+    /// <summary>在系统标题栏显示当前窗口的实际像素尺寸，便于调试缩放。</summary>
+    public static void UpdateWindowTitle()
+    {
+        if (DisplayServer.GetName() == "headless") return;
+        Vector2I size = DisplayServer.WindowGetSize();
+        DisplayServer.WindowSetTitle($"{WindowTitle} - {size.X}x{size.Y}");
     }
 
     private static void LoadColours(ConfigFile file)

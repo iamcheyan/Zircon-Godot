@@ -927,6 +927,8 @@ public partial class GameScene : Control
         // 完成、每个窗口 _Ready（deferred）和 F12 热重载时应用。
         UiOverlay.Load();
         ClientSettings.ApplyDisplaySettings();
+        ClientSettings.UpdateWindowTitle();
+        GetViewport().SizeChanged += ClientSettings.UpdateWindowTitle;
         ClientSettings.ApplyAudioSettings();
         SoundPlayback.Stop(SoundIndex.LoginScene);
         SoundPlayback.Stop(SoundIndex.SelectScene);

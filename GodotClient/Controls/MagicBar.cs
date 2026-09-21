@@ -10,6 +10,8 @@ using ZirconClient.Scripts;
 /// <summary>原版 MagicBarDialog 的 Godot 绘制：12 列、最多 24 槽、按学校显示边框。</summary>
 public partial class MagicBar : Control
 {
+    private const float ChromeX = 9f;
+    private const float ChromeY = 6f;
     private const int IconSize = 36;
     private const int IconsPerRow = 12;
     private const int GroupSpacing = 5;
@@ -96,6 +98,11 @@ public partial class MagicBar : Control
     {
         if (_game == null) return;
 
+        // MagicBarDialog 原版继承 DXWindow；边框/底色由窗口统一绘制，
+        // 不是技能格自己负责。Godot 之前只绘制了格子，导致整条栏像悬浮
+        // 在地图上的黑影。
+        DXWindow.DrawWindowChrome(this, Size);
+
         var slots = GetSlotsForSet(_game.MagicBarSpellSet);
         _setLabel.Text = _game.MagicBarSpellSet.ToString();
         // 原版 MagicBarDialog 始终显示第一排 12 个槽位；只有
@@ -118,8 +125,8 @@ public partial class MagicBar : Control
             int frameWidth = frames ? 48 : 36;
             int column = i % IconsPerRow;
             int row = i / IconsPerRow;
-            float x = column * slotSpacing + (column / 4) * GroupSpacing;
-            float y = row * (slotSpacing + 5);
+            float x = ChromeX + column * slotSpacing + (column / 4) * GroupSpacing;
+            float y = ChromeY + row * (slotSpacing + 5);
             var magic = slots[i];
 
             if (magic == null)
@@ -243,8 +250,8 @@ public partial class MagicBar : Control
         {
             int column = i % IconsPerRow;
             int row = i / IconsPerRow;
-            float x = column * slotSpacing + (column / 4) * GroupSpacing;
-            float y = row * (slotSpacing + 5);
+            float x = ChromeX + column * slotSpacing + (column / 4) * GroupSpacing;
+            float y = ChromeY + row * (slotSpacing + 5);
             if (slots[i] != null && new Rect2(x, y, slotSize, slotSize).HasPoint(local))
             {
                 _game.UseMagicSlot(i);
@@ -349,8 +356,8 @@ public partial class MagicBar : Control
             Mathf.Clamp(Position.Y, 0, Mathf.Max(0, logicalViewport.Y - Size.Y)));
     }
 
-    private float BarWidth() => (_game?.ShowMagicBarFrames == false ? 37 : 49) * IconsPerRow + 15 + 20;
+    private float BarWidth() => (_game?.ShowMagicBarFrames == false ? 37 : 49) * IconsPerRow + 15 + 20 + 18;
     private float BarHeight(int rows) => _game?.ShowMagicBarFrames == false
-        ? (rows == 2 ? 37 * 2 + 5 : 37)
-        : (rows == 2 ? 46 * 2 + 5 + 3 : 46);
+        ? (rows == 2 ? 37 * 2 + 5 : 37) + 12
+        : (rows == 2 ? 46 * 2 + 5 + 3 : 46) + 12;
 }

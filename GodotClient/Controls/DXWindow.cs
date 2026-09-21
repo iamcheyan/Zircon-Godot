@@ -153,7 +153,69 @@ public abstract partial class DXWindow : DXControl
             };
             DrawStyleBox(_shadowStyle, new Rect2(Vector2.Zero, Size));
         }
+        DrawWindowChrome(this, Size, HasTopBorder, HasTitle, HasFooter, SlimFooter);
         base._Draw();
+    }
+
+    /// <summary>
+    /// 原版 DXWindow.DrawEdges 的 Godot 绘制。旧客户端的窗口底色和金色边框
+    /// 不是各个窗口自己补的，而是 DXWindow 在子控件之前统一合成；遗漏这层
+    /// 会让无标题窗口（腰带、技能栏）只剩黑色阴影。
+    /// </summary>
+    public static void DrawWindowChrome(CanvasItem canvas, Vector2 size,
+        bool hasTopBorder = false, bool hasTitle = false, bool hasFooter = false,
+        bool slimFooter = false)
+    {
+        if (canvas == null || size.X <= 0 || size.Y <= 0) return;
+
+        canvas.DrawRect(new Rect2(Vector2.Zero, size), new Color(0.063f, 0.031f, 0.031f, 0.98f));
+
+        void DrawStretch(int index, float x, float y, float width, float height)
+        {
+            var texture = MirSkin.GetTexture(LibraryFile.Interface, index);
+            if (texture == null || width <= 0 || height <= 0) return;
+            canvas.DrawTextureRect(texture, new Rect2(x, y, width, height), false);
+        }
+
+        var topTexture = MirSkin.GetTexture(LibraryFile.Interface, hasTopBorder ? 0 : 2);
+        var sideTexture = MirSkin.GetTexture(LibraryFile.Interface, 1);
+        if (topTexture != null)
+            DrawStretch(hasTopBorder ? 0 : 2, 0, 0, size.X, topTexture.GetHeight());
+
+        float topHeight = topTexture?.GetHeight() ?? 0;
+        if (sideTexture != null)
+        {
+            DrawStretch(1, 0, topHeight, sideTexture.GetWidth(), size.Y - topHeight);
+            DrawStretch(1, size.X - sideTexture.GetWidth(), topHeight,
+                sideTexture.GetWidth(), size.Y - topHeight);
+        }
+
+        int leftCorner = hasTopBorder ? 11 : 25;
+        int rightCorner = hasTopBorder ? 12 : 26;
+        var leftTop = MirSkin.GetTexture(LibraryFile.Interface, leftCorner);
+        var rightTop = MirSkin.GetTexture(LibraryFile.Interface, rightCorner);
+        if (leftTop != null) canvas.DrawTexture(leftTop, Vector2.Zero);
+        if (rightTop != null) canvas.DrawTexture(rightTop, new Vector2(size.X - rightTop.GetWidth(), 0));
+
+        if (!hasFooter)
+        {
+            int bottom = slimFooter ? 126 : 2;
+            var bottomTexture = MirSkin.GetTexture(LibraryFile.Interface, bottom);
+            if (bottomTexture != null)
+                DrawStretch(bottom, 0, size.Y - bottomTexture.GetHeight(), size.X, bottomTexture.GetHeight());
+
+            var leftBottom = MirSkin.GetTexture(LibraryFile.Interface, slimFooter ? 8 : 8);
+            var rightBottom = MirSkin.GetTexture(LibraryFile.Interface, slimFooter ? 9 : 9);
+            if (leftBottom != null) canvas.DrawTexture(leftBottom, new Vector2(0, size.Y - leftBottom.GetHeight()));
+            if (rightBottom != null) canvas.DrawTexture(rightBottom,
+                new Vector2(size.X - rightBottom.GetWidth(), size.Y - rightBottom.GetHeight()));
+        }
+        else
+        {
+            var footer = MirSkin.GetTexture(LibraryFile.Interface, 126);
+            if (footer != null)
+                DrawStretch(126, 0, size.Y - footer.GetHeight(), size.X, footer.GetHeight());
+        }
     }
 
     public new string Text

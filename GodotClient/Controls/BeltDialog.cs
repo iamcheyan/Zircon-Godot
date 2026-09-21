@@ -15,7 +15,11 @@ public partial class BeltDialog : DXWindow
 {
     public ClientBeltLink[] Links;
     public DXItemGrid Grid;
+    private DXControl _dragHandle;
     private bool _resizing;
+    private bool _draggingHandle;
+    private Vector2 _dragStartMouse;
+    private Vector2 _dragStartPosition;
 
     /// <summary>玩家是否拖动过腰带栏; LayoutHud 不能覆盖已自定义的位置。</summary>
     public bool UserMoved { get; private set; }
@@ -27,7 +31,29 @@ public partial class BeltDialog : DXWindow
         HasFooter = false;
         HasTopBorder = false;
         ShowCloseButton = false;
-        Size = new Vector2I(10 * (DXItemCell.CellWidth - 1) + 1, DXItemCell.CellHeight - 1 + 1);
+        Size = new Vector2I(10 * (DXItemCell.CellWidth - 1) + 19, DXItemCell.CellHeight - 1 + 13);
+
+        // HasTitle=false 的 DXWindow 没有可拖拽标题栏；专用手柄不覆盖任何格子，
+        // 并把移动操作转发到窗口本身。
+        _dragHandle = new DXControl
+        {
+            Name = "BeltDragHandle",
+            Location = Vector2I.Zero,
+            Size = new Vector2(Size.X, 6),
+            IsControl = true,
+            BackColour = Colors.Transparent,
+            ZIndex = 20,
+        };
+        _dragHandle.MouseDown += (_, _) =>
+        {
+            _draggingHandle = true;
+            _dragStartMouse = GetViewport().GetMousePosition() / GameScene.UiScale;
+            _dragStartPosition = Position;
+            UserMoved = true;
+        };
+        _dragHandle.MouseUp += (_, _) => FinishHandleDrag();
+        _dragHandle.MouseMove += (_, _) => ApplyHandleDrag();
+        AddControl(_dragHandle);
 
         // 恢复上一次拖动后的位置; (-1,-1) 表示首次使用, 由 LayoutHud 给默认锚点。
         Vector2I saved = ClientSettings.BeltDialogLocation;
@@ -54,7 +80,7 @@ public partial class BeltDialog : DXWindow
         Grid = new DXItemGrid
         {
             GridSize = new Vector2I(10, 1),
-            Location = Vector2I.Zero,
+            Location = new Vector2I(9, 6),
             GridType = GridType.Belt,
             GridPadding = 0,
             Border = false,
@@ -68,6 +94,32 @@ public partial class BeltDialog : DXWindow
         base._Ready();
         Resized += OnResized;
         RefreshGridLayout();
+    }
+
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        if (_draggingHandle && !Input.IsMouseButtonPressed(MouseButton.Left))
+            FinishHandleDrag();
+    }
+
+    private void ApplyHandleDrag()
+    {
+        if (!_draggingHandle) return;
+        Vector2 mouse = GetViewport().GetMousePosition() / GameScene.UiScale;
+        Vector2 target = _dragStartPosition + mouse - _dragStartMouse;
+        Vector2 viewport = GetViewportRect().Size / GameScene.UiScale;
+        Position = new Vector2(
+            Mathf.Clamp(target.X, 0, Mathf.Max(0, viewport.X - Size.X)),
+            Mathf.Clamp(target.Y, 0, Mathf.Max(0, viewport.Y - Size.Y)));
+    }
+
+    private void FinishHandleDrag()
+    {
+        if (!_draggingHandle) return;
+        _draggingHandle = false;
+        ClientSettings.BeltDialogLocation = new Vector2I((int)Position.X, (int)Position.Y);
+        ClientSettings.Save();
     }
 
     private void OnResized() => RefreshGridLayout();
@@ -85,26 +137,29 @@ public partial class BeltDialog : DXWindow
     {
         int width = Math.Max(1, (int)requested.X);
         int height = Math.Max(1, (int)requested.Y);
-        int columns = Math.Max(1, Math.Min(Globals.MaxBeltCount, (int)Math.Ceiling((width - 10) / (double)DXItemCell.CellWidth)));
-        int rows = Math.Max(1, Math.Min(Globals.MaxBeltCount, (int)Math.Ceiling((height - 10) / (double)DXItemCell.CellHeight)));
+        int columns = Math.Max(1, Math.Min(Globals.MaxBeltCount, (int)Math.Ceiling((width - 28) / (double)DXItemCell.CellWidth)));
+        int rows = Math.Max(1, Math.Min(Globals.MaxBeltCount, (int)Math.Ceiling((height - 22) / (double)DXItemCell.CellHeight)));
 
         if (height > width)
             columns = 1;
         else
             rows = 1;
 
-        return new Vector2I(columns * (DXItemCell.CellWidth - 1) + 1,
-            rows * (DXItemCell.CellHeight - 1) + 1);
+        return new Vector2I(columns * (DXItemCell.CellWidth - 1) + 19,
+            rows * (DXItemCell.CellHeight - 1) + 13);
     }
 
     private void RefreshGridLayout()
     {
         if (Grid == null) return;
 
+        if (_dragHandle != null) _dragHandle.Size = new Vector2(Size.X, 6);
+        Grid.Location = new Vector2I(9, 6);
+
         int columns = Math.Max(1, Math.Min(Globals.MaxBeltCount,
-            (int)Math.Ceiling((Size.X - 10) / (double)DXItemCell.CellWidth)));
+            (int)Math.Ceiling((Size.X - 28) / (double)DXItemCell.CellWidth)));
         int rows = Math.Max(1, Math.Min(Globals.MaxBeltCount,
-            (int)Math.Ceiling((Size.Y - 10) / (double)DXItemCell.CellHeight)));
+            (int)Math.Ceiling((Size.Y - 22) / (double)DXItemCell.CellHeight)));
         if (Size.Y > Size.X) columns = 1;
         else rows = 1;
 

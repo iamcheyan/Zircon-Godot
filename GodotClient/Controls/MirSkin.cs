@@ -221,18 +221,19 @@ public static class MirSkin
     }
 
     /// <summary>
-    /// 全局字体缩放系数。旧版字号单位是 pt（96dpi 下 8pt ≈ 10.67px），
-    /// 新版是逻辑像素，直接沿用旧数值会小 ~25%；本系数把逻辑像素字号
-    /// 放大到与旧版视觉一致，并允许用户按 DPI/分辨率微调。
-    /// 与 UiScale 独立：UiScale 缩放整个 _uiLayer（含字体），这里只负责
-    /// 「基准字号本身」的适配，两者相乘才是最终屏幕字号。
+    /// 像素字体只使用稳定的字号档位。原版字号很多是 8/9/10/11/13，
+    /// 若继续乘 4/3 会得到 11/12/13/15/17，Fusion Pixel 的 12px 字形
+    /// 就会被重新栅格化，出现灰边和模糊。当前把常规 UI 统一落到 12px，
+    /// 大标题使用 16px；文字测量和实际绘制共用此映射。
     /// </summary>
-    public static float FontScale = 4f / 3f;
+    public static int ScaledSize(int size)
+    {
+        if (size <= 13) return 12;
+        if (size <= 18) return 16;
+        return 24;
+    }
 
-    /// <summary>应用全局缩放后的实际绘制字号（取整，保证布局测量一致）。</summary>
-    public static int ScaledSize(int size) => Mathf.Max(1, Mathf.RoundToInt(size * FontScale));
-
-    public static int ScaledSize(float size) => Mathf.Max(1, Mathf.RoundToInt(size * FontScale));
+    public static int ScaledSize(float size) => ScaledSize(Mathf.RoundToInt(size));
 
 
     public static Vector2 MeasureText(string text, int fontSize)

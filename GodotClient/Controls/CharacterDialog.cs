@@ -42,6 +42,9 @@ public partial class CharacterDialog : DXWindow
     private readonly List<DXImageControl> _disciplineMagicIcons = new();
     private readonly ClientUserItem[] _inspectItems = new ClientUserItem[17];
     private bool _inspectMode;
+    private bool _draggingBackground;
+    private Vector2 _dragStartMouse;
+    private Vector2 _dragStartPosition;
     private string _partnerName = string.Empty;
     private string _ownPartnerName = string.Empty;
     private int _inspectGuildFlag = -1;
@@ -97,10 +100,9 @@ public partial class CharacterDialog : DXWindow
     {
         // 原版 CharacterDialog 继承 DXImageControl，不绘制通用标题栏。
         HasTitle = false;
-        // 角色面板没有标题栏，且装备格/纸娃娃覆盖了大量区域。
-        // 背景若穿透鼠标，点击空白区会让 DXWindow 进入通用拖动；
-        // 松开时若落在装备格子上，根窗口收不到 MouseUp，就会一直粘住光标。
-        // 角色面板保持固定位置，避免把普通点击误判为窗口拖动。
+        // 角色面板没有标题栏，不能使用 DXWindow 的通用拖动：装备格拦截
+        // MouseUp 时根窗口可能收不到释放事件。拖动由背景控件显式转发到
+        // 窗口，空白区仍可拖动，子控件的点击不会误移动整个面板。
         Movable = false;
         Text = Lang.CharacterCharacterTabLabel;
         Size = _inspectMode ? InspectSize : OwnSize;
@@ -113,6 +115,9 @@ public partial class CharacterDialog : DXWindow
             Size = Size,
             MouseFilter = MouseFilterEnum.Stop,
         };
+        _background.MouseDown += (_, _) => BeginBackgroundDrag();
+        _background.MouseMove += (_, _) => ApplyBackgroundDrag();
+        _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
 
         // 人物纸娃娃 (原版 (130,270) 相对 CharacterTab (Y=45), 绝对 Y=315)
@@ -659,6 +664,10 @@ public partial class CharacterDialog : DXWindow
 
     public override void _Process(double delta)
     {
+        if (_draggingBackground)
+            ApplyBackgroundDrag();
+        if (_draggingBackground && !Input.IsMouseButtonPressed(MouseButton.Left))
+            FinishBackgroundDrag();
         if (_inspectMode) return;
         var info = GameScene.Game?.StartInfo;
         if (info == null) return;
@@ -670,6 +679,30 @@ public partial class CharacterDialog : DXWindow
         foreach (var entry in _attributeValues)
             entry.Label.Text = stats[entry.Stat].ToString();
         RefreshStatsPanel();
+    }
+
+    private void BeginBackgroundDrag()
+    {
+        _draggingBackground = true;
+        _dragStartMouse = GetViewport().GetMousePosition() / GameScene.UiScale;
+        _dragStartPosition = Position;
+        WindowManager.BringToFront(this);
+    }
+
+    private void ApplyBackgroundDrag()
+    {
+        if (!_draggingBackground) return;
+        Vector2 mouse = GetViewport().GetMousePosition() / GameScene.UiScale;
+        Vector2 target = _dragStartPosition + mouse - _dragStartMouse;
+        Vector2 viewport = GetViewportRect().Size / GameScene.UiScale;
+        Position = new Vector2(
+            Mathf.Clamp(target.X, 0, Mathf.Max(0, viewport.X - Size.X)),
+            Mathf.Clamp(target.Y, 0, Mathf.Max(0, viewport.Y - Size.Y)));
+    }
+
+    private void FinishBackgroundDrag()
+    {
+        _draggingBackground = false;
     }
 
     private void DrawSlotBackground(DXItemCell cell, int index)

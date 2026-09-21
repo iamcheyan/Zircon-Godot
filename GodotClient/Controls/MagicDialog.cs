@@ -483,14 +483,16 @@ public partial class MagicCellView : DXControl
         if (tex != null)
             DrawTextureRect(tex, new Rect2(9, 9, 36, 36), false, new Color(1f, 1f, 1f, opacity));
 
-        // 名称
-        DrawString(MirSkin.GetFont(), new Vector2(54, 18), _info.Local() ?? "", fontSize: MirSkin.ScaledSize(13),
-            modulate: new Color(1f, 1f, 1f, opacity));
+        // 技能行文字必须和 DXLabel 一样按物理像素绘制。这里是自绘控件，
+        // 不能使用 ScaledSize，否则 CanvasLayer 放大后字体会再次被缩放采样，
+        // 表现为发虚且同一行字号不一致。
+        DrawPhysicalText(_info.Local() ?? "", new Vector2(54, 18), 12,
+            new Color(1f, 1f, 1f, opacity));
 
         // 等级 / 学习状态
         string levelText = _magic == null ? "未\n学习" : $"等级: {_magic.Level}";
-        DrawString(MirSkin.GetFont(), new Vector2(54, 36), levelText, fontSize: MirSkin.ScaledSize(11),
-            modulate: _magic == null ? new Color(1f, 0.35f, 0.35f, opacity) : new Color(0.8f, 0.8f, 0.8f, opacity));
+        DrawPhysicalText(levelText, new Vector2(54, 36), 12,
+            _magic == null ? new Color(1f, 0.35f, 0.35f, opacity) : new Color(0.8f, 0.8f, 0.8f, opacity));
 
         string experienceText;
         Color experienceColour = new Color(1f, 0.85f, 0.45f, opacity);
@@ -514,8 +516,8 @@ public partial class MagicCellView : DXControl
             }
             experienceText = MagicExperienceText(_magic);
         }
-        DrawString(MirSkin.GetFont(), new Vector2(364, 31), experienceText,
-            HorizontalAlignment.Right, 205, MirSkin.ScaledSize(10), experienceColour);
+        DrawPhysicalText(experienceText, new Vector2(364, 31), 12, experienceColour,
+            HorizontalAlignment.Right, 205);
 
         // 当前栏组键位
         if (game != null && _magic != null)
@@ -530,9 +532,35 @@ public partial class MagicCellView : DXControl
             };
             if (key != Library.SpellKey.None)
             {
-                DrawString(MirSkin.GetFont(), new Vector2(330, 18), SpellKeyText(key), fontSize: MirSkin.ScaledSize(13),
-                    modulate: new Color(1f, 0.85f, 0.3f, opacity));
+                DrawPhysicalText(SpellKeyText(key), new Vector2(330, 18), 12,
+                    new Color(1f, 0.85f, 0.3f, opacity));
             }
+        }
+    }
+
+    private void DrawPhysicalText(string text, Vector2 logicalPosition, int fontSize, Color colour,
+        HorizontalAlignment alignment = HorizontalAlignment.Left, float logicalWidth = -1f)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        var font = MirSkin.GetFont();
+        if (font == null) return;
+
+        float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+        if (canvasScale < 0.01f) canvasScale = 1f;
+
+        Vector2 position = logicalPosition * canvasScale;
+        float width = logicalWidth > 0 ? logicalWidth * canvasScale : -1f;
+        int drawSize = MirSkin.PhysicalSize(fontSize);
+
+        DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
+        try
+        {
+            DrawString(font, new Vector2(Mathf.Round(position.X), Mathf.Round(position.Y)), text,
+                alignment, width, drawSize, colour);
+        }
+        finally
+        {
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
         }
     }
 

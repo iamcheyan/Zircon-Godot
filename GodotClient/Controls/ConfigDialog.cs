@@ -193,7 +193,7 @@ public partial class ConfigDialog : DXWindow
 
         var resolution = new ConfigSelect();
         // 档位 = 常用分辨率 + 当前窗口尺寸（去重排序），保证当前值总能匹配显示
-        // UI 校准阶段固定为原版设计基准 1024x768；完成校准后再恢复多档分辨率。
+        // 方案二：逻辑设计基准仍为 1024x768，当前实际窗口固定为整数 2 倍。
         var resolutions = new List<Vector2I> { ClientSettings.FixedDebugGameSize };
         var current = ClientSettings.FixedDebugGameSize;
         foreach (var size in resolutions)

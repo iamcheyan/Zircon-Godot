@@ -28,6 +28,8 @@ project/assembly_name="ZirconClient"
 window/size/viewport_width=1024
 window/size/viewport_height=768
 window/size/mode=0
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
 
 [rendering]
 

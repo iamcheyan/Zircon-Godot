@@ -7,8 +7,10 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
-    // 临时调试基准：使用原版设计画布，不做任何显示器放大或缩放。
-    public static readonly Vector2I FixedDebugGameSize = new(1024, 768);
+    // 方案二临时调试基准：逻辑画布仍是 1024x768，实际窗口使用整数 2 倍。
+    // 2048x1536 避免 4K 下的非整数缩放，保持像素网格规整。
+    public static readonly Vector2I FixedDebugLogicalSize = new(1024, 768);
+    public static readonly Vector2I FixedDebugGameSize = new(2048, 1536);
     private static bool _loaded;
     private static bool _windowArgsApplied;
 

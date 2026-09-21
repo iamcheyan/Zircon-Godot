@@ -51,6 +51,7 @@ public static class MirSkin
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _overlayTextures = new();
 
     private static FontFile _font;
+    private static readonly List<Font> _fontFallbacks = new();
     private static bool _fontFailed;
 
     public static ZlLibrary GetLibrary(LibraryFile file)
@@ -137,12 +138,20 @@ public static class MirSkin
         if (_font != null) return _font;
         if (_fontFailed) return null;
         var candidates = new List<string>();
+        string projectDir = string.Empty;
+        try { projectDir = ProjectSettings.GlobalizePath("res://"); }
+        catch { }
+        if (!string.IsNullOrEmpty(projectDir))
+        {
+            // Fusion Pixel 的中文和拉丁字符分包；中文主字体保持 12px 点阵，
+            // 拉丁字体作为 fallback，避免数字/英文又回退到平滑的系统字体。
+            candidates.Add(Path.Combine(projectDir, "Fonts/third_party/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf"));
+        }
         // 客户端自带字体优先 (GodotClient/Fonts/NotoSansCJK*, 随仓库分发): 不依赖
         // 系统环境, nixos-rebuild / 换机 / 无中文字体的系统都不受影响。
         // Fonts/ 带 .gdignore — 不让 Godot 编辑器扫描生成 .import 噪音。
         try
         {
-            string projectDir = ProjectSettings.GlobalizePath("res://");
             candidates.AddRange(Directory.EnumerateFiles(
                 Path.Combine(projectDir, "Fonts"), "NotoSansCJK*"));
         }
@@ -173,6 +182,9 @@ public static class MirSkin
             if (font.LoadDynamicFont(path) == Error.Ok)
             {
                 _font = font;
+                LoadFusionLatinFallback(projectDir);
+                if (_fontFallbacks.Count > 0)
+                    _font.Fallbacks = new Godot.Collections.Array<Font>(_fontFallbacks);
                 GD.Print($"[MirSkin] 中文字体加载: {path}");
                 return font;
             }
@@ -182,6 +194,18 @@ public static class MirSkin
         _fontFailed = true;
         GD.PrintErr("[MirSkin] 找不到中文字体 (Noto Sans CJK), UI 中文将无法显示");
         return null;
+    }
+
+    private static void LoadFusionLatinFallback(string projectDir)
+    {
+        if (string.IsNullOrEmpty(projectDir)) return;
+        string path = Path.Combine(projectDir, "Fonts/third_party/fusion-pixel/fusion-pixel-12px-proportional-latin.otf");
+        if (!File.Exists(path)) return;
+        var latin = new FontFile();
+        if (latin.LoadDynamicFont(path) == Error.Ok)
+            _fontFallbacks.Add(latin);
+        else
+            latin.Dispose();
     }
 
     /// <summary>
@@ -220,6 +244,8 @@ public static class MirSkin
 
         _font?.Dispose();
         _font = null;
+        foreach (var fallback in _fontFallbacks) fallback.Dispose();
+        _fontFallbacks.Clear();
         _fontFailed = false;
     }
 }

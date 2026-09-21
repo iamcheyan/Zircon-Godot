@@ -189,18 +189,18 @@ public partial class ConfigDialog : DXWindow
 
         var resolution = new ConfigSelect();
         // 档位 = 常用分辨率 + 当前窗口尺寸（去重排序），保证当前值总能匹配显示
-        var resolutions = new List<Vector2I> { new(1024, 768), new(1280, 720), new(1280, 800), new(1366, 768), new(1600, 900), new(1920, 1080), new(2560, 1440), new(3840, 2160) };
-        var current = (Vector2I)DisplayServer.WindowGetSize();
-        if (!resolutions.Contains(current)) resolutions.Add(current);
-        foreach (var size in resolutions.OrderBy(r => r.X).ThenBy(r => r.Y))
+        // UI 校准阶段固定为主显示器原生 1280x1024；完成校准后再恢复多档分辨率。
+        var resolutions = new List<Vector2I> { ClientSettings.FixedDebugGameSize };
+        var current = ClientSettings.FixedDebugGameSize;
+        foreach (var size in resolutions)
             resolution.AddItem($"{size.X} x {size.Y}");
-        // 当前窗口尺寸是实际生效值；GameSize 可能仍是启动参数/ini 的旧值。
+        // 当前阶段固定基准；解除锁定后这里再恢复为实际窗口尺寸匹配。
         resolution.SelectItem($"{current.X} x {current.Y}");
         resolution.SelectedChanged += (s, e) =>
         {
             string[] parts = resolution.SelectedItem.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 3 || !int.TryParse(parts[0], out int width) || !int.TryParse(parts[2], out int height)) return;
-            ClientSettings.GameSize = new Vector2I(width, height);
+            ClientSettings.GameSize = ClientSettings.FixedDebugGameSize;
             ClientSettings.Save();
             ClientSettings.ApplyDisplaySettings();
         };

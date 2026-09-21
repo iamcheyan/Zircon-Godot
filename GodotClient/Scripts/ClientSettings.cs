@@ -7,6 +7,9 @@ namespace ZirconClient.Scripts;
 public static class ClientSettings
 {
     private const string FilePath = "user://Zircon.ini";
+    // 临时调试基准：当前主显示器为 1280x1024，UI 调整阶段禁止分辨率漂移。
+    // 完成 1280x1024 下的 UI 校准后，再恢复为可选/自适应分辨率。
+    public static readonly Vector2I FixedDebugGameSize = new(1280, 1024);
     private static bool _loaded;
     private static bool _windowArgsApplied;
 
@@ -39,7 +42,7 @@ public static class ClientSettings
     public static bool Borderless { get; set; }
     public static bool VSync { get; set; }
     public static bool LimitFPS { get; set; }
-    public static Vector2I GameSize { get; set; } = new(1024, 768);
+    public static Vector2I GameSize { get; set; } = new(1280, 1024);
     public static int DefaultMonitor { get; set; }
     public static string RenderingPipeline { get; set; } = "Forward Plus";
     // 原版移动是按走/跑帧时长连续回拉的；默认关闭会退化成按帧阶梯位移，
@@ -189,6 +192,9 @@ public static class ClientSettings
         VSync = Read(file, "Graphics", nameof(VSync), VSync);
         LimitFPS = Read(file, "Graphics", nameof(LimitFPS), LimitFPS);
         GameSize = ReadVector2I(file, "Graphics", nameof(GameSize), GameSize);
+        // 当前阶段固定使用主显示器原生尺寸，避免旧 ini 中的 1920x1080
+        // 让窗口被裁剪/缩放，干扰 UI 校准。
+        GameSize = FixedDebugGameSize;
         DefaultMonitor = Read(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         RenderingPipeline = Read(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
         SmoothMove = Read(file, "Graphics", nameof(SmoothMove), SmoothMove);
@@ -321,18 +327,8 @@ public static class ClientSettings
             Borderless = false;
             if (!_windowArgsApplied)
             {
-                Vector2I size = AutoLoginArgs.WindowSize;
-                if (size.X > 0 && size.Y > 0)
-                {
-                    GameSize = size;
-                }
-                else if (DisplayServer.GetName() != "headless")
-                {
-                    Vector2I screen = DisplayServer.ScreenGetSize();
-                    GameSize = new Vector2I(
-                        Mathf.Clamp(screen.X * 3 / 4, 1024, 1920),
-                        Mathf.Clamp(screen.Y * 3 / 4, 768, 1080));
-                }
+                // UI 校准期间无论是否传入 --window=WxH，都固定到当前基准。
+                GameSize = FixedDebugGameSize;
                 _windowArgsApplied = true;
                 GD.Print($"[Display] --window 初始尺寸: {GameSize.X}x{GameSize.Y}");
             }
@@ -350,7 +346,8 @@ public static class ClientSettings
         else
         {
             DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-            var targetSize = GameSize.X > 0 && GameSize.Y > 0 ? GameSize : new Vector2I(1024, 768);
+            var targetSize = FixedDebugGameSize;
+            GameSize = targetSize;
             DisplayServer.WindowSetSize(targetSize);
         }
 

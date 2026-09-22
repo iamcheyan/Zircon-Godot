@@ -2448,12 +2448,12 @@ public partial class MapTestScene : Control
 
     private void RunLayerOrderAudit()
     {
-        bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.TerrainFront(10)
-            && RenderOrder.TerrainFront(10) < RenderOrder.Object(10)
+        bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.Object(10)
+            && RenderOrder.Object(10) < RenderOrder.TerrainFront(10)
             && RenderOrder.Object(10) < RenderOrder.ObjectEffect(10)
+            && RenderOrder.TerrainFront(10) < RenderOrder.ObjectEffect(10)
             && RenderOrder.ObjectEffect(10) < RenderOrder.TerrainMiddle(11);
-        bool postObject = RenderOrder.ObjectEffect(10) < RenderOrder.LocalPlayer
-            && RenderOrder.LocalPlayer < RenderOrder.Particles
+        bool postObject = RenderOrder.Object(10) < RenderOrder.Particles
             && RenderOrder.Particles < RenderOrder.LocalPlayerEffect
             && RenderOrder.LocalPlayerEffect < RenderOrder.FinalEffects;
         // 旧端 MapControl 把 DrawType.Floor 特效画在底色与所有地形行之间，

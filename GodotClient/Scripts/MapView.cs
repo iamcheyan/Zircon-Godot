@@ -198,7 +198,7 @@ public partial class MapView : Node2D
                 AddChild(row);
             }
             row.Row = y;
-            // 旧端每行顺序：中层、前景、对象、对象特效。
+            // 每行顺序：中层地面、对象、前景树/悬崖、对象特效。
             row.ZIndex = RenderOrder.TerrainMiddle(y);
             row.QueueRedraw();
 

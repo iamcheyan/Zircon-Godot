@@ -4,7 +4,7 @@ namespace ZirconClient.Scripts;
 
 /// <summary>
 /// Global canvas ordering equivalent to Client/Scenes/Views/MapControl.DrawObjects.
-/// One map row is: middle terrain, front terrain, objects, object effects.
+/// One map row is: middle terrain, objects, front terrain, object effects.
 /// The local player is drawn by the legacy client after every map object.
 /// </summary>
 public static class RenderOrder
@@ -26,7 +26,6 @@ public static class RenderOrder
     // 自身持续 Buff 光环/护盾在角色身体后方，避免特效帧的透明键或矩形
     // 覆盖腿部；仍高于所有地图前景地形。
     public const int PlayerBuffEffect = 3198;
-    public const int LocalPlayer = 3200;
     public const int Particles = 3300;
     public const int FinalEffects = 3400;
     // 原版 MapControl.OnBeforeDraw 在 DrawObjects()(地形+对象+天气粒子)
@@ -39,8 +38,10 @@ public static class RenderOrder
     public const int LightOverlay = FinalEffects + 1;
 
     public static int TerrainMiddle(int renderY) => TerrainBase + Math.Clamp(renderY, 0, 1000) * RowStride;
-    public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 1;
-    public static int Object(int renderY) => TerrainMiddle(renderY) + 2;
+    // 一行内的旧版遮挡关系是：中层地面 -> 对象 -> 前景树/悬崖 -> 对象特效。
+    // 前景贴图必须在对象之后，否则树冠、岩壁前沿会被人物/怪物穿过去。
+    public static int Object(int renderY) => TerrainMiddle(renderY) + 1;
+    public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 2;
     public static int ObjectEffect(int renderY) => TerrainMiddle(renderY) + 3;
     // Legacy MapControl draws the local player's target effects after all
     // particle emitters, so keep this above Particles.

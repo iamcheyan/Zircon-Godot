@@ -1058,7 +1058,9 @@ public partial class GameScene : Control
         UpdateViewRange();
 
         _player = new PlayerRenderer();
-        _player.ZIndex = RenderOrder.LocalPlayer;
+        // 本地玩家和其他对象一样按脚底所在行排序，允许同一行的前景树木
+        // 与悬崖前沿盖住人物，而普通中层地面仍在人物下面。
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         _player.FrameChanged = (animation, frame, magic) => OnPlayerFrameChanged(_player, animation, frame, magic);
             _player.SoundCue = PlaySound;
         AddChild(_player);
@@ -9712,7 +9714,7 @@ public partial class GameScene : Control
         _mapView.CenterOn(_player.CellX, _player.CellY);
         _player.Position = _mapView.CellToScreen(_player.CellX, _player.CellY, true)
             + new Vector2(_player.OffsetX, _player.OffsetY);
-        _player.ZIndex = RenderOrder.LocalPlayer;
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         UpdateObjectPositions();
     }
 

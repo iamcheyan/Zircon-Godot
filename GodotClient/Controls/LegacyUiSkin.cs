@@ -59,6 +59,44 @@ public static class LegacyUiSkin
         return true;
     }
 
+    /// <summary>
+    /// 测试场专用：把窗口的第一张背景图切换到旧版 GameInter 资源。
+    /// 正式窗口仍由各自的业务布局控制；这个入口用于验证旧版素材是否能
+    /// 在独立 HUD 实验场中正确显示，避免误用当前版 Interface 黑底。
+    /// </summary>
+    public static bool ApplyLegacyTestWindow(DXWindow window, Vector2I location)
+    {
+        if (window == null) return false;
+
+        (int frame, Vector2I size) profile = window.GetType().Name switch
+        {
+            "InventoryDialog" => (frame: 250, size: new Vector2I(284, 324)),
+            "CharacterDialog" => (frame: 200, size: new Vector2I(244, 328)),
+            "GroupDialog" => (frame: 900, size: new Vector2I(256, 244)),
+            "QuestDialog" => (frame: 700, size: new Vector2I(340, 440)),
+            "CommunicationDialog" => (frame: 350, size: new Vector2I(572, 388)),
+            "MagicDialog" => (frame: 400, size: new Vector2I(296, 332)),
+            "MenuDialog" => (frame: 750, size: new Vector2I(248, 264)),
+            _ => (-1, Vector2I.Zero),
+        };
+        if (profile.frame < 0) return false;
+
+        window.Location = location;
+        window.Size = profile.size;
+        foreach (var child in window.Controls)
+        {
+            if (child is not DXImageControl image) continue;
+            image.LibraryFile = LibraryFile.GameInter;
+            image.Index = profile.frame;
+            image.FixedSize = true;
+            image.Size = profile.size;
+            image.MouseFilter = Control.MouseFilterEnum.Ignore;
+            window.UpdateClientAreaForLegacySkin();
+            return true;
+        }
+        return false;
+    }
+
     public static Color GetControlText(bool enabled = true) => enabled ? TitleText : new Color(.45f, .4f, .3f, 1f);
 
     /// <summary>

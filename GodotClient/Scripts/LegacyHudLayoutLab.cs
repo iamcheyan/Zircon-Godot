@@ -77,7 +77,7 @@ public partial class LegacyHudLayoutLab : Control
 
     private T AddWindow<T>(T window, Vector2I location) where T : DXWindow
     {
-        window.Location = location;
+        LegacyUiSkin.ApplyLegacyTestWindow(window, location);
         _canvas.AddChild(window);
         return window;
     }

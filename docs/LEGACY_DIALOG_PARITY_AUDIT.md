@@ -147,9 +147,16 @@ dotnet build GodotClient/ZirconClient.csproj --no-incremental
 ZIRCON_UI_DATA_PATH=/home/tetsuya/mir3ei/LegacyEI/Data \
 godot-mono --path GodotClient res://Scenes/LegacyHudLayoutLab.tscn -- \
   --window --legacy-open=magic
+
+# 真实登录场景（只在明确验证旧版核心控件树时开启）
+godot-mono --path GodotClient -- \
+  --server 127.0.0.1 --port 7000 --user test@test.com --pass test123 \
+  --char TestHero --window --legacy-ui
 ```
 
 窗口名：`character`、`inventory`、`magic`、`quest`、`chat`、`group`、`menu`、`horse`、`belt`。截图使用 `grim`。每项必须同时通过编译、独立窗口截图、模拟器对照和交互验证。
+
+2026-09-23 已完成一次真实登录 smoke test：`--legacy-ui` 场景完成 Login、StartGame 并进入地图；日志确认 `StartGame 成功` 和 `进入游戏! 玩家: TestHero`。这只证明登录及控件树接入没有阻断进游戏，不替代各窗口的业务交互验收。
 
 ## 8. 禁止事项
 

@@ -31,6 +31,7 @@ public partial class MagicDialog : DXWindow
     private DXButton _closeButton;
     private bool _legacyEiLayout;
     private readonly List<DXImageControl> _legacySkillSlots = new();
+    private readonly List<DXLabel> _legacySkillLabels = new();
 
     public MagicDialog()
     {
@@ -159,6 +160,12 @@ public partial class MagicDialog : DXWindow
             slot.QueueFree();
         }
         _legacySkillSlots.Clear();
+        foreach (var label in _legacySkillLabels)
+        {
+            RemoveControl(label);
+            label.QueueFree();
+        }
+        _legacySkillLabels.Clear();
 
         // 12 个格子来自 simulator/layout.json 与 skill-grid-magic-exp-evidence：
         // 4 列、3 行、36×36，GameInter F410..F421 是 Magic.exp 的基准图标。
@@ -183,6 +190,29 @@ public partial class MagicDialog : DXWindow
             };
             AddControl(slot);
             _legacySkillSlots.Add(slot);
+        }
+    }
+
+    private void RefreshLegacySkillSlots(IEnumerable<(MagicInfo Info, ClientUserMagic UserMagic)> entries)
+    {
+        var visible = entries.Take(12).ToArray();
+        for (int i = 0; i < _legacySkillSlots.Count; i++)
+        {
+            var slot = _legacySkillSlots[i];
+            if (i >= visible.Length)
+            {
+                slot.Visible = false;
+                continue;
+            }
+
+            var (info, userMagic) = visible[i];
+            slot.Visible = true;
+            // Magic.exp supplies the category frame; the learned spell supplies
+            // the actual icon and level/status. Do not leave the static frame in
+            // place once runtime data is available.
+            slot.LibraryFile = LibraryFile.MagicIcon;
+            slot.Index = info.Icon;
+            slot.TooltipText = $"{info.Local()} · {(userMagic == null ? "未学习" : $"等级 {userMagic.Level}")}";
         }
     }
 
@@ -424,6 +454,8 @@ public partial class MagicDialog : DXWindow
 
         var game = GameScene.Game;
         if (game == null) return;
+        if (_legacyEiLayout)
+            RefreshLegacySkillSlots(GetVisibleMagicInfos(game).Where(x => x.Info.School == school));
         foreach (var entry in GetVisibleMagicInfos(game)
                      .Where(x => x.Info.School == school)
                      .OrderBy(x => x.Info.NeedLevel1)

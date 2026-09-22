@@ -23,6 +23,7 @@ public partial class LegacyHudLayoutLab : Control
     private CommunicationDialog _chat;
     private MagicDialog _magic;
     private BeltDialog _belt;
+    private HorseDialog _horse;
 
     public override void _Ready()
     {
@@ -74,6 +75,7 @@ public partial class LegacyHudLayoutLab : Control
         _chat = AddWindow(new CommunicationDialog(), new Vector2I(252, 80));
         _magic = AddWindow(new MagicDialog(), new Vector2I(348, 10));
         _belt = AddWindow(new BeltDialog(), new Vector2I(280, 330));
+        _horse = AddWindow(new HorseDialog(), new Vector2I(250, 130));
     }
 
     private T AddWindow<T>(T window, Vector2I location) where T : DXWindow
@@ -122,6 +124,7 @@ public partial class LegacyHudLayoutLab : Control
                 "group" => _group,
                 "menu" => _menu,
                 "belt" => _belt,
+                "horse" => _horse,
                 _ => null,
             };
             if (window != null) WindowManager.Open(window, _canvas);
@@ -139,15 +142,17 @@ public partial class LegacyHudLayoutLab : Control
         bool character = _character.AuditLegacyEiLayout(out string characterDetails);
         bool inventory = _inventory.AuditLegacyEiLayout(out string inventoryDetails);
         bool magic = _magic.AuditLegacyEiLayout(out string magicDetails);
+        bool horse = _horse.AuditLegacyEiLayout(out string horseDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             && _chat.Size == new Vector2I(572, 388)
             && _menu.Size == new Vector2I(248, 264);
-        bool pass = character && inventory && magic && roots;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} roots={roots}");
+        bool pass = character && inventory && magic && horse && roots;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} roots={roots}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");
+        GD.Print($"[LegacyAudit] horse {horseDetails}");
         GetTree().Quit(pass ? 0 : 1);
     }
 
@@ -170,6 +175,7 @@ public partial class LegacyHudLayoutLab : Control
             case Key.F6: Toggle(_chat); break;
             case Key.F7: Toggle(_group); break;
             case Key.F8: Toggle(_menu); break;
+            case Key.F9: Toggle(_horse); break;
             case Key.Escape: WindowManager.CloseTop(); break;
         }
     }

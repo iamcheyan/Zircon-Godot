@@ -80,7 +80,9 @@ public static class LegacyUiSkin
             "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36), false),
             "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62), false),
             "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119), false),
-            "BeltDialog" => (850, new Vector2I(296, 332), new Vector2I(7, -44), false),
+            "HorseDialog" => (850, new Vector2I(296, 332), Vector2I.Zero, false),
+            // BeltDialog remains the modern quick-use belt and is deliberately
+            // not aliased to the EI horse window.
             _ => (-1, Vector2I.Zero, Vector2I.Zero, false),
         };
         if (profile.frame < 0) return false;
@@ -117,6 +119,9 @@ public static class LegacyUiSkin
                 return true;
             case BeltDialog belt:
                 belt.ApplyLegacyEiLayout();
+                return true;
+            case HorseDialog horse:
+                horse.SetMountState(0);
                 return true;
         }
         foreach (var child in window.Controls)

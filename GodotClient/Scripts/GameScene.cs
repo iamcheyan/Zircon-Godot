@@ -88,6 +88,7 @@ public partial class GameScene : Control
     private FishingDialog _fishingDialog;
     private FishingCatchDialog _fishingCatchDialog;
     private HorseTameDialog _horseTameDialog;
+    private HorseDialog _horseDialog;
     private uint _tamingTargetObjectID;
     // 原版 MapControl 挖矿状态机：左键点矿点后 Mining=true，
     // 每帧满足条件（矿点在界内/Flag/相邻/武器槽 PickAxe/无马/冷却到）
@@ -2122,6 +2123,13 @@ public partial class GameScene : Control
         WindowManager.Open(_characterDialog, _uiLayer);
     }
 
+    /// <summary>旧版 EI Ctrl+S 坐骑窗口入口；坐骑动作仍由窗口按钮发送。</summary>
+    public void ToggleHorseWindow()
+    {
+        if (_horseDialog == null) return;
+        WindowManager.Toggle(_horseDialog, _uiLayer);
+    }
+
     private void OnObjectMove(uint objectID, MirDirection dir, System.Drawing.Point loc, int distance,
         TimeSpan slow = default, bool mapChanged = false)
     {
@@ -3082,6 +3090,7 @@ public partial class GameScene : Control
             _player.RefreshAppearanceLibraries();
             _player.PlayStandingForState();
             _playerHorse = p.Horse;
+            _horseDialog?.SetMountState(p.Horse == HorseType.None ? 0 : 1);
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {
@@ -4548,6 +4557,8 @@ public partial class GameScene : Control
         _uiLayer.AddChild(_fishingCatchDialog);
         _horseTameDialog = new HorseTameDialog();
         _uiLayer.AddChild(_horseTameDialog);
+        _horseDialog = new HorseDialog();
+        _uiLayer.AddChild(_horseDialog);
         _monsterDialog = new MonsterDialog();
         _uiLayer.AddChild(_monsterDialog);
         _tradeDialog = new TradeDialog();
@@ -10307,6 +10318,13 @@ public partial class GameScene : Control
 
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
+
+        // EI 旧版坐骑窗口热键为 Ctrl+S；保留现代 M 的坐骑动作键不变。
+        if (key.Keycode == Key.S && key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            ToggleHorseWindow();
+            return;
+        }
 
         // Alt 是地面掉落物名称的显示开关。只处理单独按下 Alt，
         // 不影响 Alt+左键的采集/钓鱼/驯马操作。

@@ -60,6 +60,7 @@ public partial class CombatController : Node2D
     // 追击被阻挡时的原地转向（原版 AttemptAction(Standing)）。
     private readonly Action<MirDirection> _sendTurn;
     private readonly Action _clearMagicLock;
+    private readonly Action _stopPlayerAction;
     // 预测坐标会在发包时先切到下一格；攻击必须等视觉移动完成，不能只看逻辑格距。
     private readonly Func<bool> _isPlayerMoving;
     // 目标追击沿用原版的“第一段走、后续可跑”节奏。
@@ -179,7 +180,8 @@ public partial class CombatController : Node2D
         Action clearMagicLock = null,
         Func<bool> isPlayerMoving = null,
         Func<int> getRunSteps = null,
-        Func<int> getTargetRunSteps = null)
+        Func<int> getTargetRunSteps = null,
+        Action stopPlayerAction = null)
     {
         _mapView = mapView;
         _getObjects = getObjects;
@@ -201,6 +203,7 @@ public partial class CombatController : Node2D
         _isMagicPending = isMagicPending;
         _sendTurn = sendTurn;
         _clearMagicLock = clearMagicLock;
+        _stopPlayerAction = stopPlayerAction;
         _isPlayerMoving = isPlayerMoving;
         _getRunSteps = getRunSteps;
         _getTargetRunSteps = getTargetRunSteps;
@@ -366,7 +369,14 @@ public partial class CombatController : Node2D
                 // 同格拾取优先：非 Shift 时把普通左键让给 GameScene._UnhandledInput。
                 // Shift 点击脚下格不拾取（原版 case Left 的 Shift 分支先返回）。
                 if (ShouldDeferForMapPickup(MouseCell(), _getPlayerCell(), shiftHeld))
+                {
+                    // 脚下拾取优先，但这次点击仍代表用户放弃当前攻击目标。
+                    TargetObject = null;
+                    _targetMoveStarted = false;
+                    _stopPlayerAction?.Invoke();
+                    _clearMagicLock?.Invoke();
                     return;
+                }
 
                 // 原版 OnMouseDown（683-739）：CanAttack 通过 → 选中并走
                 // Shuriken 分支；未通过 → 取消选中。Shift 点击不在这里
@@ -376,12 +386,19 @@ public partial class CombatController : Node2D
                 if (!attackable)
                 {
                     TargetObject = null;
+                    _targetMoveStarted = false;
+                    _stopPlayerAction?.Invoke();
                     _clearMagicLock?.Invoke();
                     QueueRedraw();
                     return;
                 }
                 if (TargetObject != hit)
+                {
                     _targetMoveStarted = false;
+                    // 主动切换目标必须先结束上一目标的攻击动作；否则移动
+                    // 动画会排在攻击动作后面，人物会保持攻击姿势滑向新目标。
+                    _stopPlayerAction?.Invoke();
+                }
                 TargetObject = hit;
                 GD.Print($"[Combat] 选中目标: {hit.DisplayName} ObjectID={hit.ObjectID}");
 
@@ -395,12 +412,16 @@ public partial class CombatController : Node2D
                 {
                     _notifyRangeAttackTooFar?.Invoke();
                     TargetObject = null;
+                    _targetMoveStarted = false;
+                    _stopPlayerAction?.Invoke();
                     QueueRedraw();
                     return;
                 }
                 if (result == ShurikenClickResult.ClearOnly)
                 {
                     TargetObject = null;
+                    _targetMoveStarted = false;
+                    _stopPlayerAction?.Invoke();
                     QueueRedraw();
                     return;
                 }
@@ -426,6 +447,7 @@ public partial class CombatController : Node2D
                 {
                     TargetObject = null;
                     _targetMoveStarted = false;
+                    _stopPlayerAction?.Invoke();
                     _clearMagicLock?.Invoke();
                 }
             }

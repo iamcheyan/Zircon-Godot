@@ -1051,7 +1051,8 @@ public partial class GameScene : Control
             ClearMagicLock,
             () => _moveFrameCount > 1,
             GetRunSteps,
-            GetTargetRunSteps);
+            GetTargetRunSteps,
+            StopPlayerActionForInput);
         AddChild(_combatController);
         _combatController.ZIndex = 200;  // 高亮框画在物体之上
         UpdateViewRange();
@@ -9772,6 +9773,12 @@ public partial class GameScene : Control
         if (_magicLockTargetObjectId == 0) return;
         GD.Print($"[Magic] 清除锁定目标 ObjectID={_magicLockTargetObjectId}");
         _magicLockTargetObjectId = 0;
+    }
+
+    private void StopPlayerActionForInput()
+    {
+        if (_player == null || _player.Dead) return;
+        _player.StopActionForInput();
     }
 
     private ObjectRenderer GetMagicLockTarget()

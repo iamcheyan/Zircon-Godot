@@ -569,13 +569,40 @@ public partial class PlayerRenderer : Node2D
     {
         Direction = direction;
         MoveDistance = Math.Max(1, distance);
+        InterruptActionForMovement();
         // 原版 Moving 的优先级是：隐身步行先于跑步；普通状态才按
         // distance>=2 切换 Running/HorseRunning。
-        SetAnimation(Cloaked
+        ApplyAnimation(Cloaked
             ? (GhostWalking ? MirAnimation.CreepWalkFast : MirAnimation.CreepWalkSlow)
             : running
                 ? (mounted ? MirAnimation.HorseRunning : MirAnimation.Running)
-                : (mounted ? MirAnimation.HorseWalking : MirAnimation.Walking));
+                : (mounted ? MirAnimation.HorseWalking : MirAnimation.Walking),
+            (0, MagicType.None));
+        _pendingSpell = (0, MagicType.None);
+    }
+
+    /// <summary>
+    /// 用户主动点击空白或切换目标时，立即结束旧的一次性动作。
+    /// SetAnimation 的默认语义是排队衔接，适合服务端连续动作，但不适合
+    /// “攻击中改走位”：如果把 Walking 排在 Combat 后面，角色会保持攻击
+    /// 姿势滑行。移动和主动取消都必须清掉这条队列。
+    /// </summary>
+    public void StopActionForInput()
+    {
+        InterruptActionForMovement();
+        PlayStandingForState();
+    }
+
+    private void InterruptActionForMovement()
+    {
+        _animationQueue.Clear();
+        _pendingSpellQueue.Clear();
+        _pendingSpell = (0, MagicType.None);
+        _oneShotAnim = MirAnimation.Standing;
+        _animationComplete = true;
+        _spellType = MagicType.None;
+        _rangeAttack = false;
+        _stanceUntilMs = 0;
     }
 
     // 其他玩家的移动回包：权威坐标立即到终点，画面从起点平滑回拉。

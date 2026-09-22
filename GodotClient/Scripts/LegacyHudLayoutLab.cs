@@ -48,6 +48,7 @@ public partial class LegacyHudLayoutLab : Control
 
         CreateInteractiveWindows();
         BindHudButtons();
+        OpenRequestedWindow();
 
         var caption = new Label
         {
@@ -99,6 +100,29 @@ public partial class LegacyHudLayoutLab : Control
         _hud.PartyButton.MouseClick += (o, e) => Toggle(_group);
         _hud.GuildButton.MouseClick += (o, e) => ShowNotice("行会窗口将在正式游戏中打开");
         _hud.ExchangeButton.MouseClick += (o, e) => ShowNotice("交易窗口需要先选中其他玩家");
+    }
+
+    private void OpenRequestedWindow()
+    {
+        foreach (string arg in OS.GetCmdlineUserArgs())
+        {
+            if (!arg.StartsWith("--legacy-open=")) continue;
+            string name = arg["--legacy-open=".Length..].ToLowerInvariant();
+            DXWindow window = name switch
+            {
+                "character" => _character,
+                "inventory" => _inventory,
+                "magic" => _magic,
+                "quest" => _quest,
+                "chat" => _chat,
+                "group" => _group,
+                "menu" => _menu,
+                "belt" => _belt,
+                _ => null,
+            };
+            if (window != null) WindowManager.Open(window, _canvas);
+            break;
+        }
     }
 
     private void Toggle(DXWindow window) => WindowManager.Toggle(window, _canvas);

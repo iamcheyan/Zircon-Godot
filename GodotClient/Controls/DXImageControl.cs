@@ -35,6 +35,13 @@ public partial class DXImageControl : DXControl
     /// <summary>true: 尺寸固定为 Size, 不随图自动调整 (贴图偏移仍生效)</summary>
     public bool FixedSize;
 
+    /// <summary>
+    /// true 时把完整贴图拉伸到控件 Size。旧版网页模拟器的普通窗口背景
+    /// 使用 object-fit: fill；FixedSize 本身只固定控件尺寸，不会改变绘制尺寸。
+    /// 默认 false，避免影响现有精灵和普通 UI 控件。
+    /// </summary>
+    public bool StretchImage;
+
     public bool DrawImage = true;
 
     /// <summary>原版 Blend 标记；图库 UI 光效使用高亮混合。</summary>
@@ -87,7 +94,9 @@ public partial class DXImageControl : DXControl
         }
 
         Vector2I off = UseOffSet ? MirSkin.GetOffset(LibraryFile, idx) : Vector2I.Zero;
-        Rect2 dest = new(off, tex.GetSize());
+        Rect2 dest = StretchImage
+            ? new Rect2(Vector2.Zero, Size)
+            : new Rect2(off, tex.GetSize());
 
         // 旧版 PresentTexture 会把 ForeColour（禁用时为灰色）直接乘到
         // 贴图，并把 ImageOpacity 作为源 Alpha；在贴图上再盖半透明灰块

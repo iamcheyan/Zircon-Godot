@@ -90,6 +90,7 @@ public static class LegacyUiSkin
             image.LibraryFile = LibraryFile.GameInter;
             image.Index = profile.frame;
             image.FixedSize = true;
+            image.StretchImage = true;
             // 模拟器对普通窗口使用 object-fit: fill：完整背景帧从窗口
             // 左上角开始，拉伸到 evidence 中记录的窗口矩形。不能把
             // 原始帧的透明边界当成 Godot 窗口偏移，也不能按 visible-bbox

@@ -68,16 +68,16 @@ public static class LegacyUiSkin
     {
         if (window == null) return false;
 
-        (int frame, Vector2I size, Vector2I visibleOrigin) profile = window.GetType().Name switch
+        (int frame, Vector2I size) profile = window.GetType().Name switch
         {
-            "InventoryDialog" => (250, new Vector2I(284, 324), new Vector2I(114, 94)),
-            "CharacterDialog" => (200, new Vector2I(244, 328), new Vector2I(6, 92)),
-            "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6)),
-            "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36)),
-            "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62)),
-            "MagicDialog" => (400, new Vector2I(296, 332), new Vector2I(30, 67)),
-            "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119)),
-            _ => (-1, Vector2I.Zero, Vector2I.Zero),
+            "InventoryDialog" => (250, new Vector2I(284, 324)),
+            "CharacterDialog" => (200, new Vector2I(244, 328)),
+            "GroupDialog" => (900, new Vector2I(256, 244)),
+            "QuestDialog" => (700, new Vector2I(340, 440)),
+            "CommunicationDialog" => (350, new Vector2I(572, 388)),
+            "MagicDialog" => (400, new Vector2I(296, 332)),
+            "MenuDialog" => (750, new Vector2I(248, 264)),
+            _ => (-1, Vector2I.Zero),
         };
         if (profile.frame < 0) return false;
 
@@ -90,8 +90,12 @@ public static class LegacyUiSkin
             image.LibraryFile = LibraryFile.GameInter;
             image.Index = profile.frame;
             image.FixedSize = true;
-            image.Size = MirSkin.GetSize(LibraryFile.GameInter, profile.frame);
-            image.Location = -profile.visibleOrigin;
+            // 模拟器对普通窗口使用 object-fit: fill：完整背景帧从窗口
+            // 左上角开始，拉伸到 evidence 中记录的窗口矩形。不能把
+            // 原始帧的透明边界当成 Godot 窗口偏移，也不能按 visible-bbox
+            // 裁剪；否则技能页等 512 帧会被放大后截断。
+            image.Location = Vector2I.Zero;
+            image.Size = profile.size;
             image.MouseFilter = Control.MouseFilterEnum.Ignore;
             window.UpdateClientAreaForLegacySkin();
             return true;

@@ -21,6 +21,7 @@ public partial class NPCDialog : DXWindow
     private readonly List<DXImageControl> _rowBackgrounds = new();
     private readonly DXImageControl _headerBackground;
     private readonly DXImageControl _footerBackground;
+    private DXButton _closeButton;
     private NPCPage _page;
     private readonly NPCGoodsPanel _goods;
     private readonly NPCRepairPanel _repair;
@@ -33,8 +34,8 @@ public partial class NPCDialog : DXWindow
         AddControl(_headerBackground);
         _footerBackground = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 382, FixedSize = true, Size = new Vector2I(380, 64), Location = new Vector2I(0, 140), MouseFilter = MouseFilterEnum.Ignore };
         AddControl(_footerBackground);
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15, Location = new Vector2I(350, 3) };
-        close.MouseClick += (o, e) => CloseNpc(); AddControl(close);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15, Location = new Vector2I(350, 3) };
+        _closeButton.MouseClick += (o, e) => CloseNpc(); AddControl(_closeButton);
         _textArea = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true }; AddControl(_textArea);
         _text = new NPCTextControl { Size = new Vector2I(340, 1000) }; _textArea.AddControl(_text);
         _scroll = new DXVScrollBar { Location = new Vector2I(350, 45), Size = new Vector2I(14, 95), VisibleSize = 95, Change = 1, HideWhenNoScroll = false, BackColour = Colors.Transparent, Border = false };
@@ -45,6 +46,37 @@ public partial class NPCDialog : DXWindow
         _goods = new NPCGoodsPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_goods);
         _repair = new NPCRepairPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_repair);
         _advanced = new NPCAdvancedPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_advanced);
+    }
+
+    /// <summary>旧版 EI NPC 根窗口：F1100 552×176；正文和交易子面板仍复用现有业务。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(552, 176);
+        _headerBackground.LibraryFile = LibraryFile.GameInter;
+        _headerBackground.Index = 1100;
+        _headerBackground.Location = Vector2I.Zero;
+        _headerBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 1100);
+        _headerBackground.StretchImage = false;
+        _footerBackground.Visible = false;
+        _textArea.Location = new Vector2I(20, 28);
+        _textArea.Size = new Vector2I(500, 112);
+        _scroll.Location = new Vector2I(530, 28);
+        _scroll.Size = new Vector2I(18, 112);
+        _scroll.VisibleSize = 112;
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(516, 146);
+        _closeButton.Size = new Vector2I(28, 26);
+        UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(552, 176) && _headerBackground.Index == 1100;
+        details = $"size={Size} background=F{_headerBackground.Index} text={_textArea.Location}/{_textArea.Size}";
+        return ok;
     }
 
     public void ShowPage(S.NPCResponse response)

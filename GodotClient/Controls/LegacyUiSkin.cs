@@ -81,6 +81,7 @@ public static class LegacyUiSkin
             "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62), false),
             "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119), false),
             "HorseDialog" => (850, new Vector2I(296, 332), Vector2I.Zero, false),
+            "NPCDialog" => (1100, new Vector2I(552, 176), Vector2I.Zero, false),
             // BeltDialog remains the modern quick-use belt and is deliberately
             // not aliased to the EI horse window.
             _ => (-1, Vector2I.Zero, Vector2I.Zero, false),
@@ -122,6 +123,9 @@ public static class LegacyUiSkin
                 return true;
             case HorseDialog horse:
                 horse.SetMountState(0);
+                return true;
+            case NPCDialog npc:
+                npc.ApplyLegacyEiLayout();
                 return true;
         }
         foreach (var child in window.Controls)

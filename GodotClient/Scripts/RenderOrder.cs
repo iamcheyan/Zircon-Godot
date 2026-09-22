@@ -4,7 +4,7 @@ namespace ZirconClient.Scripts;
 
 /// <summary>
 /// Global canvas ordering equivalent to Client/Scenes/Views/MapControl.DrawObjects.
-/// One map row is: middle terrain, objects, front terrain, object effects.
+/// One map row is: middle terrain, front terrain, objects, object effects.
 /// The local player is drawn by the legacy client after every map object.
 /// </summary>
 public static class RenderOrder
@@ -38,10 +38,12 @@ public static class RenderOrder
     public const int LightOverlay = FinalEffects + 1;
 
     public static int TerrainMiddle(int renderY) => TerrainBase + Math.Clamp(renderY, 0, 1000) * RowStride;
-    // 一行内的旧版遮挡关系是：中层地面 -> 对象 -> 前景树/悬崖 -> 对象特效。
-    // 前景贴图必须在对象之后，否则树冠、岩壁前沿会被人物/怪物穿过去。
-    public static int Object(int renderY) => TerrainMiddle(renderY) + 1;
-    public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 2;
+    // 原版 MapControl.DrawObjects 的真实顺序是：中层地面 -> 前景树/悬崖
+    // -> 该行对象 -> 该行对象特效。前景贴图必须先于同一 RenderY 的对象，
+    // 但其透明区域不会遮挡对象；如果把前景放到对象之后，悬崖/树根会错误
+    // 地盖住人物和怪物的腿（见 Client/Scenes/Views/MapControl.cs）。
+    public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 1;
+    public static int Object(int renderY) => TerrainMiddle(renderY) + 2;
     public static int ObjectEffect(int renderY) => TerrainMiddle(renderY) + 3;
     // Legacy MapControl draws the local player's target effects after all
     // particle emitters, so keep this above Particles.

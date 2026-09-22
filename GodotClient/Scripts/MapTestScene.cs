@@ -2449,7 +2449,8 @@ public partial class MapTestScene : Control
     private void RunLayerOrderAudit()
     {
         bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.Object(10)
-            && RenderOrder.Object(10) < RenderOrder.TerrainFront(10)
+            && RenderOrder.TerrainMiddle(10) < RenderOrder.TerrainFront(10)
+            && RenderOrder.TerrainFront(10) < RenderOrder.Object(10)
             && RenderOrder.Object(10) < RenderOrder.ObjectEffect(10)
             && RenderOrder.TerrainFront(10) < RenderOrder.ObjectEffect(10)
             && RenderOrder.ObjectEffect(10) < RenderOrder.TerrainMiddle(11);

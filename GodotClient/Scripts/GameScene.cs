@@ -17,6 +17,15 @@ namespace ZirconClient.Scripts;
 
 public partial class GameScene : Control
 {
+    // 开发阶段暂时关闭商城及充值入口，避免测试时误触发商城/支付流程。
+    // 当前 EI 三职业兼容范围：商城、寄售、副本和宠物入口关闭；
+    // 自动巡路、自动战斗、套装、宝石、钓鱼、声望和称号保持可用。
+    private static readonly bool GameStoreEnabled = false;
+    private static readonly bool ConsignmentEnabled = false;
+    private static readonly bool DungeonEnabled = false;
+    private static readonly bool CompanionEnabled = false;
+    public static bool IsCompanionEnabled => CompanionEnabled;
+    public static bool IsConsignmentEnabled => ConsignmentEnabled;
     /// <summary>
     /// UI 缩放系数：跟随窗口高度保持逻辑视口高恒定（原版 1024x768 基准）。
     /// 窗口 1536 高 → 2x（旧行为）；更高窗口等比放大，UI/字体占屏比例不变。
@@ -275,6 +284,7 @@ public partial class GameScene : Control
 
     public void OpenRechargePage()
     {
+        if (!GameStoreEnabled) return;
         if (_net == null || string.IsNullOrWhiteSpace(_net.BuyAddress))
         {
             ReceiveChat(Lang.GameUi542Label, MessageType.System);
@@ -309,16 +319,19 @@ public partial class GameScene : Control
 
     public void SendGameStoreBuy(int index, long count, bool useHuntGold)
     {
+        if (!GameStoreEnabled) return;
         if (IsObserver || index < 0 || count <= 0) return;
         _net?.Connection?.SendGameStoreBuy(index, count, useHuntGold);
     }
     public void SendGameStoreGift(int index, long count, bool useHuntGold, string recipient)
     {
+        if (!GameStoreEnabled) return;
         if (IsObserver || index < 0 || count <= 0 || string.IsNullOrWhiteSpace(recipient)) return;
         _net?.Connection?.SendGameStoreGift(index, count, useHuntGold, recipient.Trim());
     }
     public void SendGameStoreFavourite(int index)
     {
+        if (!GameStoreEnabled) return;
         if (IsObserver || index < 0) return;
         _net?.Connection?.SendGameStoreFavourite(index);
     }
@@ -422,7 +435,8 @@ public partial class GameScene : Control
         => _net?.Connection?.Enqueue(new C.FriendRemove { Index = index });
     public void SendBlockAdd(string name) => _net?.Connection?.SendBlockAdd(name);
     public void SendBlockRemove(int index) => _net?.Connection?.SendBlockRemove(index);
-    public void SendIncreaseDiscipline() => _net?.Connection?.SendIncreaseDiscipline();
+    // 修炼功能暂时关闭：即使未来有隐藏控件或旧 UI 回调，也不向服务端发请求。
+    public void SendIncreaseDiscipline() { }
     public void SendGuildTax(long tax) => _net?.Connection?.SendGuildTax(tax);
     public void SendMarriageResponse(bool accept)
     {
@@ -442,7 +456,8 @@ public partial class GameScene : Control
     public void SendGroupLfg(bool enabled, string name, string type, int maxCount) => _net?.Connection?.SendGroupLfg(enabled, name, type, maxCount);
     public void SendGroupNotify(bool receive) => _net?.Connection?.SendGroupNotify(receive);
     public void SendMagicToggle(MagicType magic, bool canUse) => _net?.Connection?.SendMagicToggle(magic, canUse);
-    public void SendHermit(Stat stat) => _net?.Connection?.SendHermit(stat);
+    // 隐士功能暂时关闭：保留方法签名以兼容现有控件代码，但不执行加点。
+    public void SendHermit(Stat stat) { }
     public void SendObservable(bool allow) => _net?.Connection?.SendObservable(allow);
     public void SendTownRevive() => _net?.Connection?.SendTownRevive();
     private ClientUserCurrency _selectedCurrency;
@@ -475,9 +490,10 @@ public partial class GameScene : Control
     }
     public void SendRankingInspect(int index)
         => _net?.Connection?.Enqueue(new C.Inspect { Index = index, Ranking = true });
-    public void OpenCompanionDialog() { if (_companionDialog != null) WindowManager.Open(_companionDialog, _uiLayer); }
+    public void OpenCompanionDialog() { if (!CompanionEnabled) return; if (_companionDialog != null) WindowManager.Open(_companionDialog, _uiLayer); }
     public void OpenNPCCompanionStorage()
     {
+        if (!CompanionEnabled) return;
         if (_npcCompanionStorageDialog == null) return;
         _npcCompanionStorageDialog.SetCompanions(Companions);
         WindowManager.Open(_npcCompanionStorageDialog, _uiLayer);
@@ -624,8 +640,12 @@ public partial class GameScene : Control
     public void OpenCommunicationDialog() { if (_communicationDialog != null) WindowManager.Open(_communicationDialog, _uiLayer); }
     public void OpenGroupDialog() { if (_groupDialog != null) { _net?.Connection?.SendGroupNotify(true); WindowManager.Open(_groupDialog, _uiLayer); } }
     public void CloseGroupDialog() { if (_groupDialog != null) WindowManager.Close(_groupDialog); }
-    public void OpenGameStoreDialog() { if (_gameStoreDialog != null) WindowManager.Open(_gameStoreDialog, _uiLayer); }
-    public void OpenConsignmentDialog() { if (_consignmentDialog != null) WindowManager.Open(_consignmentDialog, _uiLayer); }
+    public void OpenGameStoreDialog()
+    {
+        if (!GameStoreEnabled) return;
+        if (_gameStoreDialog != null) WindowManager.Open(_gameStoreDialog, _uiLayer);
+    }
+    public void OpenConsignmentDialog() { if (!ConsignmentEnabled) return; if (_consignmentDialog != null) WindowManager.Open(_consignmentDialog, _uiLayer); }
     public void OpenMarketHistory(ClientUserItem item) { if (_marketHistoryDialog != null) _marketHistoryDialog.ShowFor(item); }
     public void OpenFishingDialog() { if (_fishingDialog != null) WindowManager.Open(_fishingDialog, _uiLayer); }
     public void OpenEditCharacterDialog()
@@ -676,7 +696,8 @@ public partial class GameScene : Control
     private DXLabel _mouseItemLabel;    // 拿起物品跟随鼠标的文字
     private DXLabel _hoverLabel;        // 物品悬浮提示
     private ClientUserItem _hoverItem;
-    private readonly System.Collections.Generic.Dictionary<uint, MirEffectNode> _itemGlows = new(); // 地面物品稀有度光效
+    // 每个地面物品都有经典白色闪烁；稀有物品还会叠加其蓝/绿/紫光效。
+    private readonly System.Collections.Generic.Dictionary<uint, List<MirEffectNode>> _itemGlows = new();
     private readonly System.Collections.Generic.Dictionary<int, MirEffectNode> _buffEffects = new();
     private readonly System.Collections.Generic.Dictionary<uint, MirEffectNode> _spellEffects = new();
     private readonly System.Collections.Generic.Dictionary<(uint, BuffType), MirEffectNode> _objectBuffEffects = new();
@@ -1998,7 +2019,7 @@ public partial class GameScene : Control
                 if (_magicBar != null) _magicBar.Visible = !_magicBar.Visible;
                 break;
             case KeyBindAction.DungeonFinderWindow:
-                WindowManager.Toggle(_dungeonFinderDialog, _uiLayer);
+                if (DungeonEnabled) WindowManager.Toggle(_dungeonFinderDialog, _uiLayer);
                 break;
             case KeyBindAction.BlockListWindow:
                 WindowManager.Toggle(_communicationDialog, _uiLayer);
@@ -2048,10 +2069,11 @@ public partial class GameScene : Control
                 WindowManager.Toggle(_rankingDialog, _uiLayer);
                 break;
             case KeyBindAction.GameStoreWindow:
-                WindowManager.Toggle(_gameStoreDialog, _uiLayer);
+                if (GameStoreEnabled)
+                    WindowManager.Toggle(_gameStoreDialog, _uiLayer);
                 break;
             case KeyBindAction.CompanionWindow:
-                WindowManager.Toggle(_companionDialog, _uiLayer);
+                if (CompanionEnabled) WindowManager.Toggle(_companionDialog, _uiLayer);
                 break;
             case KeyBindAction.GroupWindow:
                 WindowManager.Toggle(_groupDialog, _uiLayer);
@@ -2905,25 +2927,52 @@ public partial class GameScene : Control
     private void OnDisciplineExperienceChanged(long experience) { if (StartInfo?.Discipline != null) StartInfo.Discipline.Experience = experience; _characterDialog?.RefreshDiscipline(); }
     private void OnMarriageInvite(S.MarriageInvite packet) => _guildDialog?.ShowMarriageInvite(packet?.Name);
 
-    // 稀有度光效 (原版 ItemObject: Common+AddedStats / Superior / Elite)
+    // 地面物品光效：所有掉落使用经典白色十字闪烁；稀有度光效沿用
+    // 原版 ItemObject 的 Common+AddedStats / Superior / Elite 规则并叠加。
     private void SpawnItemGlow(ObjectRenderer ob, ClientUserItem item)
     {
+        if (ob == null) return;
+        var effects = new List<MirEffectNode>();
+        _itemGlows[ob.ObjectID] = effects;
+
+    // ProgUse 20..29：资源内的经典白色星芒/十字闪烁，10 帧循环。
+    // 旧版实际显示的是小型星芒，而不是把 128 像素画布原尺寸铺开。
+    // 0.5 倍约为旧版截图中的 25~35 像素可见尺寸；普通掉落使用更慢、更
+    // 柔和的呼吸节奏，避免 100ms 快速循环造成“乱闪”；同时叠加平滑
+    // 淡入淡出，让星芒不是单纯切帧闪烁。
+        var sparkle = new MirEffectNode();
+        AddChild(sparkle);
+    sparkle.Setup(LibraryFile.ProgUse, 20, 10, 280, ob, ob.CellX, ob.CellY, null);
+    sparkle.Loop = true;
+    sparkle.Blend = true;
+    sparkle.BlendRate = 0.25f;
+    sparkle.SpriteScale = 0.5f;
+    // Ground 图库物品本体以节点左上角 + (24,16) 居中绘制；ProgUse
+    // 的资源偏移属于另一套特效锚点，不能直接套到地面物品上。
+    sparkle.UseOffSet = false;
+    sparkle.AdditionalOffX = 24;
+    sparkle.AdditionalOffY = 16;
+    sparkle.PulseFade = true;
+    sparkle.PulseMinOpacity = 0.12f;
+    sparkle.PulseMaxOpacity = 0.48f;
+        effects.Add(sparkle);
+
         if (item?.Info == null) return;
         var info = item.Info;
 
         int fxIndex;
-        Color colour;
+        Color lightColour;
         switch (info.Rarity)
         {
             case Rarity.Superior:
-                fxIndex = 100; colour = new Color(0.6f, 1f, 0.6f); break;  // PaleGreen
+                fxIndex = 100; lightColour = Colors.PaleGreen; break;
             case Rarity.Elite:
-                fxIndex = 120; colour = new Color(0.72f, 0.6f, 1f); break; // MediumPurple
+                fxIndex = 120; lightColour = Colors.MediumPurple; break;
             default:
                 // Common: 带附加属性且非零件才有光效
                 if (item.AddedStats?.Count > 0 && info.ItemEffect != ItemEffect.ItemPart)
                 {
-                    fxIndex = 110; colour = new Color(0.3f, 0.7f, 1f); break; // DeepSkyBlue
+                    fxIndex = 110; lightColour = Colors.DeepSkyBlue; break;
                 }
                 return;
         }
@@ -2934,9 +2983,12 @@ public partial class GameScene : Control
         fx.Loop = true;
         fx.Blend = true;
         fx.BlendRate = 0.5f;
-        fx.ZIndex = 25;
-        fx.SelfModulate = colour;
-        _itemGlows[ob.ObjectID] = fx;
+        // 原版 ItemObject 的 MirEffect 构造参数为 (60, 60, colour)：
+        // colour 是随帧光源颜色，不是序列帧贴图的染色。贴图本身始终白色
+        // Blend 绘制，并在物品脚底所在行的物体特效层显示。
+        fx.FrameLight = 60;
+        fx.FrameLightColour = lightColour;
+        effects.Add(fx);
     }
 
     private void OnObjectRemove(uint objectID)
@@ -2957,7 +3009,8 @@ public partial class GameScene : Control
             if (_objectBuffEffects.Remove(key, out var buffFx)) buffFx.QueueFree();
         }
         if (_objectPoisonEffects.Remove(objectID, out var poisonFx)) poisonFx.QueueFree();
-        if (_itemGlows.Remove(objectID, out var fx)) fx.QueueFree();
+        if (_itemGlows.Remove(objectID, out var glows))
+            foreach (var glow in glows) glow.QueueFree();
         if (_otherPlayers.Remove(objectID, out var player)) player.QueueFree();
         bool removedGroundItem = _objects.Remove(objectID, out var ob) && ob.Type == ObjectRenderer.Kind.Item;
         ob?.QueueFree();
@@ -4510,6 +4563,11 @@ public partial class GameScene : Control
         _npcQuestDialog = new NPCQuestDialog();
         _uiLayer.AddChild(_npcQuestDialog);
 
+        // 核心窗口统一经过旧版 profile 适配器；默认只应用旧版公共视觉，
+        // 不覆盖各窗口自身的动态尺寸和业务布局。确认过的几何迁移由
+        // LegacyUiSkin.ApplyWindowProfile(window, geometry: true) 显式开启。
+        ApplyLegacyCoreWindowProfiles();
+
         // 数组注入: 先设 ItemGrid 再 CreateGrid (格子建立时快照 ItemGrid)
         _inventoryDialog.Grid.ItemGrid = Inventory;
         _inventoryDialog.Grid.CreateGrid();
@@ -4559,10 +4617,22 @@ public partial class GameScene : Control
         _mainPanel.MailButton.MouseClick += (o, e) => OpenCommunicationDialog();
         _mainPanel.GroupButton.MouseClick += (o, e) => OpenGroupDialog();
         _mainPanel.CashShopButton.MouseClick += (o, e) => OpenGameStoreDialog();
+        _mainPanel.CashShopButton.Visible = GameStoreEnabled;
 
         if (AutoLoginArgs.UiDiagnosticBorders)
             DXControl.DiagnosticBorders = true;
         LayoutHud();
+    }
+
+    private void ApplyLegacyCoreWindowProfiles()
+    {
+        LegacyUiSkin.ApplyWindowProfile(_inventoryDialog);
+        LegacyUiSkin.ApplyWindowProfile(_characterDialog);
+        LegacyUiSkin.ApplyWindowProfile(_questDialog);
+        LegacyUiSkin.ApplyWindowProfile(_configDialog);
+        LegacyUiSkin.ApplyWindowProfile(_groupDialog);
+        LegacyUiSkin.ApplyWindowProfile(_npcDialog);
+        _mainPanel?.SetPetModeEnabled(CompanionEnabled);
     }
 
     private void OnGameResized()
@@ -5052,13 +5122,13 @@ public partial class GameScene : Control
         _currentMP = info.CurrentMP;
         _currentFP = info.CurrentFP;
         _attackMode = info.AttackMode;
-        _petMode = info.PetMode;
+        _petMode = default;
 
         _mainPanel?.SetLevel(_playerLevel);
         _mainPanel?.SetClass(info.Class);
         _mainPanel?.SetExperience(_playerExperience, _playerMaxExperience);
         _mainPanel?.SetAttackMode(_attackMode);
-        _mainPanel?.SetPetMode(_petMode);
+        _mainPanel?.SetPetModeEnabled(CompanionEnabled);
         RefreshPlayerBars();
 
         _buffs.Clear();
@@ -5144,9 +5214,9 @@ public partial class GameScene : Control
         if (_player == null) return;
         _player.MaxHealth = _playerStats[Stat.Health];
         _player.MaxMana = _playerStats[Stat.Mana];
-        // 原版即使没有火把也保留半径 3 的玩家微光；装备火把后由 Stat.Light
-        // 提供更大的半径。此前直接使用 Stat.Light 会让无火把时完全没有光圈。
-        _player.Light = Math.Max(3, _playerStats[Stat.Light]);
+        // 无照明物时保留蜡烛级基础光；装备蜡烛/火把后在原始 Stat.Light
+        // 基础上额外增强约 20%，让照明物的差异仍然保留但夜间不至于过暗。
+        _player.Light = EffectivePlayerLight(_playerStats[Stat.Light]);
         if (_player.Health <= 0) _player.Health = _playerStats[Stat.Health];
         RefreshPlayerBars();
     }
@@ -5155,6 +5225,12 @@ public partial class GameScene : Control
     // 这里循环施放 Abyss 环绕特效——原版每次光照层重建都重画
     // user.CreateMagicEffect(MagicEffect.Abyss), 对应 14帧×70ms≈980ms。
     private const double AbyssEffectIntervalSeconds = 0.98;
+
+    private static int EffectivePlayerLight(int statLight)
+    {
+        if (statLight <= 0) return 3;
+        return Math.Max(3, (int)Math.Ceiling(statLight * 1.2));
+    }
 
     private void UpdateAbyssVision(bool active)
     {
@@ -5184,7 +5260,7 @@ public partial class GameScene : Control
         foreach (var player in _otherPlayers.Values)
             if (!player.Dead)
             {
-                int light = Math.Max(3, player.Light);
+                int light = EffectivePlayerLight(player.Light);
                 yield return new MapLightLayer.LightSource(player.Position + new Vector2(24f, 0f), light,
                     player.Light > 0 ? new Color(1f, 0.86f, 0.55f) : new Color(1f, 1f, 1f, 0.47f));
             }
@@ -5460,6 +5536,7 @@ public partial class GameScene : Control
 
     private void CyclePetMode()
     {
+        if (!CompanionEnabled) return;
         _petMode = (PetMode)(((int)_petMode + 1) % 5);
         _mainPanel?.SetPetMode(_petMode);
         _net.Connection.Enqueue(new C.ChangePetMode { Mode = _petMode });
@@ -5477,6 +5554,7 @@ public partial class GameScene : Control
 
     private void OnPetModeChanged(PetMode mode)
     {
+        if (!CompanionEnabled) return;
         _petMode = mode;
         _mainPanel?.SetPetMode(mode);
         if (_mainPanel != null && _chatLog != null)
@@ -8290,8 +8368,8 @@ public partial class GameScene : Control
         if (clearObjects)
         {
             _combatController?.RemoveObjectReference(_combatController.TargetObject?.ObjectID ?? 0);
-            foreach (var fx in _itemGlows.Values)
-                fx.QueueFree();
+            foreach (var glows in _itemGlows.Values)
+                foreach (var glow in glows) glow.QueueFree();
             _itemGlows.Clear();
             foreach (var ob in _objects.Values)
                 ob.QueueFree();

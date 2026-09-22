@@ -57,8 +57,7 @@ public partial class MainPanel : DXImageControl
         // 原版 MainPanel 在每个按钮/属性图标上提供 Hint；Godot 使用
         // Control.TooltipText 承载相同的悬停提示，键位从已加载的持久化表读取。
         CharacterButton.TooltipText = string.Format(Lang.MainPanelCharacterButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.CharacterWindow));
-        InventoryButton.TooltipText = string.Format(Lang.MainPanelInventoryButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.InventoryWindow))
-            + "\n" + string.Format(Lang.MainPanelCompanionButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.CompanionWindow));
+        InventoryButton.TooltipText = string.Format(Lang.MainPanelInventoryButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.InventoryWindow));
         SpellButton.TooltipText = string.Format(Lang.MainPanelSpellButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.MagicWindow));
         QuestButton.TooltipText = string.Format(Lang.MainPanelQuestButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.QuestLogWindow));
         MailButton.TooltipText = string.Format(Lang.MainPanelMailButtonHint, KeyBindManager.GetKeyBindLabel(KeyBindAction.MailBoxWindow));
@@ -362,6 +361,11 @@ public partial class MainPanel : DXImageControl
     public void SetPetMode(PetMode mode)
     {
         PetModeLabel.Text = GetDescription(mode) ?? mode.ToString();
+    }
+
+    public void SetPetModeEnabled(bool enabled)
+    {
+        PetModeLabel.Visible = enabled;
     }
 
     private static string GetDescription<T>(T value) where T : Enum

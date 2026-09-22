@@ -64,9 +64,21 @@ Hint `MonsterDialogGrowthIconHint`（含成长等级）。新版此前硬编码
 「成长等级 N」。数据来自 `S.ObjectStats`（GameScene.OnObjectStats 填充
 `objectNode.Stats`），与旧版 `MonsterObject.Stats[Stat.GrowthLevel]` 同源。
 
+### 3.4 悬停信息条可读性
+
+旧版虽然将 `MonsterDialog` 放在逻辑画布顶部居中（`Location = (250, 50)`，
+窗口尺寸 `186x54`），但窗口的 `Opacity = 0.3` 不会级联压暗子控件文字；各个
+信息面板的半透明只影响背景。Godot 的 `Modulate` 会把父控件和文字一起变暗，
+导致怪物信息条在游戏中几乎不可读。
+
+新版保留原版的顶部居中定位和尺寸，将窗口透明度改为 1，改用面板背景颜色的
+alpha 表达半透明，并给等级、名称、血量文字增加黑色描边。这样背景仍保持老游戏
+的暗色效果，文字不会再被父控件透明度一起压暗。
+
 ## 4. 验证
 
-- `dotnet build GodotClient/ZirconClient.csproj`：✅ 0 警告 0 错误；
+- `dotnet build GodotClient/ZirconClient.csproj --no-incremental`：✅ 0 错误；
+- `UITestScene --ui-audit --monster-audit`：✅ `UIMonsterAudit PASS`；
 - `AuditLayout`（UITestScene 使用）：控件数 27 不变（引用数组不增控件），
   初始图标索引断言不受影响；
 - 建议真机核对：悬停怪物展开面板，抗性正负颜色、图标悬停文字、

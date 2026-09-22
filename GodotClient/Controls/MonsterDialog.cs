@@ -29,17 +29,22 @@ public sealed partial class MonsterDialog : DXWindow
 
     public MonsterDialog()
     {
-        HasTitle = false; HasFooter = false; HasTopBorder = false; ShowCloseButton = false; Size = new Vector2I(186, 54); Opacity = .3f; MouseFilter = MouseFilterEnum.Ignore;
-        var levelBox = new DXControl { Location = new Vector2I(5, 5), Size = new Vector2I(31, 20), BackColour = Colors.Black, Border = true, BorderColour = new Color(1f, .75f, .25f), Opacity = .6f, MouseFilter = MouseFilterEnum.Ignore }; AddControl(levelBox);
-        _level = new DXLabel { FontSize = 9, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Size = new Vector2I(31, 20), IsControl = false }; levelBox.AddControl(_level);
-        var nameBox = new DXControl { Location = new Vector2I(41, 5), Size = new Vector2I(140, 20), BackColour = Colors.Black, Border = true, BorderColour = new Color(1f, .75f, .25f), Opacity = .6f, MouseFilter = MouseFilterEnum.Ignore }; AddControl(nameBox);
-        _name = new DXLabel { FontSize = 9, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Size = new Vector2I(140, 20), IsControl = false }; nameBox.AddControl(_name);
-        var healthBox = new DXControl { Location = new Vector2I(41, 32), Size = new Vector2I(121, 16), BackColour = Colors.Black, Border = true, BorderColour = new Color(1f, .75f, .25f), Opacity = .6f, MouseFilter = MouseFilterEnum.Ignore, Clip = true }; AddControl(healthBox);
+        HasTitle = false; HasFooter = false; HasTopBorder = false; ShowCloseButton = false; Size = new Vector2I(186, 54);
+        // 原版 MonsterDialog 的 Opacity=0.3 只作用于窗口底图；WinForms 不会把它
+        // 级联到子标签。Godot 的 Modulate 会连文字一起变暗，因此背景透明度必须
+        // 用 BackColour 的 alpha 表达，窗口本身保持不透明。
+        Opacity = 1f;
+        MouseFilter = MouseFilterEnum.Ignore;
+        var levelBox = CreateInfoBox(new Vector2I(5, 5), new Vector2I(31, 20)); AddControl(levelBox);
+        _level = CreateInfoLabel(31, 20); levelBox.AddControl(_level);
+        var nameBox = CreateInfoBox(new Vector2I(41, 5), new Vector2I(140, 20)); AddControl(nameBox);
+        _name = CreateInfoLabel(140, 20); nameBox.AddControl(_name);
+        var healthBox = CreateInfoBox(new Vector2I(41, 32), new Vector2I(121, 16)); healthBox.Clip = true; AddControl(healthBox);
         _healthFill = new DXControl { Location = new Vector2I(1, 2), Size = new Vector2I(1, 12), MouseFilter = MouseFilterEnum.Ignore, Clip = true }; healthBox.AddControl(_healthFill);
         _healthTexture = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 5430, IsControl = false, MouseFilter = MouseFilterEnum.Ignore };
         _healthFill.AddControl(_healthTexture);
-        _health = new DXLabel { FontSize = 8, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Size = new Vector2I(120, 16), IsControl = false }; healthBox.AddControl(_health);
-        var attackBox = new DXControl { Location = new Vector2I(5, 30), Size = new Vector2I(31, 20), BackColour = Colors.Black, Border = true, BorderColour = new Color(1f, .75f, .25f), Opacity = .6f, MouseFilter = MouseFilterEnum.Ignore };
+        _health = CreateInfoLabel(120, 16); healthBox.AddControl(_health);
+        var attackBox = CreateInfoBox(new Vector2I(5, 30), new Vector2I(31, 20));
         AddControl(attackBox);
         _attackIcon = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 1517, Location = new Vector2I(5, 0), IsControl = false, MouseFilter = MouseFilterEnum.Ignore };
         attackBox.AddControl(_attackIcon);
@@ -51,8 +56,8 @@ public sealed partial class MonsterDialog : DXWindow
             Size = new Vector2I(176, 110),
             Border = true,
             BorderColour = new Color(1f, .75f, .25f),
-            BackColour = Colors.Black,
-            Opacity = .6f,
+            BackColour = new Color(0f, 0f, 0f, .72f),
+            Opacity = 1f,
             MouseFilter = MouseFilterEnum.Ignore,
             Visible = false,
         };
@@ -169,9 +174,9 @@ public sealed partial class MonsterDialog : DXWindow
     public bool AuditLayout(out string details)
     {
         bool valid = Size == new Vector2I(186, 54)
-            && Mathf.IsEqualApprox(Opacity, .3f)
+            && Mathf.IsEqualApprox(Opacity, 1f)
             && _detailsPanel.Size == new Vector2I(176, 110)
-            && Mathf.IsEqualApprox(_detailsPanel.Opacity, .6f)
+            && Mathf.IsEqualApprox(_detailsPanel.Opacity, 1f)
             && _resist.Length == 8
             && _attackSpeedIcon.Index == 590
             && _movementSpeedIcon.Index == 620
@@ -250,6 +255,36 @@ public sealed partial class MonsterDialog : DXWindow
     }
 
     private static string Resistance(int value) => $"x{Mathf.Abs(value):0}";
+
+    private static DXControl CreateInfoBox(Vector2I location, Vector2I size)
+    {
+        return new DXControl
+        {
+            Location = location,
+            Size = size,
+            BackColour = new Color(0f, 0f, 0f, .72f),
+            Border = true,
+            BorderColour = new Color(1f, .75f, .25f),
+            Opacity = 1f,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+    }
+
+    private static DXLabel CreateInfoLabel(int width, int height)
+    {
+        return new DXLabel
+        {
+            FontSize = 9,
+            Align = HorizontalAlignment.Center,
+            VAlign = VerticalAlignment.Center,
+            AutoSize = false,
+            Size = new Vector2I(width, height),
+            IsControl = false,
+            DrawOutline = true,
+            OutlineColour = Colors.Black,
+            TextColour = Colors.White,
+        };
+    }
 
     /// <summary>
     /// 旧版 PopulateLabel 的抗性颜色：0 白、正数 Lime、负数 IndianRed。

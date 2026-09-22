@@ -4631,6 +4631,8 @@ public partial class GameScene : Control
         _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitDialog();
         _mainPanel.PartyButton.MouseClick += (o, e) => OpenGroupDialog();
         _mainPanel.GuildButton.MouseClick += (o, e) => OpenGuildDialog();
+        _mainPanel.ExchangeButton.MouseClick += (o, e) => _tradeDialog?.OpenTrade("交易");
+        _mainPanel.LogoutButton.MouseClick += (o, e) => OpenExitDialog();
 
         if (AutoLoginArgs.UiDiagnosticBorders)
             DXControl.DiagnosticBorders = true;

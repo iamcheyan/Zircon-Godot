@@ -4618,6 +4618,19 @@ public partial class GameScene : Control
         _mainPanel.GroupButton.MouseClick += (o, e) => OpenGroupDialog();
         _mainPanel.CashShopButton.MouseClick += (o, e) => OpenGameStoreDialog();
         _mainPanel.CashShopButton.Visible = GameStoreEnabled;
+        // 旧版 HUD 左上/两侧的小按钮也保留原版的入口语义。
+        _mainPanel.SkillEntryButton.MouseClick += (o, e) =>
+        {
+            WindowManager.Toggle(_magicDialog, _uiLayer);
+            _magicDialog.Refresh();
+        };
+        _mainPanel.MiniMapButton.MouseClick += (o, e) =>
+        {
+            if (_miniMap != null) _miniMap.Visible = !_miniMap.Visible;
+        };
+        _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitDialog();
+        _mainPanel.PartyButton.MouseClick += (o, e) => OpenGroupDialog();
+        _mainPanel.GuildButton.MouseClick += (o, e) => OpenGuildDialog();
 
         if (AutoLoginArgs.UiDiagnosticBorders)
             DXControl.DiagnosticBorders = true;

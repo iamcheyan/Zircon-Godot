@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
 using System.Reflection;
 using Godot;
 using Library;
@@ -18,6 +19,9 @@ public partial class MainPanel : DXImageControl
     public DXControl HealthBar, ManaBar, FocusBar;
     public DXButton CharacterButton, InventoryButton, SpellButton, QuestButton, MailButton,
         BeltButton, GroupButton, MenuButton, CashShopButton;
+    public DXButton ExchangeButton, MiniMapButton, SkillEntryButton, ExitButton, LogoutButton,
+        PartyButton, GuildButton;
+    private readonly List<DXButton> _legacyHudButtons = new();
     public DXImageControl NewMailIcon, AvailableQuestIcon, CompletedQuestIcon;
     public DXImageControl ClassImage, LevelImage, FPImage, CPImage, ACImage, DCImage, MACImage, MCImage, SCImage;
     public DXLabel ClassLabel, LevelLabel, FPLabel, CPLabel, ACLabel, DCLabel, MACLabel, MCLabel, SCLabel,
@@ -27,6 +31,7 @@ public partial class MainPanel : DXImageControl
     private int _currentHP, _currentMP, _currentFP;
     private decimal _experience, _maxExperience;
     private Stats _stats = new Stats();
+    private DXControl _playerOrb;
 
     public MainPanel()
     {
@@ -56,17 +61,42 @@ public partial class MainPanel : DXImageControl
         FocusBar = CreateBar(0, 0, 1, 1, 60, () => PercentOf(_currentFP, _stats[Stat.Focus]), glowIndex: 60);
         FocusBar.Visible = false;
 
-        // CreateButton 的参数顺序是 (图标索引, X, Y)；X/Y 保持旧客户端
-        // GameInter 50 底图上的逻辑坐标，CanvasLayer 再统一放大 2 倍。
-        CharacterButton = CreateButton(82, 650, 23);
-        InventoryButton = CreateButton(87, 689, 23);
-        SpellButton = CreateButton(92, 728, 23);
-        QuestButton = CreateButton(112, 767, 23);
-        MailButton = CreateButton(97, 806, 23);
-        BeltButton = CreateButton(107, 845, 23);
-        GroupButton = CreateButton(102, 884, 23);
-        MenuButton = CreateButton(117, 923, 23);
-        CashShopButton = CreateButton(122, 972, 16);
+        // 旧版玩家球使用 GameInter[60]/[61] 两个 56x110 半球，完整红球为
+        // GameInter[62] 的 112x110 贴图。统一用一个 112x110 控件绘制，
+        // 避免把完整球误画到右侧环形操作区。
+        _playerOrb = new DXControl
+        {
+            Location = new Vector2I(49, 13),
+            Size = new Vector2I(112, 110),
+            Clip = true,
+        };
+        _playerOrb.BeforeDraw += DrawPlayerOrb;
+        AddControl(_playerOrb);
+        HealthBar.Visible = false;
+        ManaBar.Visible = false;
+
+        // 旧版 HUD 的 16 个控件不是新版的横向九键排布。这里严格使用
+        // 模拟器/反编译证据中的屏幕矩形，所有坐标先减去 HUD 原点 (0,465)。
+        // 额外控件也保留，确保右侧环形操作区和左上三个小按钮完整对齐。
+        ExchangeButton = CreateButton(80, 81, 204, 2, 24, 16);
+        MiniMapButton = CreateButton(82, 83, 228, 2, 24, 16);
+        SkillEntryButton = CreateButton(84, 85, 252, 2, 24, 16);
+        ExitButton = CreateButton(90, 91, 161, 46, 28, 26);
+        LogoutButton = CreateButton(92, 93, 161, 82, 28, 26);
+        PartyButton = CreateButton(94, 95, 616, 47, 28, 26);
+        GuildButton = CreateButton(96, 97, 616, 82, 28, 26);
+        _legacyHudButtons.AddRange(new[] { ExchangeButton, MiniMapButton, SkillEntryButton,
+            ExitButton, LogoutButton, PartyButton, GuildButton });
+
+        CharacterButton = CreateButton(110, 111, 648, 70, 40, 38);
+        InventoryButton = CreateButton(112, 113, 648, 32, 40, 38);
+        SpellButton = CreateButton(100, 101, 703, 16, 40, 38);
+        QuestButton = CreateButton(104, 105, 718, 70, 40, 38);
+        MailButton = CreateButton(102, 103, 718, 32, 40, 38);
+        BeltButton = CreateButton(159, 159, 393, 2, 24, 16);
+        GroupButton = CreateButton(108, 109, 664, 86, 40, 38);
+        MenuButton = CreateButton(106, 107, 703, 85, 40, 38);
+        CashShopButton = CreateButton(114, 115, 665, 16, 40, 38);
 
         // 原版 MainPanel 在每个按钮/属性图标上提供 Hint；Godot 使用
         // Control.TooltipText 承载相同的悬停提示，键位从已加载的持久化表读取。
@@ -227,13 +257,33 @@ public partial class MainPanel : DXImageControl
         bar.DrawTextureRect(tex, new Rect2(0, y, ExperienceBar.Size.X * p, imgSize.Y), false);
     }
 
-    private DXButton CreateButton(int index, int x, int y)
+    private void DrawPlayerOrb(object sender, EventArgs e)
+    {
+        if (sender is not DXControl orb) return;
+        if (_currentMP <= 0)
+        {
+            var full = MirSkin.GetTexture(LibraryFile.GameInter, 62);
+            if (full != null) orb.DrawTextureRect(full, new Rect2(0, 0, 112, 110), false);
+            return;
+        }
+
+        var red = MirSkin.GetTexture(LibraryFile.GameInter, 60);
+        var blue = MirSkin.GetTexture(LibraryFile.GameInter, 61);
+        if (red != null) orb.DrawTextureRect(red, new Rect2(0, 0, 56, 110), false);
+        if (blue != null) orb.DrawTextureRect(blue, new Rect2(56, 0, 56, 110), false);
+    }
+
+    private DXButton CreateButton(int index, int hoverIndex, int x, int y, int width, int height)
     {
         var b = new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
             Index = index,
+            HoverIndex = hoverIndex,
+            PressedIndex = hoverIndex,
             Location = new Vector2I(x, y),
+            FixedSize = true,
+            Size = new Vector2I(width, height),
         };
         AddControl(b);
         return b;
@@ -333,6 +383,7 @@ public partial class MainPanel : DXImageControl
         _currentMP = currentMP;
         ManaLabel.Text = $"{currentMP}/{_stats[Stat.Mana]}";
         CenterBarLabel(ManaLabel, ManaBar);
+        _playerOrb?.QueueRedraw();
     }
 
     public void SetFocus(int currentFP)

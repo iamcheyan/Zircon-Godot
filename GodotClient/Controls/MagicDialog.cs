@@ -22,7 +22,7 @@ public partial class MagicDialog : DXWindow
     private DXControl _list;
     private DXVScrollBar _scrollBar;
     private DXImageControl _header;
-    private DXImageControl _background;
+    private LegacyUiFrame _background;
     private MagicSchool _selectedSchool;
     private List<MagicSchool> _tabOrder = new();
     private int _tabPageStart;
@@ -50,11 +50,12 @@ public partial class MagicDialog : DXWindow
         };
         AddControl(_header);
 
-        _background = new DXImageControl
+        _background = new LegacyUiFrame
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 164,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 400,
             Location = new Vector2I(0, 66),
+            Size = new Vector2I(419, 445),
             MouseFilter = MouseFilterEnum.Ignore,
         };
         AddControl(_background);

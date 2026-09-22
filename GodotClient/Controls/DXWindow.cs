@@ -129,6 +129,8 @@ public abstract partial class DXWindow : DXControl
             AddChild(_titleLabel);
         }
 
+        LegacyUiSkin.ApplyVisualDefaults(this);
+
 
         // 布局完成后应用 Web 编辑器 overlay（deferred：等子类 _Ready 尾部的重排
         // 如 InventoryDialog.CenterWeightLabel 跑完再覆盖）。无 overlay 时零开销。
@@ -168,7 +170,7 @@ public abstract partial class DXWindow : DXControl
     {
         if (canvas == null || size.X <= 0 || size.Y <= 0) return;
 
-        canvas.DrawRect(new Rect2(Vector2.Zero, size), new Color(0.063f, 0.031f, 0.031f, 0.98f));
+        canvas.DrawRect(new Rect2(Vector2.Zero, size), LegacyUiSkin.WindowFill);
 
         void DrawStretch(int index, float x, float y, float width, float height)
         {

@@ -785,6 +785,7 @@ public partial class GameScene : Control
     private double _runCooldownUntilMs;
     private double _nextNpcCallMs;
     private uint _pendingNpcClickObjectId;
+    private uint _groundItemPickupTargetId;
     private double _nextInspectMs;
     private PoisonType _playerPoison;
     private bool _abyssVisionActive;
@@ -8052,6 +8053,92 @@ public partial class GameScene : Control
         };
     }
 
+    private void ProcessGroundItemPickup()
+    {
+        if (_groundItemPickupTargetId == 0 || _player == null) return;
+        if (!_objects.TryGetValue(_groundItemPickupTargetId, out var item)
+            || item.Type != ObjectRenderer.Kind.Item)
+        {
+            _groundItemPickupTargetId = 0;
+            return;
+        }
+
+        // 等当前移动插值和服务端回包完成，再判断是否已经到达拾取范围。
+        // 这样不会在人物还滑行时提前发送 PickUp。
+        double now = Godot.Time.GetTicksMsec();
+        if (_moveFrameCount > 1 || now < _moveVisualLockUntilMs || now < _moveServerLockUntilMs)
+            return;
+
+        int distance = Functions.Distance(_playerLocation,
+            new System.Drawing.Point(item.CellX, item.CellY));
+        if (distance <= 1)
+        {
+            if (CanSendMapPickup(_observer, _player.Dead,
+                    _playerPoison.HasFlag(PoisonType.Paralysis),
+                    _playerPoison.HasFlag(PoisonType.Containment),
+                    _player.DragonRepulsed))
+                SendPickUp();
+            _groundItemPickupTargetId = 0;
+            return;
+        }
+
+        if (!CanPlayerMove()) return;
+        MirDirection desired = Functions.DirectionFromPoint(_playerLocation,
+            new System.Drawing.Point(item.CellX, item.CellY));
+        MirDirection direction = desired;
+        int steps = Math.Min(GetTargetRunSteps(), Math.Max(1, distance - 1));
+        if (!CanMoveGroundItemPath(direction, steps))
+        {
+            steps = 1;
+            direction = FindGroundItemDirection(item);
+            if (!CanMoveGroundItemPath(direction, 1)) return;
+        }
+        SendMouseMove(direction, steps, steps >= 2);
+    }
+
+    private bool CanMoveGroundItemPath(MirDirection direction, int steps)
+    {
+        for (int i = 1; i <= steps; i++)
+        {
+            var point = Functions.Move(_playerLocation, direction, i);
+            if (_mapView?.Map == null || point.X < 0 || point.Y < 0
+                || point.X >= _mapView.Map.Width || point.Y >= _mapView.Map.Height
+                || _mapView.Map.Cells[point.X, point.Y].Flag
+                || IsMovementCellBlocked(point.X, point.Y))
+                return false;
+        }
+        return true;
+    }
+
+    private MirDirection FindGroundItemDirection(ObjectRenderer item)
+    {
+        MirDirection best = MirDirection.Down;
+        int bestDistance = int.MaxValue;
+        for (int i = 0; i < 8; i++)
+        {
+            var direction = (MirDirection)i;
+            if (!CanMoveGroundItemPath(direction, 1)) continue;
+            var next = Functions.Move(_playerLocation, direction);
+            int distance = Functions.Distance(next, new System.Drawing.Point(item.CellX, item.CellY));
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = direction;
+            }
+        }
+        return best;
+    }
+
+    private void BeginGroundItemPickup(ObjectRenderer item)
+    {
+        if (item?.Type != ObjectRenderer.Kind.Item) return;
+        _groundItemPickupTargetId = item.ObjectID;
+        _combatController.TargetObject = null;
+        _mouseWalker?.SuspendUntilInputRelease();
+        _mouseWalker?.AutoRun = false;
+        StopPlayerActionForInput();
+    }
+
     private void SendMouseMove(MirDirection direction, int distance, bool running)
     {
         if (_player == null) return;
@@ -8349,6 +8436,7 @@ public partial class GameScene : Control
         }
         TryContinueMining();
         ProcessPendingAutoPathMove();
+        ProcessGroundItemPickup();
         UpdateViewRange();
         // Remote PlayerRenderer advances movement offsets in its own _Process;
         // refresh both the rendered node and its hit proxy in the same frame.
@@ -10316,6 +10404,7 @@ public partial class GameScene : Control
             (stateMouse.ButtonIndex == MouseButton.Left || stateMouse.ButtonIndex == MouseButton.Right))
         {
             CancelAutoPath();
+            _groundItemPickupTargetId = 0;
             bool altLeft = stateMouse.ButtonIndex == MouseButton.Left &&
                 (stateMouse.AltPressed || Input.IsKeyPressed(Key.Alt));
             // 原版 Alt 分支在 Fishing/Taming 状态下直接返回；它不会把
@@ -10476,6 +10565,26 @@ public partial class GameScene : Control
         }
 
         var pickupObject = _combatController?.MouseObject;
+        if (@event is InputEventMouseButton itemClick && itemClick.Pressed
+            && itemClick.ButtonIndex == MouseButton.Left
+            && pickupObject?.Type == ObjectRenderer.Kind.Item)
+        {
+            int itemDistance = Functions.Distance(_playerLocation,
+                new System.Drawing.Point(pickupObject.CellX, pickupObject.CellY));
+            if (itemDistance <= 1)
+            {
+                if (CanSendMapPickup(_observer, _player?.Dead == true,
+                        _playerPoison.HasFlag(PoisonType.Paralysis),
+                        _playerPoison.HasFlag(PoisonType.Containment),
+                        _player?.DragonRepulsed == true))
+                    SendPickUp();
+                _groundItemPickupTargetId = 0;
+            }
+            else
+                BeginGroundItemPickup(pickupObject);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         bool mouseOnPlayerCell = _combatController?.MouseCell() == _playerLocation;
         bool mouseOnNearbyItem = pickupObject?.Type == ObjectRenderer.Kind.Item
             && Math.Max(Math.Abs(pickupObject.CellX - _playerLocation.X),

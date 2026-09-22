@@ -550,6 +550,14 @@ public partial class CombatController : Node2D
             .Where(x => x != null)
             .OrderByDescending(x => x.HitOrder)
             .ToArray();
+
+        // 物品名称标签位于物品图标上方，可能落在另一个逻辑格内；先做
+        // 标签命中，避免点击标签时被地图格扫描转换成普通移动。
+        var labelItem = orderedObjects.FirstOrDefault(ob =>
+            ob.Type == ObjectRenderer.Kind.Item
+            && ob.IsGroundItemLabelHit(mouseLocal - ob.Position));
+        if (labelItem != null) return labelItem;
+
         ObjectRenderer deadObject = null;
         ObjectRenderer itemObject = null;
         for (int d = 0; d < 4; d++)

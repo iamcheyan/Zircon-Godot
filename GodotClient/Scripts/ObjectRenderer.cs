@@ -579,10 +579,11 @@ public partial class ObjectRenderer : MapObjectNode
         if (Type == Kind.Item)
         {
             Vector2 itemLabelPosition = new Vector2(24f, -18f) + GroundItemLabelOffset;
+            bool highlighted = NameHovered;
             RenderPrimitives.DrawLabelWithBackground(this, DisplayName, itemLabelPosition,
-                NameColour, 9f,
+                highlighted ? new Color(1f, 1f, 0.65f) : new Color(0.78f, 0.78f, 0.78f), 9f,
                 new Color(0.02f, 0.02f, 0.02f, 0.86f),
-                new Color(0.95f, 0.78f, 0.28f, 0.92f));
+                highlighted ? new Color(1f, 0.92f, 0.35f, 1f) : new Color(0.58f, 0.58f, 0.58f, 0.95f));
             return;
         }
         // 只有人物名称放在血条上方；怪物、NPC 等地图对象保持原版位置。
@@ -605,6 +606,16 @@ public partial class ObjectRenderer : MapObjectNode
             DrawCircle(new Vector2(24f, y - 7f), 3f, new Color(0.35f, 1f, 0.35f, 0.85f));
         if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
             RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 18f), Colors.White, 9f);
+    }
+
+    /// <summary>判断鼠标是否落在地面物品的可见名称标签上。</summary>
+    public bool IsGroundItemLabelHit(Vector2 localPoint)
+    {
+        if (Type != Kind.Item || string.IsNullOrWhiteSpace(DisplayName)) return false;
+        if (!ClientSettings.ShowItemNames || (!ClientSettings.ShowGroundItemNames && !NameHovered)) return false;
+        Vector2 baseline = new Vector2(24f, -18f) + GroundItemLabelOffset;
+        float width = RenderPrimitives.MeasureLabelWidth(DisplayName, 9f) + 8f;
+        return new Rect2(baseline.X - width / 2f, baseline.Y - 14f, width, 18f).HasPoint(localPoint);
     }
 
     public void SetChat(string text)

@@ -31,11 +31,10 @@ public partial class StorageDialog : DXWindow
         Text = Lang.StorageDialogTitle;
         Size = new Vector2I(410, 479);
 
-        var bg = new DXImageControl
+        var bg = new LegacyUiFrame
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 121,
-            FixedSize = true,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 250,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };

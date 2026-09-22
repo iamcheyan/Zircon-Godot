@@ -28,6 +28,8 @@ public partial class InventoryDialog : DXWindow
     private bool _weightInit;
     private CurrencyInfo _primaryCurrency;
     private DXImageControl _background;
+    private DXButton _legacyActionButton;
+    private DXLabel _legacyModeLabel;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
 
@@ -222,6 +224,36 @@ public partial class InventoryDialog : DXWindow
         Grid.Location = new Vector2I(25, 41);
 
         _titleLabel.Visible = false;
+        _legacyModeLabel ??= new DXLabel
+        {
+            TextColour = new Color(1f, .85f, .55f),
+            DrawOutline = true,
+            OutlineColour = Colors.Black,
+            FontSize = 9,
+            AutoSize = false,
+            IsControl = false,
+        };
+        if (_legacyModeLabel.GetParent() == null) AddControl(_legacyModeLabel);
+        _legacyModeLabel.Text = InvMode switch
+        {
+            InventoryMode.Sell => "[变卖]",
+            _ => "[包袱]",
+        };
+        _legacyModeLabel.Location = new Vector2I(38, 282);
+        _legacyModeLabel.Size = new Vector2I(100, 18);
+
+        _legacyActionButton ??= new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 264,
+            HoverIndex = 265,
+            PressedIndex = 265,
+            Location = new Vector2I(176, 262),
+            Size = new Vector2I(64, 20),
+        };
+        if (_legacyActionButton.GetParent() == null) AddControl(_legacyActionButton);
+        _legacyActionButton.Location = new Vector2I(176, 262);
+        _legacyActionButton.Size = new Vector2I(64, 20);
         CloseButton.LibraryFile = LibraryFile.GameInter;
         CloseButton.Index = 161;
         CloseButton.HoverIndex = 162;
@@ -297,7 +329,10 @@ public partial class InventoryDialog : DXWindow
     /// <summary>GameScene 数据注入</summary>
     public void SetWeight(int bagWeight)
     {
-        WeightLabel.Text = $"{bagWeight}";
+        int capacity = GameScene.Game?.PlayerStats?[Stat.BagWeight] ?? 0;
+        WeightLabel.Text = capacity > 0
+            ? $"负重:{bagWeight} / 总量:{capacity}"
+            : $"负重:{bagWeight} / 总量:0";
         CenterWeightLabel();
         WeightBar.QueueRedraw();
     }

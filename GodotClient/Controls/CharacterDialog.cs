@@ -24,6 +24,8 @@ public partial class CharacterDialog : DXWindow
     private DXControl _fameControl;
     private DXImageControl _background;
     private DXButton _closeButton;
+    private DXButton _legacyViewToggle;
+    private bool _legacyEquipmentView;
     private PaperDoll _doll;
     private DXControl _attributePanel;
     private DXControl _hermitPanel;
@@ -135,6 +137,18 @@ public partial class CharacterDialog : DXWindow
         _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
         _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
         AddControl(_closeButton);
+
+        _legacyViewToggle = new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 171,
+            HoverIndex = 172,
+            PressedIndex = 172,
+            Location = new Vector2I(176, 264),
+            Size = new Vector2I(36, 36),
+        };
+        _legacyViewToggle.MouseClick += (_, _) => ToggleLegacyView();
+        AddControl(_legacyViewToggle);
 
         AddTab(Lang.CharacterCharacterTabLabel, 0, 110);
         // 开发阶段暂不开放“修炼”和“隐士”页签；相关面板仍保留在代码中，
@@ -343,7 +357,20 @@ public partial class CharacterDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(212, 298);
         _closeButton.Size = new Vector2I(28, 26);
+        _legacyViewToggle.Location = new Vector2I(176, 264);
+        _legacyViewToggle.Size = new Vector2I(36, 36);
+        _legacyViewToggle.Visible = true;
         UpdateClientAreaForLegacySkin();
+    }
+
+    private void ToggleLegacyView()
+    {
+        _legacyEquipmentView = !_legacyEquipmentView;
+        _background.Index = _legacyEquipmentView ? 201 : 200;
+        _legacyViewToggle.Index = _legacyEquipmentView ? 168 : 171;
+        _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
+        _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
+        QueueRedraw();
     }
 
     private void AddTab(string text, int x, int backgroundIndex)

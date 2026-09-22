@@ -30,6 +30,7 @@ public partial class MagicDialog : DXWindow
     private DXButton _tabNext;
     private DXButton _closeButton;
     private bool _legacyEiLayout;
+    private readonly List<DXImageControl> _legacySkillSlots = new();
 
     public MagicDialog()
     {
@@ -146,7 +147,43 @@ public partial class MagicDialog : DXWindow
         _closeButton.Location = new Vector2I(418, 348);
         _closeButton.Size = new Vector2I(28, 26);
         BuildLegacySchoolButtons();
+        BuildLegacySkillSlots();
         UpdateClientAreaForLegacySkin();
+    }
+
+    private void BuildLegacySkillSlots()
+    {
+        foreach (var slot in _legacySkillSlots)
+        {
+            RemoveControl(slot);
+            slot.QueueFree();
+        }
+        _legacySkillSlots.Clear();
+
+        // 12 个格子来自 simulator/layout.json 与 skill-grid-magic-exp-evidence：
+        // 4 列、3 行、36×36，GameInter F410..F421 是 Magic.exp 的基准图标。
+        for (int i = 0; i < 12; i++)
+        {
+            int index = i;
+            var slot = new DXImageControl
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 410 + i,
+                FixedSize = true,
+                Location = new Vector2I(30 + (i % 4) * 40, 60 + (i / 4) * 40),
+                Size = new Vector2I(36, 36),
+                IsControl = true,
+                MouseFilter = MouseFilterEnum.Pass,
+                TooltipText = $"旧版技能格 {i + 1} · Magic.exp 图标 F{410 + i}",
+            };
+            slot.MouseClick += (_, _) =>
+            {
+                if (index < _cells.Count)
+                    _cells[index].GrabFocus();
+            };
+            AddControl(slot);
+            _legacySkillSlots.Add(slot);
+        }
     }
 
     private void BuildLegacySchoolButtons()

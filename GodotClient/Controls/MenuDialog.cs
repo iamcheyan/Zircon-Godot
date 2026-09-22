@@ -9,14 +9,14 @@ namespace ZirconClient.Controls;
 public partial class MenuDialog : DXWindow
 {
     public DXButton SettingsButton, HelpButton, GuildButton, StorageButton,
-        RankingButton, CompanionButton, LeaveButton;
+        RankingButton, LeaveButton;
 
     public MenuDialog()
     {
         HasTitle = false;
         Movable = true;
         HasFooter = false;
-        Size = new Vector2I(152, 260);
+        Size = new Vector2I(152, 230);
 
         AddControl(new DXImageControl
         {
@@ -56,15 +56,13 @@ public partial class MenuDialog : DXWindow
         GuildButton = AddMenuButton(Lang.MenuDialogGuildButtonLabel, 100);
         StorageButton = AddMenuButton(Lang.MenuDialogStorageButtonLabel, 130);
         RankingButton = AddMenuButton(Lang.MenuDialogRankingButtonLabel, 160);
-        CompanionButton = AddMenuButton(Lang.CompanionDialogTitle, 190);
-        LeaveButton = AddMenuButton(Lang.MenuDialogLeaveButtonLabel, 220);
+        LeaveButton = AddMenuButton(Lang.MenuDialogLeaveButtonLabel, 190);
 
         StorageButton.MouseClick += (o, e) => GameScene.Game?.ToggleStorageWindow();
         SettingsButton.MouseClick += (o, e) => GameScene.Game?.OpenConfigDialog();
         HelpButton.MouseClick += (o, e) => GameScene.Game?.OpenHelpDialog();
         GuildButton.MouseClick += (o, e) => GameScene.Game?.OpenGuildDialog();
         RankingButton.MouseClick += (o, e) => GameScene.Game?.OpenRankingDialog();
-        CompanionButton.MouseClick += (o, e) => GameScene.Game?.OpenCompanionDialog();
         LeaveButton.MouseClick += (o, e) => GameScene.Game?.OpenExitDialog();
     }
 

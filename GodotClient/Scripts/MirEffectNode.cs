@@ -46,6 +46,13 @@ public partial class MirEffectNode : Node2D
     public float BlendRate = 0.7f;
     public float Opacity = 1f;
     public bool UseOffSet = true; // true 使用图库 OffSet；false 从节点左上角绘制
+    // 部分旧版小型地面特效使用大画布资源，但实际显示尺寸远小于画布。
+    // 默认保持原版 1:1；仅调用方明确设置时缩放，避免影响技能/稀有度特效。
+    public float SpriteScale = 1f;
+    // 可选的平滑呼吸透明度。用于旧式地面物品小闪光；其他特效默认关闭。
+    public bool PulseFade;
+    public float PulseMinOpacity = 0.15f;
+    public float PulseMaxOpacity = 0.65f;
     public int FrameLight;
     public Color FrameLightColour = Colors.White;
     // true=用 GetEffectTexture(黑色透明键抠除, 适合背景为 opaque 黑的帧);
@@ -233,8 +240,10 @@ public partial class MirEffectNode : Node2D
 
     public override void _Draw()
     {
-        // 设置开关门控：关闭"显示特效/粒子"时不绘制（客户端特效唯一总闸）
-        if (!ClientSettings.DrawEffects || !ClientSettings.DrawParticles) return;
+        // MirEffect 是原版的普通序列帧特效，不是粒子发射器。原版只由
+        // Config.DrawEffects 控制；若错误地再受“显示粒子”控制，地面稀有
+        // 掉落光效会在关闭天气/粒子后无故消失。
+        if (!ClientSettings.DrawEffects) return;
         // Keep the legacy NORMAL screen blend. The shader discards fully
         // transparent pixels before sampling SCREEN_TEXTURE, so it cannot
         // turn the sprite's transparent rectangle into an opaque square.
@@ -257,17 +266,33 @@ public partial class MirEffectNode : Node2D
 
         // MirLibrary.Draw uses the supplied position as the top-left when
         // useOffSet=false; centered particles use their own centered path.
+        float scale = Math.Max(0.01f, SpriteScale);
         float ox = UseOffSet ? img.OffSetX : 0f;
         float oy = UseOffSet ? img.OffSetY : 0f;
 
-        var destRect = new Rect2(ox, oy, img.Width, img.Height);
+        // 缩放围绕帧中心进行，避免把缩小后的星芒偏到物品一侧。
+        float cx = img.Width * 0.5f;
+        float cy = img.Height * 0.5f;
+        var destRect = new Rect2(
+            cx + ox * scale - img.Width * scale * 0.5f,
+            cy + oy * scale - img.Height * scale * 0.5f,
+            img.Width * scale, img.Height * scale);
         var srcRect = new Rect2(0, 0, img.Width, img.Height);
 
         // Old MirEffect.Draw uses DrawColour (white by default). The
         // FrameLightColour is only the light/effect-light colour; applying it
         // to the sprite itself turns FireColour=OrangeRed into a solid red
         // overlay, unlike the original client.
-        Color c = new(1f, 1f, 1f, Blend ? 1f : Opacity);
+        float drawOpacity = Opacity;
+        if (PulseFade && FrameCount > 1)
+        {
+            // 以完整序列帧为一个呼吸周期，使用 sin 平滑淡入/淡出，避免
+            // 相邻帧亮度突变。+0.5 取每帧中心，保证首帧不会从最低点跳起。
+            float phase = ((_frameIndex + 0.5f) / FrameCount) * Mathf.Tau;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(phase - Mathf.Pi * 0.5f);
+            drawOpacity *= Mathf.Lerp(PulseMinOpacity, PulseMaxOpacity, pulse);
+        }
+        Color c = new(1f, 1f, 1f, drawOpacity);
         DrawTextureRectRegion(tex, destRect, srcRect, c);
     }
 }

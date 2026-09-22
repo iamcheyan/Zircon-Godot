@@ -464,6 +464,9 @@ public partial class QuestDialog : DXWindow
             OutlineColour = Colors.Black,
             Location = new Vector2I(x, y),
             Size = new Vector2I(220, 18),
+            // Location names are bounded by the details panel.  DXLabel defaults
+            // to AutoSize, which would make long names paint over the next field.
+            AutoSize = false,
         };
         label.MouseFilter = Control.MouseFilterEnum.Stop;
         label.MouseClick += (o, e) =>
@@ -476,7 +479,21 @@ public partial class QuestDialog : DXWindow
 
     private void AddDetailText(string text, int x, int y, int size, Color colour, int width = 285, int height = 20)
     {
-        _detailPanel.AddControl(new DXLabel { Text = text ?? string.Empty, FontSize = size, TextColour = colour, DrawOutline = true, OutlineColour = Colors.Black, Location = new Vector2I(x, y), Size = new Vector2I(width, height), IsControl = false });
+        _detailPanel.AddControl(new DXLabel
+        {
+            Text = text ?? string.Empty,
+            FontSize = size,
+            TextColour = colour,
+            DrawOutline = true,
+            OutlineColour = Colors.Black,
+            Location = new Vector2I(x, y),
+            Size = new Vector2I(width, height),
+            // Explicit dimensions are intentional here: DXLabel's default
+            // AutoSize=true disables wrapping and lets quest descriptions run
+            // through the right edge of the panel.
+            AutoSize = false,
+            IsControl = false,
+        });
     }
 
     private void RepositionLines()

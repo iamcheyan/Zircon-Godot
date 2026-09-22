@@ -78,7 +78,6 @@ public partial class SelectScene : Control
         _classBtn.AddItem("战士", (int)MirClass.Warrior);
         _classBtn.AddItem("法师", (int)MirClass.Wizard);
         _classBtn.AddItem("道士", (int)MirClass.Taoist);
-        _classBtn.AddItem("刺客", (int)MirClass.Assassin);
         _genderBtn.AddItem("男", (int)MirGender.Male);
         _genderBtn.AddItem("女", (int)MirGender.Female);
 
@@ -478,7 +477,6 @@ public partial class SelectScene : Control
         _createClassButtons.Add(AddCreateOption(classBox, 0, Lang.NewCharacterSelectedClassLabel, 120, () => SelectCreateClass(MirClass.Warrior)));
         _createClassButtons.Add(AddCreateOption(classBox, 1, Lang.RankingUi145Label, 126, () => SelectCreateClass(MirClass.Wizard)));
         _createClassButtons.Add(AddCreateOption(classBox, 2, Lang.RankingUi146Label, 131, () => SelectCreateClass(MirClass.Taoist)));
-        _createClassButtons.Add(AddCreateOption(classBox, 3, Lang.RankingUi147Label, 136, () => SelectCreateClass(MirClass.Assassin)));
 
         var genderBox = CreateOptionBox(Lang.SelectGenderLabel, new Vector2I(30, 135));
         _selectedGenderLabel = new DXLabel { Text = "男", FontSize = 8, Align = HorizontalAlignment.Center, Location = new Vector2I(60, 65), Size = new Vector2I(80, 15), IsControl = false };

@@ -246,6 +246,9 @@ namespace Server.Models
 
         public MagicObject SetupMagic(UserMagic userMagic)
         {
+            if (userMagic?.Info == null ||
+                (!Config.EnableDiscipline && userMagic.Info.School == MagicSchool.Discipline))
+                return null;
             var type = userMagic.Info.Magic;
 
             var found = SEnvir.MagicTypes.FirstOrDefault(x => x.GetCustomAttribute<MagicTypeAttribute>().Type == type);
@@ -267,6 +270,7 @@ namespace Server.Models
             foreach (UserMagic magic in Character.Magics)
             {
                 if (magic.Info.School == MagicSchool.None) continue;
+                if (!Config.EnableDiscipline && magic.Info.School == MagicSchool.Discipline) continue;
 
                 var type = magic.Info.Magic;
 
@@ -851,13 +855,15 @@ namespace Server.Models
                 OnlineState = OnlineState,
                 Friends = Character.Friends.Select(x => x.ToClientInfo()).ToList(),
 
-                Discipline = Character.Discipline?.ToClientInfo(),
+                Discipline = Config.EnableDiscipline ? Character.Discipline?.ToClientInfo() : null,
 
                 Items = Character.Items.Select(x => x.ToClientInfo()).ToList(),
                 BeltLinks = blinks,
                 AutoPotionLinks = alinks,
                 Milestones = GetClientUserMilestones(),
-                Magics = Character.Magics.Select(x => x.ToClientInfo()).ToList(),
+                Magics = Character.Magics
+                    .Where(x => Config.EnableDiscipline || x.Info?.School != MagicSchool.Discipline)
+                    .Select(x => x.ToClientInfo()).ToList(),
                 Buffs = Buffs.Select(x => x.ToClientInfo()).ToList(),
                 Currencies = Character.Account.Currencies.Select(x => x.ToClientInfo(x.Info.Type == CurrencyType.GameGold && observer)).ToList(),
 
@@ -880,11 +886,15 @@ namespace Server.Models
 
                 Quests = Quests.Select(x => x.ToClientInfo()).ToList(),
 
-                CompanionUnlocks = Character.Account.CompanionUnlocks.Select(x => x.CompanionInfo.Index).ToList(),
+                CompanionUnlocks = Config.EnableCompanions
+                    ? Character.Account.CompanionUnlocks.Select(x => x.CompanionInfo.Index).ToList()
+                    : new List<int>(),
 
-                Companions = Character.Account.Companions.Select(x => x.ToClientInfo()).ToList(),
+                Companions = Config.EnableCompanions
+                    ? Character.Account.Companions.Select(x => x.ToClientInfo()).ToList()
+                    : new List<ClientUserCompanion>(),
 
-                Companion = Character.Companion?.Index ?? 0,
+                Companion = Config.EnableCompanions ? Character.Companion?.Index ?? 0 : 0,
 
                 StorageSize = Character.Account.StorageSize,
 
@@ -1109,18 +1119,20 @@ namespace Server.Models
             if (refines.Count > 0)
                 Enqueue(new S.RefineList { List = refines });
 
-            Enqueue(new S.MarketPlaceConsign { Consignments = Character.Account.Auctions.Select(x => x.ToClientInfo(Character.Account)).ToList(), ObserverPacket = false });
+            if (Config.EnableConsignment)
+                Enqueue(new S.MarketPlaceConsign { Consignments = Character.Account.Auctions.Select(x => x.ToClientInfo(Character.Account)).ToList(), ObserverPacket = false });
 
             Enqueue(new S.MailList { Mail = Character.Account.Mail.Select(x => x.ToClientInfo()).ToList() });
-            Enqueue(new S.GameStoreData
-            {
-                Favourites = Character.Account.StoreFavourites
-                    .Where(x => x.StoreInfo != null)
-                    .Select(x => x.StoreInfo.Index)
-                    .ToList(),
-                TopItems = GetGameStoreTopItems(),
-                ObserverPacket = false,
-            });
+            if (Config.EnableGameStore)
+                Enqueue(new S.GameStoreData
+                {
+                    Favourites = Character.Account.StoreFavourites
+                        .Where(x => x.StoreInfo != null)
+                        .Select(x => x.StoreInfo.Index)
+                        .ToList(),
+                    TopItems = GetGameStoreTopItems(),
+                    ObserverPacket = false,
+                });
 
 
             if (Character.Account.Characters.Max(x => x.Level) > Level && Character.Rebirth == 0)
@@ -2275,7 +2287,8 @@ namespace Server.Models
                 {
                     MagicInfo info = SEnvir.GetMagicInfo(item.Info.Shape);
 
-                    if (info != null && info.School != MagicSchool.None)
+                    if (info != null && info.School != MagicSchool.None &&
+                        (Config.EnableDiscipline || info.School != MagicSchool.Discipline))
                     {
                         if (!GetMagic(info.Magic, out MagicObject magicObject))
                         {
@@ -2548,7 +2561,7 @@ namespace Server.Models
             Stats[Stat.Health] = stat.Health;
             Stats[Stat.Mana] = stat.Mana;
 
-            Stats[Stat.Focus] = Character.Discipline?.Info.FocusPoints ?? 0;
+            Stats[Stat.Focus] = Config.EnableDiscipline ? Character.Discipline?.Info.FocusPoints ?? 0 : 0;
 
             Stats[Stat.BagWeight] = stat.BagWeight;
             Stats[Stat.WearWeight] = stat.WearWeight;
@@ -7176,7 +7189,8 @@ namespace Server.Models
 
                     MagicInfo info = SEnvir.GetMagicInfo(item.Info.Shape);
 
-                    if (info.School == MagicSchool.None) return;
+                    if (info.School == MagicSchool.None ||
+                        (!Config.EnableDiscipline && info.School == MagicSchool.Discipline)) return;
 
                     if (GetMagic(info.Magic, out MagicObject magicObject))
                     {
@@ -16872,6 +16886,7 @@ namespace Server.Models
 
         public void JoinInstance(C.JoinInstance p)
         {
+            if (!Config.EnableDungeons) return;
             var instance = SEnvir.InstanceInfoList.Binding.FirstOrDefault(x => x.Index == p.Index);
 
             if (instance == null)
@@ -17363,6 +17378,7 @@ namespace Server.Models
 
         public void GainDisciplineExperience(int amount)
         {
+            if (!Config.EnableDiscipline) return;
             if (Character.Discipline == null)
                 return;
 
@@ -17373,6 +17389,7 @@ namespace Server.Models
 
         public void IncreaseDiscipline()
         {
+            if (!Config.EnableDiscipline) return;
             int currentLevel = 0;
 
             if (Character.Discipline != null)

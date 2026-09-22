@@ -907,6 +907,7 @@ namespace Server.Envir
 
         public void Process(C.Hermit p)
         {
+            if (!Config.EnableHermit) return;
             if (Stage != GameStage.Game) return;
 
             Player.AssignHermit(p.Stat);
@@ -914,6 +915,7 @@ namespace Server.Envir
 
         public void Process(C.MarketPlaceHistory p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game && Stage != GameStage.Observer) return;
 
 
@@ -943,6 +945,7 @@ namespace Server.Envir
         }
         public void Process(C.MarketPlaceConsign p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game) return;
 
             Player.MarketPlaceConsign(p);
@@ -950,6 +953,7 @@ namespace Server.Envir
 
         public void Process(C.MarketPlaceSearch p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game && Stage != GameStage.Observer) return;
 
             MPSearchResults.Clear();
@@ -1028,6 +1032,7 @@ namespace Server.Envir
         }
         public void Process(C.MarketPlaceSearchIndex p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game && Stage != GameStage.Observer) return;
 
             if (p.Index < 0 || p.Index >= MPSearchResults.Count) return;
@@ -1043,30 +1048,35 @@ namespace Server.Envir
         }
         public void Process(C.MarketPlaceCancelConsign p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game) return;
 
             Player.MarketPlaceCancelConsign(p);
         }
         public void Process(C.MarketPlaceBuy p)
         {
+            if (!Config.EnableConsignment) return;
             if (Stage != GameStage.Game) return;
 
             Player.MarketPlaceBuy(p);
         }
         public void Process(C.MarketPlaceStoreBuy p)
         {
+            if (!Config.EnableGameStore) return;
             if (Stage != GameStage.Game) return;
 
             Player.MarketPlaceStoreBuy(p);
         }
         public void Process(C.GameStoreFavouriteToggle p)
         {
+            if (!Config.EnableGameStore) return;
             if (Stage != GameStage.Game) return;
 
             Player.GameStoreFavouriteToggle(p);
         }
         public void Process(C.GameStoreGift p)
         {
+            if (!Config.EnableGameStore) return;
             if (Stage != GameStage.Game) return;
 
             Player.GameStoreGift(p);
@@ -1119,6 +1129,7 @@ namespace Server.Envir
         }
         public void Process(C.ChangePetMode p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             switch (p.Mode)
@@ -1316,24 +1327,28 @@ namespace Server.Envir
 
         public void Process(C.CompanionUnlock p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.CompanionUnlock(p.Index);
         }
         public void Process(C.CompanionAdopt p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.CompanionAdopt(p);
         }
         public void Process(C.CompanionRetrieve p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.CompanionRetrieve(p.Index);
         }
         public void Process(C.CompanionRelease p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.CompanionRelease(p.Index);
@@ -1341,6 +1356,7 @@ namespace Server.Envir
 
         public void Process(C.CompanionStore p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.CompanionStore(p.Index);
@@ -1508,6 +1524,7 @@ namespace Server.Envir
 
         public void Process(C.JoinInstance p)
         {
+            if (!Config.EnableDungeons) return;
             if (Stage != GameStage.Game) return;
 
             Player.JoinInstance(p);
@@ -1515,6 +1532,7 @@ namespace Server.Envir
 
         public void Process(C.SendCompanionFilters p)
         {
+            if (!Config.EnableCompanions) return;
             if (Stage != GameStage.Game) return;
 
             Player.SetFilters(p);
@@ -1576,6 +1594,7 @@ namespace Server.Envir
 
         public void Process(C.IncreaseDiscipline p)
         {
+            if (!Config.EnableDiscipline) return;
             if (Stage != GameStage.Game) return;
 
             Player.IncreaseDiscipline();

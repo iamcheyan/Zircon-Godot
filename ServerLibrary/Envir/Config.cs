@@ -61,7 +61,8 @@ namespace Server.Envir
         public static bool AllowWarrior { get; set; } = true;
         public static bool AllowWizard { get; set; } = true;
         public static bool AllowTaoist { get; set; } = true;
-        public static bool AllowAssassin { get; set; } = true;
+        /// <summary>当前 EI 三职业兼容范围不开放刺客。</summary>
+        public static bool AllowAssassin { get; set; } = false;
 
         [ConfigSection("Mail")]
         public static string MailServer { get; set; } = @"smtp.gmail.com";
@@ -119,8 +120,14 @@ namespace Server.Envir
         public static TimeSpan RankChangeResetDelay { get; set; } = TimeSpan.FromHours(24);
         public static bool EnableStruck { get; set; } = false;
         public static bool EnableHermit { get; set; } = false;
+        /// <summary>测试阶段是否启用修炼系统。</summary>
+        public static bool EnableDiscipline { get; set; } = false;
         /// <summary>测试阶段是否启用跟随宠物系统。</summary>
         public static bool EnableCompanions { get; set; } = false;
+        /// <summary>测试阶段关闭商城、寄售和副本入口；代码和数据暂时保留。</summary>
+        public static bool EnableGameStore { get; set; } = false;
+        public static bool EnableConsignment { get; set; } = false;
+        public static bool EnableDungeons { get; set; } = false;
 
         [ConfigSection("Monsters")]
         public static TimeSpan DeadDuration { get; set; } = TimeSpan.FromMinutes(1);

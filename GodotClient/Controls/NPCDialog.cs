@@ -105,6 +105,7 @@ public partial class NPCDialog : DXWindow
         GameScene.Game?.CloseNPCCompanionStorage();
         if (_page.DialogType != NPCDialogType.None && _page.DialogType != NPCDialogType.BuySell && _page.DialogType != NPCDialogType.Repair &&
             _page.DialogType != NPCDialogType.Socketing && _page.DialogType != NPCDialogType.SocketCombine &&
+            (_page.DialogType != NPCDialogType.CompanionManage || GameScene.IsCompanionEnabled) &&
             _page.DialogType != NPCDialogType.Consignment)
         {
             _advanced.Configure(_page.DialogType);
@@ -112,7 +113,7 @@ public partial class NPCDialog : DXWindow
             if (_page.DialogType == NPCDialogType.CompanionManage)
                 GameScene.Game?.OpenNPCCompanionStorage();
         }
-        if (_page.DialogType == NPCDialogType.Consignment)
+        if (_page.DialogType == NPCDialogType.Consignment && GameScene.IsConsignmentEnabled)
             GameScene.Game?.OpenConsignmentDialog();
         WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent());
         if (_page.DialogType == NPCDialogType.None)

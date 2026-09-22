@@ -136,8 +136,8 @@ public partial class CharacterDialog : DXWindow
         AddControl(close);
 
         AddTab(Lang.CharacterCharacterTabLabel, 0, 110);
-        AddTab(Lang.CharacterUi70Label, 62, 112);
-        AddTab(Lang.CharacterUi71Label, 124, 111);
+        // 开发阶段暂不开放“修炼”和“隐士”页签；相关面板仍保留在代码中，
+        // 以后重新启用时无需恢复界面结构，但当前没有任何可见入口。
 
         _attributePanel = new DXControl
         {

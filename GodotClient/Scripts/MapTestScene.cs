@@ -105,6 +105,9 @@ public partial class MapTestScene : Control
     private string _dumpZlFile;
     private string _dumpZlOutput;
     private string _tableSnapshotPath;
+    private string _dumpZlContactOutput;
+    private int _dumpZlContactStart;
+    private int _dumpZlContactEnd = -1;
     private int _dumpZlIndex = -1;
 
     // 网格常量（第 7.1 章）
@@ -144,6 +147,9 @@ public partial class MapTestScene : Control
         _dumpZlOutput = GetCmdlineValue("--dump-zl-output=");
         _dumpZlIndex = ParseAuditInt("--dump-zl-index=", -1);
         _tableSnapshotPath = GetCmdlineValue("--table-snapshot=");
+        _dumpZlContactOutput = GetCmdlineValue("--dump-zl-contact-output=");
+        _dumpZlContactStart = ParseAuditInt("--dump-zl-contact-start=", 0);
+        _dumpZlContactEnd = ParseAuditInt("--dump-zl-contact-end=", -1);
 
         // 与实际 GameScene 保持一致：地图、对象、特效都在逻辑 48x32
         // 坐标绘制，根世界统一放大 2 倍。否则审计截图只能验证 1x。
@@ -202,6 +208,10 @@ public partial class MapTestScene : Control
                 && !string.IsNullOrWhiteSpace(_dumpZlOutput)
                 && _dumpZlIndex >= 0)
                 CallDeferred(nameof(DumpRequestedZlFrame));
+            if (!string.IsNullOrWhiteSpace(_dumpZlFile)
+                && !string.IsNullOrWhiteSpace(_dumpZlContactOutput)
+                && _dumpZlContactEnd >= _dumpZlContactStart)
+                CallDeferred(nameof(DumpRequestedZlContactSheet));
         }
         catch (Exception ex)
         {
@@ -2352,6 +2362,49 @@ public partial class MapTestScene : Control
         {
             GetTree().Quit();
         }
+    }
+
+    /// <summary>导出连续索引的缩略图表，供定位未编号特效帧时做资源审计。</summary>
+    private void DumpRequestedZlContactSheet()
+    {
+        try
+        {
+            using var library = new ZlLibrary(_dumpZlFile);
+            const int cell = 64, columns = 20, padding = 2;
+            int start = _dumpZlContactStart;
+            int end = Math.Min(_dumpZlContactEnd, library.Images.Length - 1);
+            int count = end - start + 1;
+            int rows = (count + columns - 1) / columns;
+            var sheet = Image.CreateEmpty(columns * cell, rows * cell, false, Image.Format.Rgba8);
+            sheet.Fill(new Color(0.12f, 0.12f, 0.12f, 1f));
+
+            for (int index = start; index <= end; index++)
+            {
+                var meta = library.Images[index];
+                Image source = meta == null ? null : library.GetImageTexture(index)?.GetImage();
+                if (source == null) continue;
+                Image thumb = source.Duplicate() as Image;
+                if (thumb == null) continue;
+                float scale = Math.Min((cell - padding * 2f) / thumb.GetWidth(),
+                    (cell - padding * 2f) / thumb.GetHeight());
+                if (scale < 1f)
+                    thumb.Resize(Math.Max(1, (int)(thumb.GetWidth() * scale)),
+                        Math.Max(1, (int)(thumb.GetHeight() * scale)), Image.Interpolation.Nearest);
+                int slot = index - start;
+                var at = new Vector2I((slot % columns) * cell + (cell - thumb.GetWidth()) / 2,
+                    (slot / columns) * cell + (cell - thumb.GetHeight()) / 2);
+                sheet.BlitRect(thumb, new Rect2I(Vector2I.Zero, thumb.GetSize()), at);
+            }
+            Error saved = sheet.SavePng(_dumpZlContactOutput);
+            GD.Print(saved == Error.Ok
+                ? $"[ZlContactDump] PASS file={_dumpZlFile} range={start}..{end} columns={columns} output={_dumpZlContactOutput}"
+                : $"[ZlContactDump] FAIL output={_dumpZlContactOutput} error={saved}");
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[ZlContactDump] FAIL {ex.Message}");
+        }
+        GetTree().Quit();
     }
 
     private void RunWeatherAudit()

@@ -38,6 +38,7 @@ public partial class ObjectRenderer : MapObjectNode
     public Color DrawColour = Colors.White;
     public PoisonType Poison;
     public bool Focused;
+    public bool NameHovered;
     public bool TargetHighlighted;
     public Color TargetOutlineColour = Colors.Transparent;
     public int Light;
@@ -568,24 +569,23 @@ public partial class ObjectRenderer : MapObjectNode
 
     private void DrawName()
     {
-        if (Type == Kind.Item && !Focused) return;
+        if (!NameHovered) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;
-        // 对象节点的坐标是脚底基线。原版按当前帧的真实图像顶部放置
-        // 名称；固定 -64 会让大型怪物名字压进身体，小型 NPC 又漂得过高。
-        float y = Type == Kind.Item ? -18f : RenderPrimitives.OriginalNameBaseline(9f);
+        // 名称不再固定在角色身体中部；所有地图对象统一锚到血条上方。
+        float y = RenderPrimitives.NameAboveHealthBarBaseline(9f);
         if (string.IsNullOrWhiteSpace(DisplayName)) return;
         // DrawX 是格子左边缘，原版用 (48 - labelWidth) / 2，故节点局部
         // 坐标必须以 48x32 格中心 (24, 0) 为文字中心。
         RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, y), NameColour, 9f);
         if (!string.IsNullOrWhiteSpace(GuildName))
-            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, y - 12f), new Color(0.8f, 0.8f, 0.4f), 8f);
+            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, y - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
         if (!string.IsNullOrWhiteSpace(PetOwner))
-            RenderPrimitives.DrawLabel(this, $"({PetOwner})", new Vector2(24f, y + 12f), new Color(0.7f, 0.9f, 0.7f), 8f);
+            RenderPrimitives.DrawLabel(this, $"({PetOwner})", new Vector2(24f, y - 22f), new Color(0.7f, 0.9f, 0.7f), 8f);
         if (Poison != PoisonType.None)
             DrawCircle(new Vector2(24f, y - 7f), 3f, new Color(0.35f, 1f, 0.35f, 0.85f));
         if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
-            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 18f), Colors.White, 9f);
+            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 33f), Colors.White, 9f);
     }
 
     public void SetChat(string text)

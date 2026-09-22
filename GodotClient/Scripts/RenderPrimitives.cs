@@ -150,4 +150,10 @@ internal static class RenderPrimitives
         float height = font?.GetHeight((int)drawSize) ?? drawSize;
         return -(32f - height) / 2f - 6f + height;
     }
+
+    /// <summary>
+    /// 地图对象名称统一放在头顶血条上方。血条背景的旧版锚点是 y=-55，
+    /// 名称基线放在其上方并为公会名/宠物归属名预留两行。
+    /// </summary>
+    public static float NameAboveHealthBarBaseline(float size = 9f) => -61f;
 }

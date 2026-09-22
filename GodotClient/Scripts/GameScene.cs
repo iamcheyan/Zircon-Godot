@@ -8319,9 +8319,15 @@ public partial class GameScene : Control
             foreach (var ob in _objects.Values)
             {
                 bool focused = ob.Type == ObjectRenderer.Kind.Item && ob == _combatController.MouseObject;
+                bool nameHovered = ob == _combatController.MouseObject;
                 if (ob.Focused != focused)
                 {
                     ob.Focused = focused;
+                    ob.QueueRedraw();
+                }
+                if (ob.NameHovered != nameHovered)
+                {
+                    ob.NameHovered = nameHovered;
                     ob.QueueRedraw();
                 }
 
@@ -8339,6 +8345,14 @@ public partial class GameScene : Control
 
             uint hoveredPlayerId = _combatController.MouseObject?.Type == ObjectRenderer.Kind.Player
                 ? _combatController.MouseObject.ObjectID : 0;
+            bool localPlayerNameHovered = _player != null
+                && _combatController.MouseCell() == _playerLocation
+                && _combatController.MouseObject == null;
+            if (_player != null && _player.NameHovered != localPlayerNameHovered)
+            {
+                _player.NameHovered = localPlayerNameHovered;
+                _player.QueueRedraw();
+            }
             foreach (var pair in _otherPlayers)
             {
                 bool highlighted = ClientSettings.ShowTargetOutline && pair.Key == hoveredPlayerId;
@@ -8348,6 +8362,12 @@ public partial class GameScene : Control
                         : ClientSettings.TargetPlayerEnemyColour)
                     : Colors.Transparent;
                 var player = pair.Value;
+                bool nameHovered = pair.Key == hoveredPlayerId;
+                if (player.NameHovered != nameHovered)
+                {
+                    player.NameHovered = nameHovered;
+                    player.QueueRedraw();
+                }
                 if (player.TargetHighlighted != highlighted || player.TargetOutlineColour != outline)
                 {
                     player.TargetHighlighted = highlighted;

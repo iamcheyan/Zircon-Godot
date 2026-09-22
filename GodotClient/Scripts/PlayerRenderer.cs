@@ -48,6 +48,7 @@ public partial class PlayerRenderer : Node2D
     public string GuildName;
     public Color NameColour = Colors.White;
     public bool TargetHighlighted;
+    public bool NameHovered;
     public Color TargetOutlineColour = Colors.Transparent;
     public int Light;
     public string ChatText;
@@ -926,13 +927,13 @@ public partial class PlayerRenderer : Node2D
             DrawTargetOutline();
         DrawPlayerAt(0, 0);
         DrawExteriorEffects(false);
-        float nameY = RenderPrimitives.OriginalNameBaseline(9f);
-        if (ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(DisplayName))
+        float nameY = RenderPrimitives.NameAboveHealthBarBaseline(9f);
+        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(DisplayName))
             RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, nameY), NameColour, 9f);
-        if (ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
-            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 12f), new Color(0.8f, 0.8f, 0.4f), 8f);
-        if (ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
-            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, nameY - 18f), Colors.White, 9f);
+        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
+            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
+        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
+            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, nameY - 22f), Colors.White, 9f);
 
         // 玩家头顶血条 (受击显示 5 秒)
         if (ShowHealthBar && ClientSettings.ShowUserHealth && !Dead && MaxHealth > 0 && Godot.Time.GetTicksMsec() <= DrawHealthUntilMs)

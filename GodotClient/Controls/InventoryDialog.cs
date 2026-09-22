@@ -351,6 +351,18 @@ public partial class InventoryDialog : DXWindow
         GgLabel.Text = SaleTotal().ToString("N0");
     }
 
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(284, 324)
+            && _background.Index == 250
+            && Grid.GridSize == new Vector2I(6, 6)
+            && Grid.Location == new Vector2I(25, 41)
+            && CloseButton.Location == new Vector2I(249, 288)
+            && _legacyActionButton?.Location == new Vector2I(176, 262);
+        details = $"size={Size} background=F{_background.Index} grid={Grid.GridSize}@{Grid.Location} close={CloseButton.Location} action={_legacyActionButton?.Location}";
+        return ok;
+    }
+
     /// <summary>原版 InventoryDialog.SellMode：背包负责多选物品和提交 NPCSell。</summary>
     public void SellMode(CurrencyInfo currency, IEnumerable<ItemType> sellableTypes)
     {

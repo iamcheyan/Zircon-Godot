@@ -127,6 +127,28 @@ public partial class LegacyHudLayoutLab : Control
             if (window != null) WindowManager.Open(window, _canvas);
             break;
         }
+        bool auditRequested = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            auditRequested |= arg == "--legacy-audit";
+        if (auditRequested)
+            RunLegacyAudit();
+    }
+
+    private void RunLegacyAudit()
+    {
+        bool character = _character.AuditLegacyEiLayout(out string characterDetails);
+        bool inventory = _inventory.AuditLegacyEiLayout(out string inventoryDetails);
+        bool magic = _magic.AuditLegacyEiLayout(out string magicDetails);
+        bool roots = _group.Size == new Vector2I(256, 244)
+            && _quest.Size == new Vector2I(340, 440)
+            && _chat.Size == new Vector2I(572, 388)
+            && _menu.Size == new Vector2I(248, 264);
+        bool pass = character && inventory && magic && roots;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} roots={roots}");
+        GD.Print($"[LegacyAudit] character {characterDetails}");
+        GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
+        GD.Print($"[LegacyAudit] magic {magicDetails}");
+        GetTree().Quit(pass ? 0 : 1);
     }
 
     private void Toggle(DXWindow window) => WindowManager.Toggle(window, _canvas);

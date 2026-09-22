@@ -241,6 +241,16 @@ public partial class MagicDialog : DXWindow
         return valid;
     }
 
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(452, 380)
+            && _header.Index == 400
+            && _legacySkillSlots.Count == 12
+            && _schoolButtons.Count == 8;
+        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} skillSlots={_legacySkillSlots.Count}";
+        return ok;
+    }
+
     /// <summary>从 GameScene.UserMagics 刷新技能列表。</summary>
     public void Refresh()
     {

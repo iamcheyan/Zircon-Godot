@@ -332,7 +332,6 @@ public partial class CharacterDialog : DXWindow
         {
             [EquipmentSlot.Helmet] = new(177, 70),
             [EquipmentSlot.Torch] = new(27, 264),
-            [EquipmentSlot.Necklace] = new(103, 70),
             [EquipmentSlot.BraceletL] = new(27, 186),
             [EquipmentSlot.BraceletR] = new(175, 186),
             [EquipmentSlot.RingL] = new(27, 227),
@@ -361,6 +360,18 @@ public partial class CharacterDialog : DXWindow
         _legacyViewToggle.Size = new Vector2I(36, 36);
         _legacyViewToggle.Visible = true;
         UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
+        bool ok = Size == new Vector2I(244, 328)
+            && _background.Index == 200
+            && _legacyViewToggle.Location == new Vector2I(176, 264)
+            && _legacyViewToggle.Size == new Vector2I(36, 36)
+            && visibleSlots == 8;
+        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots}";
+        return ok;
     }
 
     private void ToggleLegacyView()

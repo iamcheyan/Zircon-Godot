@@ -18,7 +18,7 @@ namespace ZirconClient.Controls;
 ///   4. Equip[weapon.Image](+overlay) 武器
 ///   5. Equip[shield.Image](+overlay) 盾
 ///   6. Equip[helmet.Image](+overlay) 头盔
-/// 坐标 (130, 270) 相对窗口 (原版 CharacterTab 内坐标)。
+/// 坐标 (130, 270) 相对窗口（原版 CharacterTab_BeforeChildrenDraw 使用的绘制锚点）。
 ///
 /// 数据来源: GameScene.StartInfo (Gender/Class/HairType/HairColour) +
 ///           GameScene.Equipment (装备数组) + HideBody/HideWeapon (骑马时)。

@@ -120,9 +120,10 @@ public partial class CharacterDialog : DXWindow
         _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
 
-        // 人物纸娃娃 (原版 (130,270) 相对 CharacterTab (Y=45), 绝对 Y=315)
+        // 原版 CharacterTab_BeforeChildrenDraw 直接使用 (130,270) 绘制锚点。
+        // 这里已经是窗口绘制坐标，不能再额外加 CharacterTab 的 Y 偏移。
         _doll = new PaperDoll();
-        _doll.Position = new Vector2(130, 315);
+        _doll.Position = new Vector2(130, 270);
         AddChild(_doll);
 
         var close = new DXButton
@@ -174,16 +175,19 @@ public partial class CharacterDialog : DXWindow
             IsControl = false,
         };
         AddControl(namePanel);
-        _characterNameLabel = CreateCharacterLabel(12, new Color(0.87f, 1f, 0.87f));
+        _characterNameLabel = CreateCharacterLabel(9, new Color(0.87f, 1f, 0.87f));
+        _characterNameLabel.Size = new Vector2I(137, 20);
         _guildNameLabel = CreateCharacterLabel(9, new Color(1f, 1f, 0.71f));
         _guildNameLabel.Location = new Vector2I(0, 18);
+        _guildNameLabel.Size = new Vector2I(137, 15);
         _guildRankLabel = CreateCharacterLabel(8, new Color(0.78f, 0.78f, 0.78f));
-        _guildRankLabel.Location = new Vector2I(0, 34);
+        _guildRankLabel.Size = new Vector2I(137, 15);
+        _guildRankLabel.Location = new Vector2I(0, 31);
         namePanel.AddControl(_characterNameLabel);
         namePanel.AddControl(_guildNameLabel);
         namePanel.AddControl(_guildRankLabel);
 
-        // 原版 CharacterTab 坐标换算到窗口坐标（页签根节点从 Y=45 开始）。
+        // 文本面板坐标直接沿用原版窗口坐标。
         _marriageIcon = new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
@@ -763,12 +767,13 @@ public partial class CharacterDialog : DXWindow
     {
         bool valid = Size == OwnSize
             && _background.Index == 110
-            && _doll.Position == new Vector2(130, 315)
+            && _doll.Position == new Vector2(130, 270)
             && Grid.Length == 17
             && _marriageIcon.Position == new Vector2(96, 105)
             && _marriageLabel.Position == new Vector2(112, 100)
             && _fameControl.Position == new Vector2(235, 61);
-        details = $"size={Size} grid={Grid.Length} doll={_doll.Position} marriage={_marriageIcon.Position}/{_marriageLabel.Position} fame={_fameControl.Position}";
+        details = $"size={Size} grid={Grid.Length} doll={_doll.Position} name={_characterNameLabel.Size}/{_guildNameLabel.Size}/{_guildRankLabel.Size} "
+            + $"nameY=0/{_guildNameLabel.Position.Y}/{_guildRankLabel.Position.Y} marriage={_marriageIcon.Position}/{_marriageLabel.Position} fame={_fameControl.Position}";
         return valid;
     }
 

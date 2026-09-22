@@ -18,6 +18,8 @@ public abstract partial class DXWindow : DXControl
     public bool HasTopBorder = true;
     public bool HasFooter;
     public bool SlimFooter;
+    /// <summary>是否绘制 Zircon 新版窗口底色/边框。旧版 EI 窗口背景已包含完整外框。</summary>
+    public bool DrawChrome = true;
     /// <summary>
     /// 原版 DXWindow 构造时总会创建关闭按钮；无标题的浮动窗口再显式关闭它。
     /// 已经由具体窗口创建的 Interface[15] 不会重复创建。
@@ -85,7 +87,7 @@ public abstract partial class DXWindow : DXControl
     {
         base._Ready();
 
-        if (ShowCloseButton && DefaultCloseButton == null)
+        if (DrawChrome && ShowCloseButton && DefaultCloseButton == null)
         {
             foreach (var control in Controls)
             {
@@ -111,7 +113,7 @@ public abstract partial class DXWindow : DXControl
             }
         }
 
-        if (_titleLabel == null && HasTitle)
+        if (DrawChrome && _titleLabel == null && HasTitle)
         {
             _titleLabel = new DXLabel
             {
@@ -144,7 +146,7 @@ public abstract partial class DXWindow : DXControl
 
     public override void _Draw()
     {
-        if (DropShadow && Size.X > 0 && Size.Y > 0)
+        if (DrawChrome && DropShadow && Size.X > 0 && Size.Y > 0)
         {
             _shadowStyle ??= new StyleBoxFlat
             {
@@ -155,7 +157,8 @@ public abstract partial class DXWindow : DXControl
             };
             DrawStyleBox(_shadowStyle, new Rect2(Vector2.Zero, Size));
         }
-        DrawWindowChrome(this, Size, HasTopBorder, HasTitle, HasFooter, SlimFooter);
+        if (DrawChrome)
+            DrawWindowChrome(this, Size, HasTopBorder, HasTitle, HasFooter, SlimFooter);
         base._Draw();
     }
 

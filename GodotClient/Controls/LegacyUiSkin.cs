@@ -68,35 +68,40 @@ public static class LegacyUiSkin
     {
         if (window == null) return false;
 
-        (int frame, Vector2I size) profile = window.GetType().Name switch
+        (int frame, Vector2I size, Vector2I imageOrigin, bool stretch) profile = window.GetType().Name switch
         {
-            "InventoryDialog" => (250, new Vector2I(284, 324)),
-            "CharacterDialog" => (200, new Vector2I(244, 328)),
-            "GroupDialog" => (900, new Vector2I(256, 244)),
-            "QuestDialog" => (700, new Vector2I(340, 440)),
-            "CommunicationDialog" => (350, new Vector2I(572, 388)),
-            "MagicDialog" => (400, new Vector2I(296, 332)),
-            "MenuDialog" => (750, new Vector2I(248, 264)),
-            _ => (-1, Vector2I.Zero),
+            // WIL 帧含透明画布。人物/背包/技能必须保持有效像素原始比例，
+            // 用 alpha bbox 原点裁掉透明边距，不能把整张 512 画布缩进窗口。
+            "InventoryDialog" => (250, new Vector2I(284, 324), new Vector2I(114, 94), false),
+            "CharacterDialog" => (200, new Vector2I(244, 328), new Vector2I(6, 92), false),
+            // wrapper 0x439250 原始参数明确给出 452x380；F400 bbox 451x378。
+            "MagicDialog" => (400, new Vector2I(452, 380), new Vector2I(30, 67), false),
+            "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6), false),
+            "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36), false),
+            "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62), false),
+            "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119), false),
+            _ => (-1, Vector2I.Zero, Vector2I.Zero, false),
         };
         if (profile.frame < 0) return false;
 
         window.Location = location;
         window.Size = profile.size;
         window.Clip = true;
+        window.DrawChrome = false;
+        window.DropShadow = false;
+        window.HasTitle = false;
+        window.ShowCloseButton = false;
         foreach (var child in window.Controls)
         {
             if (child is not DXImageControl image) continue;
             image.LibraryFile = LibraryFile.GameInter;
             image.Index = profile.frame;
             image.FixedSize = true;
-            image.StretchImage = true;
-            // 模拟器对普通窗口使用 object-fit: fill：完整背景帧从窗口
-            // 左上角开始，拉伸到 evidence 中记录的窗口矩形。不能把
-            // 原始帧的透明边界当成 Godot 窗口偏移，也不能按 visible-bbox
-            // 裁剪；否则技能页等 512 帧会被放大后截断。
-            image.Location = Vector2I.Zero;
-            image.Size = profile.size;
+            image.StretchImage = profile.stretch;
+            image.Location = -profile.imageOrigin;
+            image.Size = profile.stretch
+                ? profile.size
+                : MirSkin.GetSize(LibraryFile.GameInter, profile.frame);
             image.MouseFilter = Control.MouseFilterEnum.Ignore;
             window.UpdateClientAreaForLegacySkin();
             return true;

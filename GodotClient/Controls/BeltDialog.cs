@@ -20,6 +20,7 @@ public partial class BeltDialog : DXWindow
     private bool _draggingHandle;
     private Vector2 _dragStartMouse;
     private Vector2 _dragStartPosition;
+    private DXImageControl _background;
 
     /// <summary>玩家是否拖动过腰带栏; LayoutHud 不能覆盖已自定义的位置。</summary>
     public bool UserMoved { get; private set; }
@@ -90,6 +91,28 @@ public partial class BeltDialog : DXWindow
         };
         AddControl(Grid);
         RefreshGridLayout();
+    }
+
+    /// <summary>旧版坐骑/腰带窗的 GameInter F850 资源布局。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(296, 332);
+        _background ??= new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 850,
+            FixedSize = true,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_background.GetParent() == null) AddControl(_background);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 850;
+        _background.Location = new Vector2I(-7, 44);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 850);
+        _background.StretchImage = false;
+        _dragHandle.Size = new Vector2(Size.X, 6);
+        Grid.Visible = false;
+        UpdateClientAreaForLegacySkin();
     }
 
     public override void _Ready()

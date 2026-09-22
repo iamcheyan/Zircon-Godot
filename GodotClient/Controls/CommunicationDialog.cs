@@ -16,6 +16,9 @@ public partial class CommunicationDialog : DXWindow
     private readonly List<ClientFriendInfo> _friends = new();
     private readonly List<ClientBlockInfo> _blocks = new();
     private readonly DXImageControl _pageBackground;
+    private DXImageControl _background;
+    private DXButton _closeButton;
+    private DXLabel _titleLabel;
     private DXControl _body;
     private DXVScrollBar _scroll;
     private DXTextArea _detail;
@@ -48,14 +51,16 @@ public partial class CommunicationDialog : DXWindow
         HasFooter = false;
         // 原版 Interface 200 外框为 296x424，TabControl 从 y=37 开始。
         Size = new Vector2I(296, 424);
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 200, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
+        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 200, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        AddControl(_background);
         _pageBackground = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 201, FixedSize = true, Size = new Vector2I(296, 316), Location = new Vector2I(0, 60), MouseFilter = MouseFilterEnum.Ignore };
         AddControl(_pageBackground);
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
-        AddControl(new DXLabel { Text = Lang.CommunicationUi175Label, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(296, 18), IsControl = false });
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
+        _titleLabel = new DXLabel { Text = Lang.CommunicationUi175Label, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(296, 18), IsControl = false };
+        AddControl(_titleLabel);
         // 原版 DXTabControl：TabControl 位于 y=37，页签从 x=10 按 60px+1px 间距排列，
         // 内容页从 y=60 开始，尺寸为 296x316。
         AddTab(Lang.CommunicationDialogFriendTabLabel, 10, 0);
@@ -70,6 +75,34 @@ public partial class CommunicationDialog : DXWindow
         AddControl(_scroll);
         CreateActionButtons();
         ShowPage(0);
+    }
+
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(572, 388);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 350;
+        _background.Location = new Vector2I(-226, -62);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 350);
+        _background.StretchImage = false;
+        _titleLabel.Visible = false;
+        _pageBackground.Visible = false;
+        _body.Modulate = new Color(1, 1, 1, 0);
+        _scroll.Modulate = new Color(1, 1, 1, 0);
+        foreach (var tab in _tabs)
+        {
+            tab.Modulate = new Color(1, 1, 1, 0);
+            tab.Location = new Vector2I(tab.Location.X + 226, 37);
+        }
+        foreach (var button in new[] { _friendAdd, _friendRemove, _receivedCollectAll, _receivedDeleteAll, _receivedNew, _blockAdd, _blockRemove })
+            if (button != null) button.Modulate = new Color(1, 1, 1, 0);
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(536, 354);
+        _closeButton.Size = new Vector2I(28, 26);
+        UpdateClientAreaForLegacySkin();
     }
 
     public bool AuditLayout(out string details)

@@ -111,6 +111,12 @@ public static class LegacyUiSkin
             case MenuDialog menu:
                 menu.ApplyLegacyEiLayout();
                 return true;
+            case CommunicationDialog communication:
+                communication.ApplyLegacyEiLayout();
+                return true;
+            case BeltDialog belt:
+                belt.ApplyLegacyEiLayout();
+                return true;
         }
         foreach (var child in window.Controls)
         {

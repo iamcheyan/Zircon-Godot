@@ -26,7 +26,7 @@ public partial class ConfigDialog : DXWindow
         HasTitle = false;
         HasFooter = false;
         Size = new Vector2I(364, 416); // 原版 Interface 282
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 282, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
+        AddControl(new LegacyUiFrame { LibraryFile = LibraryFile.GameInter, Index = 750, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
 
         var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);

@@ -38,11 +38,10 @@ public partial class InventoryDialog : DXWindow
         Text = Lang.InventoryDialogTitle;
         Size = new Vector2I(264, 436);
 
-        var bg = new DXImageControl
+        var bg = new LegacyUiFrame
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 130,
-            FixedSize = true,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 250,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };

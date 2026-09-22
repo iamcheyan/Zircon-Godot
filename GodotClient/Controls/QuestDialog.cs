@@ -14,7 +14,7 @@ public partial class QuestDialog : DXWindow
     private readonly List<DXLabel> _lines = new();
     private readonly List<ClientUserQuest> _quests = new();
     private readonly List<QuestInfo> _available = new();
-    private DXImageControl _background;
+    private LegacyUiFrame _background;
     private DXControl _content;
     private DXVScrollBar _scroll;
     private readonly DXControl _detailPanel;
@@ -32,11 +32,10 @@ public partial class QuestDialog : DXWindow
         HasFooter = false;
         Size = new Vector2I(732, 480);
 
-        _background = new DXImageControl
+        _background = new LegacyUiFrame
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 291,
-            FixedSize = true,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 700,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };
@@ -129,7 +128,7 @@ public partial class QuestDialog : DXWindow
         {
             if (_page == 3 && page != 3) GameScene.Game?.SendMilestoneNotify(false);
             _page = page;
-            _background.Index = page == 3 ? 292 : 291;
+            _background.Index = 700;
             _selectedQuest = null;
             _selectedAvailable = null;
             UpdateTabStyles();

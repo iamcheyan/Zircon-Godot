@@ -22,7 +22,7 @@ public partial class CharacterDialog : DXWindow
     private DXImageControl _marriageIcon, _guildFlagBase, _guildFlagOverlay;
     private DXLabel _marriageLabel;
     private DXControl _fameControl;
-    private DXImageControl _background;
+    private LegacyUiFrame _background;
     private PaperDoll _doll;
     private DXControl _attributePanel;
     private DXControl _hermitPanel;
@@ -107,11 +107,10 @@ public partial class CharacterDialog : DXWindow
         Text = Lang.CharacterCharacterTabLabel;
         Size = _inspectMode ? InspectSize : OwnSize;
 
-        _background = new DXImageControl
+        _background = new LegacyUiFrame
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 110,
-            FixedSize = true,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 200,
             Size = Size,
             MouseFilter = MouseFilterEnum.Stop,
         };
@@ -306,7 +305,9 @@ public partial class CharacterDialog : DXWindow
 
     private void SelectTab(int backgroundIndex)
     {
-        _background.Index = backgroundIndex;
+        // 旧版 status window 使用 GameInter[200]（属性）/ [201]（装备）；
+        // 当前代码的 110/111/112 仍作为业务页签标识，不再作为底图帧号。
+        _background.Index = backgroundIndex == 110 ? 200 : 200;
         foreach (var tab in _mainTabs)
             tab.Button.Type = tab.Background == backgroundIndex
                 ? DXButton.ButtonType.SelectedTab
@@ -329,7 +330,7 @@ public partial class CharacterDialog : DXWindow
     {
         if (info == null) return;
         _inspectMode = true;
-        _background.Index = 115;
+        _background.Index = 201;
         Size = InspectSize;
         _background.Size = InspectSize;
         _doll.Visible = true;
@@ -369,7 +370,7 @@ public partial class CharacterDialog : DXWindow
     public void ShowOwn()
     {
         _inspectMode = false;
-        _background.Index = 110;
+        _background.Index = 200;
         Size = OwnSize;
         _background.Size = OwnSize;
         _doll.ClearInspect();
@@ -766,7 +767,7 @@ public partial class CharacterDialog : DXWindow
     public bool AuditLayout(out string details)
     {
         bool valid = Size == OwnSize
-            && _background.Index == 110
+            && _background.Index == 200
             && _doll.Position == new Vector2(130, 280)
             && Grid.Length == 17
             && _marriageIcon.Position == new Vector2(96, 105)

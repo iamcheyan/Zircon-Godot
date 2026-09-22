@@ -42,7 +42,7 @@ public partial class GroupDialog : DXWindow
         Movable = true;
         HasFooter = false;
         Size = new Vector2I(240, 424);
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 240, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
+        AddControl(new LegacyUiFrame { LibraryFile = LibraryFile.GameInter, Index = 900, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
         var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
         close.MouseClick += (o, e) => GameScene.Game?.CloseGroupDialog();

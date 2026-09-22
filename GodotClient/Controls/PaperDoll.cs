@@ -26,7 +26,7 @@ namespace ZirconClient.Controls;
 public partial class PaperDoll : Control
 {
     private const int DollX = 130;
-    private const int DollY = 270;
+    private const int DollY = 280;
 
     private ZlLibrary _progUse;
     private ZlLibrary _equip;

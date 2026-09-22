@@ -123,7 +123,7 @@ public partial class CharacterDialog : DXWindow
         // 原版 CharacterTab_BeforeChildrenDraw 直接使用 (130,270) 绘制锚点。
         // 这里已经是窗口绘制坐标，不能再额外加 CharacterTab 的 Y 偏移。
         _doll = new PaperDoll();
-        _doll.Position = new Vector2(130, 270);
+        _doll.Position = new Vector2(130, 280);
         AddChild(_doll);
 
         var close = new DXButton
@@ -767,7 +767,7 @@ public partial class CharacterDialog : DXWindow
     {
         bool valid = Size == OwnSize
             && _background.Index == 110
-            && _doll.Position == new Vector2(130, 270)
+            && _doll.Position == new Vector2(130, 280)
             && Grid.Length == 17
             && _marriageIcon.Position == new Vector2(96, 105)
             && _marriageLabel.Position == new Vector2(112, 100)

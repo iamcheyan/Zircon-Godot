@@ -44,7 +44,12 @@ public static class RenderOrder
     // 地盖住人物和怪物的腿（见 Client/Scenes/Views/MapControl.cs）。
     public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 1;
     public static int Object(int renderY) => TerrainMiddle(renderY) + 2;
+    // MapView.CellToScreen(..., objectBaseline:true) 与地图中/前景的 drawY
+    // 都落在 CellY+1 的脚底基线。对象的深度也必须使用同一基线，否则对象
+    // 虽然画在下一行，Z 顺序却仍停留在上一行，前景切口会错误压住脚和影子。
+    public static int ObjectAtFoot(int renderY) => Object(renderY + 1);
     public static int ObjectEffect(int renderY) => TerrainMiddle(renderY) + 3;
+    public static int ObjectEffectAtFoot(int renderY) => ObjectEffect(renderY + 1);
     // Legacy MapControl draws the local player's target effects after all
     // particle emitters, so keep this above Particles.
     public static int LocalPlayerEffect => Particles + 1;

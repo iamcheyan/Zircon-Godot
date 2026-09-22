@@ -2451,9 +2451,10 @@ public partial class MapTestScene : Control
         bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.Object(10)
             && RenderOrder.TerrainMiddle(10) < RenderOrder.TerrainFront(10)
             && RenderOrder.TerrainFront(10) < RenderOrder.Object(10)
-            && RenderOrder.Object(10) < RenderOrder.ObjectEffect(10)
-            && RenderOrder.TerrainFront(10) < RenderOrder.ObjectEffect(10)
-            && RenderOrder.ObjectEffect(10) < RenderOrder.TerrainMiddle(11);
+            && RenderOrder.Object(10) < RenderOrder.ObjectAtFoot(10)
+            && RenderOrder.TerrainFront(11) < RenderOrder.ObjectAtFoot(10)
+            && RenderOrder.ObjectAtFoot(10) < RenderOrder.ObjectEffectAtFoot(10)
+            && RenderOrder.ObjectEffectAtFoot(10) < RenderOrder.TerrainMiddle(12);
         bool postObject = RenderOrder.Object(10) < RenderOrder.Particles
             && RenderOrder.Particles < RenderOrder.LocalPlayerEffect
             && RenderOrder.LocalPlayerEffect < RenderOrder.FinalEffects;

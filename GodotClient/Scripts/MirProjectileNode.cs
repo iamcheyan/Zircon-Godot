@@ -124,7 +124,7 @@ public partial class MirProjectileNode : MirEffectNode
             // 原版 MapControl.DrawObjects: 投射物整段飞行固定在目标行深度
             // (Target.RenderY 或 MapTarget.Y)，不从起点行插值。
             // 插值会导致火球生成时与施法者身体同层，视觉上像从身体内部飞出。
-            ZIndex = RenderOrder.ObjectEffect(CurrentRenderY);
+            ZIndex = RenderOrder.ObjectEffectAtFoot(CurrentRenderY);
         }
         else
         {

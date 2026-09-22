@@ -4596,6 +4596,9 @@ public partial class GameScene : Control
 
         BeltLinks = _beltDialog.Links; // 与对话框共享同一数组 (QuickInfo/QuickItem 写回)
 
+        if (AutoLoginArgs.LegacyUi)
+            ApplyLegacyCoreTestLayouts();
+
         // M9: 主面板功能按钮 -> 对话框开关
         _mainPanel.CharacterButton.MouseClick += (o, e) =>
         {
@@ -4659,6 +4662,19 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyWindowProfile(_groupDialog);
         LegacyUiSkin.ApplyWindowProfile(_npcDialog);
         _mainPanel?.SetPetModeEnabled(CompanionEnabled);
+    }
+
+    private void ApplyLegacyCoreTestLayouts()
+    {
+        // 仅由 --legacy-ui 显式开启，方便在真实登录场景验证同一套旧版
+        // 控件树；默认正式布局暂不隐藏尚未完成旧版数据绑定的现代内容。
+        LegacyUiSkin.ApplyLegacyTestWindow(_inventoryDialog, _inventoryDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_characterDialog, _characterDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_magicDialog, _magicDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_groupDialog, _groupDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_questDialog, _questDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_communicationDialog, _communicationDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_menuDialog, _menuDialog.Location);
     }
 
     private void OnGameResized()

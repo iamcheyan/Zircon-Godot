@@ -65,6 +65,8 @@ public static class AutoLoginArgs
 
     /// <summary>给每个 DXControl 画红色边框 + 四角方块/四边黄条 (临时布局诊断)</summary>
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
+    /// <summary>显式启用旧版 EI 核心窗口实验布局（未提供时保持现行正式布局）。</summary>
+    public static bool LegacyUi => Has("--legacy-ui");
 
     /// <summary>
     /// --window [=WxH]：强制窗口模式（覆盖 Zircon.ini 的全屏设置，直接开窗口）。

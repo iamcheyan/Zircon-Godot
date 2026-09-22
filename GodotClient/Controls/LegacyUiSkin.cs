@@ -68,28 +68,30 @@ public static class LegacyUiSkin
     {
         if (window == null) return false;
 
-        (int frame, Vector2I size) profile = window.GetType().Name switch
+        (int frame, Vector2I size, Vector2I visibleOrigin) profile = window.GetType().Name switch
         {
-            "InventoryDialog" => (frame: 250, size: new Vector2I(284, 324)),
-            "CharacterDialog" => (frame: 200, size: new Vector2I(244, 328)),
-            "GroupDialog" => (frame: 900, size: new Vector2I(256, 244)),
-            "QuestDialog" => (frame: 700, size: new Vector2I(340, 440)),
-            "CommunicationDialog" => (frame: 350, size: new Vector2I(572, 388)),
-            "MagicDialog" => (frame: 400, size: new Vector2I(296, 332)),
-            "MenuDialog" => (frame: 750, size: new Vector2I(248, 264)),
-            _ => (-1, Vector2I.Zero),
+            "InventoryDialog" => (250, new Vector2I(284, 324), new Vector2I(114, 94)),
+            "CharacterDialog" => (200, new Vector2I(244, 328), new Vector2I(6, 92)),
+            "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6)),
+            "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36)),
+            "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62)),
+            "MagicDialog" => (400, new Vector2I(296, 332), new Vector2I(30, 67)),
+            "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119)),
+            _ => (-1, Vector2I.Zero, Vector2I.Zero),
         };
         if (profile.frame < 0) return false;
 
         window.Location = location;
         window.Size = profile.size;
+        window.Clip = true;
         foreach (var child in window.Controls)
         {
             if (child is not DXImageControl image) continue;
             image.LibraryFile = LibraryFile.GameInter;
             image.Index = profile.frame;
             image.FixedSize = true;
-            image.Size = profile.size;
+            image.Size = MirSkin.GetSize(LibraryFile.GameInter, profile.frame);
+            image.Location = -profile.visibleOrigin;
             image.MouseFilter = Control.MouseFilterEnum.Ignore;
             window.UpdateClientAreaForLegacySkin();
             return true;

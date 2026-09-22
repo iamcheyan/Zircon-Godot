@@ -23,6 +23,7 @@ public partial class CharacterDialog : DXWindow
     private DXLabel _marriageLabel;
     private DXControl _fameControl;
     private DXImageControl _background;
+    private DXButton _closeButton;
     private PaperDoll _doll;
     private DXControl _attributePanel;
     private DXControl _hermitPanel;
@@ -126,14 +127,14 @@ public partial class CharacterDialog : DXWindow
         _doll.Position = new Vector2(130, 280);
         AddChild(_doll);
 
-        var close = new DXButton
+        _closeButton = new DXButton
         {
             LibraryFile = LibraryFile.Interface,
             Index = 15,
         };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
 
         AddTab(Lang.CharacterCharacterTabLabel, 0, 110);
         // 开发阶段暂不开放“修炼”和“隐士”页签；相关面板仍保留在代码中，
@@ -284,6 +285,65 @@ public partial class CharacterDialog : DXWindow
             IsControl = false,
         };
         AddControl(WeightLabel);
+    }
+
+    /// <summary>按最早 EI 客户端 GameInter F200 的装备页坐标重排。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(244, 328);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 200;
+        _background.Location = new Vector2I(-6, -92);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
+        _background.StretchImage = false;
+
+        foreach (var tab in _mainTabs) tab.Button.Visible = false;
+        _attributePanel.Visible = false;
+        _hermitPanel.Visible = false;
+        _statsPanel.Visible = false;
+        WeightLabel.Visible = false;
+        _characterNameLabel.Visible = false;
+        _guildNameLabel.Visible = false;
+        _guildRankLabel.Visible = false;
+        _marriageIcon.Visible = false;
+        _marriageLabel.Visible = false;
+        _fameControl.Visible = false;
+        _guildFlagBase.Visible = false;
+        _guildFlagOverlay.Visible = false;
+        _doll.Visible = true;
+        _doll.Position = new Vector2(122, 164);
+
+        // 只有逆向编辑器已经确认的格子才显示；其余新版扩展槽绝不猜坐标。
+        var confirmed = new Dictionary<EquipmentSlot, Vector2I>
+        {
+            [EquipmentSlot.Helmet] = new(177, 70),
+            [EquipmentSlot.Torch] = new(27, 264),
+            [EquipmentSlot.Necklace] = new(103, 70),
+            [EquipmentSlot.BraceletL] = new(27, 186),
+            [EquipmentSlot.BraceletR] = new(175, 186),
+            [EquipmentSlot.RingL] = new(27, 227),
+            [EquipmentSlot.RingR] = new(175, 227),
+            [EquipmentSlot.Shoes] = new(103, 264),
+            [EquipmentSlot.Poison] = new(64, 264),
+        };
+        foreach (var cell in Grid)
+        {
+            if (cell == null) continue;
+            var slot = (EquipmentSlot)cell.Slot;
+            cell.Visible = confirmed.TryGetValue(slot, out Vector2I position);
+            if (!cell.Visible) continue;
+            cell.Location = position;
+            cell.Size = new Vector2I(38, 38);
+            cell.Hidden = false;
+        }
+
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(212, 298);
+        _closeButton.Size = new Vector2I(28, 26);
+        UpdateClientAreaForLegacySkin();
     }
 
     private void AddTab(string text, int x, int backgroundIndex)

@@ -27,6 +27,7 @@ public partial class InventoryDialog : DXWindow
 
     private bool _weightInit;
     private CurrencyInfo _primaryCurrency;
+    private DXImageControl _background;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
 
@@ -38,7 +39,7 @@ public partial class InventoryDialog : DXWindow
         Text = Lang.InventoryDialogTitle;
         Size = new Vector2I(264, 436);
 
-        var bg = new DXImageControl
+        _background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface,
             Index = 130,
@@ -46,7 +47,7 @@ public partial class InventoryDialog : DXWindow
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        AddControl(bg);
+        AddControl(_background);
 
         // 原版虽然没有 DXWindow 标题栏，但背景图内部仍有独立的标题文字层。
         // 不能只给 DXWindow.Text 赋值，否则 HasTitle=false 时不会绘制标题。
@@ -202,6 +203,47 @@ public partial class InventoryDialog : DXWindow
         };
         SellButton.MouseClick += (o, e) => SellSelected();
         AddControl(SellButton);
+    }
+
+    /// <summary>按最早 EI 客户端 GameInter F250 的原始坐标重排背包。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(284, 324);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 250;
+        _background.Location = new Vector2I(-114, -94);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 250);
+        _background.StretchImage = false;
+
+        // 原版是 6x6，格距严格为 36px；DXItemGrid 的 35+2*padding
+        // 因而 padding=0.5。先设 padding 再设尺寸，只重建一次最终网格。
+        Grid.GridPadding = .5f;
+        Grid.GridSize = new Vector2I(6, 6);
+        Grid.Location = new Vector2I(25, 41);
+
+        _titleLabel.Visible = false;
+        CloseButton.LibraryFile = LibraryFile.GameInter;
+        CloseButton.Index = 161;
+        CloseButton.HoverIndex = 162;
+        CloseButton.PressedIndex = 162;
+        CloseButton.Location = new Vector2I(249, 288);
+        CloseButton.Size = new Vector2I(28, 26);
+
+        WeightBar.Location = new Vector2I(24, 260);
+        WeightLabel.Location = new Vector2I(24, 260);
+        WeightLabel.Size = new Vector2I(145, 18);
+        _goldTitle.Location = new Vector2I(24, 281);
+        GoldLabel.Location = new Vector2I(64, 281);
+        _ggTitle.Location = new Vector2I(24, 299);
+        GgLabel.Location = new Vector2I(64, 299);
+        WalletButton.Location = new Vector2I(176, 262);
+        WalletButton.Size = new Vector2I(64, 20);
+
+        // 新版排序/丢弃/出售按钮没有旧版 F250 中的等价固定入口。
+        SortButton.Visible = false;
+        TrashButton.Visible = false;
+        SellButton.Visible = false;
+        UpdateClientAreaForLegacySkin();
     }
 
     private void TrashItem()

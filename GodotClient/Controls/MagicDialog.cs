@@ -28,6 +28,8 @@ public partial class MagicDialog : DXWindow
     private int _tabPageStart;
     private DXButton _tabPrevious;
     private DXButton _tabNext;
+    private DXButton _closeButton;
+    private bool _legacyEiLayout;
 
     public MagicDialog()
     {
@@ -59,10 +61,10 @@ public partial class MagicDialog : DXWindow
         };
         AddControl(_background);
 
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
 
         AddControl(new DXLabel
         {
@@ -117,6 +119,75 @@ public partial class MagicDialog : DXWindow
         Visible = false;
     }
 
+    /// <summary>按最早 EI 客户端 GameInter F400 的书本界面重排。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        _legacyEiLayout = true;
+        Size = new Vector2I(452, 380);
+        _header.LibraryFile = LibraryFile.GameInter;
+        _header.Index = 400;
+        _header.Location = new Vector2I(-30, -67);
+        _header.Size = MirSkin.GetSize(LibraryFile.GameInter, 400);
+        _header.StretchImage = false;
+        _background.Visible = false;
+        _tabPrevious.Visible = false;
+        _tabNext.Visible = false;
+
+        _list.Location = new Vector2I(15, 235);
+        _list.Size = new Vector2I(410, 125);
+        _scrollBar.Location = new Vector2I(425, 235);
+        _scrollBar.Size = new Vector2I(18, 125);
+        _scrollBar.VisibleSize = 125;
+
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(418, 348);
+        _closeButton.Size = new Vector2I(28, 26);
+        BuildLegacySchoolButtons();
+        UpdateClientAreaForLegacySkin();
+    }
+
+    private void BuildLegacySchoolButtons()
+    {
+        foreach (var button in _schoolButtons.Values)
+        {
+            RemoveControl(button);
+            button.QueueFree();
+        }
+        _schoolButtons.Clear();
+
+        (MagicSchool school, int frame, Vector2I location)[] schools =
+        {
+            (MagicSchool.Fire, 450, new(5, 21)),
+            (MagicSchool.Ice, 452, new(3, 56)),
+            (MagicSchool.Lightning, 454, new(4, 91)),
+            (MagicSchool.Wind, 456, new(2, 126)),
+            (MagicSchool.Holy, 458, new(2, 161)),
+            (MagicSchool.Dark, 450, new(2, 196)),
+            (MagicSchool.Phantom, 452, new(1, 231)),
+            (MagicSchool.Physical, 454, new(2, 266)),
+        };
+        _tabOrder = schools.Select(x => x.school).ToList();
+        foreach (var entry in schools)
+        {
+            MagicSchool school = entry.school;
+            var button = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = entry.frame,
+                HoverIndex = entry.frame + 1,
+                PressedIndex = entry.frame + 1,
+                Location = entry.location,
+                Size = MirSkin.GetSize(LibraryFile.GameInter, entry.frame),
+            };
+            button.MouseClick += (_, _) => SelectSchool(school);
+            AddControl(button);
+            _schoolButtons[school] = button;
+        }
+    }
+
     public bool AuditLayout(out string details)
     {
         bool valid = !HasTitle
@@ -140,7 +211,7 @@ public partial class MagicDialog : DXWindow
         if (game == null) return;
 
         // StartInfo 在窗口创建之后才到达，头图必须在刷新时重新选职业。
-        _header.Index = HeaderIndex();
+        if (!_legacyEiLayout) _header.Index = HeaderIndex();
 
         var grouped = GetVisibleMagicInfos(game)
             .GroupBy(x => x.Info.School)
@@ -157,6 +228,15 @@ public partial class MagicDialog : DXWindow
             button.QueueFree();
         }
         _schoolButtons.Clear();
+
+        if (_legacyEiLayout)
+        {
+            BuildLegacySchoolButtons();
+            if (grouped.Count > 0 && !grouped.Any(g => g.Key == _selectedSchool))
+                _selectedSchool = grouped[0].Key;
+            SelectSchool(_selectedSchool);
+            return;
+        }
 
         if (grouped.Count == 0) return;
         if (!grouped.Any(g => g.Key == _selectedSchool))

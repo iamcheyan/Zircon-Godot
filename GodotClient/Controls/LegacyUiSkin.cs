@@ -91,6 +91,18 @@ public static class LegacyUiSkin
         window.DropShadow = false;
         window.HasTitle = false;
         window.ShowCloseButton = false;
+        switch (window)
+        {
+            case InventoryDialog inventory:
+                inventory.ApplyLegacyEiLayout();
+                return true;
+            case CharacterDialog character:
+                character.ApplyLegacyEiLayout();
+                return true;
+            case MagicDialog magic:
+                magic.ApplyLegacyEiLayout();
+                return true;
+        }
         foreach (var child in window.Controls)
         {
             if (child is not DXImageControl image) continue;

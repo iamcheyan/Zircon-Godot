@@ -2591,6 +2591,9 @@ public partial class GameScene : Control
         var ob = ObjectRenderer.CreateItem(p);
         if (ob == null) return;
         AddObject(ob, p.ObjectID, zIndex: 30);
+        // 新掉落物不能等到下一次窗口/地图重建才获得标签布局；同格物品
+        // 的 slot 也必须立即重排，否则旧节点会显示、新节点却不重绘。
+        RefreshGroundItemLabels(forceRedraw: true);
         SpawnItemGlow(ob, p.Item);
     }
 
@@ -2939,7 +2942,10 @@ public partial class GameScene : Control
         if (_objectPoisonEffects.Remove(objectID, out var poisonFx)) poisonFx.QueueFree();
         if (_itemGlows.Remove(objectID, out var fx)) fx.QueueFree();
         if (_otherPlayers.Remove(objectID, out var player)) player.QueueFree();
-        if (_objects.Remove(objectID, out var ob)) ob.QueueFree();
+        bool removedGroundItem = _objects.Remove(objectID, out var ob) && ob.Type == ObjectRenderer.Kind.Item;
+        ob?.QueueFree();
+        if (removedGroundItem)
+            RefreshGroundItemLabels(forceRedraw: true);
         _npcInfos.Remove(objectID);
         GD.Print($"[Game] 移除物体: ObjectID={objectID}");
         _miniMap?.RemoveObject(objectID);
@@ -7825,6 +7831,34 @@ public partial class GameScene : Control
         _bigMap?.UpdateObject(objectID, ob.CellX, ob.CellY, ob.Type);
     }
 
+    /// <summary>
+    /// 重建地面掉落物名称的同格堆叠顺序，并确保每个受影响节点真正进入
+    /// Godot 的 CanvasItem 重绘队列。仅修改 GroundItemLabelSlot 不会自动
+    /// 触发 _Draw，因此新掉落物或同格排序变化时必须显式刷新。
+    /// </summary>
+    private void RefreshGroundItemLabels(bool forceRedraw = false)
+    {
+        if (_objects == null) return;
+
+        var items = _objects.Values.Where(x => x.Type == ObjectRenderer.Kind.Item).ToList();
+        var slots = new Dictionary<ObjectRenderer, int>();
+        foreach (var group in items.GroupBy(x => (x.CellX, x.CellY)))
+        {
+            int slot = 0;
+            foreach (var item in group.OrderByDescending(x => x.HitOrder))
+                slots[item] = slot++;
+        }
+
+        foreach (var item in items)
+        {
+            int next = slots[item];
+            bool changed = item.GroundItemLabelSlot != next;
+            item.GroundItemLabelSlot = next;
+            if (forceRedraw || changed)
+                item.QueueRedraw();
+        }
+    }
+
     private void ShowUserLocation(int direction, int x, int y, int distance)
     {
         if (_player == null)
@@ -8315,15 +8349,7 @@ public partial class GameScene : Control
         }
         if (_combatController != null)
         {
-            var itemSlots = _objects.Values
-                .Where(x => x.Type == ObjectRenderer.Kind.Item)
-                .GroupBy(x => (x.CellX, x.CellY));
-            foreach (var group in itemSlots)
-            {
-                int slot = 0;
-                foreach (var item in group.OrderByDescending(x => x.HitOrder))
-                    item.GroundItemLabelSlot = slot++;
-            }
+            RefreshGroundItemLabels();
             var hoveredMonster = _combatController.MouseObject?.Type == ObjectRenderer.Kind.Monster ? _combatController.MouseObject : null;
             _monsterDialog?.SetMonster(hoveredMonster);
             _monsterDialog?.Refresh();
@@ -10037,8 +10063,7 @@ public partial class GameScene : Control
         if (key.Keycode == Key.Alt && !key.CtrlPressed && !key.ShiftPressed)
         {
             ClientSettings.ShowGroundItemNames = !ClientSettings.ShowGroundItemNames;
-            foreach (var item in _objects.Values.Where(x => x.Type == ObjectRenderer.Kind.Item))
-                item.QueueRedraw();
+            RefreshGroundItemLabels(forceRedraw: true);
             GD.Print($"[Game] 地面物品名称: {(ClientSettings.ShowGroundItemNames ? "显示" : "隐藏")}");
             return;
         }

@@ -237,6 +237,9 @@ public abstract partial class DXWindow : DXControl
         ClientArea = new Rect2(0, top, Size.X, bottom - top);
     }
 
+    /// <summary>供旧版布局适配器在调整窗口尺寸后重新计算客户区。</summary>
+    public void UpdateClientAreaForLegacySkin() => UpdateClientArea();
+
     public override void _Process(double delta)
     {
         base._Process(delta);

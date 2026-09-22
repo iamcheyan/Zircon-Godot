@@ -45,6 +45,22 @@ public static class LegacyUiSkin
         Mathf.RoundToInt(legacy.X * 1024f / 800f),
         Mathf.RoundToInt(legacy.Y * 768f / 600f));
 
+    /// <summary>按旧版 profile 应用公共窗口属性；geometry 由迁移阶段显式开启。</summary>
+    public static bool ApplyWindowProfile(DXWindow window, bool geometry = false)
+    {
+        if (window == null || !TryGetWindow(window.GetType().Name, out WindowProfile profile)) return false;
+        ApplyVisualDefaults(window);
+        if (!geometry || profile.Candidate) return !profile.Candidate;
+
+        window.Size = ToGodotSize(profile.Size);
+        window.Location = ToGodotLocation(profile.Location);
+        window.Movable = profile.Movable;
+        window.UpdateClientAreaForLegacySkin();
+        return true;
+    }
+
+    public static Color GetControlText(bool enabled = true) => enabled ? TitleText : new Color(.45f, .4f, .3f, 1f);
+
     /// <summary>
     /// 应用公共旧版视觉约定。窗口具体尺寸不在这里强制覆盖，避免破坏现有
     /// 窗口的动态布局；第四阶段迁移窗口时再按 profile 显式采用尺寸。

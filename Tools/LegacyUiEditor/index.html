@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Zircon Legacy UI Editor</title>
+<style>
+body{margin:0;background:#17110d;color:#ead8a0;font:14px sans-serif}header{padding:10px 14px;border-bottom:1px solid #765d2a}main{display:grid;grid-template-columns:280px 1fr 1fr;gap:12px;padding:12px}select,button{background:#2b2118;color:#ead8a0;border:1px solid #927332;padding:6px;margin:3px}pre{white-space:pre-wrap;background:#0e0b09;padding:10px;min-height:180px}.stage{position:relative;background:#211a13;border:1px solid #765d2a;height:480px;overflow:hidden}.box{position:absolute;border:1px solid #e4bd52;background:#6b4d1d66;box-sizing:border-box;color:#fff2c6;font-size:10px;padding:2px;overflow:hidden}.hint{color:#b9a77c;font-size:12px}
+</style>
+<header><b>Zircon Legacy UI 双数据源编辑器</b> <span class="hint">旧版 800×600 → 当前 1024×768</span></header>
+<main><section><label>旧版窗口</label><select id="legacy"></select><label>当前窗口</label><select id="current"></select><p><button id="copy">复制换算后的几何</button><button id="download">下载 overlay 条目</button></p><pre id="info"></pre></section><section><h3>旧版参考层</h3><div id="legacyStage" class="stage"></div></section><section><h3>当前控件树</h3><div id="currentStage" class="stage"></div></section></main>
+<script>
+const scale={x:1024/800,y:768/600};let oldData,newData,selected;
+const $=id=>document.getElementById(id); const pair=v=>Array.isArray(v)?v:[0,0];
+function fill(sel,items,label){$(sel).innerHTML=items.map((x,i)=>`<option value="${i}">${x.name||x.className||label}</option>`).join('')}
+function box(stage,x,y,w,h,text,ratio){let e=document.createElement('div');e.className='box';e.style.left=x*ratio+'px';e.style.top=y*ratio+'px';e.style.width=w*ratio+'px';e.style.height=h*ratio+'px';e.textContent=text;stage.append(e)}
+function render(){let i=+$('legacy').value||0,j=+$('current').value||0;selected=oldData.windows[i];let c=newData.windows[j];$('legacyStage').innerHTML='';$('currentStage').innerHTML='';let p=selected.location,s=selected.size;box($('legacyStage'),p[0],p[1],s[0],s[1],selected.name,480/600);let q=c.location||[0,0],r=c.size||[1,1];box($('currentStage'),q[0],q[1],r[0],r[1],c.className||c.name,480/768);$('info').textContent=JSON.stringify({legacy:selected,current:c,converted:{location:[Math.round(p[0]*scale.x),Math.round(p[1]*scale.y)],size:[Math.round(s[0]*scale.x),Math.round(s[1]*scale.y)]}},null,2)}
+function overlay(){let p=selected.location,s=selected.size;return {window:selected.name,location:[Math.round(p[0]*scale.x),Math.round(p[1]*scale.y)],size:[Math.round(s[0]*scale.x),Math.round(s[1]*scale.y)],source:'legacy_ui.json',status:selected.status}}
+$('legacy').onchange=render;$('current').onchange=render;$('copy').onclick=()=>{if(selected.status==='candidate'){alert('candidate 仅供预览，不能直接迁移');return} navigator.clipboard?.writeText(JSON.stringify(overlay(),null,2));$('info').textContent+='\n\n已复制 overlay 条目';};$('download').onclick=()=>{let b=new Blob([JSON.stringify(overlay(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=selected.name+'.legacy-overlay.json';a.click()};
+Promise.all([fetch('../../GodotClient/UI/legacy_ui.json').then(r=>r.json()),fetch('../../GodotClient/UI/ui_tree.json').then(r=>r.json())]).then(([a,b])=>{oldData=a;newData=b;fill('legacy',a.windows,'legacy');fill('current',b.windows,'current');render()}).catch(e=>$('info').textContent='加载失败：'+e);
+</script>

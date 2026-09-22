@@ -10225,11 +10225,10 @@ public partial class GameScene : Control
             return;
         }
 
-        // F12 = 开发调试键：UI overlay 热重载 + 截图 + 可见窗口矩形导出
-        // （截图/矩形供 uieditor 的 underlay 对齐用）。
-        // 必须放在 KeyBindManager 分发之前——默认键位 SpellUse12=F12 会让
-        // 走到后面的分支永远不可达；需要 F12 施法的玩家可在按键设置里改绑。
-        if (key.Keycode == Key.F12)
+        // Ctrl+F12 = 开发调试键：UI overlay 热重载 + 截图 + 可见窗口矩形导出
+        // （截图/矩形供 uieditor 的 underlay 对齐用）。普通 F12 和 Shift+F12
+        // 必须留给 KeyBindManager 的 SpellUse12/24，不能再被调试分支吞掉。
+        if (key.Keycode == Key.F12 && key.CtrlPressed && !key.ShiftPressed)
         {
             UiOverlay.ReloadAll();
             DumpVisibleWindowRects();

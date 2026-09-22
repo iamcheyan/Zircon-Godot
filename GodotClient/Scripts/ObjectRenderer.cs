@@ -39,6 +39,7 @@ public partial class ObjectRenderer : MapObjectNode
     public PoisonType Poison;
     public bool Focused;
     public bool NameHovered;
+    public int GroundItemLabelSlot;
     public bool TargetHighlighted;
     public Color TargetOutlineColour = Colors.Transparent;
     public int Light;
@@ -569,9 +570,19 @@ public partial class ObjectRenderer : MapObjectNode
 
     private void DrawName()
     {
-        if (!NameHovered) return;
+        bool groundItemVisible = Type == Kind.Item && ClientSettings.ShowGroundItemNames;
+        if (!NameHovered && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;
+        if (Type == Kind.Item)
+        {
+            float itemY = -18f - GroundItemLabelSlot * 12f;
+            RenderPrimitives.DrawLabelWithBackground(this, DisplayName, new Vector2(24f, itemY),
+                NameColour, 9f,
+                new Color(0.02f, 0.02f, 0.02f, 0.86f),
+                new Color(0.95f, 0.78f, 0.28f, 0.92f));
+            return;
+        }
         // 名称不再固定在角色身体中部；所有地图对象统一锚到血条上方。
         float y = RenderPrimitives.NameAboveHealthBarBaseline(9f);
         if (string.IsNullOrWhiteSpace(DisplayName)) return;

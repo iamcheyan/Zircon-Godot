@@ -17,6 +17,9 @@ public static class ClientSettings
     public static bool DrawWeather { get; set; } = true;
     public static bool ShowTargetOutline { get; set; } = true;
     public static bool ShowItemNames { get; set; } = true;
+    // 地面物品标签默认关闭；游戏内按 Alt 可切换显示/隐藏，不写入配置，
+    // 保证每次进入游戏默认都是不遮挡场景的状态。
+    public static bool ShowGroundItemNames { get; set; }
     public static bool ShowMonsterNames { get; set; } = true;
     public static bool ShowPlayerNames { get; set; } = true;
     public static bool ShowUserHealth { get; set; } = true;

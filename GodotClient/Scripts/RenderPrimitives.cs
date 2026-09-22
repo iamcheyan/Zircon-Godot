@@ -138,6 +138,28 @@ internal static class RenderPrimitives
         canvas.DrawString(font, p, text, HorizontalAlignment.Left, -1f, drawSize, colour);
     }
 
+    public static void DrawLabelWithBackground(CanvasItem canvas, string text, Vector2 baseline,
+        Color colour, float size = 10f,
+        Color background = default, Color border = default)
+    {
+        if (canvas == null || string.IsNullOrWhiteSpace(text)) return;
+        Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+        if (font == null) return;
+        int drawSize = MirSkin.PhysicalSize((int)size);
+        Vector2 extent = font.GetStringSize(text, HorizontalAlignment.Left, -1, drawSize);
+        const float padX = 4f, padY = 2f;
+        Vector2 topLeft = baseline - new Vector2(extent.X * 0.5f + padX, font.GetAscent(drawSize) + padY);
+        Vector2 boxSize = new(extent.X + padX * 2f, font.GetHeight(drawSize) + padY * 2f);
+        Color fill = background == default ? new Color(0.02f, 0.02f, 0.02f, 0.82f) : background;
+        Color line = border == default ? new Color(0.95f, 0.78f, 0.28f, 0.9f) : border;
+        canvas.DrawRect(new Rect2(topLeft, boxSize), fill, true);
+        canvas.DrawRect(new Rect2(topLeft, boxSize), line, false, 1f);
+        Vector2 p = baseline - new Vector2(extent.X * 0.5f, 0f);
+        canvas.DrawString(font, p + new Vector2(1f, 1f), text,
+            HorizontalAlignment.Left, -1f, drawSize, new Color(0f, 0f, 0f, 0.95f));
+        canvas.DrawString(font, p, text, HorizontalAlignment.Left, -1f, drawSize, colour);
+    }
+
     /// <summary>
     /// 原版 MapObject.DrawName 的基线：NameLabel 的顶部是
     /// DrawY - (32 - labelHeight) / 2 - 6，节点原点对应 DrawX/DrawY。

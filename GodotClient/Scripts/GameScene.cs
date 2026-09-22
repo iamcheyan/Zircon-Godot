@@ -8313,6 +8313,15 @@ public partial class GameScene : Control
         }
         if (_combatController != null)
         {
+            var itemSlots = _objects.Values
+                .Where(x => x.Type == ObjectRenderer.Kind.Item)
+                .GroupBy(x => (x.CellX, x.CellY));
+            foreach (var group in itemSlots)
+            {
+                int slot = 0;
+                foreach (var item in group.OrderByDescending(x => x.HitOrder))
+                    item.GroundItemLabelSlot = slot++;
+            }
             var hoveredMonster = _combatController.MouseObject?.Type == ObjectRenderer.Kind.Monster ? _combatController.MouseObject : null;
             _monsterDialog?.SetMonster(hoveredMonster);
             _monsterDialog?.Refresh();
@@ -10020,6 +10029,17 @@ public partial class GameScene : Control
 
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
+
+        // Alt 是地面掉落物名称的显示开关。只处理单独按下 Alt，
+        // 不影响 Alt+左键的采集/钓鱼/驯马操作。
+        if (key.Keycode == Key.Alt && !key.CtrlPressed && !key.ShiftPressed)
+        {
+            ClientSettings.ShowGroundItemNames = !ClientSettings.ShowGroundItemNames;
+            foreach (var item in _objects.Values.Where(x => x.Type == ObjectRenderer.Kind.Item))
+                item.QueueRedraw();
+            GD.Print($"[Game] 地面物品名称: {(ClientSettings.ShowGroundItemNames ? "显示" : "隐藏")}");
+            return;
+        }
 
         // F12 = 开发调试键：UI overlay 热重载 + 截图 + 可见窗口矩形导出
         // （截图/矩形供 uieditor 的 underlay 对齐用）。

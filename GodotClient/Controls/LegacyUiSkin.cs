@@ -102,6 +102,15 @@ public static class LegacyUiSkin
             case MagicDialog magic:
                 magic.ApplyLegacyEiLayout();
                 return true;
+            case GroupDialog group:
+                group.ApplyLegacyEiLayout();
+                return true;
+            case QuestDialog quest:
+                quest.ApplyLegacyEiLayout();
+                return true;
+            case MenuDialog menu:
+                menu.ApplyLegacyEiLayout();
+                return true;
         }
         foreach (var child in window.Controls)
         {

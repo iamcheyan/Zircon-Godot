@@ -10,6 +10,9 @@ public partial class MenuDialog : DXWindow
 {
     public DXButton SettingsButton, HelpButton, GuildButton, StorageButton,
         RankingButton, LeaveButton;
+    private DXImageControl _background;
+    private DXButton _closeButton;
+    private DXLabel _titleLabel;
 
     public MenuDialog()
     {
@@ -18,25 +21,26 @@ public partial class MenuDialog : DXWindow
         HasFooter = false;
         Size = new Vector2I(152, 230);
 
-        AddControl(new DXImageControl
+        _background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface,
             Index = 279,
             FixedSize = true,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
-        });
+        };
+        AddControl(_background);
 
-        var close = new DXButton
+        _closeButton = new DXButton
         {
             LibraryFile = LibraryFile.Interface,
             Index = 15,
             Location = new Vector2I(Mathf.RoundToInt(Size.X) - 30, 3),
         };
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
 
-        var title = new DXLabel
+        _titleLabel = new DXLabel
         {
             Text = Lang.MenuDialogTitle,
             FontSize = 11,
@@ -49,7 +53,7 @@ public partial class MenuDialog : DXWindow
             Size = new Vector2I(Mathf.RoundToInt(Size.X), 24),
             IsControl = false,
         };
-        AddControl(title);
+        AddControl(_titleLabel);
 
         SettingsButton = AddMenuButton(Lang.MenuDialogSettingsButtonLabel, 40);
         HelpButton = AddMenuButton(Lang.MenuHelpLabel, 70);
@@ -64,6 +68,32 @@ public partial class MenuDialog : DXWindow
         GuildButton.MouseClick += (o, e) => GameScene.Game?.OpenGuildDialog();
         RankingButton.MouseClick += (o, e) => GameScene.Game?.OpenRankingDialog();
         LeaveButton.MouseClick += (o, e) => GameScene.Game?.OpenExitDialog();
+    }
+
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(248, 264);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 750;
+        _background.Location = new Vector2I(-4, -119);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 750);
+        _background.StretchImage = false;
+        _titleLabel.Visible = false;
+
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(216, 238);
+        _closeButton.Size = new Vector2I(28, 26);
+        DXButton[] buttons = { SettingsButton, HelpButton, GuildButton, StorageButton, RankingButton, LeaveButton };
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            buttons[i].Location = new Vector2I(28, 44 + i * 30);
+            buttons[i].Size = new Vector2I(192, 25);
+            buttons[i].Modulate = new Color(1, 1, 1, 0);
+        }
+        UpdateClientAreaForLegacySkin();
     }
 
     private DXButton AddMenuButton(string text, int y)

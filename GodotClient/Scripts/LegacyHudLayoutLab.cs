@@ -79,6 +79,10 @@ public partial class LegacyHudLayoutLab : Control
     private T AddWindow<T>(T window, Vector2I location) where T : DXWindow
     {
         LegacyUiSkin.ApplyLegacyTestWindow(window, location);
+        // 测试场默认只显示 HUD；由 --legacy-open 或 HUD 按钮显式打开窗口。
+        // 若让 DXWindow 的默认 Visible 状态漏出，会把多个旧版窗口叠在
+        // 截图里，误导后续的贴图/尺寸验收。
+        window.Visible = false;
         _canvas.AddChild(window);
         return window;
     }

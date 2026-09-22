@@ -24,6 +24,8 @@ public partial class QuestDialog : DXWindow
     private QuestInfo _selectedAvailable;
     private int _page;
     private QuestRewardChoiceDialog _choiceDialog;
+    private DXButton _closeButton;
+    private DXLabel _titleLabel;
 
     public QuestDialog()
     {
@@ -42,12 +44,12 @@ public partial class QuestDialog : DXWindow
         };
         AddControl(_background);
 
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
 
-        AddControl(new DXLabel
+        _titleLabel = new DXLabel
         {
             Text = Lang.QuestDialogTitle,
             FontSize = 11,
@@ -60,7 +62,8 @@ public partial class QuestDialog : DXWindow
             Location = new Vector2I(0, 8),
             Size = new Vector2I((int)Size.X, 18),
             IsControl = false,
-        });
+        };
+        AddControl(_titleLabel);
 
         AddTab(Lang.QuestQuestLabel, 18, 25, 0);
         AddTab(Lang.QuestQuestLabel2, 118, 25, 1);
@@ -88,6 +91,34 @@ public partial class QuestDialog : DXWindow
         _scroll.ValueChanged += (o, e) => RepositionLines();
         AddControl(_scroll);
         _content.MouseWheel += _scroll.DoMouseWheel;
+    }
+
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(340, 440);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 700;
+        _background.Location = new Vector2I(-86, -36);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 700);
+        _background.StretchImage = false;
+        _titleLabel.Visible = false;
+
+        // F700 已包含旧版任务页签/书页装饰。保留业务控件和点击逻辑，
+        // 只把新版深色容器与文字层设为透明，避免覆盖旧版原画。
+        _content.Modulate = new Color(1, 1, 1, 0);
+        _scroll.Modulate = new Color(1, 1, 1, 0);
+        foreach (var tab in _tabs)
+        {
+            tab.Button.Modulate = new Color(1, 1, 1, 0);
+            tab.Button.Location = new Vector2I(tab.Button.Location.X, 30);
+        }
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(304, 404);
+        _closeButton.Size = new Vector2I(28, 26);
+        UpdateClientAreaForLegacySkin();
     }
 
     public override void Close()

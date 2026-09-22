@@ -25,6 +25,11 @@ public partial class GroupDialog : DXWindow
     private readonly List<GroupLfgRowControl> _lfgRows = new();
     private DXButton _removeButton;
     private DXButton _optionsButton;
+    private DXButton _addButton;
+    private DXButton _lfgButton;
+    private DXButton _closeButton;
+    private DXImageControl _background;
+    private DXLabel _titleLabel;
     private DXVScrollBar _lfgScroll;
     private DXCheckButton _allowCheck;
     private GroupLfgInputDialog _lfgDialog;
@@ -42,12 +47,14 @@ public partial class GroupDialog : DXWindow
         Movable = true;
         HasFooter = false;
         Size = new Vector2I(240, 424);
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 240, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => GameScene.Game?.CloseGroupDialog();
-        AddControl(close);
-        AddControl(new DXLabel { Text = Lang.GroupGroupLabel, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(240, 18), IsControl = false });
+        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 240, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        AddControl(_background);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => GameScene.Game?.CloseGroupDialog();
+        AddControl(_closeButton);
+        _titleLabel = new DXLabel { Text = Lang.GroupGroupLabel, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(240, 18), IsControl = false };
+        AddControl(_titleLabel);
 
         _allowCheck = new DXCheckButton(string.Empty) { Location = new Vector2I(166, 40), Size = new Vector2I(18, 18) };
         _allowCheck.MouseClick += (o, e) => ToggleAllow();
@@ -69,15 +76,15 @@ public partial class GroupDialog : DXWindow
             _inviteName.Visible = false;
             invite.Visible = false;
         };
-        var add = new DXButton { Type = DXButton.ButtonType.AddButton, Size = new Vector2I(36, 36), Location = new Vector2I(35, 217), LibraryFile = LibraryFile.Interface };
-        add.MouseClick += (o, e) => { _inviteName.Visible = !_inviteName.Visible; invite.Visible = _inviteName.Visible; if (_inviteName.Visible) _inviteName.GrabFocus(); };
-        AddControl(add);
+        _addButton = new DXButton { Type = DXButton.ButtonType.AddButton, Size = new Vector2I(36, 36), Location = new Vector2I(35, 217), LibraryFile = LibraryFile.Interface };
+        _addButton.MouseClick += (o, e) => { _inviteName.Visible = !_inviteName.Visible; invite.Visible = _inviteName.Visible; if (_inviteName.Visible) _inviteName.GrabFocus(); };
+        AddControl(_addButton);
         _removeButton = new DXButton { Type = DXButton.ButtonType.RemoveButton, Size = new Vector2I(36, 36), Location = new Vector2I(81, 217), LibraryFile = LibraryFile.Interface, Enabled = false };
         _removeButton.MouseClick += (o, e) => RemoveSelectedMember();
         AddControl(_removeButton);
-        var lfg = new DXButton { Type = DXButton.ButtonType.LFGButton, Size = new Vector2I(36, 36), Location = new Vector2I(127, 217), LibraryFile = LibraryFile.Interface };
-        lfg.MouseClick += (o, e) => OpenLfgEditor();
-        AddControl(lfg);
+        _lfgButton = new DXButton { Type = DXButton.ButtonType.LFGButton, Size = new Vector2I(36, 36), Location = new Vector2I(127, 217), LibraryFile = LibraryFile.Interface };
+        _lfgButton.MouseClick += (o, e) => OpenLfgEditor();
+        AddControl(_lfgButton);
         _optionsButton = new DXButton { Type = DXButton.ButtonType.OptionsButton, Size = new Vector2I(36, 36), Location = new Vector2I(173, 217), LibraryFile = LibraryFile.Interface, Enabled = false };
         AddControl(_optionsButton);
 
@@ -99,6 +106,42 @@ public partial class GroupDialog : DXWindow
             _lfgRows.Add(row);
         }
         RebuildMembers();
+    }
+
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(256, 244);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 900;
+        _background.Location = new Vector2I(0, -6);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 900);
+        _background.StretchImage = false;
+        _titleLabel.Visible = false;
+
+        _allowCheck.Location = new Vector2I(137, 26);
+        _memberPanel.Location = new Vector2I(17, 59);
+        _memberPanel.Size = new Vector2I(222, 101);
+
+        // F900 自带四个按钮的完整美术文字，保留原业务按钮作为透明热区。
+        DXButton[] actions = { _addButton, _removeButton, _lfgButton, _optionsButton };
+        for (int i = 0; i < actions.Length; i++)
+        {
+            actions[i].Location = new Vector2I(17 + i * 55, 166);
+            actions[i].Size = new Vector2I(48, 24);
+            actions[i].Modulate = new Color(1, 1, 1, 0);
+        }
+        _inviteName.Location = new Vector2I(17, 194);
+        _lfgPanel.Visible = false;
+        _lfgScroll.Visible = false;
+        foreach (var row in _lfgRows) row.Visible = false;
+
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(224, 212);
+        _closeButton.Size = new Vector2I(28, 26);
+        UpdateClientAreaForLegacySkin();
     }
 
     private DXButton Button(string text, Vector2I location, Vector2I size)

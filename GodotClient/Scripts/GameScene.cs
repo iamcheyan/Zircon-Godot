@@ -755,7 +755,7 @@ public partial class GameScene : Control
 
     /// <summary>
     /// 物品交互期间地图不能继续驱动人物移动：包括背包中拿起物品、货币
-    /// 选择状态，以及数量确认窗口已经打开但 SelectedCell 已被清掉的阶段。
+    /// 选择状态，以及物品数量确认窗口已经打开但 SelectedCell 已被清掉的阶段。
     /// </summary>
     public static bool IsMovementBlockedByItemInteraction(bool selectedItem,
         bool selectedCurrency, bool itemWindowVisible)
@@ -1181,6 +1181,7 @@ public partial class GameScene : Control
         _net.Connection.PlayerChangeUpdateEvent += OnPlayerChangeUpdate;
         _net.Connection.HelmetToggleEvent += OnHelmetToggle;
         _net.Connection.ObjectNPCEvent += OnObjectNPC;
+        _net.Connection.ObjectItemEvent += OnObjectItem;
         _net.Connection.ChatEvent += OnChat;
         _net.Connection.GroupMemberEvent += OnGroupMember;
         _net.Connection.GroupRemoveEvent += OnGroupRemove;
@@ -4703,7 +4704,7 @@ public partial class GameScene : Control
         if (IsMovementBlockedByItemInteraction(
                 DXItemCell.SelectedCell != null,
                 _selectedCurrency != null,
-                WindowManager.OpenWindows.Any(window => window != null && window.Visible)))
+                WindowManager.OpenWindows.Any(window => window is ItemAmountDialog && window.Visible)))
             return false;
         return CanPlayerTurn()
             && !_player.ElementalHurricane
@@ -4731,7 +4732,7 @@ public partial class GameScene : Control
         if (IsMovementBlockedByItemInteraction(
                 DXItemCell.SelectedCell != null,
                 _selectedCurrency != null,
-                WindowManager.OpenWindows.Any(window => window != null && window.Visible)))
+                WindowManager.OpenWindows.Any(window => window is ItemAmountDialog && window.Visible)))
             return true;
         var mouseObject = _combatController?.MouseObject;
         if (IsFishingActive || IsTamingActive)
@@ -7856,28 +7857,63 @@ public partial class GameScene : Control
     }
 
     /// <summary>
-    /// 重建地面掉落物名称的同格堆叠顺序，并确保每个受影响节点真正进入
-    /// Godot 的 CanvasItem 重绘队列。仅修改 GroundItemLabelSlot 不会自动
-    /// 触发 _Draw，因此新掉落物或同格排序变化时必须显式刷新。
+    /// 重建地面掉落物名称的避让布局，并确保每个受影响节点真正进入
+    /// Godot 的 CanvasItem 重绘队列。名称不仅要处理同格堆叠，也要处理
+    /// 相邻格的图标/标签范围相交；否则两个掉落物虽然坐标不同，标签仍会互相盖住。
     /// </summary>
     private void RefreshGroundItemLabels(bool forceRedraw = false)
     {
         if (_objects == null) return;
 
         var items = _objects.Values.Where(x => x.Type == ObjectRenderer.Kind.Item).ToList();
-        var slots = new Dictionary<ObjectRenderer, int>();
-        foreach (var group in items.GroupBy(x => (x.CellX, x.CellY)))
+        var placed = new List<Rect2>();
+        var candidates = new List<Vector2>();
+        int candidateCount = items.Count + 4;
+        for (int level = 0; level < candidateCount; level++)
+            candidates.Add(new Vector2(0f, -16f * level));
+        for (int level = 1; level < candidateCount; level++)
         {
-            int slot = 0;
-            foreach (var item in group.OrderByDescending(x => x.HitOrder))
-                slots[item] = slot++;
+            float x = 72f * level;
+            candidates.Add(new Vector2(-x, 0f));
+            candidates.Add(new Vector2(x, 0f));
+            candidates.Add(new Vector2(-x, -16f));
+            candidates.Add(new Vector2(x, -16f));
         }
 
-        foreach (var item in items)
+        // 最新掉落物优先占据物品上方的默认位置，旧物品依次向上/向两侧避让。
+        foreach (var item in items.OrderByDescending(x => x.HitOrder))
         {
-            int next = slots[item];
-            bool changed = item.GroundItemLabelSlot != next;
-            item.GroundItemLabelSlot = next;
+            float width = Math.Max(24f, RenderPrimitives.MeasureLabelWidth(item.DisplayName, 9f) + 8f);
+            const float height = 18f;
+            Vector2 baseCenter = new(item.CellX * 48f + 24f, item.CellY * 32f - 18f);
+            Vector2 chosenOffset = Vector2.Zero;
+            Rect2 chosenRect = default;
+            bool found = false;
+
+            foreach (Vector2 offset in candidates)
+            {
+                Vector2 center = baseCenter + offset;
+                Rect2 rect = new(center.X - width / 2f, center.Y - 14f, width, height);
+                if (placed.All(existing => !existing.Grow(2f).Intersects(rect)))
+                {
+                    chosenOffset = offset;
+                    chosenRect = rect;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                chosenOffset = new Vector2(0f, -16f * placed.Count);
+                Vector2 center = baseCenter + chosenOffset;
+                chosenRect = new(center.X - width / 2f, center.Y - 14f, width, height);
+            }
+
+            placed.Add(chosenRect);
+            bool changed = item.GroundItemLabelOffset != chosenOffset;
+            item.GroundItemLabelOffset = chosenOffset;
+            item.GroundItemLabelSlot = Math.Max(0, (int)Math.Round(-chosenOffset.Y / 16f));
             if (forceRedraw || changed)
                 item.QueueRedraw();
         }
@@ -8394,8 +8430,10 @@ public partial class GameScene : Control
 
                 bool highlighted = ClientSettings.ShowTargetOutline
                     && ob == _combatController.MouseObject
-                    && ob.Type is ObjectRenderer.Kind.Monster or ObjectRenderer.Kind.NPC;
-                Color outline = highlighted ? GetTargetOutlineColour(ob) : Colors.Transparent;
+                    && ob.Type == ObjectRenderer.Kind.NPC;
+                Color outline = ob.Type == ObjectRenderer.Kind.Monster
+                    ? GetTargetOutlineColour(ob)
+                    : highlighted ? GetTargetOutlineColour(ob) : Colors.Transparent;
                 if (ob.TargetHighlighted != highlighted || ob.TargetOutlineColour != outline)
                 {
                     ob.TargetHighlighted = highlighted;
@@ -8471,6 +8509,13 @@ public partial class GameScene : Control
         // 计算，否则旧 Zircon.ini 中 SmoothMove=false 会导致角色跳格抖动。
         if (_moveFrameCount > 1 && _player != null)
         {
+            // 位移和动作必须是一个不可分割的视觉状态。网络回包/转身事件
+            // 可能把人物动作切回 Standing；此时位置仍在插值，就会表现成
+            // “站着飘过去”。只在动作不一致时恢复走/跑，不重置正常移动的帧起点。
+            _player.EnsureMoveAnimation(
+                _playerHorse != HorseType.None,
+                _player.MoveDistance >= 2);
+
             double t = Math.Clamp((Godot.Time.GetTicksMsec() - _moveStartMs) /
                 Math.Max(1.0, _moveDurationMs), 0.0, 1.0);
             double k = 1.0 - t;
@@ -10116,6 +10161,16 @@ public partial class GameScene : Control
             }
         }
 
+        // 窗口快捷键必须独立于其它窗口状态：Q/W 等键既要能在已有窗口
+        // 打开时继续打开自己的窗口，也要能再次按下关闭自己的窗口。
+        // 不能让下面的“有窗口时屏蔽全局快捷键”把它们提前吞掉。
+        KeyBindAction windowBind = KeyBindManager.GetAction(key);
+        if (IsWindowShortcut(windowBind))
+        {
+            HandleKeyBind(windowBind);
+            return;
+        }
+
         // 有其它可见窗口时，全局游戏快捷键也必须停止，避免窗口内的自定义
         // 控件在没有原生焦点时仍被游戏快捷键抢占。
         if (WindowManager.OpenWindows.Any(window => window != null && window.Visible))
@@ -10164,6 +10219,35 @@ public partial class GameScene : Control
                 SendMouseMove(dir.Value, 1, false);
         }
     }
+
+    private static bool IsWindowShortcut(KeyBindAction action)
+        => action is KeyBindAction.MenuWindow
+            or KeyBindAction.HelpWindow
+            or KeyBindAction.ConfigWindow
+            or KeyBindAction.CharacterWindow
+            or KeyBindAction.InventoryWindow
+            or KeyBindAction.MagicWindow
+            or KeyBindAction.MagicBarWindow
+            or KeyBindAction.DungeonFinderWindow
+            or KeyBindAction.StorageWindow
+            or KeyBindAction.BeltWindow
+            or KeyBindAction.AutoPotionWindow
+            or KeyBindAction.CurrencyWindow
+            or KeyBindAction.FilterDropWindow
+            or KeyBindAction.FortuneWindow
+            or KeyBindAction.QuestTrackerWindow
+            or KeyBindAction.MapMiniWindow
+            or KeyBindAction.MapBigWindow
+            or KeyBindAction.RankingWindow
+            or KeyBindAction.GameStoreWindow
+            or KeyBindAction.CompanionWindow
+            or KeyBindAction.GroupWindow
+            or KeyBindAction.GuildWindow
+            or KeyBindAction.MailBoxWindow
+            or KeyBindAction.MailSendWindow
+            or KeyBindAction.BlockListWindow
+            or KeyBindAction.QuestLogWindow
+            or KeyBindAction.ChatOptionsWindow;
 
     /// <summary>
     /// 导出当前可见窗口的逻辑画布矩形（F12，配合 /tmp/game_screenshot.png）：

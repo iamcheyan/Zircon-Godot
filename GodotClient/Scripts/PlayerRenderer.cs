@@ -98,6 +98,9 @@ public partial class PlayerRenderer : Node2D
     public int CellX, CellY;          // 服务端权威格子坐标
     public float OffsetX, OffsetY;    // 平滑移动的像素偏移
     public int MoveDistance { get; private set; }
+    public bool IsMoveAnimation => Animation is MirAnimation.Walking or MirAnimation.Running
+        or MirAnimation.HorseWalking or MirAnimation.HorseRunning
+        or MirAnimation.CreepWalkSlow or MirAnimation.CreepWalkFast;
     // 原版 MapObject.MovingOffSet 使用当前走/跑帧表的 Sum，
     // 不应把所有职业、坐骑和特殊外观都硬编码成 600ms。
     public double MovementDurationMs => _currentFrame?.Sum > 0 ? _currentFrame.Sum : 600.0;
@@ -579,6 +582,26 @@ public partial class PlayerRenderer : Node2D
                 ? (mounted ? MirAnimation.HorseRunning : MirAnimation.Running)
                 : (mounted ? MirAnimation.HorseWalking : MirAnimation.Walking),
             (0, MagicType.None));
+        _pendingSpell = (0, MagicType.None);
+    }
+
+    /// <summary>
+    /// 移动插值期间保持动作与位移一致。
+    /// 回包可能同时带来转身/状态更新；这些更新不能把正在移动的人物切回站立，
+    /// 否则会出现“站立姿势漂移到目标格”。已经是正确动作时不重置帧起点。
+    /// </summary>
+    public void EnsureMoveAnimation(bool mounted, bool running)
+    {
+        MirAnimation expected = Cloaked
+            ? (GhostWalking ? MirAnimation.CreepWalkFast : MirAnimation.CreepWalkSlow)
+            : running
+                ? (mounted ? MirAnimation.HorseRunning : MirAnimation.Running)
+                : (mounted ? MirAnimation.HorseWalking : MirAnimation.Walking);
+
+        if (Animation == expected) return;
+
+        InterruptActionForMovement();
+        ApplyAnimation(expected, (0, MagicType.None));
         _pendingSpell = (0, MagicType.None);
     }
 

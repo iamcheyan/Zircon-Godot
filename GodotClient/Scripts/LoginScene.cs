@@ -439,7 +439,8 @@ public partial class LoginScene : Control
             Size = new Vector2I(170, 14),
             Text = ClientSettings.RememberDetails ? ClientSettings.RememberedEMail : _emailEdit.Text,
             Border = false,
-            FontSize = 8
+            FontSize = 8,
+            TextOffsetY = -2
         };
         _skinPassword = new DXTextInput
         {
@@ -448,7 +449,8 @@ public partial class LoginScene : Control
             Text = ClientSettings.RememberDetails ? ClientSettings.RememberedPassword : _passwordEdit.Text,
             Border = false,
             Secret = true,
-            FontSize = 8
+            FontSize = 8,
+            TextOffsetY = -2
         };
         dialog.AddControl(_skinEmail);
         dialog.AddControl(_skinPassword);
@@ -469,14 +471,14 @@ public partial class LoginScene : Control
         if (defaultButtonHeight <= 0) defaultButtonHeight = 21;
 
         // 登录/退出 主按钮
-        _skinLogin = new DXButton { Text = Lang.LoginDialogLoginButtonLabel, FontSize = 10, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(550, 60), Size = new Vector2I(100, defaultButtonHeight), Enabled = false };
-        _skinExit = new DXButton { Text = Lang.CommonControlExit, FontSize = 10, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(660, 60), Size = new Vector2I(100, defaultButtonHeight) };
+        _skinLogin = new DXButton { Text = Lang.LoginDialogLoginButtonLabel, FontSize = 10, TextColour = new Color(1f, .88f, .55f), TextOffsetY = -1, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(550, 60), Size = new Vector2I(100, defaultButtonHeight), Enabled = false };
+        _skinExit = new DXButton { Text = Lang.CommonControlExit, FontSize = 10, TextColour = new Color(1f, .88f, .55f), TextOffsetY = -1, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(660, 60), Size = new Vector2I(100, defaultButtonHeight) };
 
         // 顶部功能页签按钮 (排行榜、选项、注册账号、修改密码)
         _skinRanking = new DXButton { Text = Lang.RankingRankingLabel, FontSize = 9, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = 153, Location = new Vector2I(20, 0), Size = new Vector2I(68, 32) };
         _skinOptions = new DXButton { Text = Lang.LoginDialogOptionButtonLabel, FontSize = 9, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = 153, Location = new Vector2I(93, 0), Size = new Vector2I(68, 32) };
-        _skinRegister = new DXButton { Text = Lang.LoginRegisterLabel3, FontSize = 10, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = 152, Location = new Vector2I(485, 0), Size = new Vector2I(136, 32), Enabled = false };
-        _skinChange = new DXButton { Text = Lang.LoginDialogChangePasswordButtonLabel, FontSize = 10, TextColour = new Color(1f, .88f, .55f), LibraryFile = LibraryFile.Interface, Index = 152, Location = new Vector2I(625, 0), Size = new Vector2I(136, 32) };
+        _skinRegister = new DXButton { Text = Lang.LoginRegisterLabel3, FontSize = 10, TextColour = new Color(1f, .88f, .55f), TextOffsetY = -2, LibraryFile = LibraryFile.Interface, Index = 152, Location = new Vector2I(485, 0), Size = new Vector2I(136, 32), Enabled = false };
+        _skinChange = new DXButton { Text = Lang.LoginDialogChangePasswordButtonLabel, FontSize = 10, TextColour = new Color(1f, .88f, .55f), TextOffsetY = -2, LibraryFile = LibraryFile.Interface, Index = 152, Location = new Vector2I(625, 0), Size = new Vector2I(136, 32) };
 
         _skinLogin.MouseClick += (o, e) => OnLoginPressed();
         _skinRegister.MouseClick += (o, e) => OpenAccountDialog();
@@ -497,7 +499,7 @@ public partial class LoginScene : Control
         dialog.AddControl(_skinExit);
 
         // 忘记密码 链接
-        _skinForgot = new DXLabel { Text = Lang.LoginPasswordLabel15, FontSize = 9, TextColour = new Color(1f, .75f, .25f), Location = new Vector2I(640, 38), Size = new Vector2I(100, 16), IsControl = true };
+        _skinForgot = new DXLabel { Text = Lang.LoginPasswordLabel15, FontSize = 9, TextColour = new Color(1f, .75f, .25f), TextOffsetY = -2, Location = new Vector2I(640, 38), Size = new Vector2I(100, 16), IsControl = true };
         _skinForgot.MouseEnter += (o, e) => _skinForgot.TextColour = Colors.White;
         _skinForgot.MouseLeave += (o, e) => _skinForgot.TextColour = new Color(1f, .75f, .25f);
         _skinForgot.MouseClick += (o, e) => OpenRequestResetDialog();
@@ -507,11 +509,12 @@ public partial class LoginScene : Control
         _skinRemember = new DXCheckBox { Location = new Vector2I(490, 38), LabelBoxPadding = 4, Checked = ClientSettings.RememberDetails };
         _skinRemember.Label.Text = Lang.LoginAccountLabel;
         _skinRemember.Label.FontSize = 9;
+        _skinRemember.Label.TextOffsetY = -2;
         _skinRemember.Label.TextColour = new Color(1f, .75f, .25f);
         dialog.AddControl(_skinRemember);
 
         // 激活账号 按钮
-        _skinActivation = new DXButton { Text = Lang.ActivationTitle, FontSize = 9, TextColour = new Color(1f, .75f, .25f), LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(20, 36), Size = new Vector2I(72, 20) };
+        _skinActivation = new DXButton { Text = Lang.ActivationTitle, FontSize = 9, TextColour = new Color(1f, .75f, .25f), TextOffsetY = -1, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(20, 36), Size = new Vector2I(72, 20) };
         _skinActivation.MouseClick += (o, e) => { _activationDialog ??= CreateActivationDialog(); WindowManager.Open(_activationDialog, _uiLayer); };
         dialog.AddControl(_skinActivation);
 

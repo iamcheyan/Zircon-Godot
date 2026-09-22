@@ -31,6 +31,9 @@ public partial class DXLabel : DXControl
     /// <summary>文字绘制内边距（悬浮提示框等带背景的标签用，避免文字贴边）。</summary>
     public Vector2I TextPadding;
 
+    /// <summary>文字相对控件内容区的垂直微调，供少数旧版贴图控件校准基线。</summary>
+    public float TextOffsetY;
+
     /// <summary>true: 尺寸跟随文字大小 (旧 DXLabel 默认)</summary>
     public bool AutoSize = true;
 
@@ -58,6 +61,7 @@ public partial class DXLabel : DXControl
         float blockHeight = lineHeight * lines.Count;
         if (VAlign == VerticalAlignment.Center) pos.Y = TextPadding.Y * canvasScale + (physicalHeight - blockHeight - TextPadding.Y * canvasScale * 2) / 2f;
         else if (VAlign == VerticalAlignment.Bottom) pos.Y = physicalHeight - blockHeight - TextPadding.Y * canvasScale;
+        pos.Y += TextOffsetY * canvasScale;
 
         Color colour = IsEnabled ? TextColour : new Color(TextColour, 0.5f);
 

@@ -34,6 +34,18 @@ public partial class DXButton : DXImageControl
 
     public DXLabel Label => _label;
 
+    /// <summary>按钮文字相对按钮背景的垂直微调。</summary>
+    private float _textOffsetY;
+    public float TextOffsetY
+    {
+        get => _textOffsetY;
+        set
+        {
+            _textOffsetY = value;
+            if (_label != null) _label.TextOffsetY = value;
+        }
+    }
+
     public DXButton()
     {
         // 原版 DXButton 构造函数默认 Sound = ButtonA；特殊控件仍可
@@ -54,6 +66,7 @@ public partial class DXButton : DXImageControl
                 Text = Text,
                 FontSize = FontSize,
                 TextColour = TextColour,
+                TextOffsetY = TextOffsetY,
             };
             AddChild(_label);
             // 自绘控件不走 Godot 的容器布局管线。只设置 FullRect 锚点时，

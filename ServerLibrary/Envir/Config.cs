@@ -119,6 +119,8 @@ namespace Server.Envir
         public static TimeSpan RankChangeResetDelay { get; set; } = TimeSpan.FromHours(24);
         public static bool EnableStruck { get; set; } = false;
         public static bool EnableHermit { get; set; } = false;
+        /// <summary>测试阶段是否启用跟随宠物系统。</summary>
+        public static bool EnableCompanions { get; set; } = false;
 
         [ConfigSection("Monsters")]
         public static TimeSpan DeadDuration { get; set; } = TimeSpan.FromMinutes(1);

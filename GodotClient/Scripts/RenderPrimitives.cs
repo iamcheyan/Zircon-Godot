@@ -138,6 +138,14 @@ internal static class RenderPrimitives
         canvas.DrawString(font, p, text, HorizontalAlignment.Left, -1f, drawSize, colour);
     }
 
+    public static float MeasureLabelWidth(string text, float size = 10f)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return 0f;
+        Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+        if (font == null) return 0f;
+        return font.GetStringSize(text, HorizontalAlignment.Left, -1, MirSkin.PhysicalSize((int)size)).X;
+    }
+
     public static void DrawLabelWithBackground(CanvasItem canvas, string text, Vector2 baseline,
         Color colour, float size = 10f,
         Color background = default, Color border = default)

@@ -63,6 +63,17 @@ public sealed partial class DXTextInput : DXControl
     private readonly LineEdit _edit;
     private bool _focusWhenReady;
     private int _fontSize = 10;
+    /// <summary>输入文字相对输入框顶部的垂直微调。</summary>
+    public float TextOffsetY
+    {
+        get => _textOffsetY;
+        set
+        {
+            _textOffsetY = value;
+            if (_edit != null) _edit.Position = new Vector2(2, value);
+        }
+    }
+    private float _textOffsetY;
     public event Action<string> TextChanged;
     public event Action<string> TextSubmitted;
     /// <summary>输入框按 Escape 时触发（原版 DXTextBox 的 KeyPress Escape 路径）。</summary>
@@ -138,7 +149,7 @@ public sealed partial class DXTextInput : DXControl
     {
         Border = true;
         BorderColour = DefaultBorderColour;
-        _edit = new LineEdit { Flat = true, MouseFilter = MouseFilterEnum.Stop, Position = new Vector2(2, 0), Size = new Vector2(Size.X - 4, Size.Y) };
+        _edit = new LineEdit { Flat = true, MouseFilter = MouseFilterEnum.Stop, Position = new Vector2(2, _textOffsetY), Size = new Vector2(Size.X - 4, Size.Y) };
         var emptyStyle = new StyleBoxEmpty();
         _edit.AddThemeStyleboxOverride("normal", emptyStyle);
         _edit.AddThemeStyleboxOverride("focus", emptyStyle);
@@ -172,6 +183,10 @@ public sealed partial class DXTextInput : DXControl
                 }
             }
         };
-        Resized += () => _edit.Size = Size - new Vector2(4, 2);
+        Resized += () =>
+        {
+            _edit.Position = new Vector2(2, _textOffsetY);
+            _edit.Size = Size - new Vector2(4, 2);
+        };
     }
 }

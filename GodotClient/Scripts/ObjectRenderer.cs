@@ -40,6 +40,8 @@ public partial class ObjectRenderer : MapObjectNode
     public bool Focused;
     public bool NameHovered;
     public int GroundItemLabelSlot;
+    // 地面物品名称相对物品锚点的避让偏移；同格或相邻格的标签不能互相覆盖。
+    public Vector2 GroundItemLabelOffset;
     public bool TargetHighlighted;
     public Color TargetOutlineColour = Colors.Transparent;
     public int Light;
@@ -576,27 +578,33 @@ public partial class ObjectRenderer : MapObjectNode
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;
         if (Type == Kind.Item)
         {
-            float itemY = -18f - GroundItemLabelSlot * 12f;
-            RenderPrimitives.DrawLabelWithBackground(this, DisplayName, new Vector2(24f, itemY),
+            Vector2 itemLabelPosition = new Vector2(24f, -18f) + GroundItemLabelOffset;
+            RenderPrimitives.DrawLabelWithBackground(this, DisplayName, itemLabelPosition,
                 NameColour, 9f,
                 new Color(0.02f, 0.02f, 0.02f, 0.86f),
                 new Color(0.95f, 0.78f, 0.28f, 0.92f));
             return;
         }
-        // 名称不再固定在角色身体中部；所有地图对象统一锚到血条上方。
-        float y = RenderPrimitives.NameAboveHealthBarBaseline(9f);
+        // 只有人物名称放在血条上方；怪物、NPC 等地图对象保持原版位置。
+        float y = RenderPrimitives.OriginalNameBaseline(9f);
         if (string.IsNullOrWhiteSpace(DisplayName)) return;
         // DrawX 是格子左边缘，原版用 (48 - labelWidth) / 2，故节点局部
         // 坐标必须以 48x32 格中心 (24, 0) 为文字中心。
+        if (Type == Kind.Monster && TargetOutlineColour.A > 0f)
+        {
+            float nameWidth = RenderPrimitives.MeasureLabelWidth(DisplayName, 9f);
+            float markerX = 24f - nameWidth / 2f - 6f;
+            DrawCircle(new Vector2(markerX, y - 4f), 2.5f, TargetOutlineColour);
+        }
         RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, y), NameColour, 9f);
         if (!string.IsNullOrWhiteSpace(GuildName))
-            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, y - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
+            RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, y - 12f), new Color(0.8f, 0.8f, 0.4f), 8f);
         if (!string.IsNullOrWhiteSpace(PetOwner))
-            RenderPrimitives.DrawLabel(this, $"({PetOwner})", new Vector2(24f, y - 22f), new Color(0.7f, 0.9f, 0.7f), 8f);
+            RenderPrimitives.DrawLabel(this, $"({PetOwner})", new Vector2(24f, y + 12f), new Color(0.7f, 0.9f, 0.7f), 8f);
         if (Poison != PoisonType.None)
             DrawCircle(new Vector2(24f, y - 7f), 3f, new Color(0.35f, 1f, 0.35f, 0.85f));
         if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
-            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 33f), Colors.White, 9f);
+            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 18f), Colors.White, 9f);
     }
 
     public void SetChat(string text)

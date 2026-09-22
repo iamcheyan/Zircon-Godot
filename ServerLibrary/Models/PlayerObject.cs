@@ -3182,6 +3182,8 @@ namespace Server.Models
 
         public void CompanionUnlock(int index)
         {
+            if (!Config.EnableCompanions) return;
+
             S.CompanionUnlock result = new S.CompanionUnlock();
             Enqueue(result);
 
@@ -3252,6 +3254,8 @@ namespace Server.Models
 
         public void CompanionAdopt(C.CompanionAdopt p)
         {
+            if (!Config.EnableCompanions) return;
+
             S.CompanionAdopt result = new S.CompanionAdopt();
             Enqueue(result);
 
@@ -3315,6 +3319,8 @@ namespace Server.Models
 
         public void CompanionRetrieve(int index)
         {
+            if (!Config.EnableCompanions) return;
+
             if (Dead || NPC == null || NPCPage == null) return;
 
             if (NPCPage.DialogType != NPCDialogType.CompanionManage) return;
@@ -3340,6 +3346,8 @@ namespace Server.Models
         }
         public void CompanionRelease(int index)
         {
+            if (!Config.EnableCompanions) return;
+
             if (Dead || NPC == null || NPCPage == null) return;
 
             if (NPCPage.DialogType != NPCDialogType.CompanionManage) return;
@@ -3371,6 +3379,8 @@ namespace Server.Models
 
         public void CompanionStore(int index)
         {
+            if (!Config.EnableCompanions) return;
+
             if (Dead || NPC == null || NPCPage == null) return;
 
             if (NPCPage.DialogType != NPCDialogType.CompanionManage) return;
@@ -3386,6 +3396,8 @@ namespace Server.Models
 
         public void CompanionSpawn()
         {
+            if (!Config.EnableCompanions) return;
+
             if (Companion != null) return;
 
             if (Character.Companion == null) return;

@@ -45,6 +45,7 @@ public partial class MiniMapDialog : DXWindow
     public override void _Ready()
     {
         base._Ready();
+        UpdateTitleLayout();
         UpdateButtonLocations();
         // 原版使用 DXWindow.ClientArea，并向四周扩大 6 像素；这会让地图
         // 与标题栏/边框的相对位置保持和旧客户端一致。
@@ -431,9 +432,26 @@ public partial class MiniMapDialog : DXWindow
             Panel.Location = (Vector2I)Area.Position;
             Panel.Size = Area.Size;
         }
+        UpdateTitleLayout();
         UpdateButtonLocations();
         ClipMap();
         LayoutChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 小地图的标题栏由地图 Panel 向上扩展 6 像素覆盖到边框附近，不能沿用
+    /// DXWindow 默认的 4 像素起点和固定标题尺寸，否则文字会贴近黑色标题栏
+    /// 下沿，视觉上像是落到了地图内容区。标题区域始终完整覆盖黑色栏并居中。
+    /// </summary>
+    private void UpdateTitleLayout()
+    {
+        if (TitleLabel == null) return;
+
+        const int horizontalPadding = 24;
+        TitleLabel.Location = new Vector2I(horizontalPadding, 0);
+        TitleLabel.Size = new Vector2(
+            Math.Max(0, Size.X - horizontalPadding * 2),
+            TitleHeight);
     }
 
     public override Vector2I GetAcceptableResize(Vector2 requested)

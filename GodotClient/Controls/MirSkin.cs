@@ -22,6 +22,11 @@ public static class MirSkin
 
     private static string ResolveDataPath()
     {
+        string overridePath = System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
+        if (!string.IsNullOrWhiteSpace(overridePath) && Directory.Exists(overridePath))
+            return Path.GetFullPath(overridePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                + Path.DirectorySeparatorChar;
+
         try
         {
             string projectDir = ProjectSettings.GlobalizePath("res://");

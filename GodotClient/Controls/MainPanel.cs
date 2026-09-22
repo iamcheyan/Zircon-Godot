@@ -33,14 +33,28 @@ public partial class MainPanel : DXImageControl
         LibraryFile = LibraryFile.GameInter;
         Index = 50; // 底图, Size 自动
 
-        ExperienceBar = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 51, Clip = true };
-        ExperienceBar.Location = new Vector2I((int)(Size.X - ExperienceBar.Size.X) / 2 + 1, 3);
+        // EI 原版主 HUD 使用 63 号经验条；51 是新版/转换资源里的外框，不能
+        // 直接拿来当旧版经验填充。旧版屏幕矩形为 (61,586)-(400,597)，
+        // 相对 GameInter[50] 的位置就是 (61,121)，宽 339，高 11。
+        ExperienceBar = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 63,
+            FixedSize = true,
+            Size = new Vector2I(339, 11),
+            Location = new Vector2I(61, 121),
+            Clip = true,
+        };
         ExperienceBar.BeforeDraw += DrawExperienceFill;
         AddControl(ExperienceBar);
 
-        HealthBar = CreateBar(35, 22, 52, 52, () => PercentOf(_currentHP, _stats[Stat.Health]));
-        ManaBar = CreateBar(35, 36, 52, 54, () => PercentOf(_currentMP, _stats[Stat.Mana]));
-        FocusBar = CreateBar(35, 50, 58, 58, () => PercentOf(_currentFP, _stats[Stat.Focus]), glowIndex: 59);
+        // 原版左侧不是两条细横条，而是 60/61 两个半球资源。它们在旧版
+        // 800x600 屏幕中的绘制矩形分别是 (61,496,43,70) 和
+        // (105,496,42,70)，转换为主面板相对坐标即 (61,31)/(105,31)。
+        HealthBar = CreateBar(61, 31, 43, 70, 60, () => PercentOf(_currentHP, _stats[Stat.Health]));
+        ManaBar = CreateBar(105, 31, 42, 70, 61, () => PercentOf(_currentMP, _stats[Stat.Mana]));
+        FocusBar = CreateBar(0, 0, 1, 1, 60, () => PercentOf(_currentFP, _stats[Stat.Focus]), glowIndex: 60);
+        FocusBar.Visible = false;
 
         // CreateButton 的参数顺序是 (图标索引, X, Y)；X/Y 保持旧客户端
         // GameInter 50 底图上的逻辑坐标，CanvasLayer 再统一放大 2 倍。
@@ -163,12 +177,12 @@ public partial class MainPanel : DXImageControl
 
     // ---- 条: 容器尺寸取背景图, 填充在 BeforeDraw 里按百分比缩放绘制 ----
 
-    private DXControl CreateBar(int x, int y, int sizeIndex, int fillIndex, Func<float> percent, int glowIndex = -1)
+    private DXControl CreateBar(int x, int y, int width, int height, int fillIndex, Func<float> percent, int glowIndex = -1)
     {
         var bar = new DXControl
         {
             Location = new Vector2I(x, y),
-            Size = MirSkin.GetSize(LibraryFile.GameInter, sizeIndex),
+            Size = new Vector2I(width, height),
             Clip = true,
         };
         bar.BeforeDraw += (o, e) => DrawBarFill(bar, fillIndex, percent, glowIndex);
@@ -191,10 +205,11 @@ public partial class MainPanel : DXImageControl
         var imgSize = tex.GetSize();
         // 原版 PresentTexture 按 HealthBar 左上对齐；高度以条容器为准，避免图高
         // 与 GetSize(52) 不一致时上下溢出入槽。
+        // 球体从底部向上填充；父控件 Clip 负责裁掉尚未达到的上半部。
         float h = bar.Size.Y > 0 ? Math.Min(imgSize.Y, bar.Size.Y) : imgSize.Y;
-        float y = bar.Size.Y > h ? (bar.Size.Y - h) / 2f : 0f;
-        float w = imgSize.X * p;
-        bar.DrawTextureRect(tex, new Rect2(0, y, w, h), false);
+        float y = bar.Size.Y - h;
+        float visible = h * p;
+        bar.DrawTextureRect(tex, new Rect2(0, y + h - visible, bar.Size.X, h), false);
     }
 
     private void DrawExperienceFill(object sender, EventArgs e)
@@ -204,14 +219,12 @@ public partial class MainPanel : DXImageControl
         float p = Math.Clamp((float)(_experience / _maxExperience), 0f, 1f);
         if (p <= 0) return;
 
-        var tex = MirSkin.GetTexture(LibraryFile.GameInter, 56);
+        var tex = MirSkin.GetTexture(LibraryFile.GameInter, 63);
         if (tex == null) return;
 
         var imgSize = tex.GetSize();
-        // 原版: 填充在经验条内水平居中
-        float x = (ExperienceBar.Size.X - imgSize.X) / 2f;
-        float y = (ExperienceBar.Size.Y - imgSize.Y) / 2f - 1;
-        bar.DrawTextureRect(tex, new Rect2(x, y, imgSize.X * p, imgSize.Y), false);
+        float y = (ExperienceBar.Size.Y - imgSize.Y) / 2f;
+        bar.DrawTextureRect(tex, new Rect2(0, y, ExperienceBar.Size.X * p, imgSize.Y), false);
     }
 
     private DXButton CreateButton(int index, int x, int y)

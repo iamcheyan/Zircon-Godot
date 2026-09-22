@@ -2454,7 +2454,8 @@ public partial class MapTestScene : Control
             && RenderOrder.Object(10) < RenderOrder.ObjectAtFoot(10)
             && RenderOrder.TerrainFront(11) < RenderOrder.ObjectAtFoot(10)
             && RenderOrder.ObjectAtFoot(10) < RenderOrder.ObjectEffectAtFoot(10)
-            && RenderOrder.ObjectEffectAtFoot(10) < RenderOrder.TerrainMiddle(12);
+            && RenderOrder.ObjectEffectAtFoot(10) < RenderOrder.TerrainFront(12)
+            && RenderOrder.TerrainMiddle(1000) < RenderOrder.TerrainFront(0);
         bool itemInput = GameScene.IsMovementBlockedByItemInteraction(true, false, false)
             && GameScene.IsMovementBlockedByItemInteraction(false, true, false)
             && GameScene.IsMovementBlockedByItemInteraction(false, false, true)

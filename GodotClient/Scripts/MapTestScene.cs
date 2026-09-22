@@ -2455,6 +2455,10 @@ public partial class MapTestScene : Control
             && RenderOrder.TerrainFront(11) < RenderOrder.ObjectAtFoot(10)
             && RenderOrder.ObjectAtFoot(10) < RenderOrder.ObjectEffectAtFoot(10)
             && RenderOrder.ObjectEffectAtFoot(10) < RenderOrder.TerrainMiddle(12);
+        bool itemInput = GameScene.IsMovementBlockedByItemInteraction(true, false, false)
+            && GameScene.IsMovementBlockedByItemInteraction(false, true, false)
+            && GameScene.IsMovementBlockedByItemInteraction(false, false, true)
+            && !GameScene.IsMovementBlockedByItemInteraction(false, false, false);
         bool postObject = RenderOrder.Object(10) < RenderOrder.Particles
             && RenderOrder.Particles < RenderOrder.LocalPlayerEffect
             && RenderOrder.LocalPlayerEffect < RenderOrder.FinalEffects;
@@ -2470,9 +2474,9 @@ public partial class MapTestScene : Control
             if (y >= 1) floorBelowRows &= RenderOrder.FloorEffects < RenderOrder.TerrainMiddle(y);
         }
         bool floorAboveBase = RenderOrder.FloorEffects >= RenderOrder.TerrainBase;
-        GD.Print(rows && postObject && floorBelowObjects && floorBelowRows && floorAboveBase
+        GD.Print(rows && itemInput && postObject && floorBelowObjects && floorBelowRows && floorAboveBase
             ? "[LayerOrderAudit] PASS legacy row/local-player ordering + floor-below-rows-and-objects"
-            : $"[LayerOrderAudit] FAIL rows={rows} postObject={postObject} " +
+            : $"[LayerOrderAudit] FAIL rows={rows} itemInput={itemInput} postObject={postObject} " +
               $"floorBelowObjects={floorBelowObjects} floorBelowRows={floorBelowRows} floorAboveBase={floorAboveBase}");
     }
 

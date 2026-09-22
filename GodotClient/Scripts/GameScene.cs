@@ -753,6 +753,14 @@ public partial class GameScene : Control
         => source?.Item != null && !source.Locked
             && source.GridType is GridType.Inventory or GridType.CompanionInventory;
 
+    /// <summary>
+    /// 物品交互期间地图不能继续驱动人物移动：包括背包中拿起物品、货币
+    /// 选择状态，以及数量确认窗口已经打开但 SelectedCell 已被清掉的阶段。
+    /// </summary>
+    public static bool IsMovementBlockedByItemInteraction(bool selectedItem,
+        bool selectedCurrency, bool itemWindowVisible)
+        => selectedItem || selectedCurrency || itemWindowVisible;
+
     public static bool CanDropCurrency(bool observer, long selectedAmount, long amount)
         => !observer && selectedAmount > 0 && amount > 0 && amount <= selectedAmount;
 
@@ -4692,6 +4700,11 @@ public partial class GameScene : Control
 
     private bool CanPlayerMove()
     {
+        if (IsMovementBlockedByItemInteraction(
+                DXItemCell.SelectedCell != null,
+                _selectedCurrency != null,
+                WindowManager.OpenWindows.Any(window => window != null && window.Visible)))
+            return false;
         return CanPlayerTurn()
             && !_player.ElementalHurricane
             && !_playerPoison.HasFlag(PoisonType.WraithGrip)
@@ -4715,7 +4728,11 @@ public partial class GameScene : Control
     {
         // 原版 MapControl.OnMouseDown 优先处理已拾起的货币并打开数量窗口；
         // MouseWalker 独立运行时也必须屏蔽同一帧的普通移动请求。
-        if (_selectedCurrency != null || DXItemCell.SelectedCell != null) return true;
+        if (IsMovementBlockedByItemInteraction(
+                DXItemCell.SelectedCell != null,
+                _selectedCurrency != null,
+                WindowManager.OpenWindows.Any(window => window != null && window.Visible)))
+            return true;
         var mouseObject = _combatController?.MouseObject;
         if (IsFishingActive || IsTamingActive)
             return true;

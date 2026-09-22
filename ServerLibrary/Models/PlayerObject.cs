@@ -8474,6 +8474,14 @@ namespace Server.Models
                 return;
             }
 
+            // ItemObject.OnSpawned 会通过 AddAllObjects 广播给可见玩家；
+            // 这里再对当前丢弃者做一次幂等兜底。某些时序下物品已经进地图
+            // 但当前玩家的 SeenByPlayers 尚未建立，导致丢弃者只能在重进地图
+            // 时从对象快照看到它。AddObject 自带 SeenByPlayers 去重，不会重复
+            // 发送已经成功加入可见列表的对象。
+            if (!ob.SeenByPlayers.Contains(this))
+                AddObject(ob);
+
             if (dropAll)
             {
                 RemoveItem(fromItem);

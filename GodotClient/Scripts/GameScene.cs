@@ -2587,7 +2587,14 @@ public partial class GameScene : Control
 
     private void OnObjectItem(S.ObjectItem p)
     {
-        if (_objects.ContainsKey(p.ObjectID)) return;
+        // 服务端重发/复用掉落物 ObjectID 时，旧客户端会先收到 Remove 或
+        // 直接收到新的 ObjectItem。不能因为缓存里还有旧节点就静默丢弃新物品，
+        // 否则物品只会在重进地图重建对象后出现。
+        if (_objects.TryGetValue(p.ObjectID, out var oldObject))
+        {
+            if (oldObject.Type != ObjectRenderer.Kind.Item) return;
+            OnObjectRemove(p.ObjectID);
+        }
         var ob = ObjectRenderer.CreateItem(p);
         if (ob == null) return;
         AddObject(ob, p.ObjectID, zIndex: 30);

@@ -365,12 +365,18 @@ public partial class CharacterDialog : DXWindow
     public bool AuditLegacyEiLayout(out string details)
     {
         int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
-        bool ok = Size == new Vector2I(244, 328)
+        bool initial = _background.Index == 200;
+        ToggleLegacyView();
+        bool equipmentView = _background.Index == 201 && _legacyViewToggle.Index == 168;
+        ToggleLegacyView();
+        bool restored = _background.Index == 200 && _legacyViewToggle.Index == 171;
+        bool ok = initial && equipmentView && restored
+            && Size == new Vector2I(244, 328)
             && _background.Index == 200
             && _legacyViewToggle.Location == new Vector2I(176, 264)
             && _legacyViewToggle.Size == new Vector2I(36, 36)
             && visibleSlots == 8;
-        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots}";
+        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} switch={equipmentView && restored}";
         return ok;
     }
 

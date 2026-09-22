@@ -4661,6 +4661,13 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyWindowProfile(_configDialog);
         LegacyUiSkin.ApplyWindowProfile(_groupDialog);
         LegacyUiSkin.ApplyWindowProfile(_npcDialog);
+        LegacyUiSkin.ApplyWindowProfile(_magicDialog);
+        LegacyUiSkin.ApplyWindowProfile(_communicationDialog);
+        LegacyUiSkin.ApplyWindowProfile(_storageDialog);
+        LegacyUiSkin.ApplyWindowProfile(_gameStoreDialog);
+        LegacyUiSkin.ApplyWindowProfile(_tradeDialog);
+        LegacyUiSkin.ApplyWindowProfile(_guildDialog);
+        LegacyUiSkin.ApplyWindowProfile(_horseDialog);
         _mainPanel?.SetPetModeEnabled(CompanionEnabled);
     }
 

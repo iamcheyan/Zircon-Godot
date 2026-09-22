@@ -18,16 +18,17 @@
   "windows": [
     { "id": "window.inventory", "legacyId": 0, "name": "InventoryDialog", "location": [518, 0], "size": [284, 324], "movable": true, "background": { "library": "GameInter", "frame": 250 }, "status": "confirmed" },
     { "id": "window.status", "legacyId": 1, "name": "CharacterDialog", "location": [0, 0], "size": [244, 328], "movable": true, "background": { "library": "GameInter", "frame": 200 }, "status": "confirmed" },
-    { "id": "window.store-candidate", "legacyId": 2, "name": "StoreDialog", "location": [0, 0], "size": [300, 304], "movable": false, "background": { "library": "GameInter", "frame": 1000 }, "status": "candidate" },
-    { "id": "window.exchange-candidate", "legacyId": 3, "name": "ExchangeDialog", "location": [0, 0], "size": [484, 330], "movable": true, "background": { "library": "GameInter", "frame": 1050 }, "status": "candidate" },
+    { "id": "window.store-candidate", "legacyId": 2, "name": "GameStoreDialog", "location": [0, 0], "size": [300, 304], "movable": false, "background": { "library": "GameInter", "frame": 1000 }, "status": "candidate" },
+    { "id": "window.storage-candidate", "legacyId": 5, "name": "StorageDialog", "location": [0, 0], "size": [596, 446], "movable": true, "background": { "library": "GameInter", "frame": 600 }, "status": "candidate" },
+    { "id": "window.exchange-candidate", "legacyId": 3, "name": "TradeDialog", "location": [0, 0], "size": [484, 330], "movable": true, "background": { "library": "GameInter", "frame": 1050 }, "status": "candidate" },
     { "id": "window.guild-candidate", "legacyId": 4, "name": "GuildDialog", "location": [102, 22], "size": [596, 446], "movable": true, "background": { "library": "GameInter", "frame": 600 }, "status": "candidate" },
     { "id": "window.group", "legacyId": 6, "name": "GroupDialog", "location": [272, 123], "size": [256, 244], "movable": true, "background": { "library": "GameInter", "frame": 900 }, "status": "confirmed" },
-    { "id": "window.chat-pop", "legacyId": 8, "name": "ChatDialog", "location": [114, 76], "size": [572, 388], "movable": true, "background": { "library": "GameInter", "frame": 350 }, "status": "confirmed" },
+    { "id": "window.chat-pop", "legacyId": 8, "name": "CommunicationDialog", "location": [114, 76], "size": [572, 388], "movable": true, "background": { "library": "GameInter", "frame": 350 }, "status": "confirmed" },
     { "id": "window.group-pop-candidate", "legacyId": 7, "name": "GroupPopup", "location": [560, 0], "size": [244, 328], "movable": true, "background": { "library": "GameInter", "frame": 200 }, "status": "candidate" },
     { "id": "window.option", "legacyId": 12, "name": "ConfigDialog", "location": [276, 113], "size": [248, 264], "movable": true, "background": { "library": "GameInter", "frame": 750 }, "status": "confirmed" },
     { "id": "window.quest", "legacyId": 11, "name": "QuestDialog", "location": [0, 0], "size": [340, 440], "movable": true, "background": { "library": "GameInter", "frame": 700 }, "status": "confirmed" },
     { "id": "window.horse", "legacyId": 13, "name": "HorseDialog", "location": [0, 0], "size": [296, 332], "movable": true, "background": { "library": "GameInter", "frame": 850 }, "status": "confirmed" },
-    { "id": "window.skill-book", "legacyId": 14, "name": "SkillBookDialog", "location": [0, 0], "size": [296, 332], "movable": true, "background": { "library": "GameInter", "frame": 400 }, "status": "confirmed" },
+    { "id": "window.skill-book", "legacyId": 14, "name": "SkillBookDialog", "location": [0, 0], "size": [452, 380], "movable": true, "background": { "library": "GameInter", "frame": 400 }, "status": "confirmed" },
     { "id": "window.npc-candidate", "legacyId": 9, "name": "NPCDialog", "location": [0, 0], "size": [552, 176], "movable": false, "background": { "library": "GameInter", "frame": 1100 }, "status": "candidate" }
   ]
 }

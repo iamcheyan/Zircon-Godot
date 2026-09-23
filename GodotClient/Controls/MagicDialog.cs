@@ -32,6 +32,8 @@ public partial class MagicDialog : DXWindow
     private bool _legacyEiLayout;
     private readonly List<DXImageControl> _legacySkillSlots = new();
     private readonly List<DXLabel> _legacySkillLabels = new();
+    private readonly List<(MagicInfo Info, ClientUserMagic UserMagic)> _legacyRuntimeEntries = new();
+    private (MagicInfo Info, ClientUserMagic UserMagic)? _legacySelectedSkill;
 
     public MagicDialog()
     {
@@ -185,6 +187,8 @@ public partial class MagicDialog : DXWindow
             };
             slot.MouseClick += (_, _) =>
             {
+                if (index < _legacyRuntimeEntries.Count)
+                    _legacySelectedSkill = _legacyRuntimeEntries[index];
                 if (index < _cells.Count)
                     _cells[index].GrabFocus();
             };
@@ -196,6 +200,8 @@ public partial class MagicDialog : DXWindow
     private void RefreshLegacySkillSlots(IEnumerable<(MagicInfo Info, ClientUserMagic UserMagic)> entries)
     {
         var visible = entries.Take(12).ToArray();
+        _legacyRuntimeEntries.Clear();
+        _legacyRuntimeEntries.AddRange(visible);
         for (int i = 0; i < _legacySkillSlots.Count; i++)
         {
             var slot = _legacySkillSlots[i];
@@ -471,6 +477,37 @@ public partial class MagicDialog : DXWindow
         UpdateCellLocations();
         foreach (var pair in _schoolButtons)
             pair.Value.TextColour = pair.Key == school ? new Color(1f, 0.85f, 0.3f) : Colors.White;
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (!_legacyEiLayout || @event is not InputEventKey key || !key.Pressed || key.Echo)
+            return;
+        int slot = key.Keycode switch
+        {
+            Key.F1 => 0, Key.F2 => 1, Key.F3 => 2, Key.F4 => 3,
+            Key.F5 => 4, Key.F6 => 5, Key.F7 => 6, Key.F8 => 7,
+            Key.F9 => 8, Key.F10 => 9, Key.F11 => 10, Key.F12 => 11,
+            _ => -1,
+        };
+        if (slot < 0 || _legacySelectedSkill is not { } selected || selected.UserMagic == null)
+            return;
+
+        var game = GameScene.Game;
+        if (game == null) return;
+        var spellKey = (Library.SpellKey)(slot + 1 + (key.ShiftPressed ? 12 : 0));
+        var magic = selected.UserMagic;
+        switch (game.MagicBarSpellSet)
+        {
+            case 1: magic.Set1Key = spellKey; break;
+            case 2: magic.Set2Key = spellKey; break;
+            case 3: magic.Set3Key = spellKey; break;
+            case 4: magic.Set4Key = spellKey; break;
+        }
+        game.SendMagicKey(selected.Info.Magic, magic.Set1Key, magic.Set2Key, magic.Set3Key, magic.Set4Key);
+        game.RefreshMagicBars();
+        GD.Print($"[MagicLegacy] 绑定 {selected.Info.Name} -> Set{game.MagicBarSpellSet}=F{(int)spellKey}");
+        GetViewport().SetInputAsHandled();
     }
 
     private static List<(MagicInfo Info, ClientUserMagic UserMagic)> GetVisibleMagicInfos(GameScene game)

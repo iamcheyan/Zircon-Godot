@@ -92,7 +92,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 ## 背包首轮审计
 
-这项原先的矛盾已有后续原版静态证据解决：46 个槽记录、6×6 可视/命中区域与滚动行偏移是同一套机制。`bag-list-fill-chain-evidence.json` 证明记录数组有 46 槽，网格索引表是 6 列；`trade-split-handle-evidence.json` 的 EI-301 又追完背包滚动字段的读写：`[bag+0x58]` 是顶部可见行偏移，不是行数，缩放公式与交易滚动条共用 94.0 定点比例。背包绘制把滚动偏移从可视行坐标中扣除，6 行视口最多可滚到覆盖 8 行数据，因此容量为 46 的末尾 10 槽可通过滚动显示。较早的 `inventory-window-render-evidence.json` 对该字段“仅初始化/未见写入”的备注已被 EI-301 后续 writer 追踪 supersede；不能再作为字段无滚动功能的依据。
+这项原先的矛盾已有后续原版静态证据解决：46 个槽记录、6 列索引表与滚动行偏移属于同一套机制。`bag-list-fill-chain-evidence.json` 证明记录数组有 46 槽、网格索引表是 6 列；`trade-split-handle-evidence.json` 的 EI-301 又追完背包滚动字段的读写：`[bag+0x58]` 是顶部可见数据行偏移，不是行数，绘制时从行坐标减去该值，构造参数证明视口为 6 行，缩放公式与交易滚动条共用 94.0 定点比例。46 槽按 6 列算术上是 8 行（最后一行 4 槽），因此从首行到末行只需滚动 2 行，末尾 10 槽落在最后两行。研究 JSON 中“46 slots = 10 rows”及“only 4 scrollable rows”是错误算术；交易视图的 40 行 pane 也不能用于推导背包滚动上限。反编译证据确认滚动比例写入/归一化及 6 行视口，但 writer 未找到行数上限钳位；用户可实际拖动到的有效终点与末端空白范围仍需原版运行态或完整参数复核。较早的 `inventory-window-render-evidence.json` 对该字段“仅初始化/未见写入”的备注已被 EI-301 后续 writer 追踪 supersede；不能再作为字段无滚动功能的依据。
 
 Godot `InventoryDialog.ApplyLegacyEiLayout()` 将网格设成 6×6，`DXItemGrid` 又按 `GridSize.X*GridSize.Y` 创建格控件；其当前 legacy 布局没有接入 F280 滚动条或滚轮，且 `VisibleHeight` 默认 `int.MaxValue`。所以实际只有 36 个格控件，滚动范围为零，无法呈现 46 槽。虽然初始视口的 6×6、36 px pitch、root 相对起点 `(25,41)` 与原版命中区域对齐，尾部 10 槽仍是明确功能缺口。查看器预览的 GameInter F280 是 16×424 画布的垂直轨道/滑块；原版仪表构造参数为 6 行视口、12 px 控件宽、218 px 轨道，绘制位置约 `(window.x+0xF8, window.y-0xA5)`。当前 legacy 布局尚未建立这一滚动控件。
 

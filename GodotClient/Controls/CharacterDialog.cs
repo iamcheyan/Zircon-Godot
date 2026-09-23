@@ -334,8 +334,10 @@ public partial class CharacterDialog : DXWindow
         // 只有逆向编辑器已经确认的格子才显示；其余新版扩展槽绝不猜坐标。
         var confirmed = new Dictionary<EquipmentSlot, Vector2I>
         {
-            [EquipmentSlot.Helmet] = new(177, 70),
-            [EquipmentSlot.Torch] = new(27, 264),
+            // 旧版视觉标签不能直接当作 enum 顺序：primary-static
+            // 证据确认 Helmet(2) 在左下，Torch(3) 在顶部。
+            [EquipmentSlot.Helmet] = new(27, 264),
+            [EquipmentSlot.Torch] = new(177, 70),
             [EquipmentSlot.BraceletL] = new(27, 186),
             [EquipmentSlot.BraceletR] = new(175, 186),
             [EquipmentSlot.RingL] = new(27, 227),
@@ -415,13 +417,30 @@ public partial class CharacterDialog : DXWindow
         bool equipmentView = _background.Index == 201 && _legacyViewToggle.Index == 168;
         ToggleLegacyView();
         bool restored = _background.Index == 200 && _legacyViewToggle.Index == 171;
+        var expectedSlots = new Dictionary<EquipmentSlot, Vector2I>
+        {
+            [EquipmentSlot.Helmet] = new(27, 264),
+            [EquipmentSlot.Torch] = new(177, 70),
+            [EquipmentSlot.BraceletL] = new(27, 186),
+            [EquipmentSlot.BraceletR] = new(175, 186),
+            [EquipmentSlot.RingL] = new(27, 227),
+            [EquipmentSlot.RingR] = new(175, 227),
+            [EquipmentSlot.Shoes] = new(103, 264),
+            [EquipmentSlot.Poison] = new(64, 264),
+        };
+        bool slotGeometry = expectedSlots.All(pair => Grid.Any(cell => cell != null
+            && (EquipmentSlot)cell.Slot == pair.Key
+            && cell.Visible
+            && cell.Location == pair.Value
+            && cell.Size == new Vector2I(38, 38)));
         bool ok = initial && equipmentView && restored
             && Size == new Vector2I(244, 328)
             && _background.Index == 200
             && _legacyViewToggle.Location == new Vector2I(176, 264)
             && _legacyViewToggle.Size == new Vector2I(36, 36)
-            && visibleSlots == 8;
-        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} switch={equipmentView && restored}";
+            && visibleSlots == 8
+            && slotGeometry;
+        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={equipmentView && restored}";
         return ok;
     }
 

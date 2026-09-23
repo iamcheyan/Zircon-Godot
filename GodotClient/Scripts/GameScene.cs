@@ -534,6 +534,9 @@ public partial class GameScene : Control
 
     public void EndInventoryNpcSale() => _inventoryDialog?.NormalMode();
 
+    public void SetInventoryLegacyMode(InventoryMode mode)
+        => _inventoryDialog?.SetLegacyMode(mode);
+
     public bool CanRouteAdvancedItem(DXItemCell source, DXItemCell target)
         => _npcDialog?.CanAcceptAdvancedLink(source, target) ?? true;
 

@@ -134,6 +134,8 @@ public partial class NPCDialog : DXWindow
         }
         _repair.AllowedTypes = _page.Types?.Select(x => x.ItemType);
         _repair.Visible = _page.DialogType == NPCDialogType.Repair;
+        if (_repair.Visible)
+            GameScene.Game?.SetInventoryLegacyMode(InventoryMode.Repair);
         _repair.Location = new Vector2I(0, (int)Size.Y);
         _advanced.HidePanel();
         GameScene.Game?.CloseNPCCompanionStorage();

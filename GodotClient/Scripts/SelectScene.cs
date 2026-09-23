@@ -9,6 +9,7 @@ namespace ZirconClient.Scripts;
 
 public partial class SelectScene : Control
 {
+    private const int LegacyCharacterSlotCount = 2;
     private CanvasLayer _uiLayer;
     private Network.NetworkManager _net;
     private List<SelectInfo> _characters = new();
@@ -197,7 +198,7 @@ public partial class SelectScene : Control
         _skinCharacters.Clear();
         if (_skinPanel != null)
         {
-            for (int i = 0; i < _characters.Count && i < 4; i++)
+            for (int i = 0; i < _characters.Count && i < LegacyCharacterSlotCount; i++)
             {
                 var c = _characters[i];
                 var button = new DXButton
@@ -242,7 +243,7 @@ public partial class SelectScene : Control
             _statusLabel.Text = Lang.SelectCharacterLabel4;
             SelectSkinCharacter(0);
         }
-        _skinCreate.Enabled = _characters.Count < 4;
+        _skinCreate.Enabled = _characters.Count < LegacyCharacterSlotCount;
     }
 
     private void SelectSkinCharacter(int index)

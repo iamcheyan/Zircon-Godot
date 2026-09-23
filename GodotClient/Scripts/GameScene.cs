@@ -4742,6 +4742,8 @@ public partial class GameScene : Control
         };
         if (window == _noticeDialog)
             _noticeDialog?.SetNotice("真实登录旧版 F602 窗口验收");
+        if (window == _npcDialog && AutoLoginArgs.LegacyUi)
+            _npcDialog.ApplyLegacyEiLayout();
         if (window != null)
         {
             WindowManager.Open(window, _uiLayer);

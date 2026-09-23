@@ -225,7 +225,9 @@ namespace Library
     public enum InventoryMode
     {
         Normal,
-        Sell
+        Repair,
+        Sell,
+        Storage
     }
 
     public enum BuffType

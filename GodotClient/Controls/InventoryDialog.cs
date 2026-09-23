@@ -24,6 +24,8 @@ public partial class InventoryDialog : DXWindow
 
     public InventoryMode InvMode { get; private set; } = InventoryMode.Normal;
     public bool IsSellMode => InvMode == InventoryMode.Sell;
+    public bool IsRepairMode => InvMode == InventoryMode.Repair;
+    public bool IsStorageMode => InvMode == InventoryMode.Storage;
 
     private bool _weightInit;
     private CurrencyInfo _primaryCurrency;
@@ -236,7 +238,9 @@ public partial class InventoryDialog : DXWindow
         if (_legacyModeLabel.GetParent() == null) AddControl(_legacyModeLabel);
         _legacyModeLabel.Text = InvMode switch
         {
+            InventoryMode.Repair => "[修补]",
             InventoryMode.Sell => "[变卖]",
+            InventoryMode.Storage => "[储存]",
             _ => "[包袱]",
         };
         _legacyModeLabel.Location = new Vector2I(38, 282);
@@ -330,9 +334,9 @@ public partial class InventoryDialog : DXWindow
     public void SetWeight(int bagWeight)
     {
         int capacity = GameScene.Game?.PlayerStats?[Stat.BagWeight] ?? 0;
-        WeightLabel.Text = capacity > 0
-            ? $"负重:{bagWeight} / 总量:{capacity}"
-            : $"负重:{bagWeight} / 总量:0";
+        WeightLabel.Text = InvMode == InventoryMode.Normal
+            ? (capacity > 0 ? $"负重:{bagWeight} / 总量:{capacity}" : $"负重:{bagWeight} / 总量:0")
+            : string.Empty;
         CenterWeightLabel();
         WeightBar.QueueRedraw();
     }
@@ -363,6 +367,30 @@ public partial class InventoryDialog : DXWindow
         return ok;
     }
 
+    /// <summary>
+    /// 旧版模式由服务端消息切换，而不是点击装饰性页签。保留一个明确的
+    /// 业务入口，供 NPC 修补/变卖/储存回包直接切换旧版文字和操作状态。
+    /// </summary>
+    public void SetLegacyMode(InventoryMode mode)
+    {
+        InvMode = mode;
+        if (_legacyModeLabel != null)
+            _legacyModeLabel.Text = mode switch
+            {
+                InventoryMode.Repair => "[修补]",
+                InventoryMode.Sell => "[变卖]",
+                InventoryMode.Storage => "[储存]",
+                _ => "[包袱]",
+            };
+        if (mode != InventoryMode.Sell)
+        {
+            ClearSaleSelection();
+            SellButton.Visible = false;
+        }
+        WeightLabel.Text = mode == InventoryMode.Normal ? WeightLabel.Text : string.Empty;
+        CenterWeightLabel();
+    }
+
     /// <summary>原版 InventoryDialog.SellMode：背包负责多选物品和提交 NPCSell。</summary>
     public void SellMode(CurrencyInfo currency, IEnumerable<ItemType> sellableTypes)
     {
@@ -380,6 +408,7 @@ public partial class InventoryDialog : DXWindow
         SellButton.Visible = true;
         // 原版按钮始终可用：有选中项时出售选中项，没有选中项时出售全部可售物品。
         SellButton.Enabled = true;
+        if (_legacyModeLabel != null) _legacyModeLabel.Text = "[变卖]";
         SetCurrency(0, 0);
     }
 
@@ -398,6 +427,7 @@ public partial class InventoryDialog : DXWindow
         TrashButton.Visible = true;
         SellButton.Visible = false;
         SellButton.Enabled = false;
+        if (_legacyModeLabel != null) _legacyModeLabel.Text = "[包袱]";
         SetCurrency(
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.Gold)?.Amount ?? 0,
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.GameGold)?.Amount ?? 0);

@@ -2,7 +2,7 @@
 
 > 更新时间：2026-09-23
 > 分支：`ui/legacy-layout-lab`
-> 当前提交：`8fc6e18f`
+> 当前提交：`1705661e`
 > 状态：核心布局和测试基础设施已建立，业务完整迁移仍在进行中。
 
 ## 1. 目标与总体判断
@@ -32,6 +32,7 @@
 - NPC/仓库动态刷新修复后的 `login_game.sh -R --legacy-ui` 回归通过：服务端重建、登录、StartGame 和进入 `TestHero` 地图均成功，未出现新的运行时错误。
 - 修复角色窗口动态路径：旧版模式下 `ShowOwn()` 不再恢复现代 F110 和扩展装备格，而是重新保持 F200/F201、已确认的 38×38 装备格和旧版属性标签；`ApplyInspect()` 仍保留查看他人角色逻辑。编译及完整旧版审计通过。
 - NPC 背包模式接线补齐：出售入口继续使用 `[变卖]`，修理 NPC 回包现在调用 `SetInventoryLegacyMode(Repair)` 显示 `[修补]`，关闭 NPC 统一恢复 `[包袱]`；拿取/放下/拆分/丢弃仍复用现有 `DXItemCell` 业务逻辑。
+- 角色动态与 NPC 背包模式修改后的 `login_game.sh -R --legacy-ui` 回归通过：服务端、登录、StartGame 和进入 `TestHero` 地图均成功，未出现新的运行时错误。
 - 完整 `login_game.sh -R --legacy-ui` 烟测再次通过：服务端重建并监听 7000，登录成功、StartGame 成功并进入 `TestHero` 地图；同时修复了 Login/Select/Game 场景重复绑定 `size_changed` 导致的 Godot 错误，复测日志已不再出现该警告。
 - 视觉验收补充完成：测试场分别在 800×600 和 1600×900 下运行并截图，`/tmp/legacy-ui-800x600.png`、`/tmp/legacy-ui-1600x900.png` 均目视确认旧版人物窗口保持原始比例，HUD 等比缩放且无强制拉伸。
 

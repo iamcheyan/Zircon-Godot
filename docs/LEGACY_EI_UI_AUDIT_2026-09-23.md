@@ -116,11 +116,11 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 | 编号 | 严重度 | 发现/疑问 | 状态 |
 |---|---|---|---|
-| INV-01 | 阻断，高，已证实 | EI 有46条物品记录、6×6屏幕 hit viewport 和6×100占位表；当前 Godot 用 6×6 固定槽控件，不能表达物品占位、100行视图或 `[this+0x58]` 滚动。上一轮“46格/8行/滚2行”实验已撤销，不作验收证据 | 独立解码 `0x42F6D0` first-fit 与 item frame 宽高→占位格算法；实现46条记录/600 cell occupancy/6×6 view/94-range F280 gauge 与对应 hit-test；真实填满、滚到顶部和底部，核对放置、拾取、拖放、重叠、多格物品、滚轮、拖柄和越界，记录截图 |
+| INV-01 | 阻断，高，已证实 | EI 有46条物品记录、6×6屏幕 hit viewport 和6×100占位表；当前 `GameScene.Inventory` 为48项数组，legacy `DXItemGrid.GridSize=6×6` 只创建36个 `DXItemCell`，即EI 46条记录中至少10个记录索引没有对应控件，且无法访问当前服务数组最后12项。更重要的是当前36格按 `slot→x/y` 固定排位，不能表达原版独立的物品记录 `+0x774+slot*0xC2C`、记录内列/行 `[+0x778/+0x77C]`、多格占位和6×100 WORD occupancy 表；同为6×6只能说明命中视口外形，不能证明当前36个格子映射等于原版视口。上一轮“46格/8行/滚2行”实验已撤销，不作验收证据 | 独立解码 `0x42F6D0` first-fit 与 item frame 宽高→占位格算法；实现46条记录/600 cell occupancy/6×6 view/94-range F280 gauge 与对应 hit-test；真实填满、滚到顶部和底部，核对放置、拾取、拖放、重叠、多格物品、滚轮、拖柄和越界，记录截图 |
 | INV-02 | 高，部分已修复 | EI 三个模式页签是装饰/音效控件；mode byte 由服务端消息写入。legacy 已隐藏没有旧版证据的透明 WalletButton，避免其与 F264/265 热区重叠 | 按消息 0x29C/0x286/0x2BC 核验修补/变卖/储存状态及服务端生命周期；确认隐藏 WalletButton 不影响原版底图交互，逐页签复核音效/模式状态。 |
 | INV-03 | 中，未决 | F267/268 属 Interface1c 图像帧，视觉像人物图；语义仍未闭合，当前 legacy 构造未映射该帧 | 继续找构造 owner、帧状态更新及输入处理；保持角色语义候选，避免直接改成通用按钮 |
 | INV-04 | 高，负重/货币绘制区已按静态记录修正；资源裁剪和语义待实测 | 背景/根窗和初始网格几何吻合。负重文案已移至根相对 `(134,24)`、字体10的原版矩形，并仅由包袱模式数据提供；legacy 隐藏错误的 F360 横向条及无旧版依据的 GG/钱包控件。原版 F280 垂直 gauge 的 this+0x58 在目标构建中只有 reset 清零、比例为0，因此不绘制当前错误填充；是否仍有零比例轨道像素需复核。单一底部数字已移至 `(65,282)`、10px、原版色候选，Gold 语义仍待证明 | 用独立 WIL 解码确认 F250/F280 的实际有效像素、原版 zero-ratio gauge 是否无像素；用同状态角色数据核对负重两个字段、文本两色/基线和模式切换。对比当前单一数字的实际业务来源与原版 `[0x7DA100]`，检查 F264/265、F267/268 和钱包/货币点击路径；legacy 登录截图与边界点操作尚未完成。 |
-| INV-05 | 阻断，高，资源身份不一致已证实 | EI 原版背包 icon draw 使用 el82=`Inventory.wil`，frame 来自原始 item data `+0x28`，绘制入口 `0x466130`；Zircon `DXItemCell` 固定使用现代 `StoreItem.Zl` 与 `ItemInfo.Image`，legacy 路径没有 WIL runtime reader，因此当前图标像素和多格物品尺寸均未证明等于 EI | 为旧版 `Inventory.wil` 建立独立可测的帧读取/尺寸/offset链；按已知物品比对 `+0x28` 与 `Info.Image` 映射，校验 alpha bbox、绘制原点、颜色/tint 与 36px 格脚印；再把正确 frame/occupancy 映射接入控件，截图/点击验收常见单格与多格物品。不要只把 `ItemLibraryFile` 改为 Inventory 后就宣称完成，因为当前 loader 解析 `.Zl` 且目标目录缺对应文件。 |
+| INV-05 | 阻断，高，资源身份不一致已证实 | EI 原版背包 icon draw 使用 el82=`Inventory.wil`，frame 来自原始 item data `+0x28`，绘制入口 `0x466130`；Zircon `DXItemCell` 固定使用现代 `StoreItem.Zl` 与 `ItemInfo.Image`，而且 `CenterImage=true` 把图标居中在36×36子控件中。EI paint 则从独立物品记录的列/行字段和 frame 脚印绘制；因此当前图库、帧号/offset和物品格定位都未证明等于 EI | 为旧版 `Inventory.wil` 建立独立可测的帧读取/尺寸/offset链；按已知物品比对 `+0x28` 与 `Info.Image` 映射，校验 alpha bbox、绘制原点、颜色/tint 与 36px 格脚印；再把正确 frame/occupancy 映射接入控件，截图/点击验收常见单格与多格物品。不要只把 `ItemLibraryFile` 改为 Inventory 后就宣称完成，因为当前 loader 解析 `.Zl` 且目标目录缺对应文件。 |
 
 ## 人物状态/装备窗首轮核对
 

@@ -10450,7 +10450,16 @@ public partial class GameScene : Control
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
-        // EI 旧版坐骑窗口热键为 Ctrl+S；保留现代 M 的坐骑动作键不变。
+        // EI 旧版坐骑窗口同时响应裸 S 与 Ctrl+S。裸 S 在现代键位表中
+        // 用作仓库入口，因此只在旧版 UI 模式下覆盖它。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.S
+            && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            ToggleHorseWindow();
+            return;
+        }
+
+        // Ctrl+S 是 EI 旧版坐骑窗口入口；保留现代 M 的坐骑动作键不变。
         if (key.Keycode == Key.S && key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
         {
             ToggleHorseWindow();

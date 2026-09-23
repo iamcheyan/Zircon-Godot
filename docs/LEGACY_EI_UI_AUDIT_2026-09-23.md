@@ -92,9 +92,11 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 ## 背包首轮审计
 
-这项原先的矛盾已有后续原版静态证据解决：46 个槽记录、6 列索引表与滚动行偏移属于同一套机制。`bag-list-fill-chain-evidence.json` 证明记录数组有 46 槽、网格索引表是 6 列；`trade-split-handle-evidence.json` 的 EI-301 又追完背包滚动字段的读写：`[bag+0x58]` 是顶部可见数据行偏移，不是行数，绘制时从行坐标减去该值，构造参数证明视口为 6 行，缩放公式与交易滚动条共用 94.0 定点比例。46 槽按 6 列算术上是 8 行（最后一行 4 槽），因此从首行到末行只需滚动 2 行，末尾 10 槽落在最后两行。研究 JSON 中“46 slots = 10 rows”及“only 4 scrollable rows”是错误算术；交易视图的 40 行 pane 也不能用于推导背包滚动上限。反编译证据确认滚动比例写入/归一化及 6 行视口，但 writer 未找到行数上限钳位；用户可实际拖动到的有效终点与末端空白范围仍需原版运行态或完整参数复核。较早的 `inventory-window-render-evidence.json` 对该字段“仅初始化/未见写入”的备注已被 EI-301 后续 writer 追踪 supersede；不能再作为字段无滚动功能的依据。
+原版这里有两种不同的“格”：`bag-list-fill-chain-evidence.json` 证明背包最多有46条物品记录（`this+0x774`，stride `0xC2C`）；`inventory-window-render-evidence.json` 的 `0x42F150` / `0x42F2A0` 则证明屏幕上的鼠标 hit viewport 只有6×6格，36px pitch。两者不是46个固定可见 cell。`0x42EA42` 初始化的 cell identity 表位于 `this+0x2C4`，600个WORD、每行6列、每行12字节，即6列×100行占位图；`0x42F440` 通过 `0x42F6D0` 查找连续空位并按物品宽高写入该表。paint `0x42F79C` 从占位行读取物品记录，按 `[this+0x58]` 取可视起始行并把全局行坐标减去该偏移绘制。故46是可装物品记录容量，而100是占位表行容量；视口是6×6。原研究 JSON 的“46 slots = 10 rows / only 4 scrollable rows”把物品记录数当成格数，是错误推论。
 
-此前 Godot `InventoryDialog.ApplyLegacyEiLayout()` 将网格设成 6×6，`DXItemGrid` 按 `GridSize.X*GridSize.Y` 创建格控件，因而只有36格且滚动范围为零。实施阶段第一步已把 legacy 网格改为46个 cell、6列×8数据行、6行可视区，并将鼠标滚轮接到 `ScrollValue`（0–2）；通用网格现支持末行不满的 slot 数。`AuditLegacyEiLayout()` 独立检查 46 个 cell、视口与滚动边界。增量构建成功；首次真实启动发现并修复了 48格循环写入46数组的边界错误。当前这一步只完成数据映射与鼠标滚轮通路，尚未验证装满46件的真实滚动、格位点击/拖放，也未接回原版轨道拖柄。查看器素材直接解码确认 GameInter F280 画布16×424、offset(-24,-16)、alpha bbox(0,0,13,423)；原版仪表构造参数为6行视口、12px控件宽、218px轨道，绘制位置约 `(window.x+0xF8, window.y-0xA5)`。F280帧中可见纵向轨道与中央红色圆形标记，但标记是否随值重绘/对应拖柄的裁切与点击区域仍需复核。
+滚动链由 F280 专用 gauge 处理：EI-301 `trade-split-handle-evidence.json` 给出 6行视口、`0x5E=94` 滚动比例参数、F280 原图 16×424、控件宽12px、轨道高218px；constructor `0x417960` / paint `0x4179B0` 以及 `0x430056`/`0x430696` 的写回把滚动状态映射到 `[this+0x58]`，`0x42EB94` 用同一字段绘制 gauge。600格/6列=100行，100-6=94，与原版比例范围完全吻合。旧 `inventory-window-render-evidence.json` 中“scroll field 只有 reset 写者、因此 gauge 为空”的注释已被 EI-301 writer 追踪 supersede。帧直接解码确认 F280 offset(-24,-16)、alpha bbox(0,0,13,423)；其有效绘制矩形、拖柄的精确 hit rect 和滚轮步进/页步还要按完整 gauge hit/paint 函数核实。
+
+此前实现尝试把46条记录当成6×8固定格，并把滚轮范围限到两行；尽管运行画面内容随滚轮变化，这只证明了错误表示可以滚动，不能证明与 EI 一致。该实现已撤回。当前 `InventoryDialog` 又回到6×6固定格，无原版占位表、46记录自动排位或 F280 gauge 的等价实现；背包滚动仍未修复。下一步须将“物品记录索引”和“世界占位格坐标”分离，先用独立算式/真实资源 footprint 核验 `0x42F6D0` 的 first-fit，再重建 viewport item renderer/hit-test 和 gauge；禁止再将记录数换算成行数。
 
 原版 F250 根窗为 284×324；GameInter WIL 有效像素 bbox `(114,94,281,324)`，当前背景偏移 `(-114,-94)` 与根矩形对齐。模式 byte `[bag+0x54]` 有四态：0 包袱、1 修补、2 变卖、3 储存；修补/变卖/储存由服务端消息分支写入。EI-288 的三个页签控件只是播放音效的装饰按钮，不负责设置模式。旧审计把“本地三按钮改模式”写成待核，现据 `inventory-mode-tabs-evidence.json` 与 RESEARCH_LOG EI-288 修正此结论。
 
@@ -102,7 +104,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 | 编号 | 严重度 | 发现/疑问 | 状态 |
 |---|---|---|---|
-| INV-01 | 高，部分修复 | EI 46 槽按6列×8行，6行视口；Godot已创建46格并接通格子内滚轮，逻辑滚动范围0–2。`bash login_game.sh legacy` 登录后经 cap14 打开背包，向下滚两格后画面首行内容随之下移，向窗口外移开鼠标后仍显示滚后网格；未见越界/空引用日志。截图 `/tmp/zircon-inventory-46-wheel-clear.png`，滚前 `/tmp/zircon-inventory-button-unoverlap2.png`。原版 F280 轨道/拖柄当前未跟随此滚动值，拖动与有效端点语义也未完成 | 核清 F280 绘制和拖柄输入后完成原版轨道；用账号塞满46槽，滚到末两行，逐项验证第37–46槽位置/点击/拖放、滚轮方向与边界，并记录真实截图 |
+| INV-01 | 阻断，高，已证实 | EI 有46条物品记录、6×6屏幕 hit viewport 和6×100占位表；当前 Godot 用 6×6 固定槽控件，不能表达物品占位、100行视图或 `[this+0x58]` 滚动。上一轮“46格/8行/滚2行”实验已撤销，不作验收证据 | 独立解码 `0x42F6D0` first-fit 与 item frame 宽高→占位格算法；实现46条记录/600 cell occupancy/6×6 view/94-range F280 gauge 与对应 hit-test；真实填满、滚到顶部和底部，核对放置、拾取、拖放、重叠、多格物品、滚轮、拖柄和越界，记录截图 |
 | INV-02 | 高，已证实 | EI 三个模式页签是装饰/音效控件；mode byte 由服务端消息写入。当前实现另有重叠的 F264/265 声音按钮与透明 WalletButton，可能截断钱包点击 | 按消息 0x29C/0x286/0x2BC 核验修补/变卖/储存状态及服务端生命周期；运行时测重叠点击与钱包入口命中 |
 | INV-03 | 中，未决 | F267/268 属 Interface1c 图像帧，视觉像人物图；语义仍未闭合，当前 legacy 构造未映射该帧 | 继续找构造 owner、帧状态更新及输入处理；保持角色语义候选，避免直接改成通用按钮 |
 | INV-04 | 高，部分已证实 | 背景/根窗和初始网格几何吻合；负重条错误使用 F360 横向裁剪，EI 静态链使用 F280 垂直滚动仪表；Gold/GG 与模式标签仍有差异待核 | 以 F280 轨道位置与方向、94 尺度、六行页步独立校验；在 legacy 登录实屏拖动/滚轮并核对 carry 值；继续比对 F250 固定数值和多余货币行 |
@@ -239,7 +241,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 |---|---|---|---|---|
 | mode 0 | 登录/服务器列表 | 启动→登录表单→服务列表→连接过渡 | 账号/密码字段、服务器列表、登录/返回/注册/修改密码；PRE-01/05/07 记录静态字段和消息门控，背景及按钮逐态转录未闭合 | `LoginScene` 直连单个 host，缺 EI 服务器列表阶段；PRE-01/05/07 |
 | mode 2 | 选角/创建，Interface1c F50（640×480） | 登录服务成功→mode 2；角色槽、创建/删除、进入/退出、密码流程按状态出现 | 两个角色槽、角色动画和阶段专属按钮；PRE-02/04/06 记录坐标/数量差异，按钮字样与阶段切换待逐控件转录 | `SelectScene` 使用1024×768布局和自绘操作面板；PRE-02..06 |
-| id 0 | 包袱栏，GameInter F250；窗口构造/列表几何见 `window-id-catalog.windows[0]` | HUD cap14「包袱栏(Ctrl+Q,Q)」/裸 Q→toggle id0；NPC修补/买卖等服务端状态改变背包模式 | 负重、金币/货币、修补/变卖/存储模式、格位物品/数量/提示与拖放；模式标签、装饰页签、46槽滚动与点击动作见 INV-01..04 | `InventoryDialog`；46槽/滚轮部分修复见 INV-01，模式与控件重叠差异见 INV-02..04、HUD-04 |
+| id 0 | 包袱栏，GameInter F250；窗口构造/列表几何见 `window-id-catalog.windows[0]` | HUD cap14「包袱栏(Ctrl+Q,Q)」/裸 Q→toggle id0；NPC修补/买卖等服务端状态改变背包模式 | 负重、金币/货币、修补/变卖/存储模式、格位物品/数量/提示与拖放；46条记录、6×100占位表、6×6视口及F280滚动见 INV-01..04 | `InventoryDialog`；当前固定格网与原版动态占位差异见 INV-01，模式与控件重叠差异见 INV-02..04、HUD-04 |
 | id 1 | 状态栏，GameInter F200/F201 | HUD cap15「状态栏(Ctrl+W,W)」/裸 W→toggle id1；创建 F200 属性态、窗内切换至 F201 装备态 | 属性文字、血魔数值与8个装备格/纸娃娃两态；详细槽和控件见 CHAR-01..04 | `CharacterDialog` 的 EI profile 使用 F200/F201；legacy cap15 现打开此窗并已实屏确认。先前错误地把 cap13坐骑入口当作其唯一入口，现已将 cap13 路由修为 `HorseDialog`；布局、动作细节仍见 CHAR-01..04、HUD-04 |
 | id 2 | 商店，GameInter F1000 | NPC商店/修理/存取等业务事件→id2；NPC完成/关闭流程会隐藏 id2 | 商品列表、价格、买卖/修理/存取状态控件；状态含义、货币及交易结果见 SHOP-01、WH-01..03，逐个按钮文字/空态待闭合 | `NPCGoodsPanel`与`InventoryDialog`模式共同承载；`GameStoreDialog`为另一现代商城，不能映射此节点；SHOP/WH条目 |
 | id 3 | 交易/交换，GameInter F1050 | 对玩家发交易请求并接收服务端响应→id3；HUD cap0文字「交易栏(Ctrl+C,C)」的实际动作是朝目标实体请求交易，不是直接打开窗 | 双方物品/金币、接受/取消/锁定等交互及消息门控见 TRADE-01..03；每个按钮字样与按下帧待逐控件验收 | `TradeDialog`；HUD 的 `ExchangeButton` 直接本地打开窗口，缺目标选择/0x401请求链；TRADE-01..03、HUD-04 |

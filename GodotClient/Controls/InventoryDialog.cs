@@ -219,15 +219,11 @@ public partial class InventoryDialog : DXWindow
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 250);
         _background.StretchImage = false;
 
-        // 原版显示六行、六列；46 个数据槽占八行，末行有四格。
-        // 格距为36px；DXItemGrid 的35+2*padding因而 padding=0.5。
+        // 当前迁移使用六列×六行的可视/命中视口；旧版物品记录与可视格
+        // 并非一一对应，真正的滚动占位网格仍需按反编译布局重建。
         Grid.GridPadding = .5f;
-        Grid.SlotCount = 46;
-        Grid.VisibleHeight = 6;
-        Grid.GridSize = new Vector2I(6, 8);
+        Grid.GridSize = new Vector2I(6, 6);
         Grid.Location = new Vector2I(25, 41);
-        Grid.GridMouseWheel -= ScrollLegacyInventory;
-        Grid.GridMouseWheel += ScrollLegacyInventory;
 
         _titleLabel.Visible = false;
         _legacyModeLabel ??= new DXLabel
@@ -284,12 +280,6 @@ public partial class InventoryDialog : DXWindow
         TrashButton.Visible = false;
         SellButton.Visible = false;
         UpdateClientAreaForLegacySkin();
-    }
-
-    private void ScrollLegacyInventory(object sender, MouseWheelEventArgs e)
-    {
-        Grid.ScrollValue = Math.Clamp(Grid.ScrollValue - e.Delta, 0,
-            Math.Max(0, Grid.GridSize.Y - Grid.VisibleHeight));
     }
 
     private void TrashItem()
@@ -369,16 +359,11 @@ public partial class InventoryDialog : DXWindow
     {
         bool ok = Size == new Vector2I(284, 324)
             && _background.Index == 250
-            && Grid.GridSize == new Vector2I(6, 8)
-            && Grid.SlotCount == 46
-            && Grid.Cells?.Length == 46
-            && Grid.VisibleHeight == 6
-            && Grid.ScrollValue >= 0
-            && Grid.ScrollValue <= 2
+            && Grid.GridSize == new Vector2I(6, 6)
             && Grid.Location == new Vector2I(25, 41)
             && CloseButton.Location == new Vector2I(249, 288)
             && _legacyActionButton?.Location == new Vector2I(176, 262);
-        details = $"size={Size} background=F{_background.Index} grid={Grid.GridSize} slots={Grid.Cells?.Length}/{Grid.SlotCount} viewport={Grid.VisibleHeight} scroll={Grid.ScrollValue}@{Grid.Location} close={CloseButton.Location} action={_legacyActionButton?.Location}";
+        details = $"size={Size} background=F{_background.Index} grid={Grid.GridSize}@{Grid.Location} close={CloseButton.Location} action={_legacyActionButton?.Location}";
         return ok;
     }
 

@@ -225,15 +225,15 @@ public partial class MainPanel : DXImageControl
         })
             label.Visible = false;
 
-        // 中间只显示等级；AC/DC 落在右下、环形操作区左侧。
-        LevelLabel.Location = new Vector2I(300, 42);
+        // 等级在右侧圆盘的中心；AC/DC 对齐圆盘下方原版的两个标识位。
+        LevelLabel.Location = new Vector2I(665, 60);
         LevelLabel.Size = new Vector2I(70, 16);
         LevelLabel.Visible = true;
 
-        ACLabel.Location = new Vector2I(525, 74);
+        ACLabel.Location = new Vector2I(580, 108);
         ACLabel.Size = new Vector2I(88, 16);
         ACLabel.Visible = true;
-        DCLabel.Location = new Vector2I(525, 94);
+        DCLabel.Location = new Vector2I(680, 108);
         DCLabel.Size = new Vector2I(88, 16);
         DCLabel.Visible = true;
 
@@ -523,8 +523,9 @@ public partial class MainPanel : DXImageControl
             && !SCLabel.Visible
             && ACLabel.Visible
             && DCLabel.Visible
-            && ACLabel.Location == new Vector2I(525, 74)
-            && DCLabel.Location == new Vector2I(525, 94);
+            && LevelLabel.Location == new Vector2I(665, 60)
+            && ACLabel.Location == new Vector2I(580, 108)
+            && DCLabel.Location == new Vector2I(680, 108);
         bool orb = AuditLegacyOrb(out string orbDetails);
         details = $"panel={Index}/{Size} buttons={buttons} legacyStats={legacyStats} "
             + $"vis(level/class/fp/cp/ac/dc/mac/mc/sc)={LevelLabel.Visible}/{ClassLabel.Visible}/{FPLabel.Visible}/{CPLabel.Visible}/{ACLabel.Visible}/{DCLabel.Visible}/{MACLabel.Visible}/{MCLabel.Visible}/{SCLabel.Visible} "

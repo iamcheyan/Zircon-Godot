@@ -127,12 +127,12 @@ public partial class CharacterDialog : DXWindow
         _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
 
-        // EI 原版的展开状态使用 GameInter F201 装备面板素材；F201 是
-        // 1024×512 的大画布，窗口只显示其中右侧面板的裁剪区域。
+        // EI 原版展开状态是在右侧并排再放一块 F200 状态面板。
+        // F201 是 520 宽的装备视图，不能拿来当右侧属性面板。
         _legacyExpandedBackground = new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = 201,
+            Index = 200,
             FixedSize = true,
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -329,9 +329,9 @@ public partial class CharacterDialog : DXWindow
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
         _legacyExpandedBackground.Visible = false;
-        _legacyExpandedBackground.Index = 201;
+        _legacyExpandedBackground.Index = 200;
         _legacyExpandedBackground.Location = new Vector2I(238, -92);
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = false;
 
@@ -447,7 +447,7 @@ public partial class CharacterDialog : DXWindow
     {
         if (_legacyExpandedLabels.Count > 0) return;
 
-        // 右侧面板沿用旧版 F201 的裁剪坐标；文字只使用当前服务端
+        // 右侧面板使用原版第二块 F200 状态面板；文字只使用当前服务端
         // PlayerStats，避免把现代属性页坐标或缩放参数带进 EI 窗口。
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
@@ -491,7 +491,7 @@ public partial class CharacterDialog : DXWindow
         ToggleLegacyView();
         bool expanded = _background.Index == 200
             && _legacyExpandedBackground.Visible
-            && _legacyExpandedBackground.Index == 201
+            && _legacyExpandedBackground.Index == 200
             && Size == new Vector2I(488, 328)
             && _legacyViewToggle.Index == 168
             && _legacyAttributeLabels.All(label => label.Visible)
@@ -542,7 +542,8 @@ public partial class CharacterDialog : DXWindow
             entry.Label.Visible = _legacyEquipmentView;
         Size = _legacyEquipmentView ? new Vector2I(488, 328) : new Vector2I(244, 328);
         _legacyExpandedBackground.Location = new Vector2I(238, -92);
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
+        _legacyExpandedBackground.Index = 200;
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _legacyExpandedBackground.StretchImage = false;
         UpdateClientAreaForLegacySkin();
         QueueRedraw();

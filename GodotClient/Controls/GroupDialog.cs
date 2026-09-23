@@ -143,6 +143,7 @@ public partial class GroupDialog : DXWindow
         // 保留根窗范围的裁切，使超过可见行的名字由窗口底边自然裁掉。
         _memberPanel.Location = Vector2I.Zero;
         _memberPanel.Size = Size;
+        _memberPanel.MouseFilter = MouseFilterEnum.Ignore;
 
         // F900 底部三个原版动作热区：邀请、移除、离队。EI 没有 LFG 编辑器。
         DXButton[] actions = { _addButton, _removeButton, _lfgButton };

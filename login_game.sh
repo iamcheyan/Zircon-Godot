@@ -74,7 +74,7 @@ echo ""
 echo "[1/4] 清理游戏进程..."
 
 # 杀掉 Godot 客户端
-CLIENT_PIDS=$(pgrep -f '[g]odot-mono.*ZirconClient' || true)
+CLIENT_PIDS=$(pgrep -f "[g]odot-mono.*--path $ROOT/GodotClient" || true)
 if [ -n "$CLIENT_PIDS" ]; then
     echo "  杀掉 Godot 客户端: $CLIENT_PIDS"
     kill -TERM $CLIENT_PIDS 2>/dev/null || true
@@ -104,9 +104,9 @@ sleep 2
 
 # 确认清理干净（all 模式含服务器）
 if [ "$KILL_ALL" = "1" ]; then
-    REMAIN=$(pgrep -f '[d]otnet .*ServerCore(/|/ServerCore\.dll)|[d]otnet ServerCore\.dll|[g]odot-mono.*ZirconClient' || true)
+    REMAIN=$(pgrep -f "[d]otnet .*ServerCore(/|/ServerCore\.dll)|[d]otnet ServerCore\.dll|[g]odot-mono.*--path $ROOT/GodotClient" || true)
 else
-    REMAIN=$(pgrep -f '[g]odot-mono.*ZirconClient' || true)
+    REMAIN=$(pgrep -f "[g]odot-mono.*--path $ROOT/GodotClient" || true)
 fi
 if [ -n "$REMAIN" ]; then
     echo "  ⚠️ 残留进程: $REMAIN，再杀一次"

@@ -30,6 +30,11 @@ public partial class DXButton : DXImageControl
     public bool CanBePressed = true;
     public new bool HasFocus;
 
+    /// <summary>EI HUD caption state machine: invisible idle, cursor hint on hover, state frame while pressed.</summary>
+    public bool LegacyHudCaption;
+    public string LegacyHudCaptionText = string.Empty;
+    private int _legacyHintReveal;
+
     private DXLabel _label;
 
     public DXLabel Label => _label;
@@ -56,6 +61,14 @@ public partial class DXButton : DXImageControl
     public override void _Ready()
     {
         base._Ready();
+        if (LegacyHudCaption)
+        {
+            _legacyHint = new LegacyHudCaptionHint { Visible = false };
+            _legacyHint.TextLabel.Text = LegacyHudCaptionText;
+            AddControl(_legacyHint);
+            MouseEnter += ResetLegacyHint;
+            MouseLeave += HideLegacyHint;
+        }
         if (_label == null)
         {
             _label = new DXLabel
@@ -159,6 +172,37 @@ public partial class DXButton : DXImageControl
         // IsPressed，但按钮自己的三态标记也必须同步复位，否则按钮会永久显示按下。
         if (Pressed && !Input.IsMouseButtonPressed(MouseButton.Left))
             Pressed = false;
+
+        if (LegacyHudCaption && _legacyHint != null && IsHovered && !IsPressed && !Pressed)
+        {
+            float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+            if (canvasScale < 0.01f) canvasScale = 1f;
+            Vector2 measured = MirSkin.MeasureTextPhysical(LegacyHudCaptionText, 12);
+            float fullWidthPhysical = Mathf.Ceil(measured.X) + 12;
+            float fullHeightPhysical = Mathf.Ceil(measured.Y) + 4;
+            int target = Mathf.CeilToInt(fullHeightPhysical);
+            if (_legacyHintReveal < target)
+            {
+                _legacyHintReveal++;
+            }
+
+            Vector2 cursor = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
+            float fullWidth = fullWidthPhysical / canvasScale;
+            float fullHeight = fullHeightPhysical / canvasScale;
+            float revealedHeight = Mathf.Min(_legacyHintReveal, fullHeightPhysical) / canvasScale;
+            _legacyHint.Location = new Vector2I(Mathf.RoundToInt(cursor.X), Mathf.RoundToInt(cursor.Y - revealedHeight));
+            _legacyHint.Size = new Vector2I(Mathf.CeilToInt(fullWidth), Mathf.CeilToInt(revealedHeight));
+            _legacyHint.TextLabel.Location = new Vector2I(0, Mathf.RoundToInt(revealedHeight - fullHeight));
+            _legacyHint.TextLabel.Size = new Vector2I(Mathf.CeilToInt(fullWidth), Mathf.CeilToInt(fullHeight));
+            _legacyHint.QueueRedraw();
+            _legacyHint.TextLabel.QueueRedraw();
+            _legacyHint.Visible = revealedHeight > 0;
+        }
+        else if (LegacyHudCaption && _legacyHint != null)
+        {
+            _legacyHintReveal = 0;
+            _legacyHint.Visible = false;
+        }
     }
 
     private bool _pressed;
@@ -175,6 +219,21 @@ public partial class DXButton : DXImageControl
 
     protected override void DrawControl()
     {
+        if (LegacyHudCaption)
+        {
+            if (IsPressed || Pressed)
+            {
+                int pressedFrame = PressedIndex;
+                if (pressedFrame >= 0)
+                {
+                    var texture = MirSkin.GetTexture(LibraryFile, pressedFrame);
+                    if (texture != null)
+                        DrawTextureRect(texture, new Rect2(Vector2.Zero, Size), false);
+                }
+            }
+            return;
+        }
+
         int index = GetCurrentIndex();
         if (index >= 0)
         {
@@ -190,6 +249,20 @@ public partial class DXButton : DXImageControl
         // 使 Default/SmallButton/Tab 以及功能图标按钮在所有窗口中一致。
         if (!DrawGeneratedButton())
             DrawFallbackButton();
+    }
+
+    private LegacyHudCaptionHint _legacyHint;
+
+    private void ResetLegacyHint(object sender, EventArgs e)
+    {
+        _legacyHintReveal = 0;
+        if (_legacyHint != null) _legacyHint.Visible = false;
+    }
+
+    private void HideLegacyHint(object sender, EventArgs e)
+    {
+        _legacyHintReveal = 0;
+        if (_legacyHint != null) _legacyHint.Visible = false;
     }
 
     private void DrawFallbackButton()

@@ -1,0 +1,435 @@
+# EI 旧版 UI 全量审计（进行中）
+
+更新时间：2026-09-23
+状态：按用户确认的逐窗对照/修改标准重新启动长期迁移校准；原版界面目录与首轮差异已有记录，逐控件审计、修复和运行验收仍在进行，尚未宣称任何窗口完成旧版一致性验收。
+
+## 审计目标与证据规则
+
+本审计以 EI 3.0 的 800×600 原版为目标，逐项对照 `GameInter.wil` 等 EI 资源、原版 `Mir3.exe` 的反汇编证据、可用的原版 `Client/` 源码，以及 Zircon 的真实登录运行状态。主要研究资料在 `/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/`。素材浏览器 `http://localhost:8766/` 用于检查源帧。UI 运行验收的标准启动命令是在仓库根目录执行 `bash login_game.sh legacy`；该脚本会先关闭现有客户端，因此审计期间仅在明确需要新基线时重启。
+
+证据等级：
+
+| 等级 | 含义 | 可支持的结论 |
+|---|---|---|
+| primary-static | 原版 EXE 的构造、绘制、命中或输入路径中的静态机器码证据 | 帧号、常量、调用链、静态状态转换；不自动证明运行时最终位置和可见顺序 |
+| source-confirmed | 原版可用 Client 源码中可追踪的构造/事件/业务逻辑 | 源码明确覆盖的行为；需确认该源码与 EI 目标版本一致 |
+| visual-candidate | WIL 帧、截图、模拟器或布局工具推导 | 视觉参考或候选坐标，不能单独证明点击语义 |
+| runtime-verified | EI 原版或 Zircon 实际运行中重现并记录截图/操作结果 | 只覆盖已记录分辨率、数据状态和操作路径 |
+
+若证据彼此冲突，保留原始来源、明确差异并追踪，不以 Zircon 当前常量、模拟器生成值或“自测 PASS”反证原版。每个窗口最终需要同时审查外框有效像素边界、原点/锚点、缩放/裁剪、绘制顺序、控件命中矩形、按下/悬停/禁用状态、键鼠操作及动态数据来源。
+
+## 最终验收标准（用户确认）
+
+“完全一致”指同一分辨率、同一游戏状态、同一角色/物品/服务器数据下，EI 原版与 Zircon 的玩家可见界面和操作结果一致。Godot 内部代码结构可以不同；比较对象是实际显示、输入响应、界面流转和业务结果。
+
+| 验收面 | 通过标准 | 必须留存的验证证据 |
+|---|---|---|
+| 画面与素材 | 同一状态下逐窗核对内容、EI资源帧、可见文字、字体/颜色、位置、有效像素边界、裁切、缩放和层级；固定素材区域做像素差分，动态数值/动画等可变区域注明比较规则。基准分辨率为 EI 800×600；其它分辨率按原版锚点和缩放规律复核 | 原版素材/反编译证据、Godot同状态截图、分辨率与数据状态、标出比较区域及差分结果 |
+| 控件 | 每个按钮、页签、列表行、物品格、输入框和滚动控件的RECT、悬停/按下/禁用状态与点击结果相符；帧画布、alpha有效边界和命中框分别记录 | 原版构造/命中证据、独立资源像素测量、Godot实际控件矩形和边界点点击记录 |
+| 输入与行为 | 同一鼠标/键盘输入在相同修饰键、焦点、聊天输入、模态窗口和开关状态下触发相同动作；比较节流、拖拽、滚动、确认/取消、关闭/重开 | 原版静态分派或可观察运行证据、Godot源码路径、可复现的输入步骤和结果截图/日志 |
+| 导航与状态 | 从登录、选角、游戏HUD到各窗口、二级页面及返回/关闭路径逐边相同；每个窗内按钮继续映射到相同目标窗、子状态或提示 | EI界面导航矩阵中每条边有来源、对应Godot入口、实际回放结果；扩展功能单独标明并确认不混入EI流程 |
+| 动态数据与业务 | HP/MP、属性、任务、物品、组队/行会状态、NPC选项等读取相同数据并产生相同协议请求/游戏结果；空值、边界和失败路径也核对 | 原版字段/消息证据、Godot绑定与协议路径、同输入的服务端/客户端结果 |
+| 完成门槛 | 任何未有原版证据、未能在实际界面观察或未完成行为回放的项都保持“未验收/候选”，不能按通过处理；编译、自审计常量或只看静态图不构成单项验收 | 每项审计编号最终关联原版依据、实现差异/修复、独立核验、实际交互结果与残余限制；范围内没有未解释的差异才可宣称一致 |
+
+默认按“原版界面节点与跳转 → 逐窗文字/控件/状态 → 对照当前源代码与资源路径 → 对有充分证据的差异逐项修改 → 独立几何/资源核验 → `bash login_game.sh legacy` 实际交互和截图验收”的顺序推进。对每一项边比对边修改；窗口级通过后再进入下一个窗口。发现原版证据互相冲突时先把冲突闭合或保留为未决，不以猜测推进改动。用户指定的 `GameInter.wil` 查看器和仓库根目录启动命令是资源/运行复核入口。
+
+## 先前文档与实现的审计结论
+
+1. `docs/LEGACY_UI_MIGRATION_PLAN_2026-09-22.md` 把核心窗口阶段描述为完成，但其验收范围不足以证明所有 EI 控件与行为一致。
+2. `docs/LEGACY_UI_PARITY_AUDIT_2026-09-22.md` 的“final audit”主要核验功能开关和服务可用性，不是逐控件的资源/几何/输入审计。其标题不能作为全量 UI 完成凭据。
+3. `/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/UI_COVERAGE_MATRIX.md` 和 `UI_COMPLETION_AUDIT.md` 是重要研究索引，但覆盖矩阵的“已恢复”经常表示原版静态路径已恢复，不等于 Zircon 移植已通过真实行为/视觉验收。应把“原版证据闭合”与“Zircon 实现验收”拆成两个状态。
+4. `GodotClient/Scripts/LegacyHudLayoutLab.cs` 的 `--legacy-audit` 会检查预先写入的代码尺寸和控件状态。它适合作为实现回归检查，不是独立原版验证；当前报告的 `magic=True` 不能证明技能书像素、列表、点击、翻页或快捷键与 EI 一致。
+5. `GodotClient/UI/legacy_ui.json` 只有一组 14 项窗口参考配置；多项标记为 candidate，且不含完整 HUD 子控件、登录/选角、模态流程、所有二级对话框或动态行为。`LegacyUiSkin.ApplyLegacyTestWindow` 是有限测试适配器，不代表真实登录模式的全部控件均已迁移。
+6. `bash login_game.sh legacy` 只给正常登录客户端添加 `--legacy-ui --legacy-hud`。目前 `GameScene.ApplyLegacyCoreTestLayouts()` 仅显式套用部分窗口；测试场 `LegacyHudLayoutLab` 又是独立 800×600 画布。两者不能互相代替。后续运行验收需分别标记测试场、登录场景和游戏内实际操作。
+
+## 已确认的高优先级差异：技能书
+
+### 原版证据
+
+- `skill-window-render-loop-evidence.json`：原版构造器 `0x00439250` 使用 `GameInter.wil`，窗口根参数含 452×380；右页详情由 `0x0043A440` 绘制，窗口刷新 `0x00439500` 调用。右页行起点为 `(windowX+235, windowY+30)`，垂直间隔 15 px；选择技能 ID 后读取 `Magic.exp` 相应 `#ID` 段。
+- 同一证据中的 `selection_chain`：初始选择 ID 为 -1；点击左页列表由 `0x0043A370` 对六个命中矩形和当前分类链表命中，取出 16-bit 技能 ID，写入 `this+0x964`，随后右页显示该技能详情。
+- 构造器创建 11 组帧控件：三个额外控件 440/441、410/411、412/413，以及八个分类按钮 450/451 至 464/465。按本机 `http://localhost:8766/api/image?f=GameInter.wil&i=410` 等资源预览直接检查，F410/411 外观为左箭头，F412/413 为右箭头，F440/441 为交叉剑形（visual-candidate）；与 primary-static 的控件位置/帧对共同证明它们不是技能图标序列。箭头“翻页”语义仍要由鼠标分派链验证；F440/441 的动作仍未定。
+- `skill-window-context.json` 的 `window_size=296×332` 与直接解码的 WIL 元数据冲突：GameInter F400 原始画布为 512×512，alpha 有效区约 `(30,67,451,378)`；EXE 窗口构造参数为 452×380。故 296×332 不能称作 F400 原始帧尺寸，先降级为未解释的旧 metadata。Godot 当前把 F400 放在 `(-30,-67)`，能将有效像素左上角锚到根窗 `(0,0)`，有效区约覆盖 451×378；几何看起来与 EXE 根尺寸吻合，但仍须真实运行截图确认裁边和控件坐标。
+- `skill-grid-magic-exp-evidence.json` 明确注明模拟器 12 格的 4×3 坐标仍是 candidate，未被原版技能窗口静态几何钉定。该资料证明 Magic.exp 中有真实技能记录，不证明把前 12 个技能映射到这些格子。
+- `skill-window-static-evidence.md` 与 `skill-window-context.json` 把 F400 记成 296×332，直接 WIL 解码却得到 512×512 画布/451×378 有效像素区；原版构造参数和 HUD/窗口分派证据为 452×380 根窗。旧的 296×332 结论与两条独立原始证据不符，应追溯它的生成依据；此处不再把它当资源尺寸。素材画布、alpha 有效绘制区域和 EXE 窗口根尺寸分别记录。
+
+### 当前 Zircon 实现
+
+`GodotClient/Controls/MagicDialog.cs` 的 `ApplyLegacyEiLayout()` 将根尺寸设为 452×380、使用 F400，并隐藏现代列表和滚动条；它还隐藏 `_tabPrevious`、`_tabNext`。`BuildLegacySchoolButtons()` 生成八类按钮；`BuildLegacySkillSlots()` 生成 12 个固定位置的 `DXImageControl`，使用 GameInter F410..F421，每个按索引尝试选择 `_legacyRuntimeEntries[index]`，再尝试让 `_cells[index]` 获得焦点。
+
+### 当前可确认的差异/缺口
+
+- 12 格坐标来源是候选模拟器布局，现阶段却被用作真实 EI 技能命中区域；证据不足。
+- 当前 12 个占位框把 F410..F421 全当作技能图标。原版构造器明确将 F410/411 与 F412/413 分别用于两组控件的普通/状态帧；至少这四帧的用途与当前映射冲突。F414..F421 的窗口语义仍须追踪，不能因连续编号直接认作技能图标。每个技能 ID→实际图标资源/绘制来源也缺少闭合链。
+- 当前测试实现 `RefreshLegacySkillSlots(entries.Take(12))` 以列表顺序绑定前 12 个技能，没有证明该顺序等于原版按职业分类的 `Magic.exp` 列表。
+- 原版构造器的三组顶部控件被当前实现省略（或分页按钮被隐藏），控件状态帧和命中区域没有逐项映射。
+- F1–F12、Shift+F1–F12、Ctrl+F1–F4 的当前 Zircon 默认键位只是现代 KeyBindManager 配置证据；仍需对照原版全局按键分派和技能书列表选中/拖放绑键链，区分“技能快捷施放”和“在书中绑定快捷键”。
+- 技能书外框的 F400 透明边距、内容坐标、关闭按钮命中区、可拖动窗口原点和 1024×768 等比例行为尚未以原版运行截图独立验收。
+
+**审计状态：实现不通过原版交互验收，结论确定；已确认至少 F410..F413 的资源语义冲突。精确修复方案暂缓，待把构造器余下输入分支、列表初始化/分类、键盘绑定路径一并审完后再纳入计划。**
+
+### 技能书审计条目（供后续计划引用）
+
+| 编号 | 严重度 | 发现 | 证据/现状 | 待完成的独立验收 |
+|---|---|---|---|---|
+| SKL-01 | 阻断 | 当前 12 格候选被误作原版左页布局；原版已证实 6 个技能命中矩形，不是 12 个 | primary-static `skill-window-render-loop-evidence.json`：`0x43A370` 迭代 `this+0x7C` 起的 6 个 RECT；分类链表来自 `this+0x898+24*cl`。研究模拟器的 `skill-grid-magic-exp-evidence.json` 明说 4×3 几何仍是 candidate；`skill-detail-verification-evidence.json` 的“原版 12 格”结论与其自身“sim slots”范围及 EXE 六矩形冲突。当前 `BuildLegacySkillSlots()` 创建 12 个 36×36 命中控件并对前 12 条按职业/学派/等级排序，超出原版当前静态 hit-test 记录。 | 从 `0x4397A0` 完整恢复六格绘制坐标/列表顺序、6 个 RECT 的写入者和分类链表填充逻辑；再将 Godot 每格图标/命中/列表顺序与资源、运行截图交叉验证。不要沿用模拟器 4×3 排布作为原版事实。 |
+| SKL-02 | 阻断 | F410..F421 不是 12 个技能图标序列；当前把已确认导航控件帧与未确认帧误作格子图标 | `skill-window-context.json` 的 11 次原版通用控件构造调用仅含 F440/441、F410/411、F412/413 以及八组分类帧。primary-static `0x43AC80` 先处理 3 个帧控件和 8 个分类按钮，然后才调用六矩形技能命中函数。`MagicDialog.BuildLegacySkillSlots()` 将 F410..F421 全用作 12 个背景图，再在刷新时整批换成 `MagicIcon`。所以帧 410/412 的已证实身份是两个控制帧对，不是技能图标；F414..F421 尚无此处的技能格证据。 | 逐帧检查 `GameInter.wil` metadata/预览，追到所有者、刷新函数与命中关系；补出 `0x4397A0` 绘制链后才能确认技能图标资源库。 |
+| SKL-03 | 阻断 | 原版右页详情链已经闭合，但当前旧版技能书没有右页绘制；点选旧格也无法把选择写入原版详情状态 | primary-static `skill-window-render-loop-evidence.json` Finding 272：点击左页 `0x43A370` 返回技能 ID，`0x43ACE4` 写入 `this+0x964`；`0x439500` paint 调 `0x43A440` 读取 Magic.exp `#技能ID` 区段，右页从 `(winX+235, winY+30)` 每行 15 px，技能名蓝字黑影、正文深绿。当前 `_legacySelectedSkill` 是 Godot tuple，只被本地选择和 F 键绑定读取，没有右页内容控件，也没有与原版 ID/段落映射相同的绑定。 | 从已解码 EI Magic.exp 按原始 skill ID 做独立文本比对；逐技能点击并验标题、行内容、换页及空选择；Godot 显示必须符合原版字符、颜色、行距与裁切。 |
+| SKL-04 | 高，箭头动作候选待输入链闭合 | 三个额外原版帧控件被当前实现省略；两组明显箭头帧未映射，F440/441 作用未定 | primary-static `skill-window-context.json`/`skill-window-render-loop-evidence.json`：paint 顺序在8个分类按钮前重定位/绘制对象 `+0xD8/+0x18C/+0x240`，帧对分别 F440/441、F410/411、F412/413；坐标表达式按证据 JSON 明示的 `(Y,X)` 顺序解释后，构造位置候选约为 F440 `(399,340)`、F410 `(61,303)`、F412 `(366,303)`。直接 viewer PNG 的 visual-candidate 观察为 F410/411 左箭头、F412/413 右箭头、F440/441 交叉剑形，F400 本体也可见左右页底部箭头。Godot 当前隐藏 `_tabPrevious/_tabNext`，且没有重建这三组帧控件；F440 是否关闭窗或执行其它功能仍需通过输入回调闭合。F400 原始 WIL 画布512×512、有效像素约451×378；研究 JSON 的296×332记载冲突待追。 | 回查包装器/控件坐标系和点击分派；用原版实际点按 F410、F412、F440 对应 hit rect，分别记录页/状态/动作；再直接用 source frame 的 hitbox 尺寸核相对根坐标。资源外观仅支持帧识别，不单独判定业务语义。 |
+| SKL-05 | 高 | 当前“学派按钮”仅凭 `MagicSchool` 绑定，未核对 EI 分类 byte/list | 原版当前分类为 `[this+0x54]`，8 个标签顺序/帧由构造器确认；左页技能链按分类列表头和技能记录绘制 | 对照 `Magic.exp` 的 skill ID 与原版按职业/类别的实际列表，验证八按钮切换与空类别状态 |
+| SKL-06 | 高，未决 | EI 原版 F1–F12/Shift/Ctrl 技能绑定链尚未找到；Godot 把同一组功能键做成依赖窗口状态的“绑定/施放”两种动作 | 研究工件 `window-paint-and-hotkey-dispatch-evidence.json` 的原版全局窗口热键表是 Q/W/E/R/S/D/Z/C/V/B/G/F/N/T，不含 F1–F12；`skill-window-render-loop-evidence.json` 已闭合鼠标点六个左页 RECT→技能ID→右页详情，但其中没有技能窗键盘分派证据。检索范围内尚未找到原版 F 键绑技 primary-static 链，这只能作为未检出，不能证明 EI 不支持。当前 `MagicDialog._UnhandledKeyInput()` 在 legacy 技能书打开且 `_legacySelectedSkill` 选中有效 `UserMagic` 时，把 F1–F12 / Shift+F1–F12 转成 SpellKey，写入当前 Set1–4 并发送 `SendMagicKey`；此分支不做 Modern `MagicCellView.BindCurrentSetKey()` 的同栏去重。`GameScene._Input()` 的常规路径则在没有可见窗口时把裸 F1–F12/Shift+F1–F12 用作施法，Ctrl+F1–F4 切换栏组；有窗口可见会在全局绑定分派前返回，随后技能书处理器可能接管同一 F 键。因此当前同一物理键会因窗口可见、选中技能及修饰键而代表不同动作。这是 Godot source-confirmed，不是 EI 行为。 | 从目标 EI EXE 的主键盘/子窗口输入分派器追 F1–F12、Shift/Ctrl 和技能栏绑定字段的读写/发送点；分别验证技能书打开、关闭、无选择、选择未学技能、聊天/编辑焦点和四组快捷栏时的键路由与重复绑定行为。恢复原版 EXE 后先证实是否存在输入链，再决定 legacy 是否保留窗口内绑定，不能以当前 `MagicCellView` 注释或现代热键配置定案。 |
+| SKL-07 | 中 | 自测只验尺寸与控件数量，可能把错误状态固定为“通过” | `AuditLegacyEiLayout()` 断言 12 个 slots、8 类按钮、列表和滚动条隐藏；不验帧语义、边界、点击、详情文本和键位 | 将后续回归断言改为独立来源数据，并加入资源/矩形映射与行为场景；不得把自身配置当原版 oracle |
+| SKL-08 | 高，末三组帧状态不符；坐标差异已撤销 | 八个分类按钮确为左页边缘纵列；当前物理位置与原版构造参数的 `(Y,X)` 顺序相符，但末三项重复前三项帧号 | `skill-window-render-loop-evidence.json → window_constructor_control_geometry` 明确警告坐标表达式按 `(Y,X)` 顺序列出。八个原版分类控件物理偏移为 `(X,Y)=(5,21),(3,56),(4,91),(2,126),(2,161),(2,196),(1,231),(2,266)`；用户指定素材预览器直接读取的 F400 画面也显示分类图标沿左侧竖排。当前 `MagicDialog.BuildLegacySchoolButtons()` 的八个坐标与上述位置一致，因此先前“原版横排、Godot 纵排”的判断是坐标轴次序误读，已撤销。原版8组帧为 F450/451、452/453、454/455、456/457、458/459、460/461、462/463、464/465；当前 Dark/Phantom/Physical 分别复用 F450/F452/F454，未使用原版应有的 F460/F462/F464。帧对与分类业务名的逐一语义仍需运行态核验。 | 逐帧核对八组普通/按下图像及 `MagicSchool` 到原版 `[this+0x54]` 分类 byte 的对应；逐项点击八个实际控件，验证其分类链表内容与右页选择。保留 wrapper 对绝对屏幕坐标的影响待运行时复核。 |
+| SKL-09 | 高，legacy 模式常驻快捷栏、资源根混用及 Ctrl+E 入口与 EI 技能书冲突 | 当前另建并默认显示可移动的12/24格`MagicBar`；它与 EI 技能书 id14 是不同对象。EI 主热键证据显示 Ctrl+E 与裸 E 都打开/关闭技能书；当前 `KeyBindManager` 却把裸E→`MagicWindow`、Ctrl+E→`MagicBarWindow`。`MagicBar` 确实请求 GameInter2 学派边框，但 legacy 下 `MirSkin.GetTexture(GameInter2,…)` 从 `LegacyEI/Data` 取图，那里无 GameInter2.Zl，所以当前该绘制进入 `DrawRect` 矩形边框回退；技能图标 `_iconLib=LibraryCache.Get(MagicIcon)` 仍从常规 `DataPath` 读取 MIcon.Zl。此前“快捷栏实际使用现代 GameInter2 图框”的描述过强，应改为“请求该帧但 EI 根缺失、运行时回退为线框”；也不能据此断言全栏都显示现代边框。EI 是否另有快捷栏仍未闭合 | primary-static `hud-caption-action-tail-evidence.json`/`chat-window-control-map.json`：caption“技能书(Ctrl+E, E)”，E 分支检查 VK E 后 `toggle(0xE)`；`window-paint-and-hotkey-dispatch-evidence.json` 将 id14绑定技能书F400，id5/10为空。当前 `GameScene` 无条件创建并显示 `_magicBar`；`MagicBar.cs` 有12列、最多24槽、四组、可移动逻辑，空/有技能均查 GameInter2帧815/860–892；空帧则显式画矩形回退。`MirSkin.IsUiLibrary()`将GameInter2路由到`UiDataPath`，legacy默认为`/home/tetsuya/mir3ei/LegacyEI/Data/`；`LibraryCache.Get(MagicIcon)`走`DataPath`，当前默认真实路径为`/home/tetsuya/mir3ei/Data/`。EI窗口表没登记独立MagicBar只说明该表未覆盖到此对象，不足以单独证明EI不存在同类HUD子控件。 | 从原版HUD完整构造/绘制链核常驻技能栏、资源和入口；复核裸E/Ctrl+E及打开窗口时的键路由。用实际进程资源路径和运行截图确认快捷栏当前框/图标各自来源，判定 legacy 是否应隐藏、复原或明确保留为扩展；不能把资源缺失回退状态当成EI旧版外观。 |
+
+以上条目确定属于实施计划候选，但最终排序与拆分须等输入路径和其他窗口审计结束后统一确定。
+
+### 技能书证据冲突的裁决记录
+
+Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.json` 将“8 tabs + 12 real-skill slots”写成技能子系统已闭合，但同一条记录的 `sim_vs_original` 明确区分“sim = grid slots; original = left list + right detail page”，且其几何仍标为 candidate。较新的 `skill-window-render-loop-evidence.json` primary-static 记录反汇编函数 `0x43A370` 仅遍历 6 个 `this+0x7C` RECT，并明确未知 RECT 与列表填充者；`0x43AC80` 则在进入列表命中函数前先处理 3 个帧控件及 8 个类别控件。故本审计把“原版 12 格/4×3/帧 410..421 图标”的旧结论降级为模拟器方案/视觉候选，不采纳为原版布局事实。已能断定当前 12 个 `DXImageControl` 命中格超出了已知原版六个列表 hit rect；仍待追 `0x4397A0` 和 RECT 的写入者，不能从六个矩形直接推断它们在书页上的最终绘制形状。
+
+右页部分有相反结论：Finding 272 的 ID 选择、Magic.exp 区段扫描、文本样式和 15 px 行距已经是 primary-static 闭合证据；因此不是“右页原版不清楚”，而是当前 `MagicDialog` 没有实现这条已证实绘制链。原版 F1–F12 绑技语义则尚无对应证据，保留未决。
+
+## 背包首轮审计
+
+这项原先的矛盾已有后续原版静态证据解决：46 个槽记录、6×6 可视/命中区域与滚动行偏移是同一套机制。`bag-list-fill-chain-evidence.json` 证明记录数组有 46 槽，网格索引表是 6 列；`trade-split-handle-evidence.json` 的 EI-301 又追完背包滚动字段的读写：`[bag+0x58]` 是顶部可见行偏移，不是行数，缩放公式与交易滚动条共用 94.0 定点比例。背包绘制把滚动偏移从可视行坐标中扣除，6 行视口最多可滚到覆盖 8 行数据，因此容量为 46 的末尾 10 槽可通过滚动显示。较早的 `inventory-window-render-evidence.json` 对该字段“仅初始化/未见写入”的备注已被 EI-301 后续 writer 追踪 supersede；不能再作为字段无滚动功能的依据。
+
+Godot `InventoryDialog.ApplyLegacyEiLayout()` 将网格设成 6×6，`DXItemGrid` 又按 `GridSize.X*GridSize.Y` 创建格控件；其当前 legacy 布局没有接入 F280 滚动条或滚轮，且 `VisibleHeight` 默认 `int.MaxValue`。所以实际只有 36 个格控件，滚动范围为零，无法呈现 46 槽。虽然初始视口的 6×6、36 px pitch、root 相对起点 `(25,41)` 与原版命中区域对齐，尾部 10 槽仍是明确功能缺口。查看器预览的 GameInter F280 是 16×424 画布的垂直轨道/滑块；原版仪表构造参数为 6 行视口、12 px 控件宽、218 px 轨道，绘制位置约 `(window.x+0xF8, window.y-0xA5)`。当前 legacy 布局尚未建立这一滚动控件。
+
+原版 F250 根窗为 284×324；GameInter WIL 有效像素 bbox `(114,94,281,324)`，当前背景偏移 `(-114,-94)` 与根矩形对齐。模式 byte `[bag+0x54]` 有四态：0 包袱、1 修补、2 变卖、3 储存；修补/变卖/储存由服务端消息分支写入。EI-288 的三个页签控件只是播放音效的装饰按钮，不负责设置模式。旧审计把“本地三按钮改模式”写成待核，现据 `inventory-mode-tabs-evidence.json` 与 RESEARCH_LOG EI-288 修正此结论。
+
+当前 Godot 创建 F264/265 声音控件但未绑定模式动作；另有一个透明 WalletButton 与其重叠，且后添加，需检查控件过滤顺序是否吞掉钱包点击。F267/268 来自 `Interface1c.wil`，显示人物风格图像；视觉不足以证明其语义，当前实现没有显式呈现此帧。直接预览 GameInter F360 显示圆形绿色图标；代码却把它作为负重条纹理在 `(24,260)` 横向裁剪。原版 paint 链明确调用共享垂直仪表，资源是 GameInter F280，根相对绘制位置 `(248,-165)`，其轨道画布 16×424、填充区约 12×218，位置靠窗口右侧且在窗口上沿外。故负重条使用 F360 是明确资源/方向/坐标错误，应该以后续实施计划中的独立素材合成与游戏内滚动验收修正。原版主数值使用固定 `%d` 绘制，但 EI-295 把其字段归为恒零死配置槽（可能是未用金币上限仅属推断）；当前 Godot 添加 Gold/GG 两行和模式标签，需分别对照 F250 内嵌美术与原版绘制位置，不能把扩展货币视为旧版控件。
+
+| 编号 | 严重度 | 发现/疑问 | 状态 |
+|---|---|---|---|
+| INV-01 | 阻断，已证实 | Godot legacy 仅建 36 格且没有滚动；EI 46 槽通过 6 行视口和滚动偏移覆盖 8 行数据，尾部 10 槽不可达 | 以独立算式校验 46 槽映射/边界；接入真实滚动条与滚轮后用账号塞满 46 槽，逐项滚到第 46 格并验证点击、拖放、换页方向与页步 |
+| INV-02 | 高，已证实 | EI 三个模式页签是装饰/音效控件；mode byte 由服务端消息写入。当前实现另有重叠的 F264/265 声音按钮与透明 WalletButton，可能截断钱包点击 | 按消息 0x29C/0x286/0x2BC 核验修补/变卖/储存状态及服务端生命周期；运行时测重叠点击与钱包入口命中 |
+| INV-03 | 中，未决 | F267/268 属 Interface1c 图像帧，视觉像人物图；语义仍未闭合，当前 legacy 构造未映射该帧 | 继续找构造 owner、帧状态更新及输入处理；保持角色语义候选，避免直接改成通用按钮 |
+| INV-04 | 高，部分已证实 | 背景/根窗和初始网格几何吻合；负重条错误使用 F360 横向裁剪，EI 静态链使用 F280 垂直滚动仪表；Gold/GG 与模式标签仍有差异待核 | 以 F280 轨道位置与方向、94 尺度、六行页步独立校验；在 legacy 登录实屏拖动/滚轮并核对 carry 值；继续比对 F250 固定数值和多余货币行 |
+
+## 人物状态/装备窗首轮核对
+
+### 素材边界复核（独立于 Godot 布局常量）
+
+本轮直接从 `/home/tetsuya/mir3ei/LegacyEI/Data/GameInter.wil` 读取帧头并用研究仓库的 `wilsdk.py` 解码像素；Pillow 用临时 `nix-shell` Python 环境运行，未安装为系统依赖。结果：
+
+| 帧 | 原始画布 | WIL offset | 非透明 alpha bbox | 迁移根窗口 |
+|---|---:|---:|---:|---:|
+| F200 | 256×512 | (7,-44) | (6,92)–(247,419)，241×327 | 244×328，图像位置(-6,-92) |
+| F201 | 1024×512 | (7,-44) | (252,92)–(770,419)，518×327 | 520×328，图像位置(-252,-92) |
+
+按 bbox 计算，当前 F200/F201 图像位置恰好把有效像素左上角映射到窗口 `(0,0)`；F201 根窗口宽度也覆盖其 518 px 有效绘制范围。两帧高度均为 327 px，有效像素底边差 1 px 属于边界包含/窗口尺寸差异，需运行时确认裁剪边缘。`/tmp/ei-gameinter-200.png` 与 `/tmp/ei-gameinter-201.png` 是解码图像，视觉上能看到 F201 是左右组合面板画布，alpha bbox 只覆盖 x=252..770；故之前按整张 1024 px 画布猜窗口宽度会错。当前 offset 有帧像素级依据，仍须鼠标点击前后截图测量有无抖动。
+
+### 已确认实现差异
+
+- `equipment-slots-evidence.json` 的最终 Finding 265 将协议槽位与原版 hit rect 一一对应：头盔 idx2=(27,264)，鞋子 idx9=(64,264)，毒药 idx10=(103,264)。`CharacterDialog.ApplyLegacyEiLayout()` 当前却把鞋子放在 `(103,264)`、毒药放在 `(64,264)`；与已定案原版证据相反。其 `AuditLegacyEiLayout()` 的 `expectedSlots` 重复了同一互换，所以旧自测会通过。该项是确定缺陷，列为高优先级。
+- 原版切换控件为 F171/172 与 F168/169 两组 36×36 状态帧，窗口相对 hit rect `(176,264,36,36)`；静态切换时从 244×328/F200 变为 520×328/F201，根窗口原点不变。当前代码映射的两组帧、hit rect、F200/F201 尺寸及 bbox 对齐关系与这些证据相符；自动代码检查只检查尺寸，不覆盖帧视觉状态、鼠标事件后的首帧或屏幕缩放时序，故仍需真实点按连续录屏/逐帧截图验收以排除抖动。
+- 原版画槽顺序与装备枚举对照已经 primary-static 闭合（11 条记录，索引即 wire slot byte；8 个普通装备格另有纸娃娃/人物区记录），但当前只展示 8 个可见格是合理候选。还需要核对空槽占位纹理、物品图标 WIL 选择器、战斗中直接装备/拖拽/点击使用的行为。
+
+当前展开开关的源码路径（source-confirmed，尚未做屏幕运动测量）：`ToggleLegacyView()` 不写 `CharacterDialog.Position`，只将根窗 `Size` 从244×328改为520×328，将背景子控件从`(-6,-92)`/F200改为`(-252,-92)`/F201；`UpdateClientAreaForLegacySkin()`只按新尺寸重算客户区，没有移动根窗。通过用户指定的8766 viewer API直接取F200/F201透明PNG，并用stdlib解码alpha得到 bbox：F200 `(6,92,241,327)`，F201 `(252,92,518,327)`。两组背景 Location 恰好分别抵消各自bbox左上角，因此源码逻辑坐标下两种背景有效像素都从根窗`(0,0)`开始，垂直有效像素尺寸相同；根高也始终328。`GameScene.CreateHud()`初始化时根窗位置为`(0,0)`，`LayoutHud()`没有尺寸变化后的居中/锚定回调。因此静态源码及资源几何不支持“展开逻辑主动把根窗上移/左移”的解释；它们也不能解释用户实测的抖动。待排的仍有点击态帧/事件时序、窗口父节点变换、viewport/UI scale 的亚像素取整及真实绘制裁剪。后续运行对照应分别跟踪根窗屏幕左上角、F200/F201有效像素左上角、切换按钮hit rect、展开面板右边缘和同一背景像素，逐帧记录按下/释放/重绘，不能只比较整个窗口外接矩形。该 PNG bbox 是资源视觉证据，构造尺寸/切换是primary-static，当前不标runtime-verified。
+
+### 装备槽研究记录冲突
+
+`equipment-panel-verification-evidence.json` 的旧模拟器验收把 F325 周边 8 格按旧视觉标签映射，并记录“鞋子/毒药”等身份；它不是槽位协议语义的独立原版证据。较新的 `equipment-slots-evidence.json` 追完 `0x44B720` hit index、`0x44BBD0` 暂存、`0x451690` 与 `0x452940` wire slot byte，并对齐 Server `EquipmentSlot` enum，明确：idx9 Shoes 的窗口相对矩形 `(64,264,38,38)`，idx10 Poison 为 `(103,264,38,38)`；资源画面上的旧标签解释明确标成未验证。故审计以此 primary-static 协议链为准，旧模拟器验证结论不再作为布局 oracle。当前 `CharacterDialog.cs` 与其 `AuditLegacyEiLayout()` 都把 Shoes 放 `(103,264)`、Poison 放 `(64,264)`，两处同错；需要在实施阶段修正并按真实 wire slot 独立验收。
+
+### 属性文字尚未闭合
+
+`status-window-render-evidence.json` 的 `attribute_text_draw_chain` 列出第一列 17 项与第二列 11 项原版 GBK 标签（包含等级、HP/MP、经验、背包/装备负重、腕力、准确、敏捷、毒物躲避、中毒恢复、生命/魔法恢复、防御、攻击及火冰电风/治疗/攻击等分类与魔法防御力），并给出精确双列原点、15 px 行距和颜色；其中部分 value 的语义仍特意保留为原始字段候选。当前 `BuildLegacyAttributeLabels()` 只造 7 个标签并按 22 px 纵向排布；`BuildLegacyExpandedPanel()` 造 12 个标签，固定 `(266,18+22*i)`，没有复用原版两列 15 px 渲染链。用户截图中的 12 行状态单列是有价值的 visual/runtime candidate，但不能覆盖 primary-static 中另外的属性项。需先从 paint mode 分支和条件跳转确认这些字段分别在哪个状态绘制，再使用游戏角色数据逐字段对照，避免把截图可见子集误当全量。
+
+| 编号 | 严重度 | 发现 | 验收/待决 |
+|---|---|---|---|
+| CHAR-01 | 高，已证实 | 鞋子/毒药两个装备 hit rect 交换，且 self-audit 复制相同错误 | 恢复原版 idx9=(64,264)、idx10=(103,264) 后，用非同源预期表和空/有装备时逐槽点击/拖动验证 wire slot |
+| CHAR-02 | 高，运行时抖动原因未决 | viewer API透明PNG独立解码F200 bbox `(6,92,241,327)`、F201 bbox `(252,92,518,327)`；当前`ApplyLegacyEiLayout()/ToggleLegacyView()`的背景offset正好抵消alpha bbox，根高固定328，toggle不写根`Position`。所以源代码几何预期根左上角和两状态背景有效像素左上角不变；这与用户实际观察的上下/左右抖动尚未解释。自审计中的Location相等只验证字段值，不能证明屏幕变换与绘制帧稳定 | 在800×600、1024×768及窗口缩放尺寸下真实点击切换；以root屏幕Rect、F200/F201有效像素锚、切换按钮hit rect、关闭按钮中心和展开面板边缘做逐帧差分，分别抓按下/释放/下一重绘；同步记录Viewport/CanvasTransform和clip rect，才判断是否是缩放取整、父级变换或事件时序 |
+| CHAR-03 | 高，待核 | 当前紧凑 7 标签和展开 12 标签与原版静态 17+11 标签/15 px 行距不一致；12 行截图候选与 EXE 属性绘制范围冲突 | 追踪绘制 mode/条件、区分表内常显/展开内容与禁用字段；逐字段对照原版画面与 `PlayerStats` |
+| CHAR-04 | 中 | 原版 11 hit records 中 3 个大区域不是普通装备 icon 格；当前 8 可见格/人物纸娃娃区域/属性文本的绘制次序与鼠标命中遮挡还未做整链复核 | 对齐 `0x44B5D9` paint order、`0x44B720` hit-test 与 Godot z-order/pass-through；验证装备拖入/拖出/直接使用 |
+
+## 社交/交易/任务窗首轮几何审计
+
+### WIL 像素边界样本
+
+下表的 alpha bbox 来自直接解码 `LegacyEI/Data/GameInter.wil`，是资源画布内的非透明像素范围（右/下边界为开区间）。它只描述素材像素，不自动等于原版窗口根矩形；原版 EXE 的窗口 hit rect、WIL header offset、blitter 裁切和根窗口位置必须分别记录。它可用于发现画面内容被裁掉或锚点偏差，但不能单独推导点击区域。
+
+| 帧 | 画布 | header offset | alpha bbox（x,y,w,h） | 相关用途/备注 |
+|---|---:|---:|---:|---|
+| F50 | 800×136 | (-24,-16) | (0,0,800,135) | HUD 横条 |
+| F51 | 248×46 | 待从 WIL header 复核 | (0,0,248,45) | 六格横排槽位底图（visual-candidate；原版所有者/实屏位置待核） |
+| F200 | 256×512 | (7,-44) | (6,92,241,327) | 人物装备页 |
+| F201 | 1024×512 | (7,-44) | (252,92,518,327) | 人物扩展属性组合画 |
+| F250 | 512×512 | (7,-44) | (114,94,281,324) | 背包 |
+| F350 | 1024×512 | (7,-44) | (226,62,570,387) | 聊天/好友弹窗 |
+| F400 | 512×512 | (7,-44) | (30,67,451,378) | 技能书 |
+| F600 | 1024×512 | (7,-44) | (214,33,594,445) | 行会 |
+| F601 | 1024×256 | (7,-44) | (220,2,583,252) | id15 同一公告窗替代状态；state 语义由 guild idx7 分支静态确认 |
+| F602 | 1024×256 | (7,-44) | (220,2,583,252) | id15 行会公告/编辑窗；F601 是同一对象替代状态 |
+| F700 | 512×512 | (7,-44) | (86,36,340,439) | 任务 |
+| F750 | 256×512 | (7,-44) | (4,119,248,273) | 待确认对应窗口/控件 |
+| F850 | 512×512 | (7,-44) | (118,94,275,323) | 坐骑 |
+| F900 | 256×256 | (7,-44) | (0,6,256,244) | 组队 |
+| F1000 | 512×512 | (7,-44) | (106,102,300,307) | 商店/服务状态窗口族；业务状态待逐个绑定 |
+| F1001 | 256×256 | (7,-44) | (28,26,198,204) | 商店对象 state2 网格侧面板；独立仓库窗归属错误，业务状态名仍 candidate（WH-01） |
+| F1050 | 512×512 | (7,-44) | (14,91,483,330) | 交易；原版窗口矩形小于/不含完整源画布 |
+| F1100 | 512×256 | (7,-44) | (64,59,384,138) | NPC 对话 |
+
+这些数值来自临时 `nix-shell` Python/Pillow 解码，没有新增系统依赖。本轮重新从 `LegacyEI/Data/GameInter.wil` 读取 F601/F602 原始 header 并解码 alpha；两帧均为1024×256、offset `(7,-44)`，完整 alpha bbox 均为 `(220,2,583,252)`（`x,y,width,height`；像素范围半开到 `(803,254)`）。F602 的原版根/有效窗口参数是584×252，Godot 旧版适配器也设 `Clip=true`；需继续用 800×600 实屏截图确认超出根尺寸的透明/有效像素裁剪与原版合成一致。后续其余帧也要按原版 blit 参数合成，避免把 alpha 左上角一律当作窗口内容原点。
+
+### 已证实差异
+
+| 编号 | 严重度 | 发现 | 原版证据与 Zircon 现状 | 后续验收/边界 |
+|---|---|---|---|---|
+| GUILD-01 | 高，根尺寸证据强；最终屏幕原点/命中范围仍待闭合 | 直接 WIL API 确认 F600 原始画布是1024×512、offset=(7,-44)；既有独立 alpha 解码记录其有效像素区为594×445。primary-static `layout.json.window_initialization_evidence.records[id=4]` 记录构造调用 `0x4277E8`、wrapper `0x424E60`、F600、size `[596,446]`；该证据说明值取自初始化调用序列，但共享构造器 `0x423B30` 会依资源头/锚点计算 RECT，原始 x/y `[102,22]` 不能直接当最终屏幕原点。其 `position_semantics` 明确要求区分调用输入与构造后 RECT。相反，`window-id-catalog.json` 把同一注册值写作 `[102,22,446,596]`；但 inventory 与 status 行的 catalog 末两项也分别与初始化证据中的 `[284,324]`、`[244,328]` 对调，故 catalog 数组顺序与初始化 `size` 字段发生系统性反向，不能把它当宽高裁决。RESEARCH_LOG main-init 摘要把行会写为446×596，与初始化记录冲突；更完整的 `layout.json` 初始化记录及 F600 paint 控件落点互相支持596×446：关闭控件位于绘制原点+(556,409)，落在596×446范围内。当前 `GuildDialog.ApplyLegacyEiLayout()` 根为446×596、F600画布锚在(0,0)、关闭 hit control 在(418,570)，既与初始化宽高顺序相反，也与 paint 控件位置不符；当前自检只验证自身常量。由此可判定当前纵向根尺寸是错误迁移，596×446是原版根尺寸的强 primary-static 结论；仍未闭合的部分是资源 offset如何参与最终注册/paint origin、最终可见/命中 RECT及裁剪规则，目标EXE缺失使我们不能独立重放这些机器码。 | 以初始化记录的 wrapper 参数/`0x423B30` RECT 字段流为准复核596×446的根范围；追注册点`0x42AB29`写入的RECT边界与F600绘制原点/资源offset；逐个复核F600九控件命中框、三态列表和滚动条。把根外像素、绘制Rect、hit Rect分开核对；恢复目标EXE或取得可运行原版截图后确认最终screen origin和clip。 |
+| GUILD-02 | 阻断，原版列表状态机和操作控件未迁移 | primary-static `guild-window-paint-evidence.json`：EI id4/F600 的 `0x425040` 以 `[this+0x98]` 选择三种列表绘制：state0 从 `+0xD4/+0xE4` 读联盟/敌对/公告条目，带文本标记和颜色；state1 从 `+0xA4/+0xB4` 画行会成员；其它状态从 `+0x104/+0x114` 画第三类列表并双重绘制文字。滚动条对象在 `+0x76C`，绘制位置约为 `(x+0x224,y+0xD0)`。`layout.json.control_constructors` 记录九对状态帧：161/162、610/611、612/613、614/615、616/617、618/619、620/621、622/623、624/625，实例分别位于对象 `+0x118` 起、stride `0xB4`；paint 将九控件交给 `0x417830` 每帧重定位，click handler `0x4258F0` 按 `0,1,2,3,4,7,5,8,6` 顺序分派，其中控件4/7联动 id15 公告窗。constructor 记录中多个坐标参数仍是寄存器值，不能单独恢复初始 hit rect；需与 paint-time `SetRect` 结合。当前 `GuildDialog.ApplyLegacyEiLayout()` 只替换底图、根尺寸和关闭按钮位置；原构造仍建6个可见页签（创建/成员/仓库/战争/外观/城堡）、现代成员/仓库滚动内容和邀请/升级按钮，没有 EI `[this+0x98]` 三态列表模型或九控件状态映射。`guild-window-content-verification-evidence.json` 明确对照模拟器单成员列表与原版三类状态不同。EI 三态与 Zircon Guild/网络字段的逐项关系尚未闭合，不能只把现代成员页改标题当作复原。 | 从 paint 的九控件逐项 `SetRect` 与 `0x4258F0` 事件分派恢复每个 hit rect、状态门和动作；将三个 EI 状态分别映射到当前服务器数据来源并独立验证行数/顺序/颜色标记/滚动范围。核对 id15 公告窗两个入口；若某页是 Zircon 扩展，明确标注为扩展并检查它是否覆盖原版控件。 |
+| CHAT-01 | 高 | 关闭控件命中框偏移 (+4,+4) | `chat-window-render-evidence.json` 原版绘制重定位与 hit rect 都给出 (532,350)，尺寸 28×26；`CommunicationDialog.ApplyLegacyEiLayout()` 用 (536,354)。其自审计再次断言 (536,354)。 | 固定根位置/比例后，检查关闭图标绘制像素、实际命中矩形、点击关闭动作和窗口 z-order。 |
+| CHAT-02 | 阻断，窗口身份和HUD入口均错接 | 当前把聊天弹窗 F350 套在好友/邮件窗口；聊天记录 HUD 入口实际打开 CommunicationDialog，未打开 EI id8 聊天历史窗 | primary-static `chat-window-render-evidence.json`：EI 窗口 id8 (`window.chat-pop`) 根 572×388、F350；paint 包含最多19条历史、输入文本行、两个滚动控件和6个聊天命令/频道子控件。六控件帧对 F360..371，位置 x=25/65/105/145/185/225、y=332；原生输入区 `(25,311)-(524,326)`，窗口输入文本按14px递增，历史最多19行、行距14px。当前 `CommunicationDialog.ApplyLegacyEiLayout()` 也用 F350/572×388，但该类的数据和分页是好友、收件邮件、写信、已读邮件与屏蔽名单；其四个页签/邮件控件仍保留在 F350 上，不能因相同外框尺寸就视为聊天窗。真正的 `ChatLogPanel` 是400×150 HUD聊天记录层，`ChatTextBox` 是单独输入栏；当前 `MainPanel.MailButton` (旧 HUD idx9 的聊天记录入口) 被绑定到 `OpenCommunicationDialog()`，所以点旧版聊天入口打开好友/邮件界面。 | 将EI id8/F350历史弹窗、常驻聊天记录、输入框和社交邮件分别映射为独立对象；逐项比对19行/14px历史裁切、输入焦点/Enter发送、6个频道命令状态、2条滚动/输入条控件、close以及旧 HUD idx9入口。用本地聊天、密语、组队/行会频道和超长历史消息做实屏与包路由验收。 |
+| TRADE-01 | 高 | 交易窗把原版位于根矩形外的隐形交互区改造成窗内可见控件，整体输入/绘制模型不同 | `trade-window-render-evidence.json` 原版根矩形 484×330、F1050；close hit rect (532,350)，accept (185,332)，cancel (225,332)，都超出根矩形部分；原版交易 paint 不遍历普通按钮绘制器，按钮是背景烘焙美术上的隐形 hit zones。当前 `TradeDialog.ApplyLegacyEiLayout()` 把关闭按钮移到 (456,304)，接受按钮/文字仍由现代 DXButton/标签承担；当前两格网格虽改为 5×6，但原版每侧 5×6 的命中区域分别是相对 x+21..237 与 x+253..469、y+48..300，须逐格再比。 | 按原版完整根/外溢画布与点击分派重建映射；确认关闭 hit 本身只播放声音、不关窗，确认按钮消息 0x406、完成态禁点、金币矩形以及分栏拖动。检查窗口 clipping 是否裁掉根外按钮区域。 |
+| TRADE-02 | 高，原版完整分栏滚动未迁移 | 原版交易两侧各有独立的 6 行视口与分栏滚动状态；Godot legacy 只建固定 5×6 网格，没有两侧滚动/分隔拖柄，也没有原版外溢点击区布局 | `trade-window-render-evidence.json` primary-static：F1050 根窗 484×330；paint 建两个 pane 区，item hit 以 36px 步距映射，双方各有独立 split 字段 `+0x54/+0x58`，每侧6行可视，绘制/命中均按 split 行偏移；两个 1070 gauge 对应分栏拖动状态。其拆分字段消费者、写入链在 `trade-split-handle-evidence.json` 已闭合为行偏移，并以 `trunc(gauge_pos×94)` 更新；94 是归一化刻度而非行数。当前 `TradeDialog.ApplyLegacyEiLayout()` 把双方 `DXItemGrid` 固定成 5×6、`VisibleHeight` 默认6，没有创建分栏 gauge/滚动控件；因而只对应 split=0 的首屏。当前网格位置 `(14,91)/(246,91)`，cell 的实际 pitch 为 `36-1+2×GridPadding=37`；旧版 pane hit 面积与 cell 逐格落点尚未由同一套坐标表闭合，不能把 pane 高亮 RECT 直接当作每格 RECT。 | 用原版坐标公式重建两侧 split=0、中段、最大可用行的格子命中与图标落点表，再与 Godot 每格实际 GlobalRect 独立比较；拖动两侧分隔条、滚轮/步进、跨页物品增加/取回，并验证双方数据槽号稳定。原版动态 item-id 数组的网络填充者仍是 KEPT-runtime，需用运行时包/行为证据闭合。 |
+| TRADE-03 | 高，确认/取消/关闭行为不同 | Godot 把关闭叉绑定为关闭交易、确认按钮放在窗内且只实现发送；EI 三个区域是根窗外 hit zone，其中 close 与 cancel 点击只播放声音、不关闭窗，accept 发 msg 0x406 并置完成态 | `trade-window-render-evidence.json` primary-static：构造器的 close F161/F162 hit `(x+532,y+350)`、accept F1061/F1062 `(x+185,y+332)`、cancel F1064/F1065 `(x+225,y+332)`；交易 paint 不调用按钮渲染函数，F1050 烘焙图包含可见按钮美术，cancel 帧不存在但命中区域仍有效。`trade-window-click-binding-evidence.json` 以及 `trade-window-closure-evidence.json` 确认 close/cancel 只播放 0x69 音效并消费点击，accept 发 0x406、设置 `+0x13644=1`，之后忽略点击；金币框 `(34,270)-(156,304)` 打开 0x405 金额窗。Godot `TradeDialog` 的 close 回调直接 `CloseTrade()`；`_confirm` 是 `(126,203,80,25)` 的文字 `DXButton`，无独立取消 hit zone；金币文字点击开 `ItemAmountDialog`。Godot 当前完结/服务器回包语义需和 EI 确认状态字段逐包映射。 | 在真实交易双方中分别点击 close、accept、cancel、金币框；记录窗口是否关闭、交易状态/包号/回包后锁定，再与 EI 原版分派结果逐项比较。保留消息字段等价性待运行时闭合。 |
+| NPC-01 | 高，已证实 | 旧版关闭与滚动箭头控件被放到错误位置/用了错误帧；关闭 X 随动态窗口底边重定位 | primary-static `npc-window-render-evidence.json`：close F161/162 命中框 `(7,141,28,26)` 是 ctor 初值；paint `0x440A43–0x440A8B` 后改为 `(window.x+0x15B, window.bottom-0x24)`，552×176 根窗对应相对 `(347,140)`。当前 `NPCDialog.ApplyLegacyEiLayout()` 固定 `(516,146)`，偏到右下角。EI 上/下箭头分别是 GameInter F52/53 `(290,145,12,8)`、F54/55 `(306,136,12,8)`；当前 `_scroll` 在 `(530,28)` 尺寸18×112，箭头误用 F387/F385，滑块为隐形现代滚动条。原版箭头逻辑分别按 scroll index 减一/加一并触发 0x440C30 relayout；其业务命名仍仅是视觉候选。 | 按 800×600 与不同正文高度重新核 F1100 原点，动态套用 close `(x+347,y+h-36)`；还原两组 12×8 命中区和各自状态帧，再追 scroll thumb 的构造/拖拽矩形及可滚范围；运行时验证关闭消息、滚动状态和边界。 |
+| NPC-02 | 阻断 | EI 的 NPC 对话、菜单图条与 frame id11 选项窗是分层绘制/分派；当前 Godot 把正文、候选菜单行和部分业务入口合并在一个 NPCDialog | primary-static `npc-window-render-evidence.json`：F1100 为552×176空心框；paint 对动态条循环选 F1101、末项选 F1102，`this+0x51C` 数量默认13、上限16，图条 y 按18 px步进。解析器 `this+0x594` 常规21、mode=1且overflow=1时14；实际白色GBK文本由独立 `0x43F460` 从根相对 `(150,40)` 绘制，行距 `textheight+5`。Godot `ShowPage()` 用0–6条F381、20 px间距行背景，正文 `(20,28)`、固定18 px line-height；它没有复现F1101/F1102动态条。alpha bbox F1100 `(64,59,384,138)` 不等于根原点。另有primary-static证据确认frame id11有独立窗口和≤19项列表；但**NPC点击发送0x419的旧归因已撤销**：Finding 321 raw E8 caller scan将 `0x451A40` 唯一caller定位到任务窗 `0x448148`；NPC id9输入簇 `0x440290` 没有0x419发送。必须直接重追 `0x447470` frame窗hit/event，不能从控件存在推断业务包。Godot选项走 `SendNPCButton()`；与EI 0x515/帧窗关系未证等价。 | 以 `npc-window-render-evidence.json`、`ui-coverage-matrix.json` Finding 321、`UI_COVERAGE_MATRIX.md`互校；追 `0x447470` frame窗命中回调、按键和真实协议调用者，核F1101/F1102文字关联；按普通、溢出、无选项、多级菜单对比消息与独立截图。 |
+| NPC-03 | 中；源码证据，EI版本对应关系未证 | 可用 `Client/` 源码能解释当前 Zircon NPC协议，但不能当作EI 3.0证据；Godot端也改变了来源代码的对象/点击细节 | source-confirmed（`Client/Scenes/Views/NPCDialog.cs`、`Client/Scenes/GameScene.cs`、`ServerLibrary/Models/PlayerObject.cs`）：Client创建NPC主窗、NPCGoodsBox、NPCQuestListBox、NPCQuestBox为独立对象；内嵌按钮ID0本地关闭，非零按钮节流1秒再发送 `C.NPCButton`；服务器按当前NPC/page校验按钮目的页，回包Index映射 `NPCPage`。Godot把 `_goods` 放在NPCDialog子树，非零点击立即发同一 `C.NPCButton`，没有这项1秒节流；Close路径通过 `CloseNPCDialog()` 收拢。两处差异只代表当前 Client 到 Godot 的迁移差异，目标EI源码版本关系未知；且不能用于支持0x419语义。 | 找到与目标EI匹配的Client版本或原始运行包后再判定独立商品窗与1秒节流是否应复现；运行时将0号关闭、非零page跳转、goods/quest sibling层级逐项对照。 |
+| SHOP-01 | 阻断 | EI NPC 商店对象与当前 NPC 商品面板的根窗口/尺寸/资源模型不同；当前 cash shop 名称容易造成审计对象混淆 | primary-static `store-window-render-evidence.json` / `UI_COVERAGE_MATRIX.md`：EI 商店 state0（购买五行，msg `0x285`）使用 GameInter F1000，屏幕起点 `(0,184)`，内容矩形 `(0,186,300,304)`；状态2 F1001 是同一 store 对象的仓储/扩展网格面板（语义仍 candidate，见 WH-01），并非独立根窗。当前 `NPCGoodsPanel` 不绘制 F1000，而使用 `LegacyWindowFrame`、245 px宽面板、商品行固定43 px；`NPCDialog.ShowPage()` 将它挂在 NPC 根窗底部 `(0,Size.Y)`，legacy 时 NPC 根尺寸552×176，商品面板高度按商品数量动态设为约142–399 px。`GameStoreDialog` 则是游戏现金商城，当前存在收藏/排序/充值/礼包等现代业务，不是 EI 的 NPC store 对象。原版 F1000根内容矩形与当前商品面板锚点/尺寸没有一致性证据。 | 逐状态恢复 EI store 的对象创建、屏幕坐标、F1000/F1001/F1002/F1003与商品记录/命中区；把 NPC 商品/出售/修理/存取协议映射到正确旧版 store 状态和库存交互。区分 `GameStoreDialog` 现金商城扩展入口；以购买、双击购买、出售、仓储、合成/详情及空列表状态实屏验收。 |
+| SET-01 | 阻断 | 选项窗把每行互斥 ON/OFF 控件误接成八个独立设置，且缺少原版两条音量滑轨 | `system-window-render-evidence.json` 原版构造/paint 证据：4 行设置分别位于 y=43/116/190/217，每行两控件 (148,y) F760/761 与 (185,y) F762/763 表示同一选项的 ON/OFF 状态；各行绑定 Config.ini 的 BGM、EffectSound、Ambience、ShadowBlend。F751 两个滑块位于 (34,96) 与 (34,170)。当前 `ConfigDialog.CreateLegacyOptionButtons()` 将八个位置映射到 BGM/System/Player/Monster/Magic mute、SoundInBackground、VSync、LimitFPS 八种不同配置，各个按钮独立取反；没有创建 F751 滑块。`AuditLegacyEiLayout()` 只断言自建的 8 控件数量，不能作为原版一致性证据。 | 依据原版 load/click/save 字段链重建每行的互斥状态和两个音量滑条；用独立 Config.ini 读写观察每项状态持久化、帧选择、音量拖动和启动恢复。 |
+| SET-02 | 高，动态控件缺失 | F750 上可见的两条音量轨在 legacy 下没有可操作的滑块；当前将 BGM/音效量值控件留在已隐藏的现代声音页，只留下两个不可交互的背景轨道 | `system-window-render-evidence.json` primary-static + primary-resource：F751 20×16 滑块控件实例在根相对 `(34,96)` 和 `(34,170)`，分别写回 `BGMLevel` 与 `EffectSoundLevel`，有效值域0..160；鼠标拖动经 `0x4415C2→0x441F40(1)` / `0x441667→0x441F40(0)` 更新滑块偏移、Config.ini 和音频状态。当前 `ConfigDialog.ApplyLegacyEiLayout()` 隐藏整块 `_page`，只调用 `CreateLegacyOptionButtons()` 创建八个 F760..763 开关；这里没有 F751 控件或拖动回调。现代声音页的 `BuildSoundPage()` 虽含数值音量条，但它属于 `_page` 隐藏内容，不能替代 F750 上的两条滑轨。故原版音量轨道仍显示为底图美术而无可命中滑块。 | 在 legacy 设置窗检查两条滑块初始位置对应已加载值；分别拖动 BGM 与 EffectSound，核对帧/位置、0/160端点、Config.ini 回读和声音效果；确认 4 行 ON/OFF 状态仍各自只写入相应原版字段。 |
+| MENU-01 | 中，存在 dormant legacy 菜单布局，实际入口语义明确 | EI HUD 菜单/选项图标是 F750 设置窗入口；原版窗口注册表没有通用菜单窗。当前 legacy 点击有效地打开 ConfigDialog，但 MenuDialog 仍保留一个从未调用的 `ApplyLegacyEiLayout()`，会把 F750 当作菜单背景并保留六个现代菜单项 hit zone | `hud-caption-action-tail-evidence.json`/`UI_COVERAGE_MATRIX.md` 的窗口注册表：id12=设置/F750，根尺寸264×248，默认位置(276,113)；HUD idx11 F106/107 及 N 键目标为 id12。当前 `MainPanel.MenuButton` 对 legacy 分支调用 `OpenConfigDialog()`；`MenuDialog` 只在非 legacy 分支被开关，`LegacyOpenWindow("menu")` 也路由到 `_configDialog`。但 `MenuDialog.ApplyLegacyEiLayout()` 把 F750 贴图放进248×264根窗，继续注册设置、帮助、行会、仓库、排行、离开六个现代按钮；代码搜索只发现该方法声明，没有调用点。故当前有效旧版入口没有打开这组菜单按钮；休眠方法与实际 EI 窗口身份混淆，若后续被调用会构造一个不存在的通用菜单。 | 保持菜单概念与 id12/F750 设置窗分开；实施前决定删除/隔离这段无调用的 legacy profile，避免被未来窗口恢复路径意外启用。实机点 HUD idx11 与按 N 后只验设置窗，另外确认无路径显示六项 `MenuDialog`；逐个对照 legacy 的 F750 控件后再决定是否需特殊菜单入口。 |
+| WH-01 | 高，结构冲突待闭合 | 当前独立 StorageDialog 使用 F1001，但原版窗口表没有独立仓库窗口 id，F1001 有 primary-static 证据属于 store 状态 2 侧面板 | `window-paint-dispatch-identity.json` / `UI_COVERAGE_MATRIX.md` 记录旧版 16 槽窗口 id5 为 inert/空槽，且无独立 StorageDialog hit/paint；`store-window-render-evidence.json` 将状态2的 F1001 面板置于 `(−4,182)`、205×205，属于同一个 store 对象 state byte `+0x5F8=2`。当前 `StorageDialog.ApplyLegacyEiLayout()` 把 F1001 设成 205×205 独立根窗并绑定 4×3 Storage 网格。仓库业务名有 NPC 脚本/协议交叉证据，但不能改变其旧版 UI 对象归属。仓库和行会在本地 `legacy_ui.json` 中都被分配 F600，另有 `StorageDialog` id5 候选项；这些是未验证配置候选，与 id5 inert 的静态窗口表相冲突。状态2的入站消息号另有 0x2BC/0x2C0 文档冲突，详见 WH-03。 | 追踪 Zircon NPC 存取包到旧版 store 状态2/背包储存模式的链，确认 F1001 的原版层级、开窗位置、存取成功/取消流程；确认 legacy 模式是否应将 StorageDialog 禁用并把业务接到同一状态机。 |
+| WH-02 | 高，已证实的页面与数据映射冲突 | Godot legacy 只建 F1001 的 12 格首屏，隐藏原版状态控件；EI 的静态结构还包含前后页控件，因此不能把 12 格直接等同总容量 | `store-window-content-verification-evidence.json` / `store-state-graph.json`：窗口 id2 的 store 状态2，state byte `+0x5F8=2`，调用 F1001 `(−4,182,205,205)`；12格在根相对 x=`22,60,98,136`、y=`43,81,119`，步长38。状态2另有前页 F1014/1015、后页 F1016/1017，根相对 hit/control 基址分别 `(28,162)`、`(133,162)`；同对象状态码及页数位于 store 对象字段，不能据此认定独立 StorageDialog。当前 `StorageDialog.ApplyLegacyEiLayout()` 只建4×3网格，隐藏两个滚动条、PartGrid 和页签，没有映射 F1014..F1017；故其固定绑定数组槽0..11且没有 EI 状态页切换。Zircon `GameScene.Storage` 实际长度为 `Globals.StorageSize`（默认100，服务端数据可更新），这是当前数据模型容量，不足以证明 EI 原版总页数或槽号顺序。 | 独立追踪 store state2 的页索引/总页数字段、F1014..F1017 点击分支、对应消息的数据写入者及数组到页面槽号换算；将原版页数/记录容量与 Zircon `Storage` 业务数组分开验证。之后在服务器数据含首屏、第二页及末槽物品时，逐页检查取放、切页往返、协议槽号与取消回滚。 |
+| WH-03 | 高，旧研究文档存在入站消息号冲突 | 不能将仓储 state2 的开启包号作为已闭合事实；仓库多份研究材料分别记作 `0x2BC` 与 `0x2C0` | `store-window-content-verification-evidence.json`（F363）与 `store-mode-state-graph-verification-evidence.json`（F399）称 state2 由 `0x2BC` 进入，后者路径为 `0x42042B→0x420A9B→0x44F940`；`store-window-render-evidence.json`、`store-state-graph.json` 和 `UI_COVERAGE_MATRIX.md` 则记 `0x2C0→0x420A86/0x420A95→0x44F940`。两组都把目标函数、F1001、205×205 根窗和 state byte `+0x5F8=2` 对齐，但包号/handler 地址不同；而 `RESEARCH_LOG.md` 同时出现两种记录。目标 EI EXE 当前不可从原 NAS 源路径读取（限制见工作区说明），所以这次不能用原始字节独立裁决。 | 恢复并校验目标 `Mir3.exe` 后，从网络分发表的消息编号反向追到实际 handler，核实 handler 内对 `0x44F940` 的调用；修正相冲突的研究 JSON/矩阵前保留两种候选，不在 Godot 迁移中硬编码任一包号。 |
+| GROUP-01 | 高，已证实 | EI 确为两列、每列垂直间距 20 px；Godot 当前列顺序相反，起点相对根偏左/偏上（成员区裁剪见 GROUP-02） | 旧 `group-window-detail-evidence.json` 的 `i/2*20` 曾标成推断；后续 `Mir3-Research/docs/research/mir3-map-reconstruction/group-window-render-detail-evidence.json`（F536，primary-bytes）闭合为 `idx/2*20`，列坐标 odd→`x+45`、even→`x+145`，y=`y+90+20*floor(idx/2)`，原版顺序是第 0 项在右列、第 1 项在左列；同时确认成员链插入序、单名字字段和 5 个控件。当前 `GroupDialog.RebuildMembers()` 对 i=0 放左列，根相对 `(27,64)`（panel `(17,59)`+label `(10,5)`），而 EI 第 0 项应位于 `(145,90)`。 | 修正原版预期表后以 0、1、2、3 项数据核左右交错顺序及 `(45/145,90+20*floor(i/2))` 根相对矩形；追完 5 个控件的帧/命中/事件、确认 F900 内嵌文字状态，并在真实队伍成员变更时验证列表顺序。 |
+| GROUP-02 | 高，已证实 | 组队成员面板额外套了101px内部裁剪，当前只显示约10/15名成员；EI绘制没有内部行数上限，交由完整窗口矩形裁剪 | primary-static `social-window-render-evidence.json` / RESEARCH_LOG Finding 259：paint `0x42443E–0x4244A4` 遍历整个 linked list，仅以 next==0 结束；没有行数 cap，超出内容由 256×244 根窗 viewport 裁剪。当前 `GroupDialog.ApplyLegacyEiLayout()` 将 `_memberPanel` 设为 `(17,59,222,101)` 且 `Clip=true`；`RebuildMembers()` 按20px步长绘制 label，最多仍读 `Globals.GroupLimit=15`（`LibraryCore/Globals.cs`），所以第6–8行在 panel 边界被遮。可用 `Client/Scenes/Views/GroupDialog.cs` 的 source-confirmed 旁证是其成员 `DXTab` 为214×148、AllowGroup用独立 `DXCheckBox` 发 `C.GroupSwitch`；该源码与EI 3.0版本关系未证，不能覆盖 primary-static 的根窗裁剪结论。F900 直接 viewer metadata 为 256×256，alpha bbox `(0,6,256,244)`；当前背景 `(0,-6)` 正好把有效像素对齐到256×244根窗，故差异在成员区域额外clip，不在底图锚点。 | 使用 0/10/11/15 名成员分别检查最后完整行、跨列顺序和根窗底边裁切；将Godot面板可视范围与EI根窗clip范围做像素/命中对照。不要把代码允许15条等同于EI最大人数结论；EI paint只证明无绘制硬上限，服务器人数上限另查协议/运行数据。 |
+| GROUP-03 | 高；状态动作静态闭合，现行图文映射不符 | EI 将组队权限作为动态 `[允许]/[拒绝]` 状态文字绘制，当前则画固定标签和通用复选框，且两者纵向位置互不对齐 | primary-static `social-window-render-evidence.json` / RESEARCH_LOG Finding 259：`this+0x3F0` 选择 `[允许]` 或 `[拒绝]`，颜色 `0xDCE6C8`，y=`window.y+0x3A`；文字 x 因读取未初始化栈槽而明确不可证。primary-static `party-window-click-msg-dispatch-evidence.json` F845：切换路径从 `[0x3F0]` 进入 `0x452310`，发送 msg `0x3FB`；F900 窗内关联控件为十进制 F920/F921（28×26，alpha 26×26），坐标 `(9,52)`，其语义“组队操作/权限切换”仍以 click path 为准。当前 `GroupDialog.ApplyLegacyEiLayout()` 把 `_allowCheck` 放到 `(137,26)`，构造时添加的固定标签仍在 `(186,40)`；既没有绘制原版状态字符串，也没有映射 F920/F921。可用 `Client/Scenes/Views/GroupDialog.cs` 以 `DXCheckBox` 发 `C.GroupSwitch`，但目标EI版本对应关系未证，不能据此断定Godot状态包与0x3FB等价。 | 追明 F920/F921 所属控件及 `[0x3F0]` 的真实字段更新时机；从原版运行态取允许/拒绝两种截图以确认 x、文字框和点击范围；再验证当前协议 `C.GroupSwitch` 对EI msg 0x3FB 的字段/状态等价。保持 x 坐标和 checked 帧为未决，不按屏幕猜测修正。 |
+| MODAL-01 | 阻断 | EI F950 确认框的构造/回传按调用类型分派；当前共享 ConfirmDialog 不能代表原版确认流程 | `confirmation-prompt-evidence.json` primary-static：原版 F950 360×190，默认居中在800×600 `(220,151)`；调用方选择三种按钮布局，状态控件用 F151/152、F154/155 或 F157/158；Tab 切换焦点、Enter/Space 激活；消息以 `0x7EE` 携带类型/按钮索引回传。直接调用证据列出8处：转账金额(type 3/tag 0x405)、丢金币(type 0x66/tag 0x30E)、个人仓库满与仓库操作拒绝(mode 0/tag 0xFFFF)、行会删除成员(type 6/tag 0x3FE)、掌门权限提示(type 4/tag 0xFFFF)、返回人物选择(type 0x65/tag 0xFFFF)、创建行会名称(type 9/tag 0x3F3)。其中金币与行会创建路径还会进入输入框，不是通用 yes/no。当前 `ConfirmDialog` 固定 Interface F281、252×128、文本+确定/取消本地回调。`ExitDialog` 另用 Interface F281 并直接调用离开/退出；它与 F950/F800 的操作语义均不同。 | 逐个核对这8个原版调用点的 type/tag、按钮模式、文本输入/发送路径；为真实对应的 legacy 调用建立映射，实测 Tab/Enter/Space、取消、按钮回传和网络行为。确认 `ExitDialog` 的 F800 路径另列 EXIT-01，不与 F950 合并。 |
+| MODAL-02 | 高，当前共享确认窗的调用范围及原版覆盖关系不匹配 | `ConfirmDialog` 不是仅用于现代现金商城：源码直接创建点还包括 `StorageDialog.SortStorage()`、`QuestDialog.ConfirmAbandon()`、`GuildDialog` 两项城堡维修，以及寄售购买/下架/上架、游戏商城、抽签、宝箱、伙伴释放、NPC评估等。前四类在 legacy 游戏路径也可到达；这些调用都会得到同一张 Interface F281、252×128 的 Godot yes/no 窗，且按钮仅运行本地回调/关闭。原版证据只证明特定 F950 type/tag 及 F800 退出窗，尚未证明上述 Godot 扩展业务都应显示原版 F950。此前审计稿把 ConfirmDialog 唯一调用点写成 GameStoreDialog，和当前源码搜索结果不符，现已纠正。 | 建立逐调用点表：模块、legacy 可达性、动作/协议、对应 EI 原版证据编号、是否属于 Zircon 扩展。对有 EI 对应证据的路径实现类型化确认；没有对应证据的扩展调用单独标为 Zircon 行为，不冒称 EI 原版。逐类核对按钮默认焦点、键盘操作、取消语义和 callback 是否重复执行。 |
+| GROUP-04 | 阻断，坐标已证实 | 旧版 F900 下方三组按钮的 hit rect 与 Godot 的三个业务 hit zone 不同；原版第四个子控件在左上 `(9,52)`，Godot 把禁用的 Options 放到下方且没有 F920/F921 状态帧 | primary-static `social-window-render-evidence.json` 的5个重定位记录：关闭 `(226,214)` 28×26；F910/911 `(17,197)` 60×20；F912/913 `(80,197)` 76×20；F914/915 `(159,197)` 76×20；F920/921 `(9,52)` 28×26。viewer 的 WIL alpha bbox 分别为 F910 59×19、F912/F914 75×19；F900 的底部三块带字美术也独立可见。当前 `GroupDialog.ApplyLegacyEiLayout()` 将 Add/Remove/LFG 放在 `(17,166)/(72,166)/(127,166)`，每个48×24、透明 hit zone；Options 放 `(182,166)` 且 disabled。F920/F921 没有映射，`_allowCheck` 被放到 `(137,26)`。因此当前三个 active hit zones 比原版上移31px，第二、三项宽度/横坐标也不符；原版第四项左上状态控件缺席。 | 逐项将原版五控件的构造帧、paint重定位、hit rect、点击分支，与F900底图文字逐一对齐；在 legacy 窗口用独立坐标点按每个标签中心与边缘，验证 Add/Remove/LFG/状态切换、关闭动作及状态帧。保留F920/F921业务名 candidate，按静态点击分派与EI运行时结果定语义。 |
+| NOTICE-01 | 阻断 | id=15/F602 的静态根几何/裁剪已有映射，但文本状态、编辑和按钮行为不符；当前还把公告聊天消息直接当作打开此窗的触发 | `notice-prompt-window-evidence.json` primary-static：800×600 原版父窗 `(107,110)`、584×252、GameInter F602。WIL 直接解码显示 F602 完整 alpha bbox `(220,2,583,252)`（开区间范围 x=[220,803), y=[2,254)），超出584×252根矩形的部分需按原版绘制裁剪判定；当前 `LegacyUiSkin.ApplyLegacyTestWindow()` 为此窗设584×252根尺寸及 `Clip=true`，背景仍按1024×256源帧绘制，裁剪模型与原版证据的584×252有效窗口参数相符，最终像素仍待实屏截图核。F161/162 控件 `(548,16)`、28×26，子控件处理器消费命中，随后外层 id15 分派根据非零命中结果切换窗口显隐；原版两态控件没有普通帧，hover=606、pressed=607，命中 `(496,27,40,20)`；两段提示文本位于 `(23,94)` / `(24,95)`，由 `this+0x1D0` 分支选择“行会修改等级/排行”或“行会公告”。编辑缓冲位于 `this+0x1CC`；点击操作控件提交 msg `0x411` 或 `0x410`，外层分派处理其显隐。当前 `NoticeDialog` 把 F161 设为普通态、162 设为 hover/pressed，把 F606 设为普通态、607 设为 hover/pressed；且用只读 DXTextArea、X 直接关闭、F606 按钮也只关闭。Godot `ReceiveChat(..., MessageType.Announcement)` 在 legacy 模式调用 `ShowLegacyNotice()`，把聊天消息文本写进此窗并打开。原版 `0x7EE` notice receive 链静态写入 chat-input 编辑框 `[0x8AA48C]`，不是 F602 id-15 窗口；两条业务来源不可视为相同。 | 对照原版状态字段、编辑子控件和 msg `0x410/0x411` 的两条提交链；确认 Godot Announcement 数据来源/协议是否对应其他 EI 分支。复核 F602 两种占位文本、编辑焦点、外层显隐切换、两态按钮 hover/pressed 帧与服务器处理；截图验证完整alpha超出根尺寸部分是否与原版clip一致。 |
+| NOTICE-02 | 高，静态生命周期已闭合；触发残余待运行时 | 旧研究曾把 F602 的复用对象描述成独立滚动公告横幅；该结论已被 F294 修正 | primary-static `notice-banner-lifecycle-evidence.json` Finding 294：`0x777200 = winmgr(0x7243A4)+0x52E5C`，就是同一个 id=15 对象，不是第二个独立横幅对象。guild 控件 idx4/idx7 会把它重新设为 F602/F601、写入 guild 列表文本并显示；没有 timer/tick/scroll API 静态引用，显示持续到显式 toggle。F161 子控件处理只消费命中；外层 `0x42BE95` 在 id15 handler 返回非零时调用 id15 toggle 隐藏窗口。F606/607 操作控件提交 msg `0x411/0x410`，其命中也由外层分派处理。原版 0x7EE receive 更新 chat-input `[0x8AA48C]`，id15 的可编辑子控件则是 `[0x7773CC]`。当前 `NoticeDialog` 注释和 `ReceiveChat(Announcement) -> ShowLegacyNotice` 仍把聊天公告内容直接写入并打开 F602；与同一 id15 的原版对象/触发模型不符。遗留 runtime-only：何种事件将 winmgr 激活门置位、BSS 缓冲运行时文本，以及解密绘制回调是否有额外动画。 | 追运行时触发输入来源与网络包对应，观察 guild 两分支的 F601/F602、编辑文本、显隐及 close/submit。EI 实际运行不可用前保留为明确 runtime 候选，不以 Godot 行为替代。 |
+| EXIT-01 | 阻断 | EI 的“退出游戏”和“注销人物”是不同操作路径；当前 HUD 两个按钮及 Alt+Q/Alt+X 都打开同一自制退出菜单 | primary-static `hud-caption-action-tail-evidence.json`：idx4“注销人物(Alt+X)”直接构造 F950 确认框，type `0x65`、message“返回游戏人物选择界面？”；idx3“退出游戏(Alt+Q)”调用 `HUD+0x53030` 子对象 vtable `+0x10(1)`。`window_init_candidates.json` 与 `window-catalog-evidence.json` 将该子对象定位为 id`0x64`、F800、800×600 根原点 `(218,176)`、364×184 窗。primary-resource-visual：从 viewer 导出的 GameInter F800 头部 512×256、offset `(7,-44)`，画面韩文为“是否退出游戏？”，YES/NO 标签烘焙在背景中；`confirmation-prompt-evidence.json` 的 Cluster 2 证实此独立类使用 F151/152 与 F154/155 两组 YES/NO 状态帧。因此其“退出确认窗”语义已闭合。`window-position-dispatch-evidence.json` 还记录主鼠标更新链调用独立的 `0x418AA0`（对象 `base+0x53030`）与按钮抬起链调用 `0x418A00`；现存记录未还原按钮 hit rect、`0x418A00` 的具体返回/消息，或确认后是否直接退出/经过其它清理。Godot 的 `ExitButton` 和 `LogoutButton` 都调用 `OpenExitDialog()`；当前 `ExitDialog` 为 Interface F281/252×128，列出回选人和退出客户端两按钮。`KeyBindManager` 又把 Alt+Q 与 Alt+X 放在同一个 `ExitGameWindow` action，故两个快捷键也打开相同菜单。 | 从 F800 控件构造/点击处理继续追 hit rect、F151/152 与 F154/155 的屏幕位置和确认消息；核退出确认 YES 的最终清理/进程退出路径。legacy 中分开绑定 HUD idx3/Alt+Q 与 idx4/Alt+X；idx4复现 F950 type `0x65` 返回选人链，idx3复现 F800 YES/NO 流程。分别验取消、确认、网络清理及登录状态恢复。 |
+| MAP-01 | 阻断 | 小地图资源、显示模式和命中控件未按 EI 状态机分支；Godot 200×200/300×300 不等于原版 128/256 模式 | primary-static `map-ui-resource-evidence.json` / EI-310 `minimap.json`：EI 地图子对象嵌在主世界对象中，没有独立 map dialog；默认绘制目标矩形精确 `(672,0)-(800,128)`（800×600）。T 键和图内鼠标命中区 `owner+0x2A8` 都切换同一状态 `owner+0x294`，重建 128×128 或 256×256 map surface；控件 mode 与画布放大是已证行为，但“全地图/小地图”名称仍属语义候选。资源选择证据里的 `map_id < 1000 → MMap / >=1000 → FMMap` 是 EI 地图控件自己的 selector 约定；它不能直接等同于服务端 MiniMap 字段、地图文件名或 Godot `MapInfo.Index`。`minimap-server-crossref.json` 与 `Tools/mir3_client_simulator/data/map_bindings.json` 将地图名称/服务端 MiniMap 值关联到库和帧，例如 EI “沙巴克城”对应地图文件名 `3`、服务端小地图值 `1018`、FMMap F17，“沙漠土城”对应 FMMap F7；直接从 viewer 导出的原图确认 FMMap F7 为沙漠土城图而 MMap F7 为空。只读打开当前实际加载的 `Debug/Client/Data/System.db`（`SessionMode.None`，不保存）得到 `MapInfo(Index=7, FileName=3, Description=Sabuk Keep, MiniMap=7)`；EI `RESEARCH_LOG.md` 的 map binding 为 `3.map=1018→FMMap F17`。通过 `localhost:8766/api/info` 与 `/api/image` 直接核 F17 为 600×600 的沙巴克小地图；同样核 F7 为 600×400 沙漠土城、MMap F7 为空。因此现行数据库的 `MiniMap=7` 不是 EI 的 WIL 帧号；legacy 必须按 map file name 映射库与帧。当前 `MiniMapDialog.SetMap()` 使用 `map.MiniMap` 选帧。玩家框/闪烁点和对象标记链已静态闭合。当前 `LibraryCore/Libraries.cs` 将 `LibraryFile.MiniMap` 指向 `Data/MiniMap.Zl`；EI 资源目录实际提供 MMap.wil/FMMap.wil，未发现 `LegacyEI/Data/MiniMap.Zl`。当前小地图默认 200×200，可放大到 300×300、拖图、改透明度并提供独立大图按钮；尚无证据说明 MiniMap.Zl 的索引与 EI WIL 帧等价，也未证它复现 EI 的 128/256 模式、标记色和裁剪公式。 | 以 `MapInfo.FileName` 与 `MapInfo.MiniMap` 为业务输入，逐地图对照 EI 的 `MiniMap.txt`/`map_bindings.json`，再对照独立解码的 MMap/FMMap 帧与 WIL/WIX 库选择；同时核 128/256 模式目标矩形、player/object markers。验证 T、地图内控件、切图及裁剪/坐标更新，不把 MapInfo.Index 当资源帧。保留 EI-310 标注的行走期间 live coords 写入未决项。 |
+| MAP-02 | 高 | Godot 独立 `BigMapDialog` 在 EI 该构建中没有对应窗口；键盘 B 目标也与 EI 主按键表冲突 | `map-ui-resource-evidence.json` 将 map object 唯一构造点归到主世界 `main+0x6214`，明确“no separate map dialog”；原版 B 分支切换 `main+0x6208`，而 T 分支调整 map surface。当前 `KeyBindManager` 将 B 绑定 `MapBigWindow` 并开关独立 `BigMapDialog`；`GameScene.CreateHud()` 始终创建独立大地图，另有现代图层、NPC 定位、传送/寻路输入。此处只可判定对象身份及键位不符；扩展大图业务中哪些可映射到 EI 的 256 模式尚未闭合。 | 将原版 256 surface 模式和当前独立 BigMapDialog 的地图浏览、传送、NPC 寻路分别对照业务链；确定 legacy 模式的 B 与 T 分派及鼠标显示控件，避免以“功能看起来都是大地图”代替身份/行为映射。现代模式与 legacy 模式分别做键盘和鼠标交互验收。 |
+| MAP-03 | 高，开关入口实现不一致 | EI 小地图有不同入口与各自节流/副作用；Godot 的 legacy HUD 点击直接改可见性，V 键还循环透明度，不能视为同一条旧版开关链 | `map-ui-resource-evidence.json.closed_notes[2]`（primary-static）：HUD 文本明确标注“小地图(Ctrl+V, V)”；V 分支以约64ms门控调用 `0x451770` 开/关 map panel；鼠标处理器 `0x42C270` 使用3秒门控后切换 map 状态；菜单路径另由 `0x422BC5` 处理。当前 `GameScene.cs` 的 `_mainPanel.MiniMapButton.MouseClick` 仅翻转 `_miniMap.Visible`，没有节流或 `0x409` 请求/状态流；`HandleKeyBind()` 的 `MapMiniWindow` 则按不可见→显示不透明、显示不透明→半透明、半透明→隐藏三态循环。这些是当前 Zircon 源码确认，与 EI 的 V 键开关和旧版 HUD 点击入口不是同一语义。EI 鼠标路径发送/更新状态的协议字段和服务器作用还需沿 `0x42C270` 及其发送器/接收器完整追踪；不能仅凭另一份 HUD 汇总表的“0x409 请求”推定打开状态。 | 把 EI V、HUD 小地图控件、菜单路径分别追到完整消息/状态写入者；对照 Godot 的键盘与点击入口及节流，建立独立行为表。确认 `0x409` 的方向、负载与服务端效果后，再判定缺失的业务副作用；运行时分别按 V、Ctrl+V、点 HUD 控件和菜单入口，核可见性、透明度、请求及重复输入门控。 |
+| QUEST-01 | 阻断，高度已证实 | 根窗口与 F700 有效像素锚点相符；列表、详情和两组操作控件几何/资源均与 EI 不符 | 原始 WIL 由 `localhost:8766/api/image` 直接导出：F700 512×512 画布在 2×预览中为 1024×1024，实际可见书页带 `QUEST / ONE QUEST` 标签和右侧 X/箭头图；F705 204×76（预览 408×152）；F721/722、F723/724 各为 28×28 控件帧对。primary-static `quest-window-paint-full-evidence.json` (F671) 与 `quest-window-render-detail-evidence.json` (F537) 定案最多 19 行、字段 stride 0x104、200/160 px 文本路径门、active/normal 字色 `0x1919C8/0x19197D`、15 px 行距。这里有一项坐标资料冲突：紧凑 F537 记 `y=idx*15+0x12`，但更完整的 `RESEARCH_LOG.md` F251/`UI_COVERAGE_MATRIX.md` 追完 `0x45DD70` 的子矩形偏移后给出屏幕坐标 `x=win.x+65`、`y=win.y+90+15*(row-scroll)`；采用后者为完整文本矩形，保留两份记录差异供重取 EXE 后复核。详情为 F705 204×76、根相对 `(65,294)`、3 行/15 px 深蓝正文，服务器 `/` 分隔符就地拆行（不做客户端像素换行）；滚动状态 `[+0x58]/[+0x5C]/[+0x60]`，滚轮 `0x448700`、点击 `0x448780`。原版控件根相对位置分别：F723/724 `(290,59)`、F721/722 `(290,89)`；X 只本地消费并送音效 cmd 0x69（业务名“关闭”仍为 candidate），箭头经 0x448580 送 msg 0x418，具体业务名 candidate。当前 Godot F700 根 340×440 与背景 offset `(-86,-36)` 锚点相符，但 CloseButton 使用 F161/162 且放 `(304,404)`；两个原版控件未映射。任务正文首行当前根相对 `(26,63)`、原版 `(65,90)`，行距约 22 px，额外生成分组/子任务行且没有原版 19 行绘制上限；当前详情控件从约 `(398,63)` 开始、尺寸 300×405，没有绘制 F705；scroll 位于 `(704,58)`、18×415、step30，超出 340 px 窗宽。Godot 根本身未启用 Clip，外溢风险确定、viewport 实际裁剪需实屏截图验证。 | 依 F671/F833/F923/F942 与 UI_COVERAGE_MATRIX 坐标表重建独立控件树/矩形；核 F721/722 与 F723/724 状态及真实命中边界、msg 0x418 和音效 cmd 0x69；用 800×600 坐标合成与 `bash login_game.sh legacy` 真实截图核 F700/F705、文字绘制、滚轮/箭头、任务点击及窗口裁剪。 |
+| QUEST-02 | 高，待核 | 当前把现代 QuestLog 的多个页面、任务详情和里程碑交互放进旧版 F700，但 EI 页签/控制的身份及业务流程尚未逐控件闭合 | 原版窗口分派证据为 Ctrl+D→id11；静态构造/paint 记录有 F721/722、F723/724 两组状态帧控件。当前建 3 个透明 tab（页码 0/1/3），`RefreshPage()` 又提供已完成/可接/里程碑、多列任务详情、奖励格、追踪开关和 accept/complete/abandon/map link；这些具体操作不能由单一任务文本绘制链证明属于 EI。`Client/Scenes/Views/QuestDialog.cs` 是较新的通用客户端源码（任务/可接/已完成/里程碑/任务页），只能解释代码来源，不是目标 EI 的行为证据。 | 追踪 F721..F724 的原版 hit/click 分支、其隐藏/显现条件、selection flag 与服务端消息；逐项决定 legacy 要呈现哪些原版态，再以无任务、进行中、完成/奖励三种服务端状态做截图与输入对照。 |
+| QUEST-03 | 高，primary-static/当前源码冲突 | EI 右上 F721/722 X 区域只消费点击并播放 cmd `0x69`，不会由该按钮直接关闭窗口；当前 Godot X 按钮会关窗，且关闭路径无条件发送里程碑通知关闭包 | `quest-window-input-evidence.json` F942 与 `UI_COVERAGE_MATRIX.md`/`UI_COMPLETION_AUDIT.md` 的最终归因：输入函数 `0x448430` 对两个按钮做通用 hit/click；F721/722 的 click 落入 `0x4177F0`，只调用 `0x45AFC0(...,0x69,...)` 音效、无窗口消息；箭头 F723/724 才进入 `0x448580` 并发送 `0x418`。当前 `QuestDialog` 的 close 按钮绑定 `WindowManager.Close(this)`；覆写 `Close()` 还会调用 `SendMilestoneNotify(false)`，无论是否处于里程碑页都会执行。原版 X 区域不直接等同于 Godot“关闭+通知”动作；EI 窗口实际消失依赖窗口管理/热键另一路，是否点击后仍保持显示要在原版运行态确认。 | 真实 legacy 窗口分别在任务页/里程碑页点 F721/722 中心与边缘，记录窗口可见状态、发包与声音；另验证 Ctrl+D 关闭路径以及里程碑进入/退出通知时机。不得把按钮外观或 cmd `0x69` 音效直接命名成关闭业务。 |
+| HRS-01 | 阻断 | EI 原版 `S` 与 `Ctrl+S` 都是坐骑窗口入口；当前仅 `Ctrl+S` 打开坐骑，裸 `S` 打开 StorageWindow。HUD idx13 坐骑入口也映射错误 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 将虚拟键 S 分派到 `0x42ADB0(id13)`；`hotkey-label-handler-consistency.json` / `chat-window-control-map.json` 将 caption 记录为“坐骑(Ctrl+S, S)”，并记录分支调用 `GetKeyState(0x53 'S')` 后 `test ah,ah`。检查的是 S 自身按下位、并不要求 Ctrl；Windows 的 Ctrl+S keydown 仍带 VK S，因此两种 caption 入口均到 id13。当前 `GameScene._Input()` 的 Ctrl+S 路径与旧版效果相符，但裸 S 交由 `KeyBindManager` 的 `StorageWindow`；HUD 原版 idx13 坐骑按钮在当前 `MainPanel` 中落到 `CharacterButton`（HUD-04）。 | 让 legacy 裸 S 与 Ctrl+S 两种入口都切换 id13，并处理 StorageWindow 当前占用裸 S 的冲突；修正 HUD idx13 到坐骑窗；逐项检查其他字母分支是否也只测自身键状态；实机验证 S/Ctrl+S、modal/focus 状态和 idx13 HUD 点击。实施计划中明确决定旧版模式下 StorageWindow 的新入口，不借现代 M 动作键替代原版窗口开关。 |
+| HRS-02 | 中，待核 | 坐骑窗内 F850 根尺寸、四个动作控件帧/坐标及关闭控件与 primary-static 证据吻合；动作字符串一致，但 Godot 通过聊天网络包发送，和原版窗口分派链是否等价尚未确认 | `horse-window-render-evidence.json` 给出 F850 296×332、close F161/162 `(252,293)`、动作 F860..867 与四个相对 hit rect；当前 `HorseDialog` 对应值逐项一致。原版 `0x426A80` 分支把 `@上马/@遛马/@收马` 字符串交给 `0x4520F0`；Godot `Action()` 调用 `SendChat()`，最终排入 `C.Chat`。两条路径字符串相同，但协议/状态门控并无静态等价证据；当前 `SetMountState` 把服务端 HorseType 收敛为 0/1，足够复现现已知 `==0/!=0` 按钮门控，不代表 state 1..3 语义完全复现。 | 对照原版窗口动作落点和服务端命令/协议处理；逐状态验证四个控件 enabled、发送内容、mounted 动画与窗口开合。关闭布局还需实屏看 F850 alpha bbox/anchor 与点击中心。 |
+| HRS-03 | 高，资源/代码几何冲突已证，原版基绘制偏移待闭合 | F850 为512×512画布，独立 viewer 头部 offset=(7,-44)，直接 PNG alpha bbox=(118,94,275,323)；原版窗口根为296×332，四个动作点击框在根相对 y=244。若要让有效像素窗体与根对齐，帧控件需从约(-118,-94)绘制；但 primary-static `0x423D00` 的背景blit/裁剪细节尚未证明是否自行应用偏移。当前 Godot `HorseDialog` 把 F850 作为512×512 `DXImageControl` 放在 `(0,0)`，`UseOffSet=false`，且根未设 Clip；按当前绘制器代码，像素区落在根相对 `(118,94)` 并越过根的右/下边缘。这样动作hit rect相对窗根仍在原版位置，而背景字样/窗口边界如何对齐未有证据。| 用原版 EI 可运行窗口或完整复核 `0x423D00→0x460240` 的帧偏移/clip 参数，确认 alpha bbox 应落在根坐标 `(0,0)` 还是保留画布空白；然后截同状态 HorseDialog 对照按钮烘焙标签、外框和点击目标。此项在证据闭合前不直接设置 `(-118,-94)`。 |
+
+行会窗、聊天窗、设置控件语义与 NPC 关闭/滚动控件的位置差异已由原版静态证据与当前源码交叉确认。公告资料中“独立滚动横幅”“F601 隐藏状态”和 `0x7EE` 触发 id15 的旧摘要已按 F294 修正；`0x777200` 是 id15 窗口自身，F601/F602 是两个内容状态。F602 文本/提交差异见 NOTICE-01，激活触发源仍需运行时证据。NPC 动态背景条、正文基点和行距来自不同绘制路径；当前实现把它们合并布局，不能用一个“NPC 行距”值概括。原版 frame id11 确有独立列表窗；此前“其点击发送0x419”的说法已按 Finding 321 撤销，frame id11 与 F1100 同屏关系及真实点击协议仍未闭合。交易窗的“外溢”属于原版窗口数据模型的明确行为；Godot Control 根裁切可能改变其可见/可点区域，必须结合 `DXWindow`/CanvasItem clipping 与真实 800×600 画面对照后再给最终实现判定。F1001 的独立窗归属仍需运行时/协议层补证。此阶段只登记审计结论，不在证据矩阵闭合前直接改窗口实现。
+
+## 窗口覆盖清单（第一轮范围盘点）
+
+以下是审计对象，不代表已审完。标记“待逐项”即尚未核查其所有控件和运行行为。
+
+| 区域 | 当前实现/证据入口 | 第一轮状态 | 必须补查 |
+|---|---|---|---|
+| 登录、服务器/角色选择、创建角色、进入游戏 | 原版 `login-flow-*`、`login-charselect-flow-evidence.json`；Godot `Scripts/LoginScene.cs`、`SelectScene.cs` | primary-static 状态机/消息/部分 hit rect 已闭合；Godot 有空帧引用、选角根与入口坐标不对应、角色槽门限不符、缺 EI 服务器列表阶段（PRE-01..07）；目标 WIL 读取格式阻断（RES-01）；曾验证测试账号自动进入游戏，但未真实操作原版式登录页/选角页 | 闭合 `wemade.dat`/WIL 背景与动态帧来源；恢复目标资源读取；逐项核焦点、Tab/Enter、账号字段、服务器列表/切换、错误提示、创建/删除/返回/进入及缩放 hit rect，并留可观察截图 |
+| 常驻主 HUD、属性条、底部功能按钮、状态/快捷栏 | `hud-*`、`primary-main-hud-setrect.md`、`LegacyHudLayoutLab`、`MainPanel` | 原版静态资料丰富；Godot 端待逐项验收 | 16 个 caption/按钮动作对应、绘制次序、缩放锚定、真实状态值、鼠标悬停/按下、所有热键入口 |
+| 人物状态/装备 | `status-window-render-evidence.json`、`equipment-slots-evidence.json`、当前 `CharacterDialog.cs` | 部分静态链已确认；本轮有未提交布局修正 | F200/F201 原点与展开切换抖动、11 记录、纸娃娃、8 装备格、右侧属性页内容、装备交互/数字绑定 |
+| 背包/物品格 | `inventory-window-render-evidence.json`、当前 `InventoryDialog.cs` | 静态资料丰富；待逐项对照 | 6×6 命中/跨格占用、四模式、数量/重量、拖放/右键/提示/锁定、46 个记录绑定 |
+| 技能书与技能快捷栏 | 上文所列 `skill-window-*`、`magic-exp-*`、`skill-grid-*` | 已确认存在重大实现差异 | 原版分类/列表命中矩形、额外三控件、职业列表、图标绑定、右页文本、绑定和施放键、分页/滚动/关闭 |
+| 任务、聊天、组队、行会、交易、仓库、坐骑 | 对应 `quest-window-*`、`chat-window-*`、`group-window-*`、`guild-window-*`、`horse-window-*` 和控件类 | 任务列表/详情布局与组队列映射有 primary-static 几何差异；聊天、行会、设置和 NPC 多项差异已证实，其他仍需逐控件闭合 | 背景有效像素、子控件命中、服务端数据、二级页/空状态、真实点击与键盘行为；F1001 独立仓库归属待解 |
+| NPC、商店、物品数量/确认/公告提示 | `npc-window-render-evidence.json`、`store-window-render-evidence.json`、`confirmation-prompt-evidence.json`、`notice-prompt-window-evidence.json`、`notice-banner-lifecycle-evidence.json`；`NPCDialog`/`NPCGoodsPanel`/`ItemAmountDialog`/`NoticeDialog` 等 | NPC 关闭与滚动控件几何错误、图条/对白布局不符、商店根窗归属/几何不符、F602 文本/编辑/动作差异已证实；id15 身份和静态显隐生命周期已闭合，实际激活事件与 Zircon 服务端事件映射待补；NPC option-list 关系、商店状态1/2业务名待补；真实流程未验。`GameStoreDialog` 是现金商城，不等同 NPC store | 补齐 NPC 双对象/消息链；商店状态帧、商品命中和购买/出售/修理/存取绑定；确认/取消消息与键盘链；核公告类聊天事件对应的 EI 实际入口，复核 F601/F602 切换、编辑提交和运行期文本；使用旧版素材与 `bash login_game.sh legacy` 逐项交互留图 |
+| 设置/主菜单/退出/帮助/消息窗 | `system-window-render-evidence.json`、`confirmation-prompt-evidence.json`、`hud-caption-action-tail-evidence.json`；`ConfigDialog`、`MenuDialog`、`ExitDialog`、`HelpDialog` | 设置窗四项开关映射已证实实现不符；注销 idx4 的 F950 type 0x65 路径已闭合，退出 idx3 的 F800/id64 韩文 YES/NO 确认窗语义已由 WIL 视觉闭合，hit rect 与最终动作待核；Godot 当前两入口和 Alt+Q/Alt+X 合并，见 EXIT-01 | 设置两音量滑块/互斥开关、配置读写；追 F800 按钮 hit rect/最终退出动作；分别验收 Alt+Q、Alt+X、点击两 HUD 入口、取消/确认、层级与焦点恢复 |
+| 小地图/大地图/任务追踪/状态提示 | `minimap*`、`notice-*`；对应 Godot 控件 | EI 小地图默认目标/帧选、T 与鼠标切换 128/256 surface、没有独立大地图窗均有 primary-static；Godot 对应模式/对象不同；公告窗差异见 NOTICE 项；仍待真实屏幕验收 | 800×600 下 128/256 模式目标矩形、资源帧/标记颜色、坐标转换/裁剪、EI T 与 B 分派、BigMap 扩展行为边界、地图切换生命周期 |
+| 其余 Zircon 业务窗（自动药水、货币、筛选、商城、寄售、钓鱼、宠物、排行榜等） | `GameScene.cs` 约 40 个窗口构造点及 `GodotClient/Controls/` | 尚未判断哪些属于 EI 原版、扩展或不纳入 EI 模式 | 建立 EI 对应关系；明确保留扩展入口还是隐藏；检查其是否覆盖/污染原版流程 |
+
+### 原版界面目录与导航关系（逐窗比对总表）
+
+本表先固定 EI 的“界面节点”和“从哪里进入/离开”，避免把同一张素材、同一枚热键或现代同名窗口误认为同一个界面。原版固定窗口 ID、F号、构造/绘制/点击入口取自 primary-static `window-id-catalog.json`（Finding 268）；HUD 文字与点击目标优先取 `hud-caption-action-tail-evidence.json`（F321 fresh disassembly）、`hud-label-evidence.json`、`window-paint-and-hotkey-dispatch-evidence.json`。出现字段冲突时，以能对应具体构造调用和实际字符串 VA 的更新反汇编为准，并在相应 HUD 项记录被纠正的旧映射。内容列引用本审计的逐窗条目；标“待逐控件”意味着还没有完成按钮文字、状态帧、RECT、后续页面和动态文本的逐项转录。
+
+| EI节点 | 原版界面身份 / 资源 | 进入边（触发源→目标） | 界面内容、可见文字与窗内动作审计 | 当前 Zircon 对应及首轮判定 |
+|---|---|---|---|---|
+| mode 0 | 登录/服务器列表 | 启动→登录表单→服务列表→连接过渡 | 账号/密码字段、服务器列表、登录/返回/注册/修改密码；PRE-01/05/07 记录静态字段和消息门控，背景及按钮逐态转录未闭合 | `LoginScene` 直连单个 host，缺 EI 服务器列表阶段；PRE-01/05/07 |
+| mode 2 | 选角/创建，Interface1c F50（640×480） | 登录服务成功→mode 2；角色槽、创建/删除、进入/退出、密码流程按状态出现 | 两个角色槽、角色动画和阶段专属按钮；PRE-02/04/06 记录坐标/数量差异，按钮字样与阶段切换待逐控件转录 | `SelectScene` 使用1024×768布局和自绘操作面板；PRE-02..06 |
+| id 0 | 包袱栏，GameInter F250；窗口构造/列表几何见 `window-id-catalog.windows[0]` | HUD cap14「包袱栏(Ctrl+Q,Q)」/裸 Q→toggle id0；NPC修补/买卖等服务端状态改变背包模式 | 负重、金币/货币、修补/变卖/存储模式、格位物品/数量/提示与拖放；模式标签、装饰页签、46槽滚动与点击动作见 INV-01..04 | `InventoryDialog`；入口对应但当前36格/模式与控件重叠问题见 INV-01..04、HUD-04 |
+| id 1 | 状态栏，GameInter F200/F201 | HUD cap15「状态栏(Ctrl+W,W)」/裸 W→toggle id1；创建 F200 属性态、窗内切换至 F201 装备态 | 属性文字、血魔数值与8个装备格/纸娃娃两态；详细槽和控件见 CHAR-01..04 | `CharacterDialog` 的 EI profile 使用 F200/F201；legacy cap15 现打开此窗并已实屏确认。先前错误地把 cap13坐骑入口当作其唯一入口，现已将 cap13 路由修为 `HorseDialog`；布局、动作细节仍见 CHAR-01..04、HUD-04 |
+| id 2 | 商店，GameInter F1000 | NPC商店/修理/存取等业务事件→id2；NPC完成/关闭流程会隐藏 id2 | 商品列表、价格、买卖/修理/存取状态控件；状态含义、货币及交易结果见 SHOP-01、WH-01..03，逐个按钮文字/空态待闭合 | `NPCGoodsPanel`与`InventoryDialog`模式共同承载；`GameStoreDialog`为另一现代商城，不能映射此节点；SHOP/WH条目 |
+| id 3 | 交易/交换，GameInter F1050 | 对玩家发交易请求并接收服务端响应→id3；HUD cap0文字「交易栏(Ctrl+C,C)」的实际动作是朝目标实体请求交易，不是直接打开窗 | 双方物品/金币、接受/取消/锁定等交互及消息门控见 TRADE-01..03；每个按钮字样与按下帧待逐控件验收 | `TradeDialog`；HUD 的 `ExchangeButton` 直接本地打开窗口，缺目标选择/0x401请求链；TRADE-01..03、HUD-04 |
+| id 4 | 行会，GameInter F600 | 行会状态/命令响应→id4；HUD cap6文字「行会(Ctrl+F,F)」点击发0x40C请求，不直接toggle | 公告/敌对/联盟/成员等列表状态与创建/邀请/解散等控制见 GUILD-01/02；窗内完整文字/状态逐项待转录 | `GuildDialog`可本地打开但HUD点击没有请求；根尺寸与控件次序有差异；GUILD-01/02、HUD-04 |
+| id 5 | 空 ID，无原版窗口对象 | toggle/点击表为空操作；不能据编号推导好友/社交窗口 | 原版16槽表中无此窗；见 `window-id-catalog.json` documented negative | Zircon好友/邮件等独立功能是扩展，不映射为原版 id5 |
+| id 6 | 组队，GameInter F900 | HUD cap5「组队(Ctrl+G,G)」/裸 G→toggle id6 | 成员列表、添加/移除/LFG及允许组队状态；文字、行数裁剪、F910..F921控件见 GROUP-01..04 | `GroupDialog`；入口额外发送GroupNotify；行高、下方控件位置/状态绑定不同；GROUP-01..04、HUD-04 |
+| id 7 | 消息/日志显示窗，GameInter F200（与id1共用素材帧但对象/职责不同） | 游戏事件/状态→id7；有独立窗口对象和点击/toggle handler | 从消息环读取记录并在右上绘制文本；内容来源/角色仍有候选，见 `window-id-catalog.windows[7]` 与 CHAT-02 | `_chatLog`是常驻可配置消息面板，未证实映射id7；HUD聊天记录按钮当前打开CommunicationDialog，见 CHAT-02、HUD-04 |
+| id 8 | 聊天记录窗，GameInter F350 | HUD cap9「聊天记录(Ctrl+R,R)」/裸 R→toggle id8 | 聊天记录、输入/滚动/频道与提交；原版绘制、滚轮、消息路径见 CHAT-01/02 | `CommunicationDialog`显示好友/邮件/屏蔽；主HUD另有常驻`ChatLogPanel`/输入框，均未建立与 EI id8 的完整等价；CHAT-01/02、HUD-04 |
+| id 9 | NPC对话，GameInter F1100 | NPC交互/服务器业务状态→id9；选项点击成功后关闭id9并同时隐藏id2商店 | NPC头像、对话/选项文字、商品/任务分支；主对话和独立商品/任务对象见 NPC-01..03 | `NPCDialog`与`NPCGoodsPanel`；当前改为同一子树，按钮节流与原版对象关系未闭合；NPC-01..03 |
+| id 10 | 空 ID，无原版窗口对象 | toggle/点击表为空操作 | 原版16槽表中无此窗；见 `window-id-catalog.json` documented negative | 不对应当前扩展窗；不得将排行榜/好友窗据编号认作 EI id10 |
+| id 11 | 任务，GameInter F700（窗口ID 0xB） | HUD cap10「信息窗口(Ctrl+D,D)」/裸 D→toggle id11；服务器/任务状态供列表 | 任务列表、分类/选择、右页详情、奖励/滚动；箭头/关闭/显示行数和文本见 QUEST-01..03 | `QuestDialog`入口同向，但正文、滚动与箭头几何不符；QUEST-01..03、HUD-04 |
+| id 12 | 设置，GameInter F750 | HUD cap11「设置栏(Ctrl+N,N)」/裸 N→toggle id12 | 多个互斥选项、音量滑块、键位/画面状态；原版四项与两个音量路径见 SET-01/02 | legacy HUD打开`ConfigDialog`，但四项开关/滑块与原版不一致；SET-01/02、HUD-04 |
+| id 13 | 坐骑，GameInter F850 | HUD cap13「坐骑(Ctrl+S,S)」/裸 S→toggle id13 | 马匹状态、等级/属性及上马/下马/遛马命令；HRS-01..03 | `HorseDialog`存在，但当前F110/111所在控件打开`CharacterDialog`；坐骑入口缺失/键位改道；HRS-01..03、HUD-04 |
+| id 14 | 技能书，GameInter F400（452×380根窗） | HUD cap8「技能书(Ctrl+E,E)」/裸 E→toggle id14；子控件选择/分类改变技能状态 | 八类分类、六个已证实列表hit RECT、箭头候选、右页Magic.exp详情与技能键；见 SKL-01..09 | `MagicDialog`窗口入口存在；12格伪帧、详情页缺失、末三分类帧错、快捷栏混入等见 SKL-01..09、HUD-04 |
+| id 15 | 公告/横幅，GameInter F602；不是常规可点击窗 | 行会操作/服务器状态事件→显隐或刷新；不在常规hit-test/close-all列表 | 动态公告/行会管理文本、编辑缓冲、确认动作见 NOTICE-01/02；激活事件到Zircon消息映射待补 | `NoticeDialog`可打开但内容/编辑/按钮动作不同，且触发映射未证；NOTICE-01/02 |
+| id 100 / `0x64` | 退出游戏确认，GameInter F800；在16个普通ID之外 | HUD cap3「退出游戏(Alt+Q)」通过退出门控→显示确认；确认/取消按键另有控件分派 | “是否退出游戏？”及YES/NO两态按钮；原版退出消息、hit RECT见 EXIT-01/MODAL-01 | `ExitDialog`把回选人/退出合为同一现代窗，F800和YES/NO语义未实现；EXIT-01/MODAL-01 |
+| 外置确认对象 | 注销角色确认，F950/type `0x65`；不是上述 id100 退出确认 | HUD cap4「注销人物(Alt+X)」→F950注销确认→确认后回选角 | “返回游戏人物选择界面？”及确认/取消，见 MODAL-01 | 当前注销与退出都进入同一`ExitDialog`；MODAL-01、EXIT-01 |
+
+该总表区分三种边：用户点击/键盘入口、服务器/游戏状态驱动的窗口出现、窗内按钮触发的子状态或消息。ID 1 与 ID 7 同为 F200、但对象 ID 与绘制职责不同；ID 2 商店与 id1000/现代现金商城也不是同一功能。具体窗内控件和可见文本的逐项验收仍以右列的审计编号为准；未闭合项不能据主窗口帧或控件图片臆造按钮文字/跳转。
+
+### 入口和当前按键的首轮记录
+
+- 原版 `SelectScene` 源码使用 `Interface1c` F50 背景，配置按钮使用 `GameInter` F116；选角动画来自 `Interface1c` 动画族。原版 `LoginScene` 也以 `Interface1c` 为主。这些源码可帮助理解状态机，但它们本身还不能证明 EI 3.0 同版本行为/布局，必须与 `login-flow-evidence.json`、资源帧和 EI 运行画面对照。
+- Zircon 的 `KeyBindManager` 默认把人物/背包/技能/设置窗口绑定为 Q/W/E/O；技能书 Ctrl+E 没有出现在当前 `MagicWindow` 默认项里（Ctrl+E 被定义为 `MagicBarWindow`）。需追查 EI 的键分发与技能窗口自身行为，不能把同一字母的不同修饰键合并处理。
+- EI 研究矩阵记录主 HUD caption 有 Ctrl 与单字母入口，包括 Ctrl+E/E 技能书，另有 Ctrl+Q/Q 背包、Ctrl+V/V 小地图、Ctrl+S/S 坐骑、Ctrl+N/N 设置、Ctrl+G/G 组队、Ctrl+F/F 行会、Ctrl+C/C 交易等。Zircon 的键位默认表和 `GameScene` 分派并非该表的一一实现；需建立逐个“原版入口→Godot动作→状态门控”的对照，而不是只比较按键字符。
+
+这一差异属于范围性风险：现代功能热键与 EI HUD caption 的同字母快捷键目前并存，点击 HUD 与键盘动作可能走不同窗口/功能。审计热键时要记录修饰键、焦点状态、聊天框输入状态、窗口已打开时的行为和动作目标。
+
+### 登录与选角的首轮差异
+
+原版 `login-flow-evidence.json` 已将登录/服务器选择置于主模式状态机 `0x8B1878` 的 mode 0，选角/创建置于 mode 2；模式 3 才是游戏。登录对象 `0x8A9520` 加载 `wemade.dat` 与 `Interface1c.wil`，账户/密码编辑框静态矩形分别为 `(128,440)-(227,454)` 和 `(326,440)-(425,454)`；登录页按钮 F11/12、F13/14、F15/16 分别关联选角、创建账号、修改密码（最后两者走配置 URL 并退出原程序）。登录 Enter/Tab 的状态门控及服务端消息 0x7D1 有 primary-static 证据。旧文档曾把当前 Zircon 的 Interface1c F20/F22/F23 说成 EI 登录底图/标志；本轮素材预览对目标 `LegacyEI/Data/Interface1c.wil` 查询发现这三帧均 `blank=true`，故该素材归属判断撤销。`login-flow-evidence.json` 只证明该对象加载了 WIL 和 `wemade.dat`，没有证据把 F20/F22/F23 标成原版登录底图或 logo。另，primary-static 对“阶段2画 F0x3C”的记录需要与目标 WIL 空帧状态重新交叉验证，不能据该常数直接断定实际显示来源。
+
+原版选角/角色创建在 mode 2 使用 `Interface1c.wil` F50（640×480）；研究文件列有四角色槽、底部创建/进入/退出，以及按阶段显示的 F92/F95/F98/F86/F89 等控件。空槽/已有角色、创建阶段、密码编辑阶段的控件集不同。确认进入发送 0x67，必须收到 0x20D 才进入阶段 4；不能仅以按钮点击或自动登录日志作为流程完成。
+
+当前 Godot `LoginScene.BuildLegacyLoginUi()` 与 `SelectScene.BuildLegacySelectUi()` 确实组合了 Interface1c 动画和 `DX*` 控件，但可见登录表单、按钮、选择卡片/创建面板多处用 `LibraryFile.Interface` 通用帧或自制 `LegacyWindowFrame`，坐标是 1024×768 画布。它们不等同于原版 F11/F13/F15 控件，也尚未通过 EI 输入状态机逐项比对。相同的背景帧只能证明用了同源素材，不能证明按钮状态、点击矩形、场景阶段一致。
+
+具体源代码核对发现，`LoginScene.BuildLegacyLoginUi()` 把 Interface1c F20 当全屏底图、F23/F22 当 logo 背景/子图；目标 WIL 的 viewer API 对三帧均返回 `blank=true`，这与“EI 登录页 F20/F22/F23”旧摘要相矛盾。原版登录证据所给 `wemade.dat` + Interface1c resource object 尚未定位到逐像素背景来源，不能在没有该对象解码/原版截图时把现代登录拼图方案认作 EI 登录画面。
+
+| 编号 | 严重度 | 首轮发现 | 后续验收 |
+|---|---|---|---|
+| PRE-01 | 高 | Godot 登录框、按钮及字段布局与 EI 静态登录矩形/原版成对帧未建立映射；当前有 `Interface` 151/152/153 与文本自绘按钮 | 原版登录阶段帧来源仍待解析；逐项核 login 对象 F11/12、账号注册 F13/14、修改密码 F15/16 的状态帧与入口坐标，不再把已确认空白的目标 F20/22/23 当作背景证据。按键 Enter/Tab、错误提示、记住账号、切服务器逐项比对；目标 EI 登录实屏未取得前保留候选。 |
+| PRE-02 | 高 | Godot 选角面板为自绘窗口与通用控件，和 EI F50 640×480、2 个角色槽及 5 阶段控件组尚未映射 | 对照空槽/双角色上限、创建完成/取消、删除确认、密码编辑阶段、进入消息返回和角色动画层级；F53、F92/F95/F98/F86/F89 语义仍按研究文件的 candidate 标注，不据帧号猜命令。 |
+| PRE-03 | 中 | 原版登录/选角素材画布为 800×600 / 640×480；Godot 以1024×768逻辑画布配 `UiScaler`，但控件布局坐标与原版锚点/比例尚未独立验收 | 用至少800×600、1024×768、窗口缩放三种尺寸截图并点击边缘命中目标；对照纹理原生绘制尺寸、控件Rect和UiScaler变换，检查文本裁切及动画offset |
+| PRE-04 | 阻断，选角根/入口几何不对应 | 选角场景分配了1024×768的F50控件矩形，但贴图按原生640×480绘制在左上；EI根内入口与角色页按钮坐标没有复现 | primary-static `login-flow-evidence.json → screens.parent`：原版 char-select 根背景 F50 为640×480；构造/handler记录的Create `(440,93)`、Enter `(259,49)`、Exit `(28,438)`，另有阶段2的滚动/翻页、删除和确认按钮。当前 `SelectScene.BuildLegacySelectUi()` 将 `FixedSize=true`、控件 `Size=(1024,768)`；但 `DXImageControl.DrawControl()` 只有 `StretchImage=true` 才按Size拉伸，默认值为false，本处没有设置它，因此F50纹理仍以640×480原生尺寸绘制。`UiScaler` 再变换整个图层，不能把控件Size误作图片绘制尺寸。当前选角主操作挂在自绘320×425面板上，逻辑根位置约 `(352,171)`，Enter/Create/Delete hit controls均在面板底部局部 y=382；与EI原版根坐标 `(259,49)/(440,93)/(28,438)` 不对应。 | 以F50原生640×480为基准恢复背景/相机坐标映射；分别在800×600和1024×768下叠加原版构造器rect、Godot实际hit rect和资源有效像素边界。实测进入、创建、删除、退出及阶段切换，确认背景纹理原点、控件矩形和UiScaler变换只映射一次，且焦点/人物动画/子编辑框不随窗口尺寸漂移。 |
+| PRE-05 | 阻断，当前登录美术帧选择不符合目标素材 | `LoginScene.BuildLegacyLoginUi()` 使用 Interface1c F20 作背景、F23/F22 作 logo；目标 `LegacyEI/Data/Interface1c.wil` viewer API 对三帧都返回 `blank=true`。原版静态工件证明登录对象加载 Interface1c/WIL 与 `wemade.dat`，但不把这些帧认作背景/logo；原有“F20/F22/F23 登录画面”映射无可支持证据。 | 重新映射原版 ctor/tick 中 Interface1c 各 frame helper 的实际帧参数、`wemade.dat` blit 和四组动画 frame source；直接预览所有引用帧，按8bit像素和矩形核出登录底图/按钮/动态层。再逐项映射 Godot 背景、logo、字段/按钮，不沿用空帧常量。 |
+| PRE-06 | 高，EI 与 Godot 角色槽数量/创建门限不一致 | primary-static `login-flow-evidence.json → screens.parent.char_slots`：槽索引为 `0..1`、记录步长 `0x40`；`protocol.parent_dispatcher` 的 `0x208` 刷新分支把 count cap 到2并只填两个记录。创建按钮 `0x459A20–0x459AC5` 也扫描这2个槽。当前 `SelectScene.RefreshList()` 为 `_characters` 前4项都创建选择卡片，`_skinCreate.Enabled` 以 `_characters.Count < 4` 作为创建门限；因此 Godot 对第三/第四角色的显示与创建能力超出 EI 静态角色页。真实服务器返回更多角色时，此差异会改变可见列表及创建入口状态。 | 在 EI 运行态确认两槽是客户端上限还是服务器契约；将原版角色记录索引/顺序、两槽状态和创建按钮门控逐项映射到当前 `SelectInfo.CharacterIndex`。至少验证0、1、2个角色及创建成功/失败、删除后刷新；未取得服务端限制前不要把客户端两槽结论外推成账号数据模型上限。 |
+| PRE-07 | 高，EI 登录中的服务器列表阶段在当前 legacy 登录流程中没有对应界面 | primary-static `login-flow-evidence.json`：原版登录窗口 mode 0 有 login form→server-list→transition 三阶段；服务器列表应答 530（`0x212`）解析多个服务器并记录选择项，再经约2秒淡出进入 mode 2；之后才收到 char-list `0x208`。当前 `LoginScene._Ready()` 直接连接命令行/持久化设置中的一个 host:port；`ShowLoginResult()` 收到 Success 即实例化 `SelectScene`，源码未见服务器列表场景/选择状态。该差异改变服务入口与后续服务器索引，不可把输入单服务器地址视为 EI 服务器列表的等价实现；当前服务端协议是否有意取消此阶段需另行确认。 | 追 `NetworkManager` /服务端版本协商与登录响应是否包含/替代服务器列表；按EI证据复原多服务器列表内容、选中项、530应答、消息0x68服务器选择以及失败/断线/重试状态。验证当前 `--server` 直连是否只作为开发扩展，legacy 默认 UI 是否应提供原版选择阶段；在服务端协议对应关系未闭合前不移植旧消息号。 |
+| RES-01 | 阻断（Interface1c/Interface缺失）；GameInter格式兼容已抽样核实 | 当前 legacy 进程命令行请求`--legacy-hud`时，`MirSkin.ResolveUiDataPath()`选`/home/tetsuya/mir3ei/LegacyEI/Data/`（如无有效override）；`Libraries.LibraryList`将Interface1c、Interface、GameInter映射为`.Zl`，`GetLibrary()`由`ZlLibrary`读该目录。直接列举该目录确认有`GameInter.Zl`，但没有`Interface1c.Zl`或`Interface.Zl`；同目录`.wil/.wix`不会由此加载路径自动回退读取。经用户指定的8766 viewer分别请求同目录`GameInter.wil`与`GameInter.Zl`，F50、168、200、201、400、600、1050、1100的解码像素逐帧相同，且width/height/offsetX/offsetY metadata逐项相同。这证明常用HUD、人物窗、技能书、行会、交易、NPC等抽样帧可由现有GameInter.Zl提供；不能再把GameInter概括为“不能供图”。但该抽样不证明整个库全部帧等价。当前登录/选角依赖的Interface1c/Interface库仍在目标资源根缺失，相关调用会因`.Zl`不存在返回null；另外其他被`LibraryList`引用的旧UI图集需按实际控件逐项确认。 | 第一阶段先逐项清点legacy画面实际引用的`LibraryFile`及帧：GameInter补全全帧或覆盖帧等价抽样；Interface1c/Interface确定目标`.Zl`来源或验证WIL读取方案，并用帧头、offset、像素、透明度对照。运行时输出实际解析路径和资源缺失日志；证明登录、选角及每个已审窗口使用目标EI资源，不能以目录中某一个`.Zl`存在推断其他图集可用，也不能以现代`Data`同名Zl替代EI素材。 |
+| RES-02 | 高，EI 资源根与控件图库解析根不一致 | `MirSkin.GetTexture()`的`IsUiLibrary()`仅将Interface、Interface1c、Interface1cExtended、GameInter、GameInter2、ProgUse路由到`UiDataPath`；其余如Equip、Inventory、StoreItem仍走`DataPath`。另`LibraryCache.Get()`始终使用`MirSkin.DataPath`，不检查`IsUiLibrary`。`PaperDoll._Ready()`通过LibraryCache加载ProgUse、Equip、EquipEffect_UI、GameInter；`MagicBar`通过LibraryCache加载MIcon；`DXItemCell.Draw`用`MirSkin.GetTexture(ItemLibraryFile)`，常规物品默认StoreItem。默认`DataPath`先解析`Debug/Client/Data`，本机该路径实为`/home/tetsuya/mir3ei/Data`；legacy UI路径则是`/home/tetsuya/mir3ei/LegacyEI/Data`。直接检查目标EI目录：GameInter.Zl存在；Equip.wil/.wix、ProgUse.wil/.wix、MIcon.wil/.wix和Interface1c.wil/.wix存在但对应`.Zl`缺失；`Storeitem.wil/.wix`与`inventory.wil/.wix`也存在（文件名大小写不同于代码枚举），同样无对应`.Zl`；EquipEffect_UI、GameInter2及Interface库未见对应EI文件。故纸娃娃/图标等会从默认现代Data读取可用Zl，或因legacy UI路径中无Zl返回null；EI WIL不会被Zl加载器自动读取。这个源码路径差异已证，具体运行画面中每个控件是否触发哪一路径需逐窗口追踪。 | 按窗口和绘制点建立`LibraryFile → 解析器 → 实际根目录 → 文件 → frame`表；分别测试MirSkin和LibraryCache实际解析路径及缺失返回，记录Zl/WIL帧头/offset/像素。重点复核人物纸娃娃、背包/交易图标、技能栏图标、装饰/特效和角色动画；确定legacy资源包完整度及资源等价性，再进入布局修复，不能仅因同名现代Zl能加载就认作EI一致。 |
+
+资源解析抽查表（文件存在性来自EI资源目录；路径决策来自`MirSkin.cs`/`LibraryCache.cs`，不是运行时截图）：
+
+| LibraryFile | `LegacyEI/Data` 实际文件 | 代码读取路径 | 首轮结论 |
+|---|---|---|---|
+| GameInter | `GameInter.Zl`、`GameInter.wil/.wix` | `MirSkin`→legacy；`LibraryCache`→常规Data | 8766抽查F50/168/200/201/400/600/1050/1100的`.Zl`与`.wil`解码像素和头字段相同；不代表全帧或另一份常规Data/GameInter.Zl相同 |
+| Interface1c | `Interface1c.wil/.wix`，无`.Zl` | `MirSkin`→legacy `.Zl` | 当前调用路径缺文件；WIL资源虽在目标目录但不能自动读取 |
+| Interface、Interface1cExtended | 未发现EI文件 | `MirSkin`→legacy `.Zl` | 对应控件帧会无资源；需逐项追调用者和 fallback |
+| GameInter2 | 未发现EI文件 | `MirSkin`→legacy `.Zl` | `MagicBar`边框请求走矩形回退；不可称作已加载现代边框 |
+| ProgUse | `ProgUse.wil/.wix`，无`.Zl` | `MirSkin`→legacy；`LibraryCache`→常规Data | 同一`LibraryFile`按调用入口会读不同根；`PaperDoll`使用LibraryCache，部分普通控件使用MirSkin |
+| Equip | `Equip.wil/.wix`，无`.Zl` | `LibraryCache`→常规Data | `PaperDoll`的EI图层当前读常规Data Zl；与EI WIL逐帧关系未核 |
+| StoreItem | `Storeitem.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | 背包/交易格默认走常规Data Zl；大小写与EI WIL不同，但加载器要找的是`.Zl` |
+| Inventory | `inventory.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | NPC特殊目标格等可从常规Data取图；与EI WIL帧映射未核 |
+| MIcon | `MIcon.wil/.wix`，无`.Zl` | `LibraryCache`→常规Data | `MagicBar`技能图标源于常规Data路径；legacy素材等价性未核 |
+| EquipEffect_UI | 未发现EI文件 | `LibraryCache`→常规Data | `PaperDoll`额外装备效果来自常规Data路径；是否属于目标EI版本待逐帧核 |
+
+### HUD 首轮风险
+
+Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 `LegacyHudLayout` 定义 800×600 原点 `(0,465)`；这些是可复查的迁移事实。当前 `MainPanel.AuditLegacyHud()` 仍将按钮坐标、标签可见性和玩家球位置与自身布局常量对比，因此只证明代码内部一致。原版矩阵中 16 个 caption/按钮 action、热键与输入分派是 primary-static；Zircon 的 `BindHudButtons()` 及常规 `KeyBindManager` 分别绑定动作，尚无一份逐项映射验证它们目标一致。人物球、HP/MP/经验填充方向、右侧控件 z-order 及窗口遮挡要等运行屏幕逐项复核。
+
+资源独立复核补记：通过 `localhost:8766/api/info?f=GameInter.wil&i=50` 得到 F50 画布 800×136；同源 `/api/image?...&scale=1&bg=transparent` 解码后 alpha bbox 为 `(0,0)-(800,135)`，即末行透明。HUD 控件样本 F80–83 头部各为24×16、非透明 bbox 23×15；F90/91 为28×26、alpha bbox 26×26；F100/101 为40×38、alpha bbox 37×37。该信息独立于 Godot 尺寸常量，可用于检查贴图边缘/点击框是否把透明留白计入；它不能单独裁决根窗原点或这些帧在原版上的动作。
+
+| 编号 | 严重度 | 首轮发现 | 后续验收 |
+|---|---|---|---|
+| HUD-01 | 高 | 旧版 HUD 代码的几何 self-check 被当成通过依据，但不覆盖原版 16 控件 hit rect 与 action 分派 | 从 `hud-caption-action-tail-evidence.json`、`chat-window-control-map.json` 独立建立 16 项映射；逐项点击并按键确认相同动作 |
+| HUD-02 | 高 | 当前图标提示使用现代 KeyBindManager 的绑定标签，EI caption 的 Ctrl+单字母快捷键仍需对照；部分同字母功能可能分流 | 记录全部控件 frame/state frame、旧按键、现代动作、焦点/聊天门控、开窗状态 |
+| HUD-03 | 中 | 几何检查未验证素材有效像素边界/渲染偏移、缩放后 hit-test 和窗口覆盖次序 | 原始帧 alpha bbox + 800×600 基准截图 + 实际 1024×768 截图/点击做交叉验证 |
+| HUD-04 | 阻断 | 旧版 16 个 HUD 图标帧和位置基本照搬，但部分事件仍绑定到现代字段名，多个图标点击目标错误 | 主 EXE `hud-caption-action-tail-evidence.json` 的 16 项构造器/动作表，与 `MainPanel.cs` 位置、帧和 `GameScene.cs` 鼠标回调逐项比对如下： |
+
+| idx | 帧；相对位置 | EI 原版点击动作 / caption | 当前 Zircon 控件与实际动作 | 判定 |
+|---:|---|---|---|---|
+| 0 | 80/81；(204,2) | 交易栏：玩家朝向前方找实体，发送 0x401 交易请求 | `ExchangeButton` 直接 `OpenTrade("交易")` | 明确流程不一致 |
+| 1 | 82/83；(228,2) | 小地图：3 秒门控；发送 0x409 请求并控制打开状态 | `MiniMapButton` 只翻转 `_miniMap.Visible` | 缺请求/节流链 |
+| 2 | 84/85；(252,2) | 技能图鉴：翻转对象 bool `+0x6208` | `SkillEntryButton` 打开 `MagicDialog` 技能书 | 动作类型不同 |
+| 3 | 90/91；(161,46) | 退出游戏：显示 id`0x64`/F800 “是否退出游戏？”确认窗，背景烘焙 YES/NO，另有 F151/152 与 F154/155 按钮状态 | `ExitButton` 打开 Interface F281/252×128、含“回选人/退出”两个动作的 `ExitDialog` | 原版窗身份与 YES/NO 流程确定不符；按钮 hit rect、最终 YES 消息待追，详见 EXIT-01 |
+| 4 | 92/93；(161,82) | 注销角色：F950 确认，message type `0x65` | `LogoutButton` 与退出共用 `OpenExitDialog()` | 明确确认流程/语义不同；详见 MODAL-01/EXIT-01 |
+| 5 | 94/95；(616,47) | 组队：切换原版窗口 id6 | `PartyButton` 调用 `OpenGroupDialog()`，额外发 `GroupNotify(true)` | 多出网络副作用，待核时序 |
+| 6 | 96/97；(616,82) | 行会：发送 0x40C 行会信息请求 | `GuildButton` 只本地打开 `GuildDialog` | 明确漏请求/动作不同 |
+| 7 | 159/159；(393,2) | caption 标为腰带；handler 调整 `[HUD+0xD40]` 到0..46，并在端点写`[HUD+0xD42]`为1/2；当前只确定字段写入，具体是六槽选择/动画还是地图滚动尚未闭合。F159 的16×14是按下态图像帧尺寸，不足以推出命中框尺寸 | `BeltButton` 打开腰带窗口，当前控件hit size设为24×16 | 明确没有窗口toggle；EI hit RECT需按构造器父对象字段复核 |
+| 8 | 100/101；(703,16) | 技能书：切换原版窗口 id14 | `SpellButton` 切换 `MagicDialog` | 窗口入口匹配；窗口内容另见 SKL 项 |
+| 9 | 102/103；(718,32) | 聊天记录：切换原版窗口 id8 | `MailButton` 打开 `CommunicationDialog`（好友/邮件/屏蔽页） | 明确窗口身份不同；原版 chat log 目标未接 |
+| 10 | 104/105；(718,70) | 信息/任务窗口：切换 id11 | `QuestButton` 切换 `_questDialog` | 入口候选匹配，控件行为仍待验 |
+| 11 | 106/107；(703,85) | 设置栏：切换 id12 | `MenuButton` 在 legacy 模式打开 `ConfigDialog` | 入口匹配；SET-01 内容错误 |
+| 12 | 108/109；(664,86) | 帮助窗口：原版韩文资源标记“计划支持”，点击无动作 | `GroupButton` 的旧版点击回调现为空操作；现代模式仍开组队窗 | 旧版导航目标已修正为 no-op；尚需运行时确认此按钮状态与其它映射 |
+| 13 | 110/111；(648,70) | 坐骑：切换 id13 | legacy `CharacterButton` 现切换 `HorseDialog`；现代模式保留人物窗入口 | 源码目标已修正；本轮把代码几何中心(780,721)作为鼠标目标时，未见坐骑窗且未显示该按钮caption，故点击未确认命中；需继续查实际hit rect/覆盖层/输入坐标，HRS项仍未验 |
+| 14 | 112/113；(648,32) | 包袱栏：切换 id0 | `InventoryButton` 切换背包 | 入口匹配，背包细节另见 INV 项 |
+| 15 | 114/115；(665,16) | 状态栏：切换 id1；F200/F201 根窗初始 244×328、位置(0,0)，两态按钮另行切换内容 | legacy HUD 中 `CashShopButton` 始终可见并切换 `CharacterDialog`；现代模式仍走商城 | 按 cap15 原始中心实屏悬停显示状态栏原文并点击；截图 `/tmp/zircon-cap15-click.png` 显示 F200 窗口已打开。窗内F200↔F201、根RECT和点击后位置仍待验 |
+
+表中位置以 F50 HUD 局部坐标计，和 `MainPanel` 创建位置一致；动作来自 primary-static 的 `0x42C494` handler、toggle table 与发送器证据。`MainPanel.AuditLegacyHud()` 只验证自身坐标/可见性，不能覆盖这些错误的命令目标。idx12 的错误组队跳转已在旧 HUD 路径禁用；idx15 已改为状态窗入口。idx2/3/5 仍需追踪原版状态字段或子对象的完整业务语义，当前分别仍落到错误技能书入口、错误退出对话框和附加组队通知。
+
+**控件命中尺寸交叉核对（更正）：**前一稿把 WIL 帧宽高误当作 hit RECT 宽高，结论撤销。`hud-label-evidence.json` 的 `caption_control_class` 将字段 `cap+0x18/+0x1C` 记为普通/按下绘制帧；其构造器摘要同时记载 `SetRect(..., x, y, x+frameW, y+frameH)` 的 `frame=[window_obj+0x38]`。这里用于 RECT 的对象是构造参数 `window_obj` 的 `+0x38` 字段，不是 caption 自身保存的 F100/F102 等 WIL 帧；40×38 只能说明图像画布尺寸。较早但同属 primary-static 的 `chat-window-control-map.json` 对 cap8–15 明列 `setrect_22x22` 及八组 `x/y/x+22/y+22` 结果。两份资料因此并未证明同一个 hit RECT 同时是22×22和40×38；更可能是后续字段说明把父对象 RECT 尺寸误述成了图像帧尺寸。当前应采信能看到明确四个 SetRect 坐标值的22×22记录，至少适用于右侧八个 caption；仍需用原始构造调用的寄存器/栈实参及 `[window_obj+0x38]` 初始化处独立复核父对象。belt cap7 的 F159 为16×14、当前 DXButton 为24×16，但两者都不能单独证明原版 hit RECT；其原版具体父对象及矩形尚未闭合。此前“15个按钮尺寸匹配帧头、belt 多8×2”的推断全部撤销。HUD-05 的 idle/hover/pressed 绘制状态结论不受此几何更正影响。
+
+**HUD caption 字符串证据裁决（F321）：**`hud-caption-action-tail-evidence.json` 的 fresh disassembly 对 cap0 构造调用 `0x4279B2` 直接记录 `push 0x47BCE0`，文本为“交易栏(Ctrl+C, C)”；cap1 调用 `0x4279E6` 直接记录 `push 0x47BCCC`，文本为“小地图(Ctrl+V, V)”；cap14 调用 `0x427D42` 记录 `push 0x47BBE0`，文本为“包袱栏(Ctrl+Q, Q)”。因此旧记录把 `0x47BBE0` 当 cap0、把 cap1 写成“任务栏”的结论已撤销。legacy `MainPanel` tooltip 已改用这16条静态原文并由独立悬停提示控件绘制；现代模式仍使用可编辑键位标签。此裁决只解决字符串映射；legacy提示框完整行为仍须逐项验收。
+
+以下是 F321 对全部 16 个构造调用的转录。坐标为旧版 HUD 原始构造偏移，帧号为原版控件 state 帧；这不等于 hit RECT，也不单独证明 Godot 局部坐标已经正确。cap12 保留原始韩文资源文案及研究记录给出的翻译说明。
+
+| cap | 字符串 VA | EI 原文 | 帧对 | 原始偏移 x/y |
+|---:|---|---|---|---|
+| 0 | `0x47BCE0` | 交易栏(Ctrl+C, C) | `0x50/0x51` | `+0xCC`, `+2` |
+| 1 | `0x47BCCC` | 小地图(Ctrl+V, V) | `0x52/0x53` | `+0xE4`, `+2` |
+| 2 | `0x47BCB8` | 技能图鉴(Ctrl+B, B) | `0x54/0x55` | `+0xFC`, `+2` |
+| 3 | `0x47BCA8` | 退出游戏(Alt+Q) | `0x5A/0x5B` | `+0xA1`, `+0x2E` |
+| 4 | `0x47BC98` | 注销人物(Alt+X) | `0x5C/0x5D` | `+0xA1`, `+0x52` |
+| 5 | `0x47BC88` | 组队(Ctrl+G, G) | `0x5E/0x5F` | `+0x268`, `+0x2F` |
+| 6 | `0x47BC78` | 行会(Ctrl+F, F) | `0x60/0x61` | `+0x268`, `+0x52` |
+| 7 | `0x47BC68` | 腰带(Ctrl+Z, Z) | `0x9F/0x9F` | `+0x189`, `+0xD` |
+| 8 | `0x47BC54` | 技能书(Ctrl+E, E) | `0x64/0x65` | `+0x2BF`, `+0x10` |
+| 9 | `0x47BC40` | 聊天记录(Ctrl+R, R) | `0x66/0x67` | `+0x2CE`, `+0x20` |
+| 10 | `0x47BC2C` | 信息窗口(Ctrl+D, D) | `0x68/0x69` | `+0x2CE`, `+0x46` |
+| 11 | `0x47BC18` | 设置栏(Ctrl+N, N) | `0x6A/0x6B` | `+0x2BF`, `+0x55` |
+| 12 | `0x47BC04` | 도움말창(지원예정)，韩版遗留文案“帮助窗口(计划支持)” | `0x6C/0x6D` | `+0x298`, `+0x56` |
+| 13 | `0x47BBF4` | 坐骑(Ctrl+S, S) | `0x6E/0x6F` | `+0x288`, `+0x46` |
+| 14 | `0x47BBE0` | 包袱栏(Ctrl+Q, Q) | `0x70/0x71` | `+0x288`, `+0x20` |
+| 15 | `0x47BBCC` | 状态栏(Ctrl+W, W) | `0x72/0x73` | `+0x299`, `+0x10` |
+
+**运行复核记录（2026-09-23）：**按仓库入口执行 `bash login_game.sh legacy`，服务端7000保持运行；构建成功、测试账号 `test@test.com` 自动登录并收到 `StartGame Result=Success`，进入 `TestHero`，逻辑视口1024×768。首轮 `grim` 截图显示地图与 HUD，但测试窗口遮挡主画面；之后通过 X11 window id 对 Godot 窗口直接抓取1024×768图像，不受桌面截图缩放影响。鼠标在 cap0（交易）当前按钮中心悬停后，初版截图 `/tmp/zircon-hud-cap0-hover3.png` 发现提示框上/左边缺黑线。调整为裁剪区内侧绘制后，重新执行 `bash login_game.sh legacy` 并让 Godot 顶层取得焦点，截得 `/tmp/zircon-cap0-focus-hover.png`：文案“交易栏(Ctrl+C, C)”、黄底 `#FFFF96`、黑字可见；像素扫描确认完整提示框黑色上/下边线均长109px、左/右边线均长18px，边线已进入裁剪区；提示框底缘贴近鼠标位置。此图支持 cap0 的 caption 绘制状态，不代表原版字体度量/动画/所有按钮都一致。之后把指针移到 cap12 计算中心并点击，直抓画面 `/tmp/zircon-cap12-focus-click.png` 未见组队窗，和 no-op 目标相符；但 cap12 悬停未出现 caption，因此这次点击未能证明点击坐标落入该控件，不将它记为完整交互验收。cap0 提示宽高/文本居中、边缘状态和 hover leave 仍待测。启动输出确认 `StartGame Result=Success`、viewport 1024×768，legacy HUD 自检 `PASS` 仅作代码诊断，不视为视觉证明。
+
+**测试启动器更正（2026-09-23）：**连续复测时发现 `login_game.sh` 的客户端查询模式 `godot-mono.*ZirconClient` 与真实进程参数不匹配（实际参数是 `--path /home/tetsuya/development/Zircon/GodotClient`），所以脚本先前报告“无客户端”并遗留多实例，鼠标/窗口状态因此混杂。已把清理及残留检查改为匹配 `$ROOT/GodotClient` 的实际 `--path` 参数；随后再次运行脚本，确认识别并终止了此前由本轮启动的3个实例，只保留新启动的一个客户端（PID 1863899）。这次真实登录成功，`LegacyHud` 输出 `PASS`、`duplicateIcon=False`、`hiddenAttributeIcon=True`；该自检仅为程序状态报告，不代替像素验收。
+
+| 编号 | 严重度 | 发现 | 验收要求 |
+|---|---|---|---|
+| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认 Q=人物窗/W=背包、G=行会/P=组队、J=任务、O=配置、R=排行榜、S=仓库、Z=腰带窗、M=骑马、D=自动跑、B=大地图、C=货币、F=屏蔽列表、E=技能书、Ctrl+E=技能栏、V=小地图；其中 E/V 动作匹配，其他大多目标不同。原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
+| KEY-02 | 阻断，逐键目标与修饰键策略错配 | primary-bytes `window-paint-and-hotkey-dispatch-evidence.json` 的 key table 与 `hotkey-label-handler-consistency.json` 的更正结论，对照 source-confirmed `KeyBindManager.KeyBinds`、`GetAction()` 和 `GameScene.HandleKeyBind()`，如下表。Godot `GetAction()` 比较 Ctrl/Alt/Shift 的精确布尔值；EI 热键处理器门控 `[ebp+0x20]/[ebp+0x24]` 是 modal guard，不等价于要求用户按 caption 中的 Ctrl。Q/D/N 等 caption 与字母分支一致；旧研究把 id0误记成交易、把G误记成行会的判断已由 Finding 316 撤销。 | 依据 EI primary-static 对每个按键验证有效 keydown、caption组合、焦点/mode guard和动作；依据 Godot 源码/设置验证相同物理键的所有修饰组合。逐项检查以下矩阵以及配置覆写后的键位冲突： |
+
+| EI 按键 | EI 已证动作/入口 | 当前 Godot 默认匹配 | 对照结论 |
+|---|---|---|---|
+| Q / Ctrl+Q | id0 背包；打开时另复位拾取/背包输入状态 | 裸 Q→人物装备窗；Ctrl+Q 无默认动作 | 目标错，且 Ctrl 组合被精确匹配挡掉 |
+| W / Ctrl+W | id1 状态面板 | 裸 W→背包；Ctrl+W→FortuneWindow（幸运查询） | 目标错；不能把 id1 状态面板和 id7 人物形象窗混为同一 ID |
+| E / Ctrl+E | id14 技能书 | 裸 E→技能书；Ctrl+E→现代 MagicBar | 裸键目标对，Ctrl 组合目标错 |
+| R / Ctrl+R | id8 聊天窗 | 裸 R→排行榜；Ctrl+R 无默认动作（幸运查询绑定 Ctrl+W） | 两种组合都不是原版聊天窗 |
+| S / Ctrl+S | id13 坐骑窗 | 裸 S→仓库；Ctrl+S 在 `GameScene._Input()` 特判→坐骑 | 仅 Ctrl 组合动作接近；裸 S 错，仓库入口占用原版键 |
+| D / Ctrl+D | id11 信息/任务窗 | 裸 D→自动跑；Ctrl+D 无默认动作 | 目标错，任务窗当前另绑 J |
+| Z / Ctrl+Z | 调整亮度状态 `[D40]/[D42]`，caption 为腰带/光效语义；不是独立窗开关 | 裸 Z→腰带窗；Shift+Z→伴侣传送；Ctrl+Z 无动作 | 目标与动作种类都不符；原版字段的完整业务语义仍待查 |
+| C / Ctrl+C | 向被选实体发起交易请求（不是开交易窗） | 裸 C→无动作；Ctrl+C→货币窗 | 原版动作和修饰组合都错；当前交易请求另绑 T |
+| V / Ctrl+V | 小地图显隐；字母入口约100ms节流 | 裸 V→小地图三态（显/半透明/隐）；Ctrl+V 无动作 | 目标基本对应，但多出透明度状态、节流/状态链不等；见 MAP-03 |
+| B / Ctrl+B | 切换技能书浏览状态 `[+0x6208]` | 裸 B→独立大地图窗；Ctrl+B 无动作 | 目标错；EI 不存在独立大地图窗的证据见 MAP-02 |
+| G / Ctrl+G | 裸 G→id6组队窗；caption 标注 Ctrl+G/G；确切 Ctrl 门控需按 handler/context 复核 | 裸 G→行会；Ctrl+G→组队邀请目标 | 裸键错；Ctrl 组合是邀请动作而非开组队窗 |
+| F / Ctrl+F | 行会动作请求 `0x4523E0`，不是简单开/关行会窗；caption 标注 Ctrl+F/F | 裸 F→无动作；Ctrl+F→屏蔽物品过滤窗 | 目标错；行会窗入口另绑 G |
+| N / Ctrl+N | id12 设置窗；caption标注 Ctrl+N/N | 裸 N→MenuWindow，`HandleKeyBind()` 打开通用 MenuDialog；Ctrl+N 无默认动作（Ctrl+O 才打开聊天选项） | EI 设置入口未映射到键盘路径；HUD菜单按钮对 legacy 另有 ConfigDialog 特判，键盘路径没有该特判 |
+| T / Ctrl+T | primary-static 分支先检查小地图状态 `[+0x6518]`；完整后续动作未闭合 | 裸 T→交易请求；Ctrl+T→AllowTrade聊天命令 | 不能据同字母认定对应；先追完 EI T 分支再裁定 |
+
+当前表外的 J/O/P/M、Alt+Q/Alt+X、Esc、Ctrl+F1..F4 等是 Godot 默认扩展/现代入口；EI 原版映射分别见 QUEST、SET、GROUP、HRS、EXIT、SKL 条目。它们不构成 EI 键位等价证据。EI 原版 caption 中一键两写法与 Windows `GetKeyState(VK_字母)` 的具体关系，应由对应 handler 及运行态同时闭合；不得把上述表中的 caption 文本反推成必需 modifier。
+| HUD-05 | 阻断，绘制逻辑已实现一轮，16项全状态仍未验 | `hud-label-evidence.json` primary-static：16控件 normal-frame override `-1`、hover flag `0`；paint `0x417640` normal不绘制、hover调`0x417370`绘制跟随鼠标的说明框、pressed画state frame。F50两侧常驻图标烘焙在底图。现`DXButton.LegacyHudCaption` idle隐藏、hover揭示原文、pressed画state frame；`MainPanel.ApplyLegacyEiHudCaptions()`配置16项。重启后的 cap0直抓图`/tmp/zircon-cap0-focus-hover.png`与独立像素扫描确认：黄底`#FFFF96`、黑字、上下黑线各109px、左右黑线各18px，四边均可见；提示框下缘靠近指针。此前缺边只存在于旧图`/tmp/zircon-hud-cap0-hover3.png`，内侧绘制修改后cap0边框完整。 | 对cap0继续核框尺寸/文字中心、逐帧揭示速度与hover leave；再覆盖其余15项、按下态、边界位置与800×600目标基准。点击RECT与caption绘制分开验，按HUD-08独立核验。 |
+| HUD-06 | 高，动态血量/魔法量没有进入绘制链 | 当前血球只按“最大 MP 是否大于零”画整颗红球或两张完整半球；HP/MP 百分比控件虽绑定数据和 fill 帧，但初始化后被隐藏，旧版画面实际没有任何按当前值裁切的球面填充 | `hud-bars-render-evidence.json` primary-static：`0x429740` 从 HP 与 MP 归一化字段准备 `[0,1]` 比例；HP目标矩形 `(61,496)-(104,566)`、MP `(105,496)-(147,566)`；主HUD调用序是 F62、F60、F61、经验 F63。viewer `/api/info` 给出 F60/F61=56×110、F62=112×110、F63=164×6，偏移均 `(-24,-16)`；直接取 `/api/image?...&scale=1&bg=transparent` RGBA 帧解码的 alpha bbox 分别为 F60/F61 `[0,0,55,109)`、F62 `[0,0,110,109)`、F63 `[0,0,164,6)`，末列/末行透明留白可与命中 Rect 区分。GB18030 hover 字符串确认 HP/MP/经验语义。当前 `MainPanel.CreateBar()` 为 HP/MP 创建的数据填充控件在构造后立即 `Visible=false`；`DrawPlayerOrb()` 对最大 MP≤0 直接画完整 F62，对 MP>0 直接把 F60/F61 完整纹理各画一次，不读取 `_currentHP`、`_currentMP` 或比例，因而静态球色块不反映损血/耗蓝。当前经验 F63 则单独用 `_experience/_maxExperience` 横向裁切；此项没有证明其裁切方向与原版一致。原版三帧的精确遮罩方向、空值边界与前景/底图职责仍受证据 JSON 标注的 live-memory 残项限制，不能据图片先猜补画方向。 | 依据 `0x429740` 的比例栈值和 F62/F60/F61 顺序，恢复各帧对 `0x45E570/0x4542F0` 的矩形/裁切参数；用独立 scalar 表验证HP/MP=0、半值、满值的有效源矩形，再在legacy真实状态条截图核帧叠放、血/蓝球分界、HP/MP悬停数字及数值变动。经验 F63 的方向另行单验。 |
+| HUD-07 | 高，legacy 模式仍默认叠加新式常驻 HUD | `GameScene.CreateHud()` 对 legacy 与现代模式共用同一 HUD 初始化：小地图强制显示；`BeltDialog.ApplyLegacyEiPotionBeltLayout()` 后仍强制显示腰带；`MagicBar` 也无条件显示。聊天记录/输入框按 `HideChatBar` 设置，任务追踪按 `QuestTrackerVisible` 设置。以上只确认 Zircon 的默认可见性，尚不能据此裁定哪些元素在 EI 原版应隐藏。原版 primary-static `mini-map-widget-evidence.json`（F888/0x429630）证明小地图绘制通道包含地图帧和六个热槽图标；`hud-hotkey-target-system-evidence.json`（F581/0x42D720、0x42D9E0）证明六槽有独立 RECT/记录/点击执行链，记录为六个 0xC24 item record，操作还有 item、trade、skill 分支。`chat-window-control-map.json` 与 `chat-window-mouse-dispatch.json` 记录六框位置为 `(0x117+i*0x28, 0x1B0+i*0x10)`，框尺寸 `0x26×0x26`，即客户端坐标 `(279+40i,432+16i)`、38×38；中心序列为 `(298+40i,451+16i)`。这些矩形形成对角序列，但它们是否就是 HUD 绘制后的最终屏幕框仍需沿调用参数核实。HUD 绘制例程 `0x429630` 的研究摘要只给出小地图 surface blit 的目标原点 `(275,478-[zoom])`；摘要中出现的 `0x320×0x258` 与 `0x4294E0` 对 F50 HUD 底板记录的 800×600 viewport 参数相同，不能据此当作小地图的有效像素尺寸。`minimap-blit-runtime-evidence.json` 未记录该 surface 实际宽高或最终裁切矩形。因此小地图尺寸/边界继续保持未定，不能以摘要里的 viewport 值判边界。六槽记录具有药水类型字段，和当前 potion-belt 的功能存在明显对应候选，但不能直接等同其目前横排面板布局；它也不等同 12/24 格现代 `MagicBar`。`MagicBar` 请求 GameInter2 帧作为技能边框，但 `MirSkin` 在 legacy 模式把 GameInter2 路由到缺少该文件的 `LegacyEI/Data`，绘制会走矩形回退；不要把常规 `Data` 的同名 Zl 当作已被 legacy 客户端加载。 | 重新核验 `0x429630` 传给 `0x460240` 的完整 RECT 参数、坐标系/裁切和 `0xD44` 初始化者，确定小地图 surface 和 destination clipping 的有效范围；追六槽绘制与点击的实际位置、物品/技能/交易分支及层级。从 `BeltDialog` 对应的原版对象/状态路径查明 EI 六槽对象与药水类型字段的确切关系，并判定是否属于小地图常驻绘制。再用 legacy 游戏态截图记录腰带、MagicBar、小地图、聊天和任务条各自的像素框/遮挡。只有证实原版对应关系后，才决定 legacy 默认显隐及重建方案；不可把六槽快捷物品证据直接当作 12/24 格现代魔法栏依据。 |
+| HUD-08 | 高，原版 HUD caption 命中框需要按父对象 RECT 复核 | `chat-window-control-map.json` 对右侧 cap8–15 给出 primary-static 的22×22 SetRect坐标；`hud-label-evidence.json` 的40×38、16×14是 WIL 绘制帧尺寸，不能当 hit 尺寸。其构造字段摘要把 RECT 端点连到构造参数 `window_obj+0x38`，但尚未独立查明这个父对象字段的初始化来源。当前所有 `DXButton` 按资源帧大小设置，无法据此证明其原版 hit 区正确；belt cap7尤其不能从F159尺寸推出命中矩形 | 从 `0x417550` 原始指令复核 `[window_obj+0x38]` 的数据布局，并沿所有16次构造调用追父对象/RECT大小；逐帧分别列出绘制帧有效像素框、原版 hit RECT、当前 `DXButton.Rect`。复核完再判断哪些边缘点击区需要修正 |
+| HUD-09 | 高，提示框像素行为部分闭合 | F321 `hud-caption-action-tail-evidence.json`裁决cap0/cap1/cap14字符串地址；16条原文已录入，legacy `DXButton`单独绘制静态caption。新cap0图`/tmp/zircon-cap0-focus-hover.png`验证文案、黄底、黑字、完整黑框及跟随指针；像素扫描记上下边109px、左右边18px。文字度量、框与指针间隙、动画逐帧和其它caption仍未与EI目标画面闭合 | 从`0x417640`核对锚点、绘制顺序、颜色、边框、逐字计数和pressed状态；逐项收集16个控件idle/hover/pressed/leave截图并测边界位置，caption与hit RECT分开验收 |
+| BELT-01 | 高，槽对象可能对应，原版几何证据冲突待裁决 | 原版 primary-static 证据出现六个 `0xC24` item records、每槽 38×38 RECT、每记录含 potion type；当前 `BeltDialog.ApplyLegacyEiPotionBeltLayout()` 也建六格药水栏。F51 直接 viewer PNG 头元数据为 248×46；独立解码 alpha bbox `(0,0,248,45)`，素材视觉上是六格横排，和当前 F51 横排构造相符（visual-candidate）。但 primary-static 摘要 `chat-window-control-map.json`/`chat-window-mouse-dispatch.json` 将 D44 六框解释为起点 `(279+40i,432+16i)` 的对角序列；这与 F51 六格横排及当前窗口局部 `(3,2)` 横排命中框不能同时直接映射。可能是摘要对 `SetRect` 参数/坐标轴的解释错误、D44 命中框另有用途，或存在两个六槽系统；无目标 EXE 时不能裁定。原版 F50 idx7 点击会改 `[HUD+0xD40]` 与 `[HUD+0xD42]`，不打开独立窗口；研究摘要将其解释为腰带槽选择/动画状态，小地图 `0x429630` 路径也将相同偏移解释为地图滚动量与方向，热槽点击门读取 `+0xD42`。这些字段可能被 HUD 功能共享；现有摘要没有说明彼此如何联动。 | 取得/挂载目标 EI EXE 后复核 idx7 handler、`0x429630` 与 `0x42D720` 对 `[D40]/[D42]` 的读写上下文和 this 对象；重放 `0x427DDE` SetRect 实参顺序、`[D44]` 初始化者与 `0x42D7C0` 构造关系，判断 D44 是否就是 F51 六格的交互矩形。随后以 F51、逐格命中框和 0xC24 records 独立合成，核对物品图标、药水门控与点击效果；确认 EI 模式应把 BeltDialog 实现为常驻槽、弹窗还是不另建对象。 |
+
+## 执行与记录步骤
+
+1. 按“原版界面目录与导航关系”表复核目标 EI 的节点、文字、控件、点击/键盘边和服务器驱动转场；逐项对照既有研究文档，发现矛盾就标出来源、裁决或保留未决。
+2. 对当前 Zircon 控件树、真实资源加载路径和输入/协议源码做同一节点交叉映射；记录已匹配/不匹配/证据不足，不用自身自审计常量充当原版预期。
+3. 原版证据足以定案后，关联审计编号直接修复该项；先确认其资源/坐标/行为目标，再用独立数据核几何和素材，不把彼此共用同一错误假设的工具视作交叉验证。
+4. 每项修复运行仓库根目录 `bash login_game.sh legacy`，在规定窗口、输入顺序、分辨率及数据状态下做实际鼠标/键盘/业务验证并截图。截图记录状态/步骤；无法观察或窗口未聚焦时明确记为未验证，不以进程存活替代实际UI。
+5. 一项只有画面、控件、操作、流转和数据结果都达到“最终验收标准”才标为通过；每项保留残余风险。全部范围逐项核验后再复核矩阵并整理按风险/依赖排序的最终计划/完成记录。
+
+## 工作区保护与当前限制
+
+本次审计保留开始时已有的未提交改动：`GodotClient/Controls/BeltDialog.cs`、`GodotClient/Controls/CharacterDialog.cs`、`GodotClient/Scripts/GameScene.cs`、`GodotClient/Scripts/LegacyHudLayoutLab.cs` 及未跟踪的 `docs/LOCAL_TOOL_SERVICES_STATUS_2026-09-23.md`。审计期间不得以清理工作区为由覆盖或丢弃这些内容，不提交、不推送。后续真实客户端启动前先检查当前客户端进程，避免误杀用户正在使用的实例。
+
+原版目标 `Mir3.exe` 当前不能从研究文档记录的 NAS 源路径读取：`/home/tetsuya/NAS/TMP` 当前不存在于挂载点；研究证据声明的来源为 `/home/tetsuya/NAS/TMP/EI传奇3.0客户端/Mir3.exe`。本机 `/home/tetsuya/mir3ei/Mir3.exe` 是 PE 时间戳 2003-05-14、SHA-256 `bd0909ae7b4e5ed49300f573e45a2c073a7cd8bc8da21a553be0a6bc2973fa15` 的 581,632-byte 文件；当前没有目标 EI 3.0 EXE 的哈希或版本资源可用于确认它的构建身份。只读 `objdump` 显示本机文件在 `0x427B24` 的指令流与研究记录中 HUD caption 构造调用的地址布局不同；这只证明不能把研究目标的 VA/函数标签直接套到本机文件，不能据此裁定两个版本的功能语义或版本关系。故本机 EXE 不作为目标 EI 的反汇编复核材料，研究 JSON（如 `group-window-render-detail-evidence.json` F536 与 `quest-window-render-detail-evidence.json` F537）暂作为现有 primary-static 记录使用，但不能声称已对原始字节独立重放。组队列语义现已由 F536 证据闭合；若要复核机器码本身，需取得并校验与研究目标身份一致的 EXE。素材目录和查看器可用性另行核验，不能以 EXE 身份未确认推断素材也缺失。
+
+### 真实登录运行时基线（仓库根目录入口）
+
+按用户指定从仓库根目录执行 `bash login_game.sh legacy`。这是本项目 UI 测试约定的完整调用形式。脚本识别到 7000 端口服务已运行并保留服务，服务端和客户端构建均报告 `0 Error(s)`；随后 Godot 4.6.3 Mono 以 `--legacy-ui --legacy-hud` 启动。测试账号 `test@test.com` 自动登录，角色 `TestHero` 收到 `StartGame Result=Success` 并进入地图 7（沙巴克）。当时记录的客户端 PID 1325350；桌面截图 `/tmp/zircon-legacy-root-launch.png` 可见 1024×768 客户端窗口、游戏画面及底部 HUD，且小地图位于客户端内容区右上角；后续截图 `/tmp/zircon-legacy-skill-e-hotkey.png` 显示同一初始画面。该截图可作现有 Godot 小地图可见性/锚点基线，但窗口截图经桌面缩放，不足以替代客户端坐标量测或 800×600 原版对照。已尝试 Wayland 键盘注入打开技能书，但无法确认 Godot 窗口取得焦点；因此这次按键尝试不作为“技能书未打开”的运行时结论。客户端启动/重启必须沿用仓库根目录命令 `bash login_game.sh legacy`，且脚本会先关闭当前客户端；没有另行确认需要新基线前不重复执行。
+
+本轮只读确认旧登录启动脚本仍在运行（PID 1510750，子 Godot PID 1510978，参数含 `--legacy-ui --legacy-hud`）；没有重启、激活或发送输入。通过 `grim` 截得当前双屏桌面 `/tmp/zircon-legacy-audit-live-2026-09-23.png`，当前屏幕上未见 Zircon 窗口，主要显示浏览器与终端。该截图只能证明截图时客户端进程存在但 UI 未在可见桌面呈现，不能作为控件状态验证；旧有游戏截图仍是历史运行证据。本轮因此没有新增 runtime-verified 控件结论。
+
+日志中的 `LegacyHud PASS` 只证明 HUD 的程序自检通过，不视作像素/交互验收。历史 `AuditLegacyOrb()` 将 `duplicateIcon` 错写为 `!MCImage.Visible`，因此旧日志里的 `duplicateIcon=True` 恰好表示 MCImage 隐藏，不能作为状态帧重复绘制的证据；现已更正诊断字段并另列 `hiddenAttributeIcon`。HUD-05 对 idle 状态帧叠加的判断来自原版 paint 反汇编与当前 `DXButton` 绘制源码，不依赖这个自检字段。历史运行当时仅记录初始进游戏画面，真实交互仍未验收。
+
+本轮再次按同一命令启动，脚本确认未杀其他客户端、复用端口 7000 的现有服务；登录 `test@test.com`、自动选择 `TestHero`，并收到 `StartGame Result=Success`。启动参数中的 legacy 模式有效，显示窗口初始 viewport 为 1024×768、UiScaler scale=1。先前整桌面截图缩放后未能看清客户端；随后由 X11 window id `0x2000006`（标题 `ZirconClient - 1024x768`，`_NET_WM_PID` 与启动进程一致）直接抓取 `/tmp/zircon-legacy-window-current.png`，尺寸为1024×768。图中角色位于画面中部，旧 HUD 顶部快捷栏、底部主控区和右上小地图均可见，当前没有打开子窗口。这张图是 Godot 初始游戏态 runtime-verified 证据，可用于后续同尺寸前后差分；不能代替 EI 原版图像，也不能证明任何未打开窗口或点击路径正确。当前运行 PID 可由 `ps` 查询；本轮不再启动第二个实例。
+
+对用户指定的素材入口做了带参数的 API 复核：`/api/info?f=GameInter.wil&i=168` 返回 F168 为 36×36、offset=(-24,-16)、1404 words。无帧参数的 `/api/info` 返回 `library not found` 是接口需要 `f` 和 `i` 的正常错误，不能据此判定查看器故障。之后资源边界审计统一用此带帧参数接口或原始 WIL 解码记录，并继续核对 alpha 有效像素 bbox；单凭该头信息不能证明游戏界面位置或控件语义。
+
+本轮还尝试用 XTest 发送 Ctrl+S 检查 HRS-01/HRS-03；但 `XGetInputFocus` 回报 `PointerRoot`，labwc 没有把 Godot 窗口置为输入焦点，故输入是否进入游戏不可确认。注入后截图出现的左上六槽条不能归因到此按键，不作为任何开窗/热键结论；同样不据此认定 F850 已显示。需要可控地激活 Wayland 顶层窗口后再做交互，避免把未聚焦的输入注入误记为运行时验证。
+
+本轮续查时，`pgrep` 仍看到客户端 PID 1510978，参数包含 `--legacy-ui --legacy-hud`，但 Wayland `grim` 的 1280×1024 屏幕截图 `/tmp/zircon-legacy-audit-current.png` 显示的是系统锁屏，不是游戏画面。进程存在不等于窗口当前可见，也不证明它仍连接在游戏态；本轮未解锁、未发送输入、未启动脚本或重启客户端。因此这张截图只记录运行环境当前被锁定，不能作为任何 UI 像素/交互验收。下一次 runtime 窗口验收需先由用户恢复桌面可见状态，之后再沿用现有 PID/窗口检查，避免 `login_game.sh legacy` 关闭用户正在使用的实例。
+
+2026-09-23 19:29 JST 复查：`ps` 确认 PID 1510978 仍在、启动参数仍为 `--legacy-ui --legacy-hud`；新截图 `/tmp/zircon-legacy-audit-live.png`（1280×1024）再次显示系统锁屏。该复查确认 runtime 验收当前仍不可观察；没有对锁屏或客户端发输入，也没有执行会关闭客户端的 `login_game.sh legacy`。这只是重复记录同一桌面状态，不替代静态审计继续推进。
+
+2026-09-23 19:32 JST 复查：PID 1510978 仍在，`/tmp/zircon-legacy-audit-live-2.png`（1280×1024）仍显示锁屏；游戏窗口不能作为可观察对象，未注入输入或重启。桌面截图每次仅用于判断可观察性，不进入 UI 对比样本。
+
+2026-09-23 19:37 JST 复查：PID 1510978 与启动参数未变，`/tmp/zircon-legacy-audit-live-3.png` 再次显示锁屏；未进入运行时视觉/交互验收。

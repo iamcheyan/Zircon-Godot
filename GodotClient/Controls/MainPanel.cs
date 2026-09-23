@@ -247,6 +247,34 @@ public partial class MainPanel : DXImageControl
         SCLabel.Text = string.Empty;
     }
 
+    /// <summary>Apply the original EI's three-state caption rendering to all 16 HUD hit targets.</summary>
+    public void ApplyLegacyEiHudCaptions()
+    {
+        SetLegacyCaption(ExchangeButton, "交易栏(Ctrl+C, C)");
+        SetLegacyCaption(MiniMapButton, "小地图(Ctrl+V, V)");
+        SetLegacyCaption(SkillEntryButton, "技能图鉴(Ctrl+B, B)");
+        SetLegacyCaption(ExitButton, "退出游戏(Alt+Q)");
+        SetLegacyCaption(LogoutButton, "注销人物(Alt+X)");
+        SetLegacyCaption(PartyButton, "组队(Ctrl+G, G)");
+        SetLegacyCaption(GuildButton, "行会(Ctrl+F, F)");
+        SetLegacyCaption(BeltButton, "腰带(Ctrl+Z, Z)");
+        SetLegacyCaption(SpellButton, "技能书(Ctrl+E, E)");
+        SetLegacyCaption(MailButton, "聊天记录(Ctrl+R, R)");
+        SetLegacyCaption(QuestButton, "信息窗口(Ctrl+D, D)");
+        SetLegacyCaption(MenuButton, "设置栏(Ctrl+N, N)");
+        SetLegacyCaption(GroupButton, "도움말창(지원예정)");
+        SetLegacyCaption(CharacterButton, "坐骑(Ctrl+S, S)");
+        SetLegacyCaption(InventoryButton, "包袱栏(Ctrl+Q, Q)");
+        SetLegacyCaption(CashShopButton, "状态栏(Ctrl+W, W)");
+    }
+
+    private static void SetLegacyCaption(DXButton button, string text)
+    {
+        button.LegacyHudCaption = true;
+        button.LegacyHudCaptionText = text;
+        button.TooltipText = string.Empty;
+    }
+
     private static float PercentOf(int current, int max)
     {
         if (current > 0 && max <= 0) max = current;
@@ -497,7 +525,8 @@ public partial class MainPanel : DXImageControl
             && noManaRedState
             && emptyManaSplitState
             && splitState;
-        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} states={noManaRedState}/{emptyManaSplitState}/{splitState} single={oneOrb}";
+        bool duplicateIcon = MCImage?.Visible == true;
+        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={duplicateIcon} hiddenAttributeIcon={!MCImage.Visible} states={noManaRedState}/{emptyManaSplitState}/{splitState} single={oneOrb}";
         return oneOrb;
     }
 

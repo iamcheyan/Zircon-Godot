@@ -4443,7 +4443,10 @@ public partial class GameScene : Control
     {
         _mainPanel = new MainPanel();
         if (AutoLoginArgs.LegacyHud)
+        {
             _mainPanel.ApplyLegacyEiStatsLayout();
+            _mainPanel.ApplyLegacyEiHudCaptions();
+        }
         _uiLayer.AddChild(_mainPanel);
 
         _chatLog = new ChatLogPanel();
@@ -4494,6 +4497,7 @@ public partial class GameScene : Control
         _uiLayer.AddChild(_storageDialog);
 
         _beltDialog = new BeltDialog();
+        _beltDialog.ApplyLegacyEiPotionBeltLayout();
         _uiLayer.AddChild(_beltDialog);
         _beltDialog.Visible = true; // 腰带常驻 (原版主面板上方)
 
@@ -4623,7 +4627,14 @@ public partial class GameScene : Control
         // M9: 主面板功能按钮 -> 对话框开关
         _mainPanel.CharacterButton.MouseClick += (o, e) =>
         {
-            ToggleCharacterWindow();
+            // EI cap13 is the horse window. The modern control happened to
+            // reuse the same frame slot for the character/equipment entry.
+            if (AutoLoginArgs.LegacyHud)
+            {
+                ToggleHorseWindow();
+            }
+            else
+                ToggleCharacterWindow();
         };
         _mainPanel.InventoryButton.MouseClick += (o, e) => WindowManager.Toggle(_inventoryDialog, _uiLayer);
         _inventoryDialog.WalletButton.MouseClick += (o, e) =>
@@ -4656,9 +4667,23 @@ public partial class GameScene : Control
                 WindowManager.Toggle(_menuDialog, _uiLayer);
         };
         _mainPanel.MailButton.MouseClick += (o, e) => OpenCommunicationDialog();
-        _mainPanel.GroupButton.MouseClick += (o, e) => OpenGroupDialog();
-        _mainPanel.CashShopButton.MouseClick += (o, e) => OpenGameStoreDialog();
-        _mainPanel.CashShopButton.Visible = GameStoreEnabled;
+        // EI cap12 is the Korean “help (planned)” slot; its original release
+        // handler is a no-op. Keep the actual party window on cap5 only.
+        _mainPanel.GroupButton.MouseClick += (o, e) =>
+        {
+            if (!AutoLoginArgs.LegacyHud)
+                OpenGroupDialog();
+        };
+        _mainPanel.CashShopButton.MouseClick += (o, e) =>
+        {
+            // EI cap15 is the status window (id 1); it only happens to reuse
+            // the modern client's cash shop button control/frame slot.
+            if (AutoLoginArgs.LegacyHud)
+                ToggleCharacterWindow();
+            else
+                OpenGameStoreDialog();
+        };
+        _mainPanel.CashShopButton.Visible = AutoLoginArgs.LegacyHud || GameStoreEnabled;
         // 旧版 HUD 左上/两侧的小按钮也保留原版的入口语义。
         _mainPanel.SkillEntryButton.MouseClick += (o, e) =>
         {

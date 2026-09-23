@@ -443,3 +443,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-24 00:24 JST W 键修复运行记录：增量关闭后以 `bash login_game.sh legacy` 重启，服务端保持运行；自动登录 TestHero，收到 `StartGame Success`，终端 `LegacyHud PASS`，无启动期异常。该路径验证 W 改动未破坏构建/登录/HUD 自检；没有游戏窗口绑定和真实输入回放，W/Ctrl+W 开 id1 与 F200/F201 切态仍未标记 runtime-verified。
 
 2026-09-24 00:26 JST E 键修复运行记录：构建通过（3条既有警告），`bash login_game.sh legacy` 完整重启后登录 TestHero 并进入地图，`LegacyHud PASS`；未发现启动异常。该结果仅确认新旧模式分支能正常启动，不证明 E/Ctrl+E 输入已在窗口内回放，也不证明技能书内容正确。
+
+2026-09-24 00:27 JST E 键回归复核：客户端收到 `StartGame Result=Success`，加载 Sabuk Keep 地图并完成首帧渲染；贴图诊断 missing libraries/textures 均为0。该交叉日志进一步确认新客户端稳定进入地图，但没有窗口/按键回放，仍不计作 E、Ctrl+E 行为验收。

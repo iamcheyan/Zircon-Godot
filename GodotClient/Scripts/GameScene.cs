@@ -10460,6 +10460,15 @@ public partial class GameScene : Control
             return;
         }
 
+        // EI 的 W 与 Ctrl+W 都切换 id1 状态窗；该窗在 legacy profile
+        // 中由 CharacterDialog 的 F200/F201 两态承载。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.W
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            ToggleCharacterWindow();
+            return;
+        }
+
         // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
             && !key.AltPressed && !key.ShiftPressed)

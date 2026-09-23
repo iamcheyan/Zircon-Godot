@@ -136,8 +136,8 @@ public partial class MagicDialog : DXWindow
         _background.Visible = false;
         _tabPrevious.Visible = false;
         _tabNext.Visible = false;
-        // F400 已包含旧版技能书和 12 个技能格。现代纵向列表不能只
-        // 移到书页下方，否则刷新后会把新版行控件混进旧版界面。
+        // 当前 legacy 技能格仍是未验收的模拟器候选布局；隐藏现代列表，
+        // 避免刷新时把新版行控件混进该候选画面。
         _list.Visible = false;
         _scrollBar.Visible = false;
 
@@ -167,8 +167,8 @@ public partial class MagicDialog : DXWindow
         }
         _legacySkillLabels.Clear();
 
-        // 12 个格子来自 simulator/layout.json 与 skill-grid-magic-exp-evidence：
-        // 4 列、3 行、36×36，GameInter F410..F421 是 Magic.exp 的基准图标。
+        // 12 个格子仅来自 simulator/layout.json 的候选布局，尚未由 EI 几何证据确认。
+        // F410/F412 属于已确认的导航控件状态帧，不能当作技能图标序列。
         for (int i = 0; i < 12; i++)
         {
             int index = i;
@@ -181,7 +181,7 @@ public partial class MagicDialog : DXWindow
                 Size = new Vector2I(36, 36),
                 IsControl = true,
                 MouseFilter = MouseFilterEnum.Pass,
-                TooltipText = $"旧版技能格 {i + 1} · Magic.exp 图标 F{410 + i}",
+                TooltipText = $"候选技能格 {i + 1}（EI布局未验收）",
             };
             slot.MouseClick += (_, _) =>
             {
@@ -197,7 +197,13 @@ public partial class MagicDialog : DXWindow
 
     private void RefreshLegacySkillSlots(IEnumerable<(MagicInfo Info, ClientUserMagic UserMagic)> entries)
     {
-        var visible = entries.Take(12).ToArray();
+        // Keep the hidden tuple index used by click/F-key binding aligned with
+        // the visible MagicCellView order built in SelectSchool below.
+        var visible = entries
+            .OrderBy(x => x.Info.NeedLevel1)
+            .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
+            .Take(12)
+            .ToArray();
         _legacyRuntimeEntries.Clear();
         _legacyRuntimeEntries.AddRange(visible);
         for (int i = 0; i < _legacySkillSlots.Count; i++)
@@ -211,9 +217,8 @@ public partial class MagicDialog : DXWindow
 
             var (info, userMagic) = visible[i];
             slot.Visible = true;
-            // Magic.exp supplies the category frame; the learned spell supplies
-            // the actual icon and level/status. Do not leave the static frame in
-            // place once runtime data is available.
+            // Runtime skills supply the icon and level/status. The GameInter
+            // background frames above are not established as EI skill icons.
             slot.LibraryFile = LibraryFile.MagicIcon;
             slot.Index = info.Icon;
             slot.TooltipText = $"{info.Local()} · {(userMagic == null ? "未学习" : $"等级 {userMagic.Level}")}";

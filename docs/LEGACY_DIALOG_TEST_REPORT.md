@@ -25,6 +25,23 @@
 新增直达窗口日志后，`--legacy-ui --legacy-open=inventory` 的真实登录回归输出为：
 `[LegacyOpen] requested=inventory type=InventoryDialog visible=True size=(284, 324)`，随后正常进入 `TestHero` 地图。该结果确认真实场景打开的是旧版 `InventoryDialog`，不是仅在测试场创建的占位窗口。
 
+随后对其余核心窗口执行了同样的真实登录直达回归，结果如下：
+
+| 参数 | 实际窗口 | 实际尺寸 |
+|---|---|---:|
+| `character` | `CharacterDialog` | `244×328` |
+| `magic` | `MagicDialog` | `452×380` |
+| `quest` | `QuestDialog` | `340×440` |
+| `chat` | `CommunicationDialog` | `572×388` |
+| `group` | `GroupDialog` | `256×244` |
+| `trade` | `TradeDialog` | `484×330` |
+| `guild` | `GuildDialog` | `446×596` |
+| `storage` | `StorageDialog` | `205×205` |
+| `config` | `ConfigDialog` | `248×264` |
+| `notice` | `NoticeDialog` | `584×252`，位置 `(107,110)` |
+
+每项均记录 `StartGame 成功`、`LegacyOpen visible=True` 和进入 `TestHero` 地图；尺寸与独立 `LegacyAudit` 一致。
+
 ## 1. 本轮结论
 
 旧版 EI 测试场已经可以独立启动，并复用正式窗口类、旧版 GameInter 贴图和旧版根矩形。自动审计通过，人物窗口本轮补齐了装备 enum 到旧版视觉格子的映射校验。

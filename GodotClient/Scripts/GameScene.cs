@@ -4442,6 +4442,8 @@ public partial class GameScene : Control
     private void CreateHud()
     {
         _mainPanel = new MainPanel();
+        if (AutoLoginArgs.LegacyHud)
+            _mainPanel.ApplyLegacyEiStatsLayout();
         _uiLayer.AddChild(_mainPanel);
 
         _chatLog = new ChatLogPanel();

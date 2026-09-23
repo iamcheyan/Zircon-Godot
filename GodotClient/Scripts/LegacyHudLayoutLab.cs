@@ -48,7 +48,9 @@ public partial class LegacyHudLayoutLab : Control
         {
             Location = LegacyHudLayout.MainPanelLocation,
         };
+        _hud.ApplyLegacyEiStatsLayout();
         _canvas.AddChild(_hud);
+        _hud.SetLevel(70);
         _hud.SetHealth(100);
         _hud.SetMana(80);
         _hud.SetFocus(30);

@@ -32,6 +32,7 @@ public partial class MainPanel : DXImageControl
     private decimal _experience, _maxExperience;
     private Stats _stats = new Stats();
     private DXControl _playerOrb;
+    private bool _legacyEiStats;
 
     public MainPanel()
     {
@@ -201,6 +202,51 @@ public partial class MainPanel : DXImageControl
         AddControl(PetModeLabel);
     }
 
+    /// <summary>
+    /// 旧版 EI HUD 的静态属性文字不是新版九格属性栏。
+    /// 旧版只保留中央等级，以及右下的 AC/DC；其它字段不参与绘制。
+    /// 该方法只由 --legacy-hud/--legacy-ui 和独立旧版 HUD 测试场调用。
+    /// </summary>
+    public void ApplyLegacyEiStatsLayout()
+    {
+        _legacyEiStats = true;
+
+        // 旧版没有新版属性栏的图标列，也没有职业、FP/CP、MR/MC/SC 文本。
+        foreach (DXImageControl image in new[]
+        {
+            ClassImage, LevelImage, FPImage, CPImage, ACImage, DCImage,
+            MACImage, MCImage, SCImage,
+        })
+            image.Visible = false;
+
+        foreach (DXLabel label in new[]
+        {
+            ClassLabel, FPLabel, CPLabel, MACLabel, MCLabel, SCLabel,
+        })
+            label.Visible = false;
+
+        // 中间只显示等级；AC/DC 落在右下、环形操作区左侧。
+        LevelLabel.Location = new Vector2I(300, 42);
+        LevelLabel.Size = new Vector2I(70, 16);
+        LevelLabel.Visible = true;
+
+        ACLabel.Location = new Vector2I(525, 74);
+        ACLabel.Size = new Vector2I(88, 16);
+        ACLabel.Visible = true;
+        DCLabel.Location = new Vector2I(525, 94);
+        DCLabel.Size = new Vector2I(88, 16);
+        DCLabel.Visible = true;
+
+        // SetStats 会在收到服务器属性包后重新填值；这里先清掉旧版不应残留
+        // 的新版文本，避免测试场/登录瞬间出现一帧错误字段。
+        ClassLabel.Text = string.Empty;
+        FPLabel.Text = string.Empty;
+        CPLabel.Text = string.Empty;
+        MACLabel.Text = string.Empty;
+        MCLabel.Text = string.Empty;
+        SCLabel.Text = string.Empty;
+    }
+
     private static float PercentOf(int current, int max)
     {
         if (current > 0 && max <= 0) max = current;
@@ -359,6 +405,14 @@ public partial class MainPanel : DXImageControl
         ClassLabel.Text = cls.Local();
         bool showMC = cls == MirClass.Wizard || cls == MirClass.Warrior;
         bool showSC = cls == MirClass.Taoist || cls == MirClass.Assassin;
+        if (_legacyEiStats)
+        {
+            MCLabel.Visible = false;
+            MCImage.Visible = false;
+            SCLabel.Visible = false;
+            SCImage.Visible = false;
+            return;
+        }
         MCLabel.Visible = showMC;
         MCImage.Visible = false;
         SCLabel.Visible = showSC;
@@ -368,9 +422,11 @@ public partial class MainPanel : DXImageControl
     public void SetStats(Stats stats)
     {
         _stats = stats ?? new Stats();
-        ACLabel.Text = _stats.GetFormat(Stat.MaxAC) ?? "";
+        string ac = _stats.GetFormat(Stat.MaxAC) ?? "";
+        string dc = _stats.GetFormat(Stat.MaxDC) ?? "";
+        ACLabel.Text = _legacyEiStats ? $"AC {ac}" : ac;
         MACLabel.Text = _stats.GetFormat(Stat.MaxMR) ?? "";
-        DCLabel.Text = _stats.GetFormat(Stat.MaxDC) ?? "";
+        DCLabel.Text = _legacyEiStats ? $"DC {dc}" : dc;
         SCLabel.Text = _stats.GetFormat(Stat.MaxSC) ?? "";
         MCLabel.Text = _stats.GetFormat(Stat.MaxMC) ?? "";
         RefreshBars();
@@ -457,9 +513,23 @@ public partial class MainPanel : DXImageControl
             && InventoryButton?.Location == new Vector2I(648, 32)
             && SpellButton?.Location == new Vector2I(703, 16)
             && MenuButton?.Location == new Vector2I(703, 85);
+        bool legacyStats = _legacyEiStats
+            && LevelLabel.Visible
+            && !ClassLabel.Visible
+            && !FPLabel.Visible
+            && !CPLabel.Visible
+            && !MACLabel.Visible
+            && !MCLabel.Visible
+            && !SCLabel.Visible
+            && ACLabel.Visible
+            && DCLabel.Visible
+            && ACLabel.Location == new Vector2I(525, 74)
+            && DCLabel.Location == new Vector2I(525, 94);
         bool orb = AuditLegacyOrb(out string orbDetails);
-        details = $"panel={Index}/{Size} buttons={buttons} {orbDetails}";
-        return panel && buttons && orb;
+        details = $"panel={Index}/{Size} buttons={buttons} legacyStats={legacyStats} "
+            + $"vis(level/class/fp/cp/ac/dc/mac/mc/sc)={LevelLabel.Visible}/{ClassLabel.Visible}/{FPLabel.Visible}/{CPLabel.Visible}/{ACLabel.Visible}/{DCLabel.Visible}/{MACLabel.Visible}/{MCLabel.Visible}/{SCLabel.Visible} "
+            + $"level={LevelLabel.Text}@{LevelLabel.Location} ac={ACLabel.Text}@{ACLabel.Location} dc={DCLabel.Text}@{DCLabel.Location} {orbDetails}";
+        return panel && buttons && legacyStats && orb;
     }
 
     public void SetAttackMode(AttackMode mode)

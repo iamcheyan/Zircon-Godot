@@ -372,7 +372,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 | 编号 | 严重度 | 发现 | 验收要求 |
 |---|---|---|---|
-| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认表仍是现代映射；legacy `_Input()` 已将裸/ Ctrl Q→背包 id0、W→状态 id1、E→技能书 id14、D→任务 id11、S→坐骑 id13 覆盖到原版目标，其他键仍需逐项核对。Q 的开窗附带复位副作用尚未映射；原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
+| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认表仍是现代映射；legacy `_Input()` 已将裸/ Ctrl Q→背包 id0、W→状态 id1、E→技能书 id14、D→任务 id11、S→坐骑 id13、N→设置 id12 覆盖到原版目标，其他键仍需逐项核对。Q 的开窗附带复位副作用尚未映射；原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
 | KEY-02 | 阻断，逐键目标与修饰键策略错配 | primary-bytes `window-paint-and-hotkey-dispatch-evidence.json` 的 key table 与 `hotkey-label-handler-consistency.json` 的更正结论，对照 source-confirmed `KeyBindManager.KeyBinds`、`GetAction()` 和 `GameScene.HandleKeyBind()`，如下表。Godot `GetAction()` 比较 Ctrl/Alt/Shift 的精确布尔值；EI 热键处理器门控 `[ebp+0x20]/[ebp+0x24]` 是 modal guard，不等价于要求用户按 caption 中的 Ctrl。Q/D/N 等 caption 与字母分支一致；旧研究把 id0误记成交易、把G误记成行会的判断已由 Finding 316 撤销。 | 依据 EI primary-static 对每个按键验证有效 keydown、caption组合、焦点/mode guard和动作；依据 Godot 源码/设置验证相同物理键的所有修饰组合。逐项检查以下矩阵以及配置覆写后的键位冲突： |
 
 | EI 按键 | EI 已证动作/入口 | 当前 Godot 默认匹配 | 对照结论 |
@@ -389,7 +389,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 | B / Ctrl+B | 切换技能书浏览状态 `[+0x6208]` | 裸 B→独立大地图窗；Ctrl+B 无动作 | 目标错；EI 不存在独立大地图窗的证据见 MAP-02 |
 | G / Ctrl+G | 裸 G→id6组队窗；caption 标注 Ctrl+G/G；确切 Ctrl 门控需按 handler/context 复核 | 裸 G→行会；Ctrl+G→组队邀请目标 | 裸键错；Ctrl 组合是邀请动作而非开组队窗 |
 | F / Ctrl+F | 行会动作请求 `0x4523E0`，不是简单开/关行会窗；caption 标注 Ctrl+F/F | 裸 F→无动作；Ctrl+F→屏蔽物品过滤窗 | 目标错；行会窗入口另绑 G |
-| N / Ctrl+N | id12 设置窗；caption标注 Ctrl+N/N | 裸 N→MenuWindow，`HandleKeyBind()` 打开通用 MenuDialog；Ctrl+N 无默认动作（Ctrl+O 才打开聊天选项） | EI 设置入口未映射到键盘路径；HUD菜单按钮对 legacy 另有 ConfigDialog 特判，键盘路径没有该特判 |
+| N / Ctrl+N | id12 设置窗；caption标注 Ctrl+N/N | `--legacy-ui` 裸 N/Ctrl+N→F750 `ConfigDialog`；现代模式裸 N→MenuDialog | 已将旧版键盘入口接到与 HUD cap11 相同设置窗；真实输入与窗内控件待验 |
 | T / Ctrl+T | primary-static 分支先检查小地图状态 `[+0x6518]`；完整后续动作未闭合 | 裸 T→交易请求；Ctrl+T→AllowTrade聊天命令 | 不能据同字母认定对应；先追完 EI T 分支再裁定 |
 
 当前表外的 J/O/P/M、Alt+Q/Alt+X、Esc、Ctrl+F1..F4 等是 Godot 默认扩展/现代入口；EI 原版映射分别见 QUEST、SET、GROUP、HRS、EXIT、SKL 条目。它们不构成 EI 键位等价证据。EI 原版 caption 中一键两写法与 Windows `GetKeyState(VK_字母)` 的具体关系，应由对应 handler 及运行态同时闭合；不得把上述表中的 caption 文本反推成必需 modifier。
@@ -445,3 +445,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-24 00:26 JST E 键修复运行记录：构建通过（3条既有警告），`bash login_game.sh legacy` 完整重启后登录 TestHero 并进入地图，`LegacyHud PASS`；未发现启动异常。该结果仅确认新旧模式分支能正常启动，不证明 E/Ctrl+E 输入已在窗口内回放，也不证明技能书内容正确。
 
 2026-09-24 00:27 JST E 键回归复核：客户端收到 `StartGame Result=Success`，加载 Sabuk Keep 地图并完成首帧渲染；贴图诊断 missing libraries/textures 均为0。该交叉日志进一步确认新客户端稳定进入地图，但没有窗口/按键回放，仍不计作 E、Ctrl+E 行为验收。
+
+2026-09-24 00:29 JST N 键修复运行记录：构建通过（3条既有警告）；`bash login_game.sh legacy` 重启后登录 TestHero，收到 `StartGame Success`，HUD 自检通过且进入地图。N/Ctrl+N 的 ConfigDialog 开窗仍只有代码与启动验证，尚无真实桌面按键截图。

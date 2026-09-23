@@ -10481,6 +10481,14 @@ public partial class GameScene : Control
             return;
         }
 
+        // EI 的 N 与 Ctrl+N 都打开 id12 设置窗；HUD cap11 使用同一配置窗。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.N
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            OpenConfigDialog();
+            return;
+        }
+
         // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
             && !key.AltPressed && !key.ShiftPressed)

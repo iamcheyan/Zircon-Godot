@@ -33,6 +33,12 @@ bash login_game.sh
 
 # 全部重启模式：强制重启服务端和客户端（修改了服务端代码后使用）
 bash login_game.sh all
+
+# 使用旧版 EI HUD 登录（服务端不重启）
+bash login_game.sh legacy
+
+# 重启服务端并使用旧版 EI HUD
+bash login_game.sh all legacy
 ```
 
 ---

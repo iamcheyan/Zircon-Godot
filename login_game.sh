@@ -4,6 +4,8 @@
 # 用法：
 #   bash login_game.sh        # 默认：只杀客户端，服务器若在跑则直接连（不重启）
 #   bash login_game.sh all    # 连服务器一起杀并重启（服务器代码有更新时用）
+#   bash login_game.sh legacy # 使用旧版 EI HUD 登录（不重启服务器）
+#   bash login_game.sh all legacy # 重启服务器并使用旧版 EI HUD
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,9 +22,13 @@ elif [ "$(uname)" = "Darwin" ]; then
     PORT=7001
 fi
 KILL_ALL=0
-if [ "${1:-}" = "all" ]; then
-    KILL_ALL=1
-fi
+LEGACY_HUD=0
+for arg in "$@"; do
+    case "$arg" in
+        all) KILL_ALL=1 ;;
+        legacy) LEGACY_HUD=1 ;;
+    esac
+done
 
 # 只清理由本次脚本启动的服务端；外部已运行的服务端不接管、不关闭。
 SERVER_PID=""
@@ -57,6 +63,9 @@ if [ "$KILL_ALL" = "1" ]; then
     echo "  模式: all（杀服务器+客户端，重启服务器）"
 else
     echo "  模式: 快速（只杀客户端，服务器在跑则直接连）"
+fi
+if [ "$LEGACY_HUD" = "1" ]; then
+    echo "  HUD: 旧版 EI（--legacy-ui --legacy-hud）"
 fi
 echo "══════════════════════════════════════"
 
@@ -166,7 +175,11 @@ fi
 # ---------- 4. 启动客户端 ----------
 echo ""
 echo "[4/4] 启动客户端登录 (端口 $PORT)..."
-godot-mono --path "$ROOT/GodotClient" -- --server 127.0.0.1 --port "$PORT" --user test@test.com --pass test123 --char TestHero --window
+CLIENT_ARGS=(--server 127.0.0.1 --port "$PORT" --user test@test.com --pass test123 --char TestHero --window)
+if [ "$LEGACY_HUD" = "1" ]; then
+    CLIENT_ARGS+=(--legacy-ui --legacy-hud)
+fi
+godot-mono --path "$ROOT/GodotClient" -- "${CLIENT_ARGS[@]}"
 echo ""
 echo "══════════════════════════════════════"
 echo "  游戏已启动"

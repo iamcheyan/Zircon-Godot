@@ -27,6 +27,7 @@
 - F602 公告窗口已完成：`NoticeDialog` 使用旧版 GameInter F602、`584×252` 根矩形、关闭按钮 `(548,16)`、操作按钮 `(496,27)` 和正文区 `(23,94,500,112)`；`GameScene.ReceiveChat` 在 `--legacy-ui` 下收到 `Announcement` 时打开该窗口，同时保留聊天记录。
 - F602 接入后的完整 `login_game.sh -R --legacy-ui` 烟测再次通过，服务端重建、登录、StartGame 和进入 `TestHero` 地图均成功，日志无新的运行时错误。
 - 正式 `GameScene` 新增 `--legacy-open=<window>` 直达入口；实测 `--legacy-open=character` 的完整登录链成功进入地图。该次 Xvfb 根截图受全屏窗口捕获方式影响为空白，因此只计入启动/路由验证，不把它算作正式视觉截图证据。
+- 修复 NPC 旧版动态路径：`NPCDialog.ShowPage()` 在真实协议回包后不再把 F1100 退回 380×204；旧版模式会重新保持 `552×176`、正文 `(20,28,500,112)` 和旧版关闭按钮。测试场审计通过，真实 NPC 商店/修理回包仍需实际 NPC 场景验收。
 - 完整 `login_game.sh -R --legacy-ui` 烟测再次通过：服务端重建并监听 7000，登录成功、StartGame 成功并进入 `TestHero` 地图；同时修复了 Login/Select/Game 场景重复绑定 `size_changed` 导致的 Godot 错误，复测日志已不再出现该警告。
 - 视觉验收补充完成：测试场分别在 800×600 和 1600×900 下运行并截图，`/tmp/legacy-ui-800x600.png`、`/tmp/legacy-ui-1600x900.png` 均目视确认旧版人物窗口保持原始比例，HUD 等比缩放且无强制拉伸。
 

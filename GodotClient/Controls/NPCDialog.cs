@@ -26,6 +26,7 @@ public partial class NPCDialog : DXWindow
     private readonly NPCGoodsPanel _goods;
     private readonly NPCRepairPanel _repair;
     private readonly NPCAdvancedPanel _advanced;
+    private bool _legacyLayout;
 
     public NPCDialog()
     {
@@ -51,6 +52,7 @@ public partial class NPCDialog : DXWindow
     /// <summary>旧版 EI NPC 根窗口：F1100 552×176；正文和交易子面板仍复用现有业务。</summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyLayout = true;
         Size = new Vector2I(552, 176);
         _headerBackground.LibraryFile = LibraryFile.GameInter;
         _headerBackground.Index = 1100;
@@ -93,13 +95,13 @@ public partial class NPCDialog : DXWindow
             return value?.Value ?? match.Groups["Default"].Value;
         });
         var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>.+?)\]");
-        _text.SetContent(raw, 340, 10);
+        _text.SetContent(raw, _legacyLayout ? 500 : 340, 10);
         int pageTextHeight = _text.ContentHeight;
         foreach (var button in _buttons) { RemoveControl(button); button.QueueFree(); } _buttons.Clear();
         // 原版按钮不是单独一行的 DXButton，而是画在正文中的可点击文字区域。
         // NPCTextControl 已经保留了这些区域；只有协议没有内嵌按钮时才使用
         // Page.Buttons 作为兼容性的后备入口。
-        int y = 151;
+        int y = _legacyLayout ? 120 : 151;
         if (buttonMatches.Count == 0 && _page.Buttons != null) foreach (var option in _page.Buttons)
         {
             var button = new DXButton { Text = string.Format(Lang.NPCUi357Label, option.ButtonID), FontSize = 10, TextColour = new Color(1f, .85f, .3f), LibraryFile = LibraryFile.GameInter, Index = -1, Location = new Vector2I(18, y), Size = new Vector2I(330, 20) };
@@ -159,6 +161,10 @@ public partial class NPCDialog : DXWindow
             else if (_page.DialogType == NPCDialogType.SocketCombine)
                 GameScene.Game?.OpenNPCSocketCombineDialog();
         }
+        // ShowPage 根据正文高度重建现代 NPC 尺寸；旧版 F1100 的协议回包也必须
+        // 回到固定 552×176 根框，否则真实打开 NPC 时会悄悄退回 380×204。
+        if (_legacyLayout)
+            ApplyLegacyEiLayout();
     }
 
     public void RepairResult(Library.Network.ServerPackets.NPCRepair packet) => _repair.RepairResult(packet);

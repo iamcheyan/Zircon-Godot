@@ -110,6 +110,8 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 原版 F250 根窗为 284×324；GameInter WIL 有效像素 bbox `(114,94,281,324)`，当前背景偏移 `(-114,-94)` 与根矩形对齐。模式 byte `[bag+0x54]` 有四态：0 包袱、1 修补、2 变卖、3 储存；修补/变卖/储存由服务端消息分支写入。EI-288 的三个页签控件只是播放音效的装饰按钮，不负责设置模式。旧审计把“本地三按钮改模式”写成待核，现据 `inventory-mode-tabs-evidence.json` 与 RESEARCH_LOG EI-288 修正此结论。
 
+**背包图标资源链复核：**`inventory-window-render-evidence.json` 记录原版物品 frame WORD 来自物品数据 `+0x28`，用于 `0x42F6D0` 的物品尺寸查询及 `0x466130` 图标绘制；该绘制上下文的 selector 是 `0x5668C4`，WIL 句柄表将 el82 绑定为 `Inventory.wil`。当前 `DXItemCell.ItemIconLibraryFile` 却固定为 `LibraryFile.StoreItem`，`DrawItemIcon()` 取现代 `ItemInfo.Image` 并经 `MirSkin.GetTexture()` 从常规 `Data/StoreItem.Zl` 查帧。本机 EI 目录有 `inventory.wil/.wix`，无 `Inventory.Zl`；Godot 没有通用 WIL 运行时读取器，故现有 legacy 背包图标不能声称来自 EI el82/目标帧。这不只是槽位摆放差异，还意味着帧编号/帧画布/透明偏移也未建立映射；需逐物品核对服务器 item data `+0x28` 与当前 `Info.Image`，并建立可复现的 EI WIL 解码/绘制路径后再验像素和多格占位。
+
 当前 Godot 创建 F264/265 声音控件但未绑定模式动作；另有一个透明 WalletButton 与其重叠，且后添加，需检查控件过滤顺序是否吞掉钱包点击。F267/268 来自 `Interface1c.wil`，显示人物风格图像；视觉不足以证明其语义，当前实现没有显式呈现此帧。直接预览 GameInter F360 显示圆形绿色图标；代码却把它作为负重条纹理在 `(24,260)` 横向裁剪。原版 paint 链明确调用共享垂直仪表，资源是 GameInter F280，根相对绘制位置 `(248,-165)`，其轨道画布 16×424、填充区约 12×218，位置靠窗口右侧且在窗口上沿外。故负重条使用 F360 是明确资源/方向/坐标错误，应该以后续实施计划中的独立素材合成与游戏内滚动验收修正。原版主数值使用固定 `%d` 绘制，但 EI-295 把其字段归为恒零死配置槽（可能是未用金币上限仅属推断）；当前 Godot 添加 Gold/GG 两行和模式标签，需分别对照 F250 内嵌美术与原版绘制位置，不能把扩展货币视为旧版控件。
 
 | 编号 | 严重度 | 发现/疑问 | 状态 |
@@ -118,6 +120,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | INV-02 | 高，部分已修复 | EI 三个模式页签是装饰/音效控件；mode byte 由服务端消息写入。legacy 已隐藏没有旧版证据的透明 WalletButton，避免其与 F264/265 热区重叠 | 按消息 0x29C/0x286/0x2BC 核验修补/变卖/储存状态及服务端生命周期；确认隐藏 WalletButton 不影响原版底图交互，逐页签复核音效/模式状态。 |
 | INV-03 | 中，未决 | F267/268 属 Interface1c 图像帧，视觉像人物图；语义仍未闭合，当前 legacy 构造未映射该帧 | 继续找构造 owner、帧状态更新及输入处理；保持角色语义候选，避免直接改成通用按钮 |
 | INV-04 | 高，负重/货币绘制区已按静态记录修正；资源裁剪和语义待实测 | 背景/根窗和初始网格几何吻合。负重文案已移至根相对 `(134,24)`、字体10的原版矩形，并仅由包袱模式数据提供；legacy 隐藏错误的 F360 横向条及无旧版依据的 GG/钱包控件。原版 F280 垂直 gauge 的 this+0x58 在目标构建中只有 reset 清零、比例为0，因此不绘制当前错误填充；是否仍有零比例轨道像素需复核。单一底部数字已移至 `(65,282)`、10px、原版色候选，Gold 语义仍待证明 | 用独立 WIL 解码确认 F250/F280 的实际有效像素、原版 zero-ratio gauge 是否无像素；用同状态角色数据核对负重两个字段、文本两色/基线和模式切换。对比当前单一数字的实际业务来源与原版 `[0x7DA100]`，检查 F264/265、F267/268 和钱包/货币点击路径；legacy 登录截图与边界点操作尚未完成。 |
+| INV-05 | 阻断，高，资源身份不一致已证实 | EI 原版背包 icon draw 使用 el82=`Inventory.wil`，frame 来自原始 item data `+0x28`，绘制入口 `0x466130`；Zircon `DXItemCell` 固定使用现代 `StoreItem.Zl` 与 `ItemInfo.Image`，legacy 路径没有 WIL runtime reader，因此当前图标像素和多格物品尺寸均未证明等于 EI | 为旧版 `Inventory.wil` 建立独立可测的帧读取/尺寸/offset链；按已知物品比对 `+0x28` 与 `Info.Image` 映射，校验 alpha bbox、绘制原点、颜色/tint 与 36px 格脚印；再把正确 frame/occupancy 映射接入控件，截图/点击验收常见单格与多格物品。不要只把 `ItemLibraryFile` 改为 Inventory 后就宣称完成，因为当前 loader 解析 `.Zl` 且目标目录缺对应文件。 |
 
 ## 人物状态/装备窗首轮核对
 

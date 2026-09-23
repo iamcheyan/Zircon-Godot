@@ -38,6 +38,7 @@ public partial class CharacterDialog : DXWindow
     private DXLabel _wearWeightValue, _handWeightValue;
     private int _statsPage;
     private readonly List<(DXLabel Label, Stat Stat)> _attributeValues = new();
+    private readonly List<DXLabel> _legacyAttributeLabels = new();
     private DXLabel _disciplineLabel;
     private DXButton _disciplineButton;
     private DXImageControl _disciplineLevelImage;
@@ -326,6 +327,7 @@ public partial class CharacterDialog : DXWindow
         _guildFlagOverlay.Visible = false;
         _doll.Visible = true;
         _doll.Position = new Vector2(122, 164);
+        BuildLegacyAttributeLabels();
 
         // 只有逆向编辑器已经确认的格子才显示；其余新版扩展槽绝不猜坐标。
         var confirmed = new Dictionary<EquipmentSlot, Vector2I>
@@ -362,6 +364,46 @@ public partial class CharacterDialog : DXWindow
         UpdateClientAreaForLegacySkin();
     }
 
+    private void BuildLegacyAttributeLabels()
+    {
+        if (_legacyAttributeLabels.Count > 0) return;
+        string[] names = { "等级", "HP", "MP", "攻击", "魔法", "防御", "魔御" };
+        for (int i = 0; i < names.Length; i++)
+        {
+            var label = new DXLabel
+            {
+                Text = names[i],
+                FontSize = 8,
+                TextColour = new Color(0.98f, 0.88f, 0.78f),
+                AutoSize = false,
+                Size = new Vector2I(78, 18),
+                Location = new Vector2I(160, 20 + i * 22),
+                IsControl = false,
+            };
+            AddControl(label);
+            _legacyAttributeLabels.Add(label);
+        }
+    }
+
+    private void RefreshLegacyAttributeLabels()
+    {
+        if (_legacyAttributeLabels.Count == 0) return;
+        var stats = GameScene.Game?.PlayerStats;
+        int value(Stat stat) => stats == null ? 0 : stats[stat];
+        string[] values =
+        {
+            (GameScene.Game?.PlayerLevel ?? 0).ToString(),
+            value(Stat.Health).ToString(),
+            value(Stat.Mana).ToString(),
+            $"{value(Stat.MinDC)}-{value(Stat.MaxDC)}",
+            $"{value(Stat.MinMC)}-{value(Stat.MaxMC)}",
+            $"{value(Stat.MinAC)}-{value(Stat.MaxAC)}",
+            $"{value(Stat.MinMR)}-{value(Stat.MaxMR)}",
+        };
+        for (int i = 0; i < _legacyAttributeLabels.Count; i++)
+            _legacyAttributeLabels[i].Text = $"{_legacyAttributeLabels[i].Text.Split(' ')[0]} {values[i]}";
+    }
+
     public bool AuditLegacyEiLayout(out string details)
     {
         int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
@@ -387,6 +429,8 @@ public partial class CharacterDialog : DXWindow
         _legacyViewToggle.Index = _legacyEquipmentView ? 168 : 171;
         _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
         _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
+        foreach (var label in _legacyAttributeLabels)
+            label.Visible = !_legacyEquipmentView;
         QueueRedraw();
     }
 
@@ -448,6 +492,7 @@ public partial class CharacterDialog : DXWindow
         _inspectGuildFlag = info.GuildFlag;
         _inspectGuildColour = info.GuildColour;
         RefreshMarriageAndGuild();
+        RefreshLegacyAttributeLabels();
 
         Array.Clear(_inspectItems, 0, _inspectItems.Length);
         foreach (var item in info.Items ?? new List<ClientUserItem>())

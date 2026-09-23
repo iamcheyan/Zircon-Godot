@@ -28,8 +28,10 @@ public partial class GroupDialog : DXWindow
     private DXButton _addButton;
     private DXButton _lfgButton;
     private DXButton _closeButton;
+    private DXButton _legacyPermissionButton;
     private DXImageControl _background;
     private DXLabel _titleLabel;
+    private DXLabel _allowLabel;
     private DXVScrollBar _lfgScroll;
     private DXCheckButton _allowCheck;
     private GroupLfgInputDialog _lfgDialog;
@@ -38,7 +40,7 @@ public partial class GroupDialog : DXWindow
 
     public override void Close()
     {
-        GameScene.Game?.SendGroupNotify(false);
+        if (!_legacyEiLayout) GameScene.Game?.SendGroupNotify(false);
         base.Close();
     }
 
@@ -60,7 +62,8 @@ public partial class GroupDialog : DXWindow
         _allowCheck = new DXCheckButton(string.Empty) { Location = new Vector2I(166, 40), Size = new Vector2I(18, 18) };
         _allowCheck.MouseClick += (o, e) => ToggleAllow();
         AddControl(_allowCheck);
-        AddControl(new DXLabel { Text = Lang.GroupAllowLabel, FontSize = 9, Location = new Vector2I(186, 40), Size = new Vector2I(48, 18), IsControl = false });
+        _allowLabel = new DXLabel { Text = Lang.GroupAllowLabel, FontSize = 9, Location = new Vector2I(186, 40), Size = new Vector2I(48, 18), IsControl = false };
+        AddControl(_allowLabel);
 
         _memberPanel = new DXControl { Location = new Vector2I(13, 60), Size = new Vector2I(194, 148), Clip = true };
         AddControl(_memberPanel);
@@ -84,7 +87,7 @@ public partial class GroupDialog : DXWindow
         _removeButton.MouseClick += (o, e) => RemoveSelectedMember();
         AddControl(_removeButton);
         _lfgButton = new DXButton { Type = DXButton.ButtonType.LFGButton, Size = new Vector2I(36, 36), Location = new Vector2I(127, 217), LibraryFile = LibraryFile.Interface };
-        _lfgButton.MouseClick += (o, e) => OpenLfgEditor();
+        _lfgButton.MouseClick += OnLfgButtonClick;
         AddControl(_lfgButton);
         _optionsButton = new DXButton { Type = DXButton.ButtonType.OptionsButton, Size = new Vector2I(36, 36), Location = new Vector2I(173, 217), LibraryFile = LibraryFile.Interface, Enabled = false };
         AddControl(_optionsButton);
@@ -120,20 +123,41 @@ public partial class GroupDialog : DXWindow
         _background.StretchImage = false;
         _titleLabel.Visible = false;
 
-        _allowCheck.Location = new Vector2I(137, 26);
+        _allowCheck.Visible = false;
+        _allowLabel.Visible = false;
+        _legacyPermissionButton ??= new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 920,
+            HoverIndex = 921,
+            PressedIndex = 921,
+            Location = new Vector2I(9, 52),
+            Size = new Vector2I(28, 26),
+        };
+        if (_legacyPermissionButton.GetParent() == null)
+        {
+            _legacyPermissionButton.MouseClick += (_, _) => ToggleAllow();
+            AddControl(_legacyPermissionButton);
+        }
         // EI 直接把成员名画在窗口坐标中，列表没有独立的 101px 裁剪框。
         // 保留根窗范围的裁切，使超过可见行的名字由窗口底边自然裁掉。
         _memberPanel.Location = Vector2I.Zero;
         _memberPanel.Size = Size;
 
-        // F900 自带四个按钮的完整美术文字，保留原业务按钮作为透明热区。
-        DXButton[] actions = { _addButton, _removeButton, _lfgButton, _optionsButton };
+        // F900 底部三个原版动作热区：邀请、移除、离队。EI 没有 LFG 编辑器。
+        DXButton[] actions = { _addButton, _removeButton, _lfgButton };
+        Vector2I[] actionLocations = { new(17, 197), new(80, 197), new(159, 197) };
+        Vector2I[] actionSizes = { new(60, 20), new(76, 20), new(76, 20) };
         for (int i = 0; i < actions.Length; i++)
         {
-            actions[i].Location = new Vector2I(17 + i * 55, 166);
-            actions[i].Size = new Vector2I(48, 24);
+            actions[i].Location = actionLocations[i];
+            actions[i].Size = actionSizes[i];
             actions[i].Modulate = new Color(1, 1, 1, 0);
         }
+        _lfgButton.MouseClick -= OnLfgButtonClick;
+        _lfgButton.MouseClick -= OnLegacyLeaveClick;
+        _lfgButton.MouseClick += OnLegacyLeaveClick;
+        _optionsButton.Visible = false;
         _inviteName.Location = new Vector2I(17, 194);
         _lfgPanel.Visible = false;
         _lfgScroll.Visible = false;
@@ -263,6 +287,14 @@ public partial class GroupDialog : DXWindow
     {
         _selectedMember = objectId;
         RebuildMembers();
+    }
+
+    private void OnLfgButtonClick(object sender, EventArgs e) => OpenLfgEditor();
+
+    private void OnLegacyLeaveClick(object sender, EventArgs e)
+    {
+        // EI 的 0x3FE 是离队动作；当前服务端用关闭组队权限同时执行 GroupLeave。
+        GameScene.Game?.SendGroupSwitch(false);
     }
 
     private void RemoveSelectedMember()

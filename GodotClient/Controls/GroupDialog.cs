@@ -34,6 +34,7 @@ public partial class GroupDialog : DXWindow
     private DXCheckButton _allowCheck;
     private GroupLfgInputDialog _lfgDialog;
     private uint _selectedMember;
+    private bool _legacyEiLayout;
 
     public override void Close()
     {
@@ -110,6 +111,7 @@ public partial class GroupDialog : DXWindow
 
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(256, 244);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 900;
@@ -119,8 +121,10 @@ public partial class GroupDialog : DXWindow
         _titleLabel.Visible = false;
 
         _allowCheck.Location = new Vector2I(137, 26);
-        _memberPanel.Location = new Vector2I(17, 59);
-        _memberPanel.Size = new Vector2I(222, 101);
+        // EI 直接把成员名画在窗口坐标中，列表没有独立的 101px 裁剪框。
+        // 保留根窗范围的裁切，使超过可见行的名字由窗口底边自然裁掉。
+        _memberPanel.Location = Vector2I.Zero;
+        _memberPanel.Size = Size;
 
         // F900 自带四个按钮的完整美术文字，保留原业务按钮作为透明热区。
         DXButton[] actions = { _addButton, _removeButton, _lfgButton, _optionsButton };
@@ -218,10 +222,22 @@ public partial class GroupDialog : DXWindow
         }
         _memberLabels.Clear();
         int i = 0;
-        foreach (var pair in _members.Take(Globals.GroupLimit))
+        var members = _legacyEiLayout ? _members : _members.Take(Globals.GroupLimit);
+        foreach (var pair in members)
         {
-            int index = i;
-            var label = new DXLabel { Text = pair.Value, FontSize = 10, TextColour = pair.Key == _selectedMember ? Colors.LimeGreen : Colors.White, Location = new Vector2I(10 + 100 * (i % 2), 5 + 20 * (i / 2)), Size = new Vector2I(95, 20), IsControl = true, AutoSize = false };
+            var location = _legacyEiLayout
+                ? new Vector2I(i % 2 == 0 ? 145 : 45, 90 + 20 * (i / 2))
+                : new Vector2I(10 + 100 * (i % 2), 5 + 20 * (i / 2));
+            var label = new DXLabel
+            {
+                Text = pair.Value,
+                FontSize = 10,
+                TextColour = _legacyEiLayout || pair.Key != _selectedMember ? Colors.White : Colors.LimeGreen,
+                Location = location,
+                Size = new Vector2I(95, 20),
+                IsControl = true,
+                AutoSize = false,
+            };
             label.MouseClick += (s, e) => SelectMember(pair.Key);
             _memberPanel.AddControl(label);
             _memberLabels.Add(label);

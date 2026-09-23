@@ -435,3 +435,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-23 19:32 JST 复查：PID 1510978 仍在，`/tmp/zircon-legacy-audit-live-2.png`（1280×1024）仍显示锁屏；游戏窗口不能作为可观察对象，未注入输入或重启。桌面截图每次仅用于判断可观察性，不进入 UI 对比样本。
 
 2026-09-23 19:37 JST 复查：PID 1510978 与启动参数未变，`/tmp/zircon-legacy-audit-live-3.png` 再次显示锁屏；未进入运行时视觉/交互验收。
+
+2026-09-24 00:19 JST 本轮键位修复运行记录：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 通过（3条既有警告）；随后从仓库根目录按 `bash login_game.sh legacy` 重启，脚本构建服务端/客户端成功，连接本地 7000 端口，账号 `test@test.com` 自动进入 `TestHero`，收到 `StartGame Result=Success` 并进入地图。终端显示 `--legacy-ui --legacy-hud` 生效。`cua.getState()` 返回无可交互应用，因而本轮没有按 D/S 或点击窗口；D/S 的新路由只获源码与编译/启动验证，必须等桌面窗口可绑定后做真实按键、焦点和开合状态回放。启动脚本当前仍在运行，legacy 客户端为持续基线；后续重启前需确认它包含最新编译产物。

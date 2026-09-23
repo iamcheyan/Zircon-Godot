@@ -114,8 +114,8 @@ public partial class LegacyHudLayoutLab : Control
         _hud.ExitButton.MouseClick += (o, e) => ShowNotice("退出/登出入口已接入");
         _hud.LogoutButton.MouseClick += (o, e) => ShowNotice("登出入口已接入");
         _hud.PartyButton.MouseClick += (o, e) => Toggle(_group);
-        _hud.GuildButton.MouseClick += (o, e) => ShowNotice("行会窗口将在正式游戏中打开");
-        _hud.ExchangeButton.MouseClick += (o, e) => ShowNotice("交易窗口需要先选中其他玩家");
+        _hud.GuildButton.MouseClick += (o, e) => Toggle(_guild);
+        _hud.ExchangeButton.MouseClick += (o, e) => Toggle(_trade);
     }
 
     private void OpenRequestedWindow()

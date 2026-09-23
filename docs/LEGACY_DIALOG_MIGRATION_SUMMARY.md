@@ -37,6 +37,7 @@
 - 测试审计强化：`LegacyHudLayoutLab --legacy-audit` 现在会实际调用角色 `ShowOwn()` 和仓库 `RefreshStorage()` 后再检查旧版根框/格子，动态恢复路径也纳入 PASS 条件。
 - 完整 `login_game.sh -R --legacy-ui` 烟测再次通过：服务端重建并监听 7000，登录成功、StartGame 成功并进入 `TestHero` 地图；同时修复了 Login/Select/Game 场景重复绑定 `size_changed` 导致的 Godot 错误，复测日志已不再出现该警告。
 - 视觉验收补充完成：测试场分别在 800×600 和 1600×900 下运行并截图，`/tmp/legacy-ui-800x600.png`、`/tmp/legacy-ui-1600x900.png` 均目视确认旧版人物窗口保持原始比例，HUD 等比缩放且无强制拉伸。
+- 修复任务/聊天动态换页覆盖旧版资源的路径：旧版任务 F700 在切换当前/可接/已完成页时保持 F700，聊天 F350 在好友/收件/写信/屏蔽页切换时不再改写隐藏的现代页背景；聊天页签使用绝对旧版坐标，重复应用皮肤不会累加偏移。无头 `LegacyAudit` 仍为全 PASS。
 
 事实来源按以下优先级使用：
 

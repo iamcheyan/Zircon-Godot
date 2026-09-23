@@ -26,6 +26,7 @@ public partial class QuestDialog : DXWindow
     private QuestRewardChoiceDialog _choiceDialog;
     private DXButton _closeButton;
     private DXLabel _titleLabel;
+    private bool _legacyEiLayout;
 
     public QuestDialog()
     {
@@ -95,6 +96,7 @@ public partial class QuestDialog : DXWindow
 
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(340, 440);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 700;
@@ -171,7 +173,9 @@ public partial class QuestDialog : DXWindow
         {
             if (_page == 3 && page != 3) GameScene.Game?.SendMilestoneNotify(false);
             _page = page;
-            _background.Index = page == 3 ? 292 : 291;
+            // F700 自带旧版任务书背景；现代页签背景不能覆盖它。
+            if (!_legacyEiLayout)
+                _background.Index = page == 3 ? 292 : 291;
             _selectedQuest = null;
             _selectedAvailable = null;
             UpdateTabStyles();

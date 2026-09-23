@@ -19,6 +19,7 @@ public partial class CommunicationDialog : DXWindow
     private DXImageControl _background;
     private DXButton _closeButton;
     private DXLabel _titleLabel;
+    private bool _legacyEiLayout;
     private DXControl _body;
     private DXVScrollBar _scroll;
     private DXTextArea _detail;
@@ -79,6 +80,7 @@ public partial class CommunicationDialog : DXWindow
 
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(572, 388);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 350;
@@ -91,10 +93,12 @@ public partial class CommunicationDialog : DXWindow
         // 正式网络数据，旧版背景只负责承载它们。
         _body.Modulate = Colors.White;
         _scroll.Modulate = Colors.White;
-        foreach (var tab in _tabs)
+        for (int i = 0; i < _tabs.Count; i++)
         {
+            var tab = _tabs[i];
             tab.Modulate = new Color(1, 1, 1, 0);
-            tab.Location = new Vector2I(tab.Location.X + 226, 37);
+            // 绝对坐标，避免重复应用旧版皮肤时偏移不断累加。
+            tab.Location = new Vector2I(236 + i * 61, 37);
         }
         foreach (var button in new[] { _friendAdd, _friendRemove, _receivedCollectAll, _receivedDeleteAll, _receivedNew, _blockAdd, _blockRemove })
             if (button != null) button.Modulate = new Color(1, 1, 1, 0);
@@ -383,7 +387,8 @@ public partial class CommunicationDialog : DXWindow
             _tabs[i].Type = i == page ? DXButton.ButtonType.SelectedTab : DXButton.ButtonType.DeselectedTab;
             _tabs[i].Pressed = i == page;
         }
-        _pageBackground.Index = page switch { 0 => 201, 1 => 202, 2 => 203, 3 => 204, _ => 201 };
+        if (!_legacyEiLayout)
+            _pageBackground.Index = page switch { 0 => 201, 1 => 202, 2 => 203, 3 => 204, _ => 201 };
         foreach (var child in _body.GetChildren())
         {
             if (child is not Node node) continue;

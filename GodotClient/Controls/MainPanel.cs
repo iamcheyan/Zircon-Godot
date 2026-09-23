@@ -263,7 +263,9 @@ public partial class MainPanel : DXImageControl
     private void DrawPlayerOrb(object sender, EventArgs e)
     {
         if (sender is not DXControl orb) return;
-        if (_currentMP <= 0)
+        // 是否拥有蓝球由最大 Mana 决定；当前 MP 归零时仍应保留蓝球，
+        // 不能因为法师暂时没蓝就切回整颗红球。
+        if (_stats[Stat.Mana] <= 0)
         {
             var full = MirSkin.GetTexture(LibraryFile.GameInter, 62);
             if (full != null) orb.DrawTextureRect(full, new Rect2(0, 0, 112, 110), false);
@@ -420,10 +422,14 @@ public partial class MainPanel : DXImageControl
     public bool AuditLegacyOrb(out string details)
     {
         Vector2I location = _playerOrb?.Location ?? new Vector2I(-1, -1);
-        SetMana(0);
-        bool fullRedState = _playerOrb?.Location == location;
+        SetStats(new Stats());
         SetMana(80);
-        bool splitState = _playerOrb?.Location == location;
+        bool noManaRedState = _stats[Stat.Mana] <= 0 && _playerOrb?.Location == location;
+        SetStats(new Stats { [Stat.Mana] = 100 });
+        SetMana(0);
+        bool emptyManaSplitState = _stats[Stat.Mana] > 0 && _playerOrb?.Location == location;
+        SetMana(80);
+        bool splitState = _stats[Stat.Mana] > 0 && _playerOrb?.Location == location;
         SetClass(MirClass.Warrior);
         bool oneOrb = _playerOrb != null
             && _playerOrb.Visible
@@ -432,9 +438,10 @@ public partial class MainPanel : DXImageControl
             && !HealthBar.Visible
             && !ManaBar.Visible
             && !MCImage.Visible
-            && fullRedState
+            && noManaRedState
+            && emptyManaSplitState
             && splitState;
-        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} states={fullRedState}/{splitState} single={oneOrb}";
+        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} states={noManaRedState}/{emptyManaSplitState}/{splitState} single={oneOrb}";
         return oneOrb;
     }
 

@@ -136,12 +136,10 @@ public partial class MagicDialog : DXWindow
         _background.Visible = false;
         _tabPrevious.Visible = false;
         _tabNext.Visible = false;
-
-        _list.Location = new Vector2I(15, 235);
-        _list.Size = new Vector2I(410, 125);
-        _scrollBar.Location = new Vector2I(425, 235);
-        _scrollBar.Size = new Vector2I(18, 125);
-        _scrollBar.VisibleSize = 125;
+        // F400 已包含旧版技能书和 12 个技能格。现代纵向列表不能只
+        // 移到书页下方，否则刷新后会把新版行控件混进旧版界面。
+        _list.Visible = false;
+        _scrollBar.Visible = false;
 
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
@@ -282,7 +280,9 @@ public partial class MagicDialog : DXWindow
         bool ok = Size == new Vector2I(452, 380)
             && _header.Index == 400
             && _legacySkillSlots.Count == 12
-            && _schoolButtons.Count == 8;
+            && _schoolButtons.Count == 8
+            && !_list.Visible
+            && !_scrollBar.Visible;
         details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} skillSlots={_legacySkillSlots.Count}";
         return ok;
     }

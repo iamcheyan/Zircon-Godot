@@ -24,6 +24,7 @@ public partial class StorageDialog : DXWindow
     private DXButton _storageTab;
     private DXButton _partsTab;
     private bool _partsVisible;
+    private bool _legacyLayout;
 
     public StorageDialog()
     {
@@ -160,6 +161,8 @@ public partial class StorageDialog : DXWindow
         Grid.RefreshGrid();
         PartGrid.RefreshGrid();
         BindWheel();
+        if (_legacyLayout)
+            ApplyLegacyEiLayout();
     }
 
     private void ApplyCapacity(int storageSize)
@@ -252,6 +255,7 @@ public partial class StorageDialog : DXWindow
     /// </summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyLayout = true;
         Size = new Vector2I(205, 205);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 1001;

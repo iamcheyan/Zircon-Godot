@@ -23,6 +23,7 @@ public partial class CharacterDialog : DXWindow
     private DXLabel _marriageLabel;
     private DXControl _fameControl;
     private DXImageControl _background;
+    private DXImageControl _legacyExpandedBackground;
     private DXButton _closeButton;
     private DXButton _legacyViewToggle;
     private bool _legacyEquipmentView;
@@ -39,6 +40,7 @@ public partial class CharacterDialog : DXWindow
     private int _statsPage;
     private readonly List<(DXLabel Label, Stat Stat)> _attributeValues = new();
     private readonly List<DXLabel> _legacyAttributeLabels = new();
+    private readonly List<(DXLabel Label, Stat? Stat, Stat? MaxStat)> _legacyExpandedLabels = new();
     private bool _legacyEiLayout;
     private DXLabel _disciplineLabel;
     private DXButton _disciplineButton;
@@ -124,6 +126,18 @@ public partial class CharacterDialog : DXWindow
         _background.MouseMove += (_, _) => ApplyBackgroundDrag();
         _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
+
+        // EI 原版的展开状态使用 GameInter F201 装备面板素材；F201 是
+        // 1024×512 的大画布，窗口只显示其中右侧面板的裁剪区域。
+        _legacyExpandedBackground = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 201,
+            FixedSize = true,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddControl(_legacyExpandedBackground);
 
         // 原版 CharacterTab_BeforeChildrenDraw 直接使用 (130,270) 绘制锚点。
         // 这里已经是窗口绘制坐标，不能再额外加 CharacterTab 的 Y 偏移。
@@ -307,12 +321,19 @@ public partial class CharacterDialog : DXWindow
     public void ApplyLegacyEiLayout()
     {
         _legacyEiLayout = true;
+        _legacyEquipmentView = false;
         Size = new Vector2I(244, 328);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 200;
         _background.Location = new Vector2I(-6, -92);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
+        _legacyExpandedBackground.Visible = false;
+        _legacyExpandedBackground.Index = 201;
+        _legacyExpandedBackground.Location = new Vector2I(238, -92);
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
+        foreach (var entry in _legacyExpandedLabels)
+            entry.Label.Visible = false;
 
         foreach (var tab in _mainTabs) tab.Button.Visible = false;
         _attributePanel.Visible = false;
@@ -330,6 +351,7 @@ public partial class CharacterDialog : DXWindow
         _doll.Visible = true;
         _doll.Position = new Vector2(122, 164);
         BuildLegacyAttributeLabels();
+        BuildLegacyExpandedPanel();
 
         // 只有逆向编辑器已经确认的格子才显示；其余新版扩展槽绝不猜坐标。
         var confirmed = new Dictionary<EquipmentSlot, Vector2I>
@@ -406,6 +428,59 @@ public partial class CharacterDialog : DXWindow
         };
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
             _legacyAttributeLabels[i].Text = $"{_legacyAttributeLabels[i].Text.Split(' ')[0]} {values[i]}";
+
+        foreach (var entry in _legacyExpandedLabels)
+        {
+            string displayValue;
+            if (entry.Stat == null)
+                displayValue = (GameScene.Game?.PlayerLevel ?? 0).ToString();
+            else
+            {
+                int min = stats?[entry.Stat.Value] ?? 0;
+                displayValue = entry.MaxStat == null ? min.ToString() : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
+            }
+            entry.Label.Text = $"{entry.Label.Text.Split(' ')[0]} {displayValue}";
+        }
+    }
+
+    private void BuildLegacyExpandedPanel()
+    {
+        if (_legacyExpandedLabels.Count > 0) return;
+
+        // 右侧面板沿用旧版 F201 的裁剪坐标；文字只使用当前服务端
+        // PlayerStats，避免把现代属性页坐标或缩放参数带进 EI 窗口。
+        var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
+        {
+            ("等级", null, null),
+            ("HP", Stat.Health, null),
+            ("MP", Stat.Mana, null),
+            ("攻击", Stat.MinDC, Stat.MaxDC),
+            ("魔法", Stat.MinMC, Stat.MaxMC),
+            ("道术", Stat.MinSC, Stat.MaxSC),
+            ("防御", Stat.MinAC, Stat.MaxAC),
+            ("魔御", Stat.MinMR, Stat.MaxMR),
+            ("准确", Stat.Accuracy, null),
+            ("敏捷", Stat.Agility, null),
+            ("幸运", Stat.Luck, null),
+            ("攻速", Stat.AttackSpeed, null),
+        };
+        for (int i = 0; i < rows.Length; i++)
+        {
+            var row = rows[i];
+            var label = new DXLabel
+            {
+                FontSize = 8,
+                TextColour = new Color(0.98f, 0.88f, 0.78f),
+                AutoSize = false,
+                Size = new Vector2I(198, 18),
+                Location = new Vector2I(244 + 22, 18 + i * 22),
+                IsControl = false,
+                Visible = false,
+                Text = row.Name,
+            };
+            AddControl(label);
+            _legacyExpandedLabels.Add((label, row.Stat, row.MaxStat));
+        }
     }
 
     public bool AuditLegacyEiLayout(out string details)
@@ -414,9 +489,18 @@ public partial class CharacterDialog : DXWindow
         int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
         bool initial = _background.Index == 200;
         ToggleLegacyView();
-        bool equipmentView = _background.Index == 201 && _legacyViewToggle.Index == 168;
+        bool expanded = _background.Index == 200
+            && _legacyExpandedBackground.Visible
+            && _legacyExpandedBackground.Index == 201
+            && Size == new Vector2I(488, 328)
+            && _legacyViewToggle.Index == 168
+            && _legacyAttributeLabels.All(label => label.Visible)
+            && _legacyExpandedLabels.All(entry => entry.Label.Visible);
         ToggleLegacyView();
-        bool restored = _background.Index == 200 && _legacyViewToggle.Index == 171;
+        bool restored = _background.Index == 200
+            && !_legacyExpandedBackground.Visible
+            && Size == new Vector2I(244, 328)
+            && _legacyViewToggle.Index == 171;
         var expectedSlots = new Dictionary<EquipmentSlot, Vector2I>
         {
             [EquipmentSlot.Helmet] = new(27, 264),
@@ -433,27 +517,42 @@ public partial class CharacterDialog : DXWindow
             && cell.Visible
             && cell.Location == pair.Value
             && cell.Size == new Vector2I(38, 38)));
-        bool ok = initial && equipmentView && restored
+        bool ok = initial && expanded && restored
             && Size == new Vector2I(244, 328)
             && _background.Index == 200
             && _legacyViewToggle.Location == new Vector2I(176, 264)
             && _legacyViewToggle.Size == new Vector2I(36, 36)
             && visibleSlots == 8
             && slotGeometry;
-        details = $"size={Size} background=F{_background.Index} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={equipmentView && restored}";
+        details = $"size={Size} background=F{_background.Index} expanded={expanded} right=F{_legacyExpandedBackground.Index} rightVisible={_legacyExpandedBackground.Visible} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
         return ok;
     }
 
     private void ToggleLegacyView()
     {
         _legacyEquipmentView = !_legacyEquipmentView;
-        _background.Index = _legacyEquipmentView ? 201 : 200;
+        _background.Index = 200;
         _legacyViewToggle.Index = _legacyEquipmentView ? 168 : 171;
         _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
         _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
         foreach (var label in _legacyAttributeLabels)
-            label.Visible = !_legacyEquipmentView;
+            label.Visible = true;
+        _legacyExpandedBackground.Visible = _legacyEquipmentView;
+        foreach (var entry in _legacyExpandedLabels)
+            entry.Label.Visible = _legacyEquipmentView;
+        Size = _legacyEquipmentView ? new Vector2I(488, 328) : new Vector2I(244, 328);
+        _legacyExpandedBackground.Location = new Vector2I(238, -92);
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
+        _legacyExpandedBackground.StretchImage = false;
+        UpdateClientAreaForLegacySkin();
         QueueRedraw();
+    }
+
+    /// <summary>仅供旧版窗口直达验收：打开右侧扩展属性面板。</summary>
+    public void SetLegacyExpandedForAudit()
+    {
+        if (_legacyEiLayout && !_legacyEquipmentView)
+            ToggleLegacyView();
     }
 
     private void AddTab(string text, int x, int backgroundIndex)

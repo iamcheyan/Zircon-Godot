@@ -4724,7 +4724,7 @@ public partial class GameScene : Control
 
         DXWindow window = name switch
         {
-            "character" => _characterDialog,
+            "character" or "character-expanded" => _characterDialog,
             "inventory" => _inventoryDialog,
             "magic" => _magicDialog,
             "quest" => _questDialog,
@@ -4744,6 +4744,8 @@ public partial class GameScene : Control
             _noticeDialog?.SetNotice("真实登录旧版 F602 窗口验收");
         if (window == _npcDialog && AutoLoginArgs.LegacyUi)
             _npcDialog.ApplyLegacyEiLayout();
+        if (string.Equals(name, "character-expanded", StringComparison.OrdinalIgnoreCase))
+            _characterDialog.SetLegacyExpandedForAudit();
         if (window != null)
         {
             WindowManager.Open(window, _uiLayer);

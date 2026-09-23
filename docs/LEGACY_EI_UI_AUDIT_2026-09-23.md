@@ -88,11 +88,13 @@
 
 Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.json` 将“8 tabs + 12 real-skill slots”写成技能子系统已闭合，但同一条记录的 `sim_vs_original` 明确区分“sim = grid slots; original = left list + right detail page”，且其几何仍标为 candidate。较新的 `skill-window-render-loop-evidence.json` primary-static 记录反汇编函数 `0x43A370` 仅遍历 6 个 `this+0x7C` RECT，并明确未知 RECT 与列表填充者；`0x43AC80` 则在进入列表命中函数前先处理 3 个帧控件及 8 个类别控件。故本审计把“原版 12 格/4×3/帧 410..421 图标”的旧结论降级为模拟器方案/视觉候选，不采纳为原版布局事实。已能断定当前 12 个 `DXImageControl` 命中格超出了已知原版六个列表 hit rect；仍待追 `0x4397A0` 和 RECT 的写入者，不能从六个矩形直接推断它们在书页上的最终绘制形状。
 
-### 技能书证据再核对（新旧研究工件尚未对齐）
+### 技能书证据再核对（8 个分类控件与 6 个技能列表 RECT 已区分）
 
-继续查找整个 `Mir3-Research/docs/` 后，发现 `docs/research/mir3-map-reconstruction/` 下较晚汇总的 `skill-book-category-tabs-evidence.json`（F547）、`skill-book-draw-evidence.json`（F839）、`skill-tab-header-draw-evidence.json`（F848）、`skill-book-full-closure-evidence.json`（F982）和 handoff F939 给出另一组 primary-byte 摘要：`0x439500` 绘制 3 个头部 F704 控件、8 个位于 `this+0x2F4..0x7E0`（stride `0xB4`）的 F704 子控件、按 `count/3` 显示页计数；`0x43AC80` 对 8 个子控件做命中并以技能查找结果写选中 ID。摘要将 8 个控件称为“技能槽”，而 F547 又称同一偏移为“8 分类页签”；与此同时 `skill-window-render-loop-evidence.json` 明确记录 `0x43A370` 遍历 6 个 `[this+0x7C..0xCC]` RECT 且按 `[this+0x54]` 分类链表返回 skill ID，`0x4397A0` 还会遍历 `[this+0x898+24*cl]` 绘制图标/名字。仅凭这些摘要不能判定三者是 8 个分类、8 个页面控件、6 个列表命中区，还是对象布局/反编译版本不同；F547/F839/F848 的文字摘要对“3 tabs、8 slots、8 categories”的命名也不完全一致。
+对照 `docs/research/ei-ui-layout/skill-window-render-loop-evidence.json` 的构造器表与 `docs/research/mir3-map-reconstruction/skill-book-category-tabs-evidence.json`（F547）、`skill-book-draw-evidence.json`（F839）、`skill-tab-header-draw-evidence.json`（F848）、`skill-window-input-evidence.json`（F939）后，可按同一对象偏移闭合主要差别：构造器 `this+0x2F4..+0x7E0`（stride `0xB4`）的 8 个子控件帧对恰为 F450/451、452/453、454/455、456/457、458/459、460/461、462/463、464/465，坐标也与八个纵向魔法类别控件一致；F547 称其为八个分类页签。F839/F939 把这些共用 F704 控件类的对象简称“skill-slot controls”，不能据此把它们算作八个左页技能条目。另有 3 个头部控件位于 `+0xD8/+0x18C/+0x240`，帧为 F440/441、F410/411、F412/413。
 
-因此当前实现的 12 个 `DXImageControl` 仍没有原版依据，不能按任何一组旧 6 / 新 8 摘要直接换成固定格数。恢复目标 EXE 后须交叉重放 `0x439250` 构造器及 `0x439500` paint、`0x4397A0` tab/header 绘制、`0x43A370` 六 RECT 命中、`0x43AC80` 输入、`0x43AD20/0x43AD50` 技能记录列表构造/添加；逐个标定 this 基址和偏移、每条函数读写对象、共同 hit rect 是否仅处理列表而非 F704 控件，再核对 `Magic.exp`/记录 ID、画面和点击结果。要先对照研究 JSON 内原始 VA/指令摘录，确认这些文件是否对应同一 524,288-byte EI EXE。裁决前技能格数量/类别映射维持未决，不能标为视觉或交互通过。
+左页实际技能列表是第三组对象：`0x43A370` 对 `this+0x7C..+0xCC` 的 6 个 RECT 做命中，并按当前类别 `[this+0x54]` 从 `[this+0x898+24*cl]` 链表返回技能 ID；`0x4397A0` 遍历该分类列表绘制技能图标/名字，右页 `0x43A440` 接收所选 ID。由此“8 个分类控件”与“6 个技能列表命中矩形”并不冲突；冲突来自摘要中把通用子控件称为技能槽。当前 `BuildLegacySkillSlots()` 添加的 12 个 F410..F421 36×36 格子仍是无原版依据的 simulator 方案，既不是八个类别控件，也不对应已知六个技能列表 RECT。
+
+剩余工作是从目标 EXE 的 `0x439250/0x439500/0x4397A0/0x43A370/0x43AC80/0x43AD20/0x43AD50` 交叉追踪各 RECT 的写入坐标、页索引/计数、记录顺序及技能图标来源；六条命中 RECT 的具体值和列表绘制/输入映射仍未闭合。要先对照研究工件的原始 VA/指令摘录及 524,288-byte EI EXE 身份，再实现六条列表与右页，不复用当前 12 格布局，也不以 F410/F412 导航帧充当技能图标。
 
 右页部分有相反结论：Finding 272 的 ID 选择、Magic.exp 区段扫描、文本样式和 15 px 行距已经是 primary-static 闭合证据；因此不是“右页原版不清楚”，而是当前 `MagicDialog` 没有实现这条已证实绘制链。原版 F1–F12 绑技语义则尚无对应证据，保留未决。
 

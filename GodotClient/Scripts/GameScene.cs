@@ -10450,6 +10450,16 @@ public partial class GameScene : Control
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
+        // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，
+        // 该复位尚未对应到 Zircon 字段，先保留为单独审计缺口。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.Q
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (_inventoryDialog != null)
+                WindowManager.Toggle(_inventoryDialog, _uiLayer);
+            return;
+        }
+
         // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
             && !key.AltPressed && !key.ShiftPressed)

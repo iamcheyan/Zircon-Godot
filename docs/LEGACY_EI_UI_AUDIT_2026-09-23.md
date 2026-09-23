@@ -372,12 +372,12 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 | 编号 | 严重度 | 发现 | 验收要求 |
 |---|---|---|---|
-| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认表仍是现代映射；legacy `_Input()` 已将 D/Ctrl+D→id11、裸 S/Ctrl+S→id13 覆盖到原版目标，其他键仍需逐项核对。原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
+| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认表仍是现代映射；legacy `_Input()` 已将裸/ Ctrl Q→背包 id0、D→任务 id11、S→坐骑 id13 覆盖到原版目标，其他键仍需逐项核对。Q 的开窗附带复位副作用尚未映射；原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
 | KEY-02 | 阻断，逐键目标与修饰键策略错配 | primary-bytes `window-paint-and-hotkey-dispatch-evidence.json` 的 key table 与 `hotkey-label-handler-consistency.json` 的更正结论，对照 source-confirmed `KeyBindManager.KeyBinds`、`GetAction()` 和 `GameScene.HandleKeyBind()`，如下表。Godot `GetAction()` 比较 Ctrl/Alt/Shift 的精确布尔值；EI 热键处理器门控 `[ebp+0x20]/[ebp+0x24]` 是 modal guard，不等价于要求用户按 caption 中的 Ctrl。Q/D/N 等 caption 与字母分支一致；旧研究把 id0误记成交易、把G误记成行会的判断已由 Finding 316 撤销。 | 依据 EI primary-static 对每个按键验证有效 keydown、caption组合、焦点/mode guard和动作；依据 Godot 源码/设置验证相同物理键的所有修饰组合。逐项检查以下矩阵以及配置覆写后的键位冲突： |
 
 | EI 按键 | EI 已证动作/入口 | 当前 Godot 默认匹配 | 对照结论 |
 |---|---|---|---|
-| Q / Ctrl+Q | id0 背包；打开时另复位拾取/背包输入状态 | 裸 Q→人物装备窗；Ctrl+Q 无默认动作 | 目标错，且 Ctrl 组合被精确匹配挡掉 |
+| Q / Ctrl+Q | id0 背包；打开时另复位拾取/背包输入状态 | `--legacy-ui` 裸 Q/Ctrl+Q→背包 id0；现代模式裸 Q→人物窗 | 窗口目标已修；原版复位副作用未映射，运行按键待验 |
 | W / Ctrl+W | id1 状态面板 | 裸 W→背包；Ctrl+W→FortuneWindow（幸运查询） | 目标错；不能把 id1 状态面板和 id7 人物形象窗混为同一 ID |
 | E / Ctrl+E | id14 技能书 | 裸 E→技能书；Ctrl+E→现代 MagicBar | 裸键目标对，Ctrl 组合目标错 |
 | R / Ctrl+R | id8 聊天窗 | 裸 R→排行榜；Ctrl+R 无默认动作（幸运查询绑定 Ctrl+W） | 两种组合都不是原版聊天窗 |
@@ -437,3 +437,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-23 19:37 JST 复查：PID 1510978 与启动参数未变，`/tmp/zircon-legacy-audit-live-3.png` 再次显示锁屏；未进入运行时视觉/交互验收。
 
 2026-09-24 00:19 JST 本轮键位修复运行记录：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 通过（3条既有警告）；随后从仓库根目录按 `bash login_game.sh legacy` 重启，脚本构建服务端/客户端成功，连接本地 7000 端口，账号 `test@test.com` 自动进入 `TestHero`，收到 `StartGame Result=Success` 并进入地图。终端显示 `--legacy-ui --legacy-hud` 生效。`cua.getState()` 返回无可交互应用，因而本轮没有按 D/S 或点击窗口；D/S 的新路由只获源码与编译/启动验证，必须等桌面窗口可绑定后做真实按键、焦点和开合状态回放。启动脚本当前仍在运行，legacy 客户端为持续基线；后续重启前需确认它包含最新编译产物。
+
+2026-09-24 00:25 JST Q 键修复运行记录：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 通过（3条既有警告）；随后再次按 `bash login_game.sh legacy` 启动，前次客户端已退出且服务端未运行，脚本完整启动服务端/客户端，自动登录 TestHero 并收到 `StartGame Result=Success`。此处只确认新的 legacy 程序构建、连接与进游戏路径无回归；桌面应用清单仍为空，Q/D/S 的实际按键动作与焦点/mode 门控均未进入 runtime-verified。

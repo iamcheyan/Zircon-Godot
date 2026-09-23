@@ -503,3 +503,9 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-24 01:34 JST Xvfb运行观察：为避开黑屏的物理桌面，启动 Xvfb `:100`/Openbox，仍经 `DISPLAY=:100 bash login_game.sh legacy` 完整构建并登录 TestHero；收到 `StartGame Result=Success`，加载 Sabuk Keep，缺失贴图/库均为0。截图 `/tmp/zircon-legacy-xvfb-base.png` 实际显示地图、HUD、顶部六槽F51腰带和技能栏，证明虚拟显示器可观察当前程序画面，但分辨率是1024×768，不作为EI 800×600差分样本。尝试 `xdotool` 将W键和鼠标事件发送到Godot窗，画面/角色状态没有可见变化，且本轮没有可用Cua桌面绑定；所以没有把输入回放计入行为验证，人物切换、技能书、背包、腰带的实际点击仍未验收。
 
 2026-09-24 01:51 JST 技能书候选格索引修正运行记录：`MagicDialog.RefreshLegacySkillSlots()` 现与 `MagicCellView` 一样按 `NeedLevel1`、`Name` 排序，消除了 Godot 内部候选格视觉项与 F 键绑定 tuple 因 DB 顺序不同造成的错位。`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0 errors，3条既有 warning）；随后按 `DISPLAY=:100 bash login_game.sh legacy` 完整重启，服务端/客户端构建均为0 errors，TestHero 收到 `StartGame Result=Success` 并进入 Sabuk Keep，missingLibraries/textures/emptyImageEntries 均为0。Xvfb 无可用输入注入工具/桌面绑定，未能点击技能格或回放 F 键；因此本次是启动回归，不是技能交互验收。EI 对照仍未通过：12格布局与列表顺序仍缺原版坐标、页状态和目标 EXE 运行证据。
+
+#### 背包实机运行截图（2026-09-24，Zircon 侧）
+
+在已运行的 `:100` / 1024×768 legacy 客户端中，用鼠标点击 HUD 背包入口打开窗口，保存截图 [`inventory-open-2026-09-24.png`](evidence/legacy-ei-ui/inventory-open-2026-09-24.png)；随后点击窗口右下关闭钮，回到无背包窗口的游戏画面 `/tmp/zircon-main-restored.png`。本次未重启客户端或服务端、未改游戏数据。打开截图可直接观察到：窗口位于客户端右侧，当前内容是 6 列×6 行格子、图标绘制在格中，右侧有可见的竖向滚动控件，底部仍有货币/操作区域；截图中 HUD、腰带、技能栏和小地图同时可见。此为 Zircon 当前运行外观的记录，不等于 EI 原版运行证据。
+
+对照 `InventoryDialog.ApplyLegacyEiLayout()` 与 `DXItemGrid` 构造，源码确认仍创建固定 6×6 `DXItemCell` 视口；`DXItemGrid` 自身的滚动控件不能视为原版 F280 gauge 的实现。EI 侧的 46 条物品记录、600 WORD 占位表、6×6 hit viewport 与 F280 轨道结论仍以 INV-01/04 的 primary-static 研究证据为准。此次屏幕图没有独立证明当前右侧滚动控件的 RECT、滚动比例或帧资源对应关系，也没运行顶部/底部滚动、拖放、多格物品及鼠标边缘命中；这些继续列为未验收。窗口关闭后截图 `/tmp/zircon-main-restored.png` 可用于本机当次状态回看，但未纳入仓库证据附件。

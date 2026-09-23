@@ -4613,6 +4613,7 @@ public partial class GameScene : Control
 
         if (AutoLoginArgs.LegacyUi)
             ApplyLegacyCoreTestLayouts();
+        OpenLegacyRequestedWindow();
 
         // M9: 主面板功能按钮 -> 对话框开关
         _mainPanel.CharacterButton.MouseClick += (o, e) =>
@@ -4702,6 +4703,39 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyLegacyTestWindow(_storageDialog, _storageDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_configDialog, _configDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_noticeDialog, new Vector2I(107, 110));
+    }
+
+    /// <summary>真实登录场景的旧版窗口直达入口，便于逐窗截图和人工验收。</summary>
+    private void OpenLegacyRequestedWindow()
+    {
+        if (!AutoLoginArgs.LegacyUi) return;
+        string name = OS.GetCmdlineUserArgs()
+            .FirstOrDefault(arg => arg.StartsWith("--legacy-open=", StringComparison.OrdinalIgnoreCase))?
+            ["--legacy-open=".Length..].ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        DXWindow window = name switch
+        {
+            "character" => _characterDialog,
+            "inventory" => _inventoryDialog,
+            "magic" => _magicDialog,
+            "quest" => _questDialog,
+            "chat" => _communicationDialog,
+            "group" => _groupDialog,
+            "menu" => _menuDialog,
+            "horse" => _horseDialog,
+            "npc" => _npcDialog,
+            "trade" => _tradeDialog,
+            "guild" => _guildDialog,
+            "storage" => _storageDialog,
+            "config" or "settings" => _configDialog,
+            "notice" or "prompt" => _noticeDialog,
+            _ => null,
+        };
+        if (window == _noticeDialog)
+            _noticeDialog?.SetNotice("真实登录旧版 F602 窗口验收");
+        if (window != null)
+            WindowManager.Open(window, _uiLayer);
     }
 
     private void OnGameResized()

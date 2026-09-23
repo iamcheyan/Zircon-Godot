@@ -34,6 +34,7 @@ public partial class InventoryDialog : DXWindow
     private DXLabel _legacyModeLabel;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
+    private bool _legacyEiLayout;
 
     public InventoryDialog()
     {
@@ -212,6 +213,7 @@ public partial class InventoryDialog : DXWindow
     /// <summary>按最早 EI 客户端 GameInter F250 的原始坐标重排背包。</summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(284, 324);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 250;
@@ -265,13 +267,23 @@ public partial class InventoryDialog : DXWindow
         CloseButton.Location = new Vector2I(249, 288);
         CloseButton.Size = new Vector2I(28, 26);
 
-        WeightBar.Location = new Vector2I(24, 260);
-        WeightLabel.Location = new Vector2I(24, 260);
-        WeightLabel.Size = new Vector2I(145, 18);
-        _goldTitle.Location = new Vector2I(24, 281);
-        GoldLabel.Location = new Vector2I(64, 281);
-        _ggTitle.Location = new Vector2I(24, 299);
-        GgLabel.Location = new Vector2I(64, 299);
+        // EI 的 F280 仪表值在此版本始终为零；不绘制当前 F360 横向填充。
+        // 负重文案只在包袱模式出现，根相对绘制区为 (0x86,0x18)-(0xF0,0x26)。
+        WeightBar.Visible = false;
+        WeightLabel.Location = new Vector2I(0x86, 0x18);
+        WeightLabel.Size = new Vector2I(0xF0 - 0x86, 0x26 - 0x18);
+        WeightLabel.FontSize = 10;
+        WeightLabel.Align = HorizontalAlignment.Left;
+        WeightLabel.TextColour = new Color(0xA0 / 255f, 0xA0 / 255f, 0xA0 / 255f);
+        _goldTitle.Visible = false;
+        GoldLabel.Location = new Vector2I(0x41, 0x11A);
+        GoldLabel.Size = new Vector2I(0x8E - 0x41, 0x12B - 0x11A);
+        GoldLabel.FontSize = 10;
+        GoldLabel.Align = HorizontalAlignment.Left;
+        GoldLabel.TextColour = new Color(0x64 / 255f, 0xC8 / 255f, 0xF8 / 255f);
+        _ggTitle.Visible = false;
+        GgLabel.Visible = false;
+        WalletButton.Visible = false;
         WalletButton.Location = new Vector2I(176, 262);
         WalletButton.Size = new Vector2I(64, 20);
 
@@ -324,6 +336,7 @@ public partial class InventoryDialog : DXWindow
     public void CenterWeightLabel()
     {
         if (WeightLabel == null || WeightBar == null) return;
+        if (_legacyEiLayout) return;
         var size = MirSkin.MeasureText(WeightLabel.Text, WeightLabel.FontSize);
         WeightLabel.Location = new Vector2I(
             WeightBar.Location.X + (int)((WeightBar.Size.X - size.X) / 2),
@@ -343,6 +356,12 @@ public partial class InventoryDialog : DXWindow
 
     public void SetCurrency(long gold, long gg)
     {
+        if (_legacyEiLayout)
+        {
+            GoldLabel.Text = gold.ToString();
+            return;
+        }
+
         if (!IsSellMode)
         {
             GoldLabel.Text = gold.ToString("N0");

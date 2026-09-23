@@ -463,3 +463,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-24 00:47 JST 技能书帧修复验证：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0 errors，3条既有警告）。检查到当前 legacy 客户端 PID 383044 已于 00:30 启动，早于 F460/F462/F464 代码变更；本轮没有重启它，也没有新桌面可交互应用，因此不能把现有客户端进程当作新帧的运行验证。SKL-08 目前只有静态帧号修正与编译证据，等待窗口可观察后逐类点击/比较普通与按下帧。
 
 2026-09-24 00:48 JST 组队成员几何修复验证：从仓库根目录执行 `bash login_game.sh legacy`，脚本先关闭本轮审计旧客户端 PID 383044、复用 7000 服务，然后服务端/客户端构建均为 0 errors；自动登录 TestHero，收到 `StartGame Result=Success`，进入地图 7 / Sabuk Keep，贴图诊断 missingLibraries/textures 均为0。新客户端 PID 432180。`cua.getState()` 仍返回 apps/browsers 均为空，所以这次只确认登录/进游戏回归；GROUP-01/02 的实际成员行位置、列表溢出和窗口点击还没有运行时证据。
+
+2026-09-24 01:00 JST 组队控件入口修复运行记录：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 通过（0 errors，3条既有警告）；随后从仓库根目录再次运行 `bash login_game.sh legacy`，脚本关闭旧客户端 PID 432180，服务器按脚本策略重新启动；自动登录 TestHero 并收到 `StartGame Result=Success`，进入 Sabuk Keep，贴图缺失诊断为0。最新客户端 PID 459913，代码版本包含底部F910/F912/F914热区、F920/F921权限控件和开合时 suppress GroupNotify。此轮只确认构建、连接和进游戏未回归；`cua.getState()` 仍无交互应用，因此组队窗口尚未打开，鼠标动作/服务器离队副作用/权限状态文字都未做运行验收。

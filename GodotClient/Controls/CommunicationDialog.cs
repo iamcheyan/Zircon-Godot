@@ -87,8 +87,10 @@ public partial class CommunicationDialog : DXWindow
         _background.StretchImage = false;
         _titleLabel.Visible = false;
         _pageBackground.Visible = false;
-        _body.Modulate = new Color(1, 1, 1, 0);
-        _scroll.Modulate = new Color(1, 1, 1, 0);
+        // 保留旧版 F350 框，但不能把好友/邮件正文设为透明；这些是
+        // 正式网络数据，旧版背景只负责承载它们。
+        _body.Modulate = Colors.White;
+        _scroll.Modulate = Colors.White;
         foreach (var tab in _tabs)
         {
             tab.Modulate = new Color(1, 1, 1, 0);
@@ -125,6 +127,17 @@ public partial class CommunicationDialog : DXWindow
             && _blockAdd.Location == new Vector2I(43, 93)
             && _blockRemove.Location == new Vector2I(153, 93);
         details = $"size={Size} body={_body.Location}/{_body.Size} tabs={_tabs.Count}";
+        return ok;
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(572, 388)
+            && _background.Index == 350
+            && _body.Modulate.A > 0.99f
+            && _scroll.Modulate.A > 0.99f
+            && _closeButton.Location == new Vector2I(536, 354);
+        details = $"size={Size} background=F{_background.Index} bodyAlpha={_body.Modulate.A:0.##} close={_closeButton.Location}";
         return ok;
     }
 

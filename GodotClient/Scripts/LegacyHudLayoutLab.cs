@@ -147,17 +147,21 @@ public partial class LegacyHudLayoutLab : Control
         bool magic = _magic.AuditLegacyEiLayout(out string magicDetails);
         bool horse = _horse.AuditLegacyEiLayout(out string horseDetails);
         bool npc = _npc.AuditLegacyEiLayout(out string npcDetails);
+        bool chat = _chat.AuditLegacyEiLayout(out string chatDetails);
+        bool quest = _quest.AuditLegacyEiLayout(out string questDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             && _chat.Size == new Vector2I(572, 388)
             && _menu.Size == new Vector2I(248, 264);
-        bool pass = character && inventory && magic && horse && npc && roots;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} roots={roots}");
+        bool pass = character && inventory && magic && horse && npc && chat && quest && roots;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} roots={roots}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");
         GD.Print($"[LegacyAudit] horse {horseDetails}");
         GD.Print($"[LegacyAudit] npc {npcDetails}");
+        GD.Print($"[LegacyAudit] chat {chatDetails}");
+        GD.Print($"[LegacyAudit] quest {questDetails}");
         GetTree().Quit(pass ? 0 : 1);
     }
 

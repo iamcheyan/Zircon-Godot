@@ -103,10 +103,10 @@ public partial class QuestDialog : DXWindow
         _background.StretchImage = false;
         _titleLabel.Visible = false;
 
-        // F700 已包含旧版任务页签/书页装饰。保留业务控件和点击逻辑，
-        // 只把新版深色容器与文字层设为透明，避免覆盖旧版原画。
-        _content.Modulate = new Color(1, 1, 1, 0);
-        _scroll.Modulate = new Color(1, 1, 1, 0);
+        // F700 已包含旧版任务页签/书页装饰；业务正文不能透明，否则
+        // 旧版窗口只剩一张空羊皮纸，真实任务数据无法验收。
+        _content.Modulate = Colors.White;
+        _scroll.Modulate = Colors.White;
         foreach (var tab in _tabs)
         {
             tab.Button.Modulate = new Color(1, 1, 1, 0);
@@ -141,6 +141,17 @@ public partial class QuestDialog : DXWindow
             && _tabs[1].Button.Type == DXButton.ButtonType.DeselectedTab;
         details = $"size={Size} content={_content.Position}/{_content.Size} detail={_detailPanel.Position}/{_detailPanel.Size} scroll={_scroll.Position}/{_scroll.Size}";
         return valid;
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(340, 440)
+            && _background.Index == 700
+            && _content.Modulate.A > 0.99f
+            && _scroll.Modulate.A > 0.99f
+            && _closeButton.Location == new Vector2I(304, 404);
+        details = $"size={Size} background=F{_background.Index} contentAlpha={_content.Modulate.A:0.##} close={_closeButton.Location}";
+        return ok;
     }
 
     private void AddTab(string text, int x, int y, int page)

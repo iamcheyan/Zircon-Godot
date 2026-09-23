@@ -66,8 +66,8 @@ public partial class MainPanel : DXImageControl
         // 避免把完整球误画到右侧环形操作区。
         _playerOrb = new DXControl
         {
-            Location = new Vector2I(49, 13),
-            Size = new Vector2I(112, 110),
+            Location = LegacyHudLayout.PlayerOrbLocation,
+            Size = LegacyHudLayout.PlayerOrbSize,
             Clip = true,
         };
         _playerOrb.BeforeDraw += DrawPlayerOrb;
@@ -433,8 +433,8 @@ public partial class MainPanel : DXImageControl
         SetClass(MirClass.Warrior);
         bool oneOrb = _playerOrb != null
             && _playerOrb.Visible
-            && location == new Vector2I(49, 13)
-            && _playerOrb.Size == new Vector2I(112, 110)
+            && location == LegacyHudLayout.PlayerOrbLocation
+            && _playerOrb.Size == LegacyHudLayout.PlayerOrbSize
             && !HealthBar.Visible
             && !ManaBar.Visible
             && !MCImage.Visible

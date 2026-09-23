@@ -10,9 +10,8 @@ namespace ZirconClient.Scripts;
 /// </summary>
 public partial class LegacyHudLayoutLab : Control
 {
-    private const float LegacyWidth = 800f;
-    private const float LegacyHeight = 600f;
-    private const float MainPanelY = 465f;
+    private const float LegacyWidth = LegacyHudLayout.LogicalWidth;
+    private const float LegacyHeight = LegacyHudLayout.LogicalHeight;
     private CanvasLayer _canvas;
     private MainPanel _hud;
     private InventoryDialog _inventory;
@@ -47,7 +46,7 @@ public partial class LegacyHudLayoutLab : Control
 
         _hud = new MainPanel
         {
-            Location = new Vector2I(0, (int)MainPanelY),
+            Location = LegacyHudLayout.MainPanelLocation,
         };
         _canvas.AddChild(_hud);
         _hud.SetHealth(100);

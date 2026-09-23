@@ -4672,7 +4672,17 @@ public partial class GameScene : Control
             else
                 WindowManager.Toggle(_menuDialog, _uiLayer);
         };
-        _mainPanel.MailButton.MouseClick += (o, e) => OpenCommunicationDialog();
+        _mainPanel.MailButton.MouseClick += (o, e) =>
+        {
+            // EI cap9 is window id8 (chat log), not the modern client’s
+            // friends/mail/block communication dialog.
+            if (AutoLoginArgs.LegacyHud)
+            {
+                if (_chatLog != null) _chatLog.Visible = !_chatLog.Visible;
+            }
+            else
+                OpenCommunicationDialog();
+        };
         // EI cap12 is the Korean “help (planned)” slot; its original release
         // handler is a no-op. Keep the actual party window on cap5 only.
         _mainPanel.GroupButton.MouseClick += (o, e) =>

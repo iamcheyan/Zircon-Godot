@@ -236,9 +236,9 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Lightning, 454, new(4, 91)),
             (MagicSchool.Wind, 456, new(2, 126)),
             (MagicSchool.Holy, 458, new(2, 161)),
-            (MagicSchool.Dark, 450, new(2, 196)),
-            (MagicSchool.Phantom, 452, new(1, 231)),
-            (MagicSchool.Physical, 454, new(2, 266)),
+            (MagicSchool.Dark, 460, new(2, 196)),
+            (MagicSchool.Phantom, 462, new(1, 231)),
+            (MagicSchool.Physical, 464, new(2, 266)),
         };
         _tabOrder = schools.Select(x => x.school).ToList();
         foreach (var entry in schools)

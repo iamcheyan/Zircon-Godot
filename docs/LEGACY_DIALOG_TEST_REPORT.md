@@ -22,6 +22,9 @@
 
 真实登录回归：使用 `bash login_game.sh` 自动构建并启动本地 `ServerCore`，客户端完成版本校验、账号登录、自动选角和 `StartGame`，日志确认进入 `TestHero` 地图。该回归证明单球修正没有阻断正式旧版 UI 接入；Xvfb 下的 root 截图抓取不作为像素证据，像素/位置以测试场贴图截图和 `LegacyAudit` 坐标审计为准。
 
+新增直达窗口日志后，`--legacy-ui --legacy-open=inventory` 的真实登录回归输出为：
+`[LegacyOpen] requested=inventory type=InventoryDialog visible=True size=(284, 324)`，随后正常进入 `TestHero` 地图。该结果确认真实场景打开的是旧版 `InventoryDialog`，不是仅在测试场创建的占位窗口。
+
 ## 1. 本轮结论
 
 旧版 EI 测试场已经可以独立启动，并复用正式窗口类、旧版 GameInter 贴图和旧版根矩形。自动审计通过，人物窗口本轮补齐了装备 enum 到旧版视觉格子的映射校验。

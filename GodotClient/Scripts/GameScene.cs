@@ -4742,7 +4742,14 @@ public partial class GameScene : Control
         if (window == _noticeDialog)
             _noticeDialog?.SetNotice("真实登录旧版 F602 窗口验收");
         if (window != null)
+        {
             WindowManager.Open(window, _uiLayer);
+            GD.Print($"[LegacyOpen] requested={name} type={window.GetType().Name} visible={window.Visible} size={window.Size} location={window.Location}");
+        }
+        else
+        {
+            GD.PushWarning($"[LegacyOpen] unknown window: {name}");
+        }
     }
 
     private void OnGameResized()

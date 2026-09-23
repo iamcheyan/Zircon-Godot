@@ -4630,6 +4630,7 @@ public partial class GameScene : Control
             _currencyDialog.RefreshCurrencies(Currencies);
         };
         LayoutHud();
+        AuditLegacyHudIfRequested();
         // HUD 锚定（LayoutHud 设定各窗口根位置）之后应用 overlay 覆盖，
         // 保证窗口级 location 覆盖不会被默认布局冲掉。
         UiOverlay.ApplyAll();
@@ -5138,6 +5139,13 @@ public partial class GameScene : Control
         // 这里负责“绝不能在哪里”：旧配置、窗口尺寸瞬变、窗口拖动都不能让
         // 任何常驻 UI 控件越过当前逻辑画布。
         ClampHudControlsToViewport(vp);
+    }
+
+    private void AuditLegacyHudIfRequested()
+    {
+        if (!AutoLoginArgs.LegacyHud || _mainPanel == null) return;
+        bool pass = _mainPanel.AuditLegacyHud(out string details);
+        GD.Print($"[LegacyHud] {(pass ? "PASS" : "FAIL")} viewport={GetHudViewportSize()} location={_mainPanel.Location} {details}");
     }
 
     private void ClampHudControlsToViewport(Vector2 logicalViewport)

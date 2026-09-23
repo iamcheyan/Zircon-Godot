@@ -12,6 +12,20 @@ namespace ZirconClient.Controls;
 public partial class DXItemGrid : DXControl
 {
     private Vector2I _gridSize;
+    private int _slotCount = -1;
+    /// <summary>Optional occupied grid capacity when the final row is partial.</summary>
+    public int SlotCount
+    {
+        get => _slotCount < 0 ? GridSize.X * GridSize.Y : _slotCount;
+        set
+        {
+            int next = value < 0 ? -1 : value;
+            if (_slotCount == next) return;
+            _slotCount = next;
+            UpdateSize();
+        }
+    }
+
     public Vector2I GridSize
     {
         get => _gridSize;
@@ -99,6 +113,7 @@ public partial class DXItemGrid : DXControl
     /// <summary>原版腰带网格的固定槽位分隔线。</summary>
     public bool ShowCellDividers;
     public bool AllowLink;
+    public event EventHandler<MouseWheelEventArgs> GridMouseWheel;
     private bool _readOnly;
     public bool ReadOnly
     {
@@ -139,31 +154,35 @@ public partial class DXItemGrid : DXControl
             Cells = null;
         }
 
-        int count = GridSize.X * GridSize.Y;
+        int count = Math.Min(GridSize.X * GridSize.Y, SlotCount);
         Cells = new DXItemCell[count];
 
-        for (int y = 0; y < GridSize.Y; y++)
+        for (int slot = 0; slot < count; slot++)
         {
-            for (int x = 0; x < GridSize.X; x++)
+            int x = slot % GridSize.X;
+            int y = slot / GridSize.X;
+            var cell = new DXItemCell
             {
-                int slot = y * GridSize.X + x;
-                var cell = new DXItemCell
-                {
-                    Location = new Vector2I(
-                        (int)(x * Step + GridPadding),
-                        (int)(y * Step + GridPadding)),
-                    Slot = slot,
-                    HostGrid = this,
-                    ItemGrid = _itemGrid,
-                    GridType = GridType,
-                    ReadOnly = ReadOnly,
-                };
-                AddControl(cell);
-                Cells[slot] = cell;
-            }
+                Location = new Vector2I(
+                    (int)(x * Step + GridPadding),
+                    (int)(y * Step + GridPadding)),
+                Slot = slot,
+                HostGrid = this,
+                ItemGrid = _itemGrid,
+                GridType = GridType,
+                ReadOnly = ReadOnly,
+            };
+            cell.MouseWheel += ForwardMouseWheel;
+            AddControl(cell);
+            Cells[slot] = cell;
         }
 
         UpdateGridDisplay();
+    }
+
+    private void ForwardMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        GridMouseWheel?.Invoke(this, e);
     }
 
     /// <summary>滚动后重新摆放格子 (隐藏行外格子)</summary>
@@ -171,24 +190,23 @@ public partial class DXItemGrid : DXControl
     {
         if (Cells == null) return;
 
-        for (int y = 0; y < GridSize.Y; y++)
+        for (int slot = 0; slot < Cells.Length; slot++)
         {
-            for (int x = 0; x < GridSize.X; x++)
+            var cell = Cells[slot];
+            if (cell == null) continue;
+            int y = slot / GridSize.X;
+            int x = slot % GridSize.X;
+
+            if (y < ScrollValue || y >= ScrollValue + VisibleHeight)
             {
-                var cell = Cells[y * GridSize.X + x];
-                if (cell == null) continue;
-
-                if (y < ScrollValue || y >= ScrollValue + VisibleHeight)
-                {
-                    cell.Visible = false;
-                    continue;
-                }
-
-                cell.Visible = true;
-                cell.Location = new Vector2I(
-                    (int)(x * Step + GridPadding),
-                    (int)((y - ScrollValue) * Step + GridPadding));
+                cell.Visible = false;
+                continue;
             }
+
+            cell.Visible = true;
+            cell.Location = new Vector2I(
+                (int)(x * Step + GridPadding),
+                (int)((y - ScrollValue) * Step + GridPadding));
         }
     }
 

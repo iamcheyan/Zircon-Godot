@@ -10450,6 +10450,15 @@ public partial class GameScene : Control
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
+        // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (_questDialog != null)
+                WindowManager.Toggle(_questDialog, _uiLayer);
+            return;
+        }
+
         // EI 旧版坐骑窗口同时响应裸 S 与 Ctrl+S。裸 S 在现代键位表中
         // 用作仓库入口，因此只在旧版 UI 模式下覆盖它。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.S

@@ -372,7 +372,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 | 编号 | 严重度 | 发现 | 验收要求 |
 |---|---|---|---|
-| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认 Q=人物窗/W=背包、G=行会/P=组队、J=任务、O=配置、R=排行榜、S=仓库、Z=腰带窗、M=骑马、D=自动跑、B=大地图、C=货币、F=屏蔽列表、E=技能书、Ctrl+E=技能栏、V=小地图；其中 E/V 动作匹配，其他大多目标不同。原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
+| KEY-01 | 阻断 | EI 主热键动作与当前默认键表大范围错配；caption 中 Ctrl+字母不一定是必须修饰位，常与裸字母并列 | `window-paint-and-hotkey-dispatch-evidence.json` 的 `0x42CC76` 为 primary-bytes：Q=背包、W=状态、E=技能书、R=聊天、S=坐骑、D=任务/信息、Z=亮度/腰带效果、C=实体交易请求、V=小地图、B=技能图鉴开关、G=组队、F=行会动作、N=设置；且有 modal guard。`hotkey-label-handler-consistency.json` 的 Q/S 等按键体调用 `GetKeyState(对应字母)` 并测 AH 按下位，例如 Q 查询 Q、S 查询 S；这不是查询 Ctrl，且 S 的 caption 明确写“Ctrl+S, S”。当前 `KeyBindManager` 默认表仍是现代映射；legacy `_Input()` 已将 D/Ctrl+D→id11、裸 S/Ctrl+S→id13 覆盖到原版目标，其他键仍需逐项核对。原版 Z 与 B 都不是窗口开关，C 是实体交互交易请求。 | 建立按 keydown、GetKeyState 参数、modifier 条件、caption、模态/聊天焦点门控和目标动作分列的逐键矩阵；逐项检查 Q/W/E/R/S/D/Z/C/V/B/G/F/N 分支，严格区分“字母键 down”与“必须按 Ctrl”；再分别实测 EI 与 `bash login_game.sh legacy` 的裸键/Ctrl 组合和窗口结果。 |
 | KEY-02 | 阻断，逐键目标与修饰键策略错配 | primary-bytes `window-paint-and-hotkey-dispatch-evidence.json` 的 key table 与 `hotkey-label-handler-consistency.json` 的更正结论，对照 source-confirmed `KeyBindManager.KeyBinds`、`GetAction()` 和 `GameScene.HandleKeyBind()`，如下表。Godot `GetAction()` 比较 Ctrl/Alt/Shift 的精确布尔值；EI 热键处理器门控 `[ebp+0x20]/[ebp+0x24]` 是 modal guard，不等价于要求用户按 caption 中的 Ctrl。Q/D/N 等 caption 与字母分支一致；旧研究把 id0误记成交易、把G误记成行会的判断已由 Finding 316 撤销。 | 依据 EI primary-static 对每个按键验证有效 keydown、caption组合、焦点/mode guard和动作；依据 Godot 源码/设置验证相同物理键的所有修饰组合。逐项检查以下矩阵以及配置覆写后的键位冲突： |
 
 | EI 按键 | EI 已证动作/入口 | 当前 Godot 默认匹配 | 对照结论 |
@@ -381,8 +381,8 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 | W / Ctrl+W | id1 状态面板 | 裸 W→背包；Ctrl+W→FortuneWindow（幸运查询） | 目标错；不能把 id1 状态面板和 id7 人物形象窗混为同一 ID |
 | E / Ctrl+E | id14 技能书 | 裸 E→技能书；Ctrl+E→现代 MagicBar | 裸键目标对，Ctrl 组合目标错 |
 | R / Ctrl+R | id8 聊天窗 | 裸 R→排行榜；Ctrl+R 无默认动作（幸运查询绑定 Ctrl+W） | 两种组合都不是原版聊天窗 |
-| S / Ctrl+S | id13 坐骑窗 | 裸 S→仓库；Ctrl+S 在 `GameScene._Input()` 特判→坐骑 | 仅 Ctrl 组合动作接近；裸 S 错，仓库入口占用原版键 |
-| D / Ctrl+D | id11 信息/任务窗 | 裸 D→自动跑；Ctrl+D 无默认动作 | 目标错，任务窗当前另绑 J |
+| S / Ctrl+S | id13 坐骑窗 | `--legacy-ui` 裸 S/Ctrl+S→id13；现代模式裸 S→仓库 | 旧版映射已按原版 keycode 接入；EI / 游戏内实际输入待验 |
+| D / Ctrl+D | id11 信息/任务窗 | `--legacy-ui` 裸 D/Ctrl+D→id11；现代模式裸 D→自动跑 | 旧版映射已按原版 keycode 接入；EI / 游戏内实际输入待验 |
 | Z / Ctrl+Z | 调整亮度状态 `[D40]/[D42]`，caption 为腰带/光效语义；不是独立窗开关 | 裸 Z→腰带窗；Shift+Z→伴侣传送；Ctrl+Z 无动作 | 目标与动作种类都不符；原版字段的完整业务语义仍待查 |
 | C / Ctrl+C | 向被选实体发起交易请求（不是开交易窗） | 裸 C→无动作；Ctrl+C→货币窗 | 原版动作和修饰组合都错；当前交易请求另绑 T |
 | V / Ctrl+V | 小地图显隐；字母入口约100ms节流 | 裸 V→小地图三态（显/半透明/隐）；Ctrl+V 无动作 | 目标基本对应，但多出透明度状态、节流/状态链不等；见 MAP-03 |

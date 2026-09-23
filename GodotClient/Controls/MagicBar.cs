@@ -16,7 +16,6 @@ public partial class MagicBar : Control
     private const int IconsPerRow = 12;
     private const int GroupSpacing = 5;
     private readonly GameScene _game;
-    private readonly ZlLibrary _iconLib;
     private readonly DXButton _upButton;
     private readonly DXButton _downButton;
     private readonly DXLabel _setLabel;
@@ -31,7 +30,6 @@ public partial class MagicBar : Control
     public MagicBar(GameScene game)
     {
         _game = game;
-        _iconLib = LibraryCache.Get(LibraryFile.MagicIcon);
         // 技能槽本身需要接收点击；上下翻栏按钮仍由子控件处理。
         MouseFilter = MouseFilterEnum.Stop;
         // 原版 MagicBarDialog.Opacity = 0.6，图标本身另有 0.6 透明度。
@@ -143,7 +141,7 @@ public partial class MagicBar : Control
             if (border != null) DrawTextureRect(border, new Rect2(x, y, frameWidth, slotSize), false);
             else DrawRect(new Rect2(x, y, frameWidth, frames ? slotSize : frameWidth), new Color(0.45f, 0.35f, 0.2f), false, 1);
 
-            var icon = _iconLib?.GetImageTexture(magic.Info.Icon);
+            var icon = MirSkin.GetTexture(LibraryFile.MagicIcon, magic.Info.Icon);
             if (icon != null)
             {
                 float ix = x + (frames ? 6 : 0) + (IconSize - icon.GetWidth()) / 2f;

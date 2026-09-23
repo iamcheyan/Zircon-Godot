@@ -536,3 +536,9 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 在已运行的 `:100` / 1024×768 legacy 客户端中，用鼠标点击 HUD 背包入口打开窗口，保存截图 [`inventory-open-2026-09-24.png`](evidence/legacy-ei-ui/inventory-open-2026-09-24.png)；随后点击窗口右下关闭钮，回到无背包窗口的游戏画面 `/tmp/zircon-main-restored.png`。本次未重启客户端或服务端、未改游戏数据。打开截图可直接观察到：窗口位于客户端右侧，当前内容是 6 列×6 行格子、图标绘制在格中，右侧有可见的竖向滚动控件，底部仍有货币/操作区域；截图中 HUD、腰带、技能栏和小地图同时可见。此为 Zircon 当前运行外观的记录，不等于 EI 原版运行证据。
 
 对照 `InventoryDialog.ApplyLegacyEiLayout()` 与 `DXItemGrid` 构造，源码确认仍创建固定 6×6 `DXItemCell` 视口；`DXItemGrid` 自身的滚动控件不能视为原版 F280 gauge 的实现。EI 侧的 46 条物品记录、600 WORD 占位表、6×6 hit viewport 与 F280 轨道结论仍以 INV-01/04 的 primary-static 研究证据为准。此次屏幕图没有独立证明当前右侧滚动控件的 RECT、滚动比例或帧资源对应关系，也没运行顶部/底部滚动、拖放、多格物品及鼠标边缘命中；这些继续列为未验收。窗口关闭后截图 `/tmp/zircon-main-restored.png` 可用于本机当次状态回看，但未纳入仓库证据附件。
+
+#### 技能栏图标资源路径补齐（2026-09-24，Zircon 侧）
+
+追查发现技能书 `MagicCellView` 与常驻 `MagicBar` 直接从 `LibraryCache.Get(MagicIcon)` 取 `.Zl`，绕过 `MirSkin` 的旧版 WIL 回退。已将两处绘制统一改为 `MirSkin.GetTexture(MagicIcon, frame)`，从而让旧版模式使用同一 EI MIcon 资源。重新执行 `DISPLAY=:100 bash login_game.sh legacy` 后 TestHero 自动登录并进入 Sabuk Keep，日志确认加载 `LegacyEI/Data/MIcon.wil (1106 frames)`，并记录地图/角色首帧 `missingLibraries=0, missingTextures=0, emptyImageEntries=0`。技能栏运行截图 [`magicbar-magicicon-wil-runtime-2026-09-24-1024x768.png`](evidence/legacy-ei-ui/magicbar-magicicon-wil-runtime-2026-09-24-1024x768.png) 可见常驻栏已实际绘制三个已绑定技能图标。
+
+这只证明 EI WIL 加载与 Zircon 显示路径工作；没有原版同帧参考图，仍不能声称 `MagicInfo.Icon` 数值与 EI `[skill+6]` 完全同义，也没有验收不同窗口状态下的缩放、透明度及帧边界。技能书详情页、列表命中区、分类记录映射及 EI 窗口锚点继续阻断 SKL 验收。

@@ -571,7 +571,6 @@ public partial class MagicCellView : DXControl
 {
     private readonly MagicInfo _info;
     private readonly ClientUserMagic _magic;
-    private ZlLibrary _iconLib;
 
     public MagicCellView(MagicInfo info, ClientUserMagic magic, int spellSet)
     {
@@ -675,11 +674,6 @@ public partial class MagicCellView : DXControl
         game.RefreshMagicBars();
     }
 
-    public override void _Ready()
-    {
-        _iconLib = LibraryCache.Get(LibraryFile.MagicIcon);
-    }
-
     public override void _Draw()
     {
         if (_info == null) return;
@@ -697,7 +691,7 @@ public partial class MagicCellView : DXControl
                 new Color(1f, 1f, 1f, opacity));
 
         // 图标
-        var tex = _iconLib?.GetImageTexture(_info.Icon);
+        var tex = MirSkin.GetTexture(LibraryFile.MagicIcon, _info.Icon);
         if (tex != null)
             DrawTextureRect(tex, new Rect2(9, 9, 36, 36), false, new Color(1f, 1f, 1f, opacity));
 

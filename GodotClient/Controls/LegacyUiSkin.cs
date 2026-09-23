@@ -84,6 +84,7 @@ public static class LegacyUiSkin
             "NPCDialog" => (1100, new Vector2I(552, 176), Vector2I.Zero, false),
             "TradeDialog" => (1050, new Vector2I(484, 330), Vector2I.Zero, false),
             "GuildDialog" => (600, new Vector2I(446, 596), Vector2I.Zero, false),
+            "StorageDialog" => (1001, new Vector2I(205, 205), Vector2I.Zero, false),
             // BeltDialog remains the modern quick-use belt and is deliberately
             // not aliased to the EI horse window.
             _ => (-1, Vector2I.Zero, Vector2I.Zero, false),
@@ -134,6 +135,9 @@ public static class LegacyUiSkin
                 return true;
             case GuildDialog guild:
                 guild.ApplyLegacyEiLayout();
+                return true;
+            case StorageDialog storage:
+                storage.ApplyLegacyEiLayout();
                 return true;
         }
         foreach (var child in window.Controls)

@@ -13,6 +13,8 @@ namespace ZirconClient.Controls;
 /// </summary>
 public partial class StorageDialog : DXWindow
 {
+    private DXImageControl _background;
+    private DXButton _closeButton;
     public DXItemGrid Grid;
     public DXItemGrid PartGrid;
     public DXItemCell[] StorageCells => Grid?.Cells ?? Array.Empty<DXItemCell>();
@@ -31,7 +33,7 @@ public partial class StorageDialog : DXWindow
         Text = Lang.StorageDialogTitle;
         Size = new Vector2I(410, 479);
 
-        var bg = new DXImageControl
+        _background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface,
             Index = 121,
@@ -39,7 +41,7 @@ public partial class StorageDialog : DXWindow
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        AddControl(bg);
+        AddControl(_background);
 
         // 原版标题是背景图上的独立 DXLabel，不是 DXWindow 标题栏。
         AddControl(new DXLabel
@@ -57,14 +59,14 @@ public partial class StorageDialog : DXWindow
             IsControl = false,
         });
 
-        var close = new DXButton
+        _closeButton = new DXButton
         {
             LibraryFile = LibraryFile.Interface,
             Index = 15,
         };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => { CancelLinks(); WindowManager.Close(this); };
-        AddControl(close);
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => { CancelLinks(); WindowManager.Close(this); };
+        AddControl(_closeButton);
 
         SortButton = new DXButton
         {
@@ -241,6 +243,50 @@ public partial class StorageDialog : DXWindow
         SelectTab(false);
         details = $"size={Size} grid={Grid.Location}/{Grid.Size} scroll={ScrollBar.Location}/{ScrollBar.MaxValue} pages=storage:{storage},parts:{parts}";
         return geometry && storage && parts;
+    }
+
+    /// <summary>
+    /// 旧版 EI 仓库分支：GameInter F1001 的 205×205 紧凑网格。
+    /// 证据中的 12 个槽为 4×3，原点相对根窗口为 (22,43)，步长 38。
+    /// 商店 F1000 与仓库状态分支不同，不能共用此方法。
+    /// </summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(205, 205);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 1001;
+        _background.FixedSize = true;
+        _background.StretchImage = false;
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 1001);
+        _background.Location = Vector2I.Zero;
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(177, 176);
+        _closeButton.Size = new Vector2I(28, 26);
+        Grid.GridSize = new Vector2I(4, 3);
+        Grid.Location = new Vector2I(22, 43);
+        Grid.VisibleHeight = 3;
+        Grid.RefreshGrid();
+        PartGrid.Visible = false;
+        ScrollBar.Visible = false;
+        PartScrollBar.Visible = false;
+        _storageTab.Visible = false;
+        _partsTab.Visible = false;
+        SortButton.Visible = false;
+        UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(205, 205)
+            && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1001
+            && Grid.GridSize == new Vector2I(4, 3)
+            && Grid.Location == new Vector2(22, 43)
+            && !PartGrid.Visible && !ScrollBar.Visible;
+        details = $"size={Size} frame={_background.Index} grid={Grid.GridSize}@{Grid.Location} compact={!PartGrid.Visible && !ScrollBar.Visible}";
+        return ok;
     }
 
     public void CancelLinks()

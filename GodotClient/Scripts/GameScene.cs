@@ -4684,6 +4684,7 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyLegacyTestWindow(_menuDialog, _menuDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_tradeDialog, _tradeDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_guildDialog, _guildDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_storageDialog, _storageDialog.Location);
     }
 
     private void OnGameResized()

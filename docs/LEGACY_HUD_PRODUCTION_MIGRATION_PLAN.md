@@ -97,3 +97,9 @@ bash login_game.sh
 ```
 
 正式 HUD 验收必须在真实登录命令中额外加入 `--legacy-ui --legacy-hud`（开关接入后），并检查日志、运行时行为和截图三类证据。
+
+## 当前执行记录
+
+- 阶段 0：通过。构建 0 错误；`LegacyHudLayoutLab --legacy-audit` 全部通过；此前真实登录 smoke test 已通过。
+- 阶段 1：进行中。确认测试场与正式游戏已经共同复用 `MainPanel`；本轮新增 `LegacyHudLayout`，统一逻辑画布、HUD 原点和玩家球几何定义，构建与测试场审计通过。
+- 阶段 2～5：未开始，不得将测试场通过或阶段 1 通过描述为正式 HUD 已全部替换完成。

@@ -156,6 +156,9 @@ public partial class MainPanel : DXImageControl
         MACImage = CreateStatImage(63, 531, 25);
         MCImage = CreateStatImage(62, 541, 45);
         SCImage = CreateStatImage(64, 547, 45);
+        // GameInter[62] 是完整玩家红球，不是魔法攻击属性图标；旧版 HUD
+        // 的玩家球统一由 _playerOrb 在左侧绘制，不能把同一帧放到右侧属性区。
+        MCImage.Visible = false;
         FPImage.TooltipText = "战斗力";
         CPImage.TooltipText = "贡献";
         ACImage.TooltipText = Lang.MainPanelACLabel;
@@ -355,7 +358,7 @@ public partial class MainPanel : DXImageControl
         bool showMC = cls == MirClass.Wizard || cls == MirClass.Warrior;
         bool showSC = cls == MirClass.Taoist || cls == MirClass.Assassin;
         MCLabel.Visible = showMC;
-        MCImage.Visible = showMC;
+        MCImage.Visible = false;
         SCLabel.Visible = showSC;
         SCImage.Visible = showSC;
     }
@@ -411,6 +414,20 @@ public partial class MainPanel : DXImageControl
     public void SetMailIndicator(bool visible)
     {
         if (NewMailIcon != null) NewMailIcon.Visible = visible;
+    }
+
+    /// <summary>旧版 HUD 球体审计：红球与红蓝球必须共用左侧同一控件。</summary>
+    public bool AuditLegacyOrb(out string details)
+    {
+        bool oneOrb = _playerOrb != null
+            && _playerOrb.Visible
+            && _playerOrb.Location == new Vector2I(49, 13)
+            && _playerOrb.Size == new Vector2I(112, 110)
+            && !HealthBar.Visible
+            && !ManaBar.Visible
+            && !MCImage.Visible;
+        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} single={oneOrb}";
+        return oneOrb;
     }
 
     public void SetAttackMode(AttackMode mode)

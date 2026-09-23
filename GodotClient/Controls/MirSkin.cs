@@ -80,6 +80,7 @@ public static class MirSkin
     }
 
     private static readonly Dictionary<LibraryFile, ZlLibrary> _libraries = new();
+    private static readonly Dictionary<LibraryFile, LegacyWilLibrary> _legacyWilLibraries = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _textures = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _overlayTextures = new();
 
@@ -135,7 +136,15 @@ public static class MirSkin
         if (_textures.TryGetValue(key, out var tex) && tex != null) return tex;
 
         var lib = GetLibrary(file);
-        if (lib == null || index >= lib.Images.Length) return null;
+        if (lib == null)
+        {
+            LegacyWilLibrary wil = GetLegacyWilLibrary(file);
+            if (wil == null || index >= wil.Count) return null;
+            tex = wil.GetImageTexture(index);
+            if (tex != null) _textures[key] = tex;
+            return tex;
+        }
+        if (index >= lib.Images.Length) return null;
 
         tex = lib.GetImageTexture(index);
         if (tex == null) return null;
@@ -161,7 +170,9 @@ public static class MirSkin
     {
         if (index < 0) return Vector2I.Zero;
         var lib = GetLibrary(file);
-        if (lib == null || index >= lib.Images.Length || lib.Images[index] == null) return Vector2I.Zero;
+        if (lib == null)
+            return GetLegacyWilLibrary(file)?.GetSize(index) ?? Vector2I.Zero;
+        if (index >= lib.Images.Length || lib.Images[index] == null) return Vector2I.Zero;
         return new Vector2I(lib.Images[index].Width, lib.Images[index].Height);
     }
 
@@ -169,8 +180,40 @@ public static class MirSkin
     {
         if (index < 0) return Vector2I.Zero;
         var lib = GetLibrary(file);
-        if (lib == null || index >= lib.Images.Length || lib.Images[index] == null) return Vector2I.Zero;
+        if (lib == null)
+            return GetLegacyWilLibrary(file)?.GetOffset(index) ?? Vector2I.Zero;
+        if (index >= lib.Images.Length || lib.Images[index] == null) return Vector2I.Zero;
         return new Vector2I(lib.Images[index].OffSetX, lib.Images[index].OffSetY);
+    }
+
+    /// <summary>
+    /// Read an original EI WIL only when the selected legacy UI root has no
+    /// converted ZL for that UI library. Normal client and world-resource paths
+    /// continue to use the existing ZL loader.
+    /// </summary>
+    private static LegacyWilLibrary GetLegacyWilLibrary(LibraryFile file)
+    {
+        if (!IsUiLibrary(file)) return null;
+        if (_legacyWilLibraries.TryGetValue(file, out LegacyWilLibrary cached)) return cached;
+        if (!Libraries.LibraryList.TryGetValue(file, out string path)) return null;
+
+        string name = Path.GetFileNameWithoutExtension(path.Replace('\\', '/'));
+        string wilPath = ResolvePath(Path.Combine(UiDataPath, name + ".wil"));
+        string wixPath = ResolvePath(Path.Combine(UiDataPath, name + ".wix"));
+        if (!File.Exists(wilPath) || !File.Exists(wixPath)) return null;
+
+        try
+        {
+            var library = new LegacyWilLibrary(wilPath, wixPath);
+            _legacyWilLibraries[file] = library;
+            GD.Print($"[MirSkin] legacy UI WIL fallback: {file} -> {wilPath} ({library.Count} frames)");
+            return library;
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[MirSkin] legacy UI WIL load failed: {wilPath}: {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>中文字体 (Noto Sans CJK)。优先用客户端自带 Fonts/, 其次系统路径与
@@ -303,6 +346,10 @@ public static class MirSkin
         foreach (var lib in _libraries.Values)
             lib?.Dispose();
         _libraries.Clear();
+
+        foreach (LegacyWilLibrary lib in _legacyWilLibraries.Values)
+            lib?.Dispose();
+        _legacyWilLibraries.Clear();
 
         _textures.Clear();
         _overlayTextures.Clear();

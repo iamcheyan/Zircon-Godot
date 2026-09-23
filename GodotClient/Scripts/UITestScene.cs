@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Godot;
 using Library;
 using Library.SystemModels;
 using ZirconClient.Controls;
+using ZirconClient.Formats;
 using S = Library.Network.ServerPackets;
 
 namespace ZirconClient.Scripts;
@@ -44,6 +47,7 @@ public partial class UITestScene : Control
     private bool _configAudit;
     private bool _keyBindAudit;
     private bool _windowChromeAudit;
+    private bool _legacyWilAudit;
     private CanvasLayer _uiLayer;
 
     public override void _Ready()
@@ -82,6 +86,8 @@ public partial class UITestScene : Control
         _configAudit = OS.GetCmdlineUserArgs().Contains("--config-audit");
         _keyBindAudit = OS.GetCmdlineUserArgs().Contains("--keybind-audit");
         _windowChromeAudit = OS.GetCmdlineUserArgs().Contains("--window-chrome-audit");
+        _legacyWilAudit = OS.GetCmdlineUserArgs().Contains("--legacy-wil-audit");
+        if (_legacyWilAudit) AuditLegacyWilFallback();
         if (_uiAudit)
         {
             _uiLayer = new CanvasLayer
@@ -238,6 +244,76 @@ public partial class UITestScene : Control
         foreach (var s in list.Where(x => x != null).OrderBy(x => x.Index))
             GD.Print($"[StoreDump] #{s.Index} {s.Item?.ItemName} Price={s.Price} "
                      + $"Hunt={s.HuntGoldPrice} Available={s.Available} Filter={s.Filter}");
+    }
+
+    /// <summary>
+    /// Verify the EI WIL fallback against known converted GameInter ZL frames and
+    /// confirm that the missing Interface1c ZL can provide an original frame.
+    /// </summary>
+    private static void AuditLegacyWilFallback()
+    {
+        string root = ZirconClient.Controls.MirSkin.UiDataPath;
+        string interfaceWil = Path.Combine(root, "Interface1c.wil");
+        string interfaceWix = Path.Combine(root, "Interface1c.wix");
+        string gameInterWil = Path.Combine(root, "GameInter.wil");
+        string gameInterWix = Path.Combine(root, "GameInter.wix");
+        string gameInterZl = Path.Combine(root, "GameInter.Zl");
+
+        using var interfaceLibrary = new LegacyWilLibrary(interfaceWil, interfaceWix);
+        Vector2I interfaceSize = interfaceLibrary.GetSize(50);
+        Vector2I interfaceOffset = interfaceLibrary.GetOffset(50);
+        ImageTexture interfaceFrame = interfaceLibrary.GetImageTexture(50);
+        // F51 avoids a possible earlier cache entry from scene initialization.
+        Vector2I fallbackExpectedSize = interfaceLibrary.GetSize(51);
+        Vector2I fallbackExpectedOffset = interfaceLibrary.GetOffset(51);
+        Texture2D fallbackFrame = MirSkin.GetTexture(LibraryFile.Interface1c, 51);
+        Vector2I fallbackSize = MirSkin.GetSize(LibraryFile.Interface1c, 51);
+        Vector2I fallbackOffset = MirSkin.GetOffset(LibraryFile.Interface1c, 51);
+        bool fallbackRoutePass = fallbackFrame != null && fallbackSize == fallbackExpectedSize && fallbackOffset == fallbackExpectedOffset;
+        bool interfacePass = interfaceFrame != null && interfaceSize == new Vector2I(640, 480) && fallbackRoutePass;
+        GD.Print(interfacePass
+            ? $"[LegacyWilAudit] PASS Interface1c direct F50 size={interfaceSize} offset={interfaceOffset}; MirSkin WIL fallback F51 size={fallbackSize} offset={fallbackOffset}"
+            : $"[LegacyWilAudit] FAIL Interface1c direct F50 size={interfaceSize} offset={interfaceOffset} texture={interfaceFrame != null}; fallback F51={fallbackRoutePass} size={fallbackSize}/{fallbackOffset} texture={fallbackFrame != null} root={MirSkin.UiDataPath}");
+        if (interfaceFrame != null)
+        {
+            string pngPath = "/tmp/zircon-interface1c-wil-f50.png";
+            Error save = interfaceFrame.GetImage().SavePng(pngPath);
+            GD.Print($"[LegacyWilAudit] F50 png={pngPath} save={save} sha256={Convert.ToHexString(SHA256.HashData(interfaceFrame.GetImage().GetData().ToArray()))}");
+        }
+
+        using var gameInter = new LegacyWilLibrary(gameInterWil, gameInterWix);
+        using var gameInterZlLibrary = new ZlLibrary(gameInterZl);
+        int[] frames = { 50, 168, 200, 201, 400, 600, 750, 800, 850, 900, 1050, 1100 };
+        int compared = 0;
+        int exact = 0;
+        int metadataMatches = 0;
+        foreach (int frame in frames)
+        {
+            Vector2I wilSize = gameInter.GetSize(frame);
+            Vector2I zlSize = gameInterZlLibrary.Images[frame] == null
+                ? Vector2I.Zero
+                : new Vector2I(gameInterZlLibrary.Images[frame].Width, gameInterZlLibrary.Images[frame].Height);
+            Vector2I wilOffset = gameInter.GetOffset(frame);
+            Vector2I zlOffset = gameInterZlLibrary.Images[frame] == null
+                ? Vector2I.Zero
+                : new Vector2I(gameInterZlLibrary.Images[frame].OffSetX, gameInterZlLibrary.Images[frame].OffSetY);
+            ImageTexture wilTexture = gameInter.GetImageTexture(frame);
+            ImageTexture zlTexture = gameInterZlLibrary.GetImageTexture(frame);
+            if (wilTexture == null || zlTexture == null) continue;
+
+            metadataMatches += wilSize == zlSize && wilOffset == zlOffset ? 1 : 0;
+            byte[] wilPixels = wilTexture.GetImage().GetData().ToArray();
+            byte[] zlPixels = zlTexture.GetImage().GetData().ToArray();
+            bool same = wilPixels.AsSpan().SequenceEqual(zlPixels);
+            exact += same ? 1 : 0;
+            compared++;
+            GD.Print($"[LegacyWilAudit] GameInter F{frame}: meta={wilSize == zlSize && wilOffset == zlOffset} rgbaExact={same} wil={wilSize}/{wilOffset} zl={zlSize}/{zlOffset}");
+        }
+
+        bool pass = interfacePass && compared == frames.Length && metadataMatches == compared && exact == compared;
+        GD.Print(pass
+            ? $"[LegacyWilAudit] PASS GameInter compared={compared} metadata={metadataMatches} exactPixels={exact}"
+            : $"[LegacyWilAudit] CHECK GameInter compared={compared}/{frames.Length} metadata={metadataMatches} exactPixels={exact}");
     }
 
     private static void AuditHud(MainPanel hud)

@@ -314,7 +314,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | LibraryFile | `LegacyEI/Data` 实际文件 | 代码读取路径 | 首轮结论 |
 |---|---|---|---|
 | GameInter | `GameInter.Zl`、`GameInter.wil/.wix` | `MirSkin`→legacy；`LibraryCache`→常规Data | 8766抽查F50/168/200/201/400/600/1050/1100的`.Zl`与`.wil`解码像素和头字段相同；不代表全帧或另一份常规Data/GameInter.Zl相同 |
-| Interface1c | `Interface1c.wil/.wix`，无`.Zl` | `MirSkin`→legacy `.Zl` | 当前调用路径缺文件；WIL资源虽在目标目录但不能自动读取 |
+| Interface1c | `Interface1c.wil/.wix`，无`.Zl` | `MirSkin`→原版 EI WIL 回退（本轮新接入）；`LibraryCache`仍只读常规Data Zl | 直接解码F50并经`MirSkin`实际回退路径解码F51均通过；F50为640×480、offset(-24,-16)，原图输出`/tmp/zircon-interface1c-wil-f50.png`；登录/选角实际界面仍未完成验收 |
 | Interface、Interface1cExtended | 未发现EI文件 | `MirSkin`→legacy `.Zl` | 对应控件帧会无资源；需逐项追调用者和 fallback |
 | GameInter2 | 未发现EI文件 | `MirSkin`→legacy `.Zl` | `MagicBar`边框请求走矩形回退；不可称作已加载现代边框 |
 | ProgUse | `ProgUse.wil/.wix`，无`.Zl` | `MirSkin`→legacy；`LibraryCache`→常规Data | 同一`LibraryFile`按调用入口会读不同根；`PaperDoll`使用LibraryCache，部分普通控件使用MirSkin |
@@ -323,6 +323,8 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | Inventory | `inventory.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | NPC socket target 等显式设 `LibraryFile.Inventory`，因此实际读取现代 `Data/Inventory.Zl`；不等于EI目录的 `Inventory.wil`。普通背包格并不选该 enum，而是默认 `StoreItem`（详见 INV-05） |
 | MIcon | `MIcon.wil/.wix`，无`.Zl` | `LibraryCache`→常规Data | `MagicBar`技能图标源于常规Data路径；legacy素材等价性未核 |
 | EquipEffect_UI | 未发现EI文件 | `LibraryCache`→常规Data | `PaperDoll`额外装备效果来自常规Data路径；是否属于目标EI版本待逐帧核 |
+
+**WIL回退加载器验证记录（2026-09-24）：**为让缺少转换`.Zl`的旧版界面库能够显示EI原始素材，本轮在`MirSkin`加入受限回退：只对`IsUiLibrary()`列出的界面库生效，优先读取选定资源根的`.Zl`，该文件不存在时才尝试同名`.wil/.wix`；不改`LibraryCache`、背包StoreItem及世界资源路径。路径必须先将`Libraries.LibraryList`中的Windows反斜杠归一化，否则Linux会把`Data\Interface1c`误当文件名；此路径问题已由加载器入口测试捕获并修正。新`LegacyWilLibrary`依照`LibraryEditor/WeMadeLibrary.cs`的EI type-3 RGB565 RLE结构解码，保留frame offset，并把像素0按原转换器`nType==3`规则设透明。Godot headless中直接加载`Interface1c.wil` F50得到640×480，且通过`MirSkin.GetTexture(Interface1c,51)`真实缺ZL回退读取F51（96×26、offset(-24,-16)）；F50解码图可见。再独立拿`GameInter.wil`对照同根`GameInter.Zl`的F50、168、200、201、400、600、750、800、850、900、1050、1100：12/12的宽高、offset及RGBA像素均完全一致。截图/PNG证据为`/tmp/zircon-interface1c-wil-f50.png`；命令为`godot-mono --headless --path GodotClient --quit-after 10 res://Scenes/UITestScene.tscn -- --legacy-hud --legacy-wil-audit`。这只验证解析器抽样和Interface1c一帧，不代表Interface1c所有帧、其他WIL库、`LibraryCache`调用、UI控件选择或登录/选角画面已一致；RES-01/02其余工作仍未完成。
 
 ### HUD 首轮风险
 

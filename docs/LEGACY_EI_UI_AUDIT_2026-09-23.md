@@ -258,7 +258,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | id 1 | 状态栏，GameInter F200/F201 | HUD cap15「状态栏(Ctrl+W,W)」/裸 W→toggle id1；创建 F200 属性态、窗内切换至 F201 装备态 | 属性文字、血魔数值与8个装备格/纸娃娃两态；详细槽和控件见 CHAR-01..04 | `CharacterDialog` 的 EI profile 使用 F200/F201；legacy cap15 现打开此窗并已实屏确认。先前错误地把 cap13坐骑入口当作其唯一入口，现已将 cap13 路由修为 `HorseDialog`；布局、动作细节仍见 CHAR-01..04、HUD-04 |
 | id 2 | 商店，GameInter F1000 | NPC商店/修理/存取等业务事件→id2；NPC完成/关闭流程会隐藏 id2 | 商品列表、价格、买卖/修理/存取状态控件；状态含义、货币及交易结果见 SHOP-01、WH-01..03，逐个按钮文字/空态待闭合 | `NPCGoodsPanel`与`InventoryDialog`模式共同承载；`GameStoreDialog`为另一现代商城，不能映射此节点；SHOP/WH条目 |
 | id 3 | 交易/交换，GameInter F1050 | 对玩家发交易请求并接收服务端响应→id3；HUD cap0文字「交易栏(Ctrl+C,C)」的实际动作是朝目标实体请求交易，不是直接打开窗 | 双方物品/金币、接受/取消/锁定等交互及消息门控见 TRADE-01..03；每个按钮字样与按下帧待逐控件验收 | `TradeDialog`；HUD 的 `ExchangeButton` 直接本地打开窗口，缺目标选择/0x401请求链；TRADE-01..03、HUD-04 |
-| id 4 | 行会，GameInter F600 | 行会状态/命令响应→id4；HUD cap6文字「行会(Ctrl+F,F)」点击发0x40C请求，不直接toggle | 公告/敌对/联盟/成员等列表状态与创建/邀请/解散等控制见 GUILD-01/02；窗内完整文字/状态逐项待转录 | `GuildDialog`可本地打开但HUD点击没有请求；根尺寸与控件次序有差异；GUILD-01/02、HUD-04 |
+| id 4 | 行会，GameInter F600 | 行会状态/命令响应→id4；HUD cap6文字「行会(Ctrl+F,F)」点击发0x40C请求，不直接toggle | 公告/敌对/联盟/成员等列表状态与创建/邀请/解散等控制见 GUILD-01/02；窗内完整文字/状态逐项待转录 | `GuildDialog`可本地打开；当前协议在进游戏时预载行会资料，没有对应的单击请求包。需对照预载后的显示和原版请求时序；根尺寸与控件次序有差异；GUILD-01/02、HUD-04 |
 | id 5 | 空 ID，无原版窗口对象 | toggle/点击表为空操作；不能据编号推导好友/社交窗口 | 原版16槽表中无此窗；见 `window-id-catalog.json` documented negative | Zircon好友/邮件等独立功能是扩展，不映射为原版 id5 |
 | id 6 | 组队，GameInter F900 | HUD cap5「组队(Ctrl+G,G)」/裸 G→toggle id6 | 成员列表、添加/移除/离队及允许组队状态；文字、行数裁剪、F910..F921控件见 GROUP-01..04 | `GroupDialog`；legacy 开合已抑制现代 `GroupNotify`，成员行几何及按钮入口依静态证据修正，邀请对话框/权限文字和真实点击仍未验收；GROUP-01..04、HUD-04 |
 | id 7 | 消息/日志显示窗，GameInter F200（与id1共用素材帧但对象/职责不同） | 游戏事件/状态→id7；有独立窗口对象和点击/toggle handler | 从消息环读取记录并在右上绘制文本；内容来源/角色仍有候选，见 `window-id-catalog.windows[7]` 与 CHAT-02 | `_chatLog`是常驻可配置消息面板，未证实映射id7；HUD聊天记录按钮当前打开CommunicationDialog，见 CHAT-02、HUD-04 |
@@ -272,6 +272,10 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | id 15 | 公告/横幅，GameInter F602；不是常规可点击窗 | 行会操作/服务器状态事件→显隐或刷新；不在常规hit-test/close-all列表 | 动态公告/行会管理文本、编辑缓冲、确认动作见 NOTICE-01/02；激活事件到Zircon消息映射待补 | `NoticeDialog`可打开但内容/编辑/按钮动作不同，且触发映射未证；NOTICE-01/02 |
 | id 100 / `0x64` | 退出游戏确认，GameInter F800；在16个普通ID之外 | HUD cap3「退出游戏(Alt+Q)」通过退出门控→显示确认；确认/取消按键另有控件分派 | “是否退出游戏？”及YES/NO两态按钮；原版退出消息、hit RECT见 EXIT-01/MODAL-01 | `ExitDialog`把回选人/退出合为同一现代窗，F800和YES/NO语义未实现；EXIT-01/MODAL-01 |
 | 外置确认对象 | 注销角色确认，F950/type `0x65`；不是上述 id100 退出确认 | HUD cap4「注销人物(Alt+X)」→F950注销确认→确认后回选角 | “返回游戏人物选择界面？”及确认/取消，见 MODAL-01 | 当前注销与退出都进入同一`ExitDialog`；MODAL-01、EXIT-01 |
+
+### 行会 HUD 请求与 Zircon 预载路径（协议差异，2026-09-24）
+
+`hud-caption-action-tail-evidence.json` 的 opcode 表将 EI HUD idx6 的点击闭合为 `0x4523E0` 发送 0x40C 行会信息请求；这是原版点击动作，不是单纯打开本地窗。当前 Zircon 的 `LibraryCore/Network/ClientPackets.cs` 没有对应的客户端行会信息请求类型，`ServerLibrary/Envir/SConnection.cs` 也没有该处理入口。服务端 `PlayerObject.OnSpawned()` 在发出 `S.StartGame` 后调用 `SendGuildInfo()`；若角色有行会，`SendGuildInfo()` 会发 `S.GuildInfo`，客户端 `GameScene.OnGuildInfo()` 缓存进 `_guildDialog`。因此 Zircon 通过登录预载满足本地行会窗的数据来源，但不复现 EI 的“点击时请求”时序。不得为表面一致而伪造 0x40C；要做协议级一致，需先证明旧包语义与 Zircon 服务端/网络协议的兼容映射。尚未核对无行会角色、进游戏后行会数据更新及点击时刷新是否可见，故本条保持未验收。
 
 该总表区分三种边：用户点击/键盘入口、服务器/游戏状态驱动的窗口出现、窗内按钮触发的子状态或消息。ID 1 与 ID 7 同为 F200、但对象 ID 与绘制职责不同；ID 2 商店与 id1000/现代现金商城也不是同一功能。具体窗内控件和可见文本的逐项验收仍以右列的审计编号为准；未闭合项不能据主窗口帧或控件图片臆造按钮文字/跳转。
 

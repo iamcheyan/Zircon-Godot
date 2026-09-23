@@ -525,6 +525,12 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 2026-09-24 01:51 JST 技能书候选格索引修正运行记录：`MagicDialog.RefreshLegacySkillSlots()` 现与 `MagicCellView` 一样按 `NeedLevel1`、`Name` 排序，消除了 Godot 内部候选格视觉项与 F 键绑定 tuple 因 DB 顺序不同造成的错位。`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0 errors，3条既有 warning）；随后按 `DISPLAY=:100 bash login_game.sh legacy` 完整重启，服务端/客户端构建均为0 errors，TestHero 收到 `StartGame Result=Success` 并进入 Sabuk Keep，missingLibraries/textures/emptyImageEntries 均为0。Xvfb 无可用输入注入工具/桌面绑定，未能点击技能格或回放 F 键；因此本次是启动回归，不是技能交互验收。EI 对照仍未通过：12格布局与列表顺序仍缺原版坐标、页状态和目标 EXE 运行证据。
 
+#### 技能图标旧版资源路由复核（2026-09-24，Zircon 侧）
+
+`MirSkin.IsUiLibrary()` 已将 `LibraryFile.MagicIcon` 纳入旧版 UI 资源路由。依仓库指定流程从根目录运行 `DISPLAY=:100 bash login_game.sh legacy`，TestHero 登录并进入地图；打开技能书后运行日志出现 `[MirSkin] legacy UI WIL fallback: MagicIcon -> /home/tetsuya/mir3ei/LegacyEI/Data/MIcon.wil (1106 frames)`，证明技能书经 `MirSkin` 绘制的图标已从 EI `MIcon.wil` 回退读取，不再误读现代 `Data/MIcon.Zl`。运行截图 [`skill-window-magicicon-wil-runtime-2026-09-24-1024x768.png`](evidence/legacy-ei-ui/skill-window-magicicon-wil-runtime-2026-09-24-1024x768.png) 显示技能书打开态，当前仅有少量技能图标且窗口贴近右上边界。
+
+这只闭合 `MagicDialog`/`MirSkin` 这一条资源路由；`LibraryCache.Get()` 仍固定使用 `MirSkin.DataPath`，技能栏 `MagicBar` 与 `MagicCellView` 的图库路径仍待改正和运行确认。截图里两个图标的 MIcon 帧号是否与 EI 技能记录 `[skill+6]` 一一对应、图标尺寸/裁切、六个命中 RECT、技能清单和窗口锚点都未闭合；因此 SKL-01/02、RES-02 仍为未验收。
+
 #### 背包实机运行截图（2026-09-24，Zircon 侧）
 
 在已运行的 `:100` / 1024×768 legacy 客户端中，用鼠标点击 HUD 背包入口打开窗口，保存截图 [`inventory-open-2026-09-24.png`](evidence/legacy-ei-ui/inventory-open-2026-09-24.png)；随后点击窗口右下关闭钮，回到无背包窗口的游戏画面 `/tmp/zircon-main-restored.png`。本次未重启客户端或服务端、未改游戏数据。打开截图可直接观察到：窗口位于客户端右侧，当前内容是 6 列×6 行格子、图标绘制在格中，右侧有可见的竖向滚动控件，底部仍有货币/操作区域；截图中 HUD、腰带、技能栏和小地图同时可见。此为 Zircon 当前运行外观的记录，不等于 EI 原版运行证据。

@@ -364,8 +364,8 @@ public partial class CharacterDialog : DXWindow
             [EquipmentSlot.BraceletR] = new(175, 186),
             [EquipmentSlot.RingL] = new(27, 227),
             [EquipmentSlot.RingR] = new(175, 227),
-            [EquipmentSlot.Shoes] = new(103, 264),
-            [EquipmentSlot.Poison] = new(64, 264),
+            [EquipmentSlot.Shoes] = new(64, 264),
+            [EquipmentSlot.Poison] = new(103, 264),
         };
         foreach (var cell in Grid)
         {
@@ -509,8 +509,8 @@ public partial class CharacterDialog : DXWindow
             [EquipmentSlot.BraceletR] = new(175, 186),
             [EquipmentSlot.RingL] = new(27, 227),
             [EquipmentSlot.RingR] = new(175, 227),
-            [EquipmentSlot.Shoes] = new(103, 264),
-            [EquipmentSlot.Poison] = new(64, 264),
+            [EquipmentSlot.Shoes] = new(64, 264),
+            [EquipmentSlot.Poison] = new(103, 264),
         };
         bool slotGeometry = expectedSlots.All(pair => Grid.Any(cell => cell != null
             && (EquipmentSlot)cell.Slot == pair.Key

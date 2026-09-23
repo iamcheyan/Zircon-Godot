@@ -137,7 +137,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 ### 已确认实现差异
 
-- `equipment-slots-evidence.json` 的最终 Finding 265 将协议槽位与原版 hit rect 一一对应：头盔 idx2=(27,264)，鞋子 idx9=(64,264)，毒药 idx10=(103,264)。`CharacterDialog.ApplyLegacyEiLayout()` 当前却把鞋子放在 `(103,264)`、毒药放在 `(64,264)`；与已定案原版证据相反。其 `AuditLegacyEiLayout()` 的 `expectedSlots` 重复了同一互换，所以旧自测会通过。该项是确定缺陷，列为高优先级。
+- `equipment-slots-evidence.json` 的最终 Finding 265 将协议槽位与原版 hit rect 一一对应：头盔 idx2=(27,264)，鞋子 idx9=(64,264)，毒药 idx10=(103,264)。此前 `CharacterDialog.ApplyLegacyEiLayout()` 生产布局及其 `AuditLegacyEiLayout()` 期望表都把两者交换；2026-09-24 已按 primary-static rect 将这两张表改为 Shoes `(64,264)`、Poison `(103,264)`。独立对照的依据是EI构造器 hit rect 与协议 slot byte链，不是原测试中的艺术标签。LegacyHudLayoutLab headless audit 通过 `character=True`、`slots=True`；由于自审计与生产表同处一实现，仍不能替代原版逐格点按/拖拽和线上 wire 行为验收。
 - 原版切换控件为 F171/172 与 F168/169 两组 36×36 状态帧，窗口相对 hit rect `(176,264,36,36)`；静态切换时从 244×328/F200 变为 520×328/F201，根窗口原点不变。当前工作区未提交的 `CharacterDialog.cs` 改动已改为展开态将同一背景控件切到 F201、把根宽设为520并裁剪，同时隐藏 F200 属性标签、显示扩展文字；这与此前已提交的“双背景并列”实现不同。两种写法的字段值都不足以裁决截图中的抖动，也还未重启运行当前未提交版本；帧视觉状态、鼠标事件后的首帧和屏幕缩放时序仍须真实点按连续录屏/逐帧截图验收。
 - 原版画槽顺序与装备枚举对照已经 primary-static 闭合（11 条记录，索引即 wire slot byte；8 个普通装备格另有纸娃娃/人物区记录），但当前只展示 8 个可见格是合理候选。还需要核对空槽占位纹理、物品图标 WIL 选择器、战斗中直接装备/拖拽/点击使用的行为。
 
@@ -145,7 +145,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 ### 装备槽研究记录冲突
 
-`equipment-panel-verification-evidence.json` 的旧模拟器验收把 F325 周边 8 格按旧视觉标签映射，并记录“鞋子/毒药”等身份；它不是槽位协议语义的独立原版证据。较新的 `equipment-slots-evidence.json` 追完 `0x44B720` hit index、`0x44BBD0` 暂存、`0x451690` 与 `0x452940` wire slot byte，并对齐 Server `EquipmentSlot` enum，明确：idx9 Shoes 的窗口相对矩形 `(64,264,38,38)`，idx10 Poison 为 `(103,264,38,38)`；资源画面上的旧标签解释明确标成未验证。故审计以此 primary-static 协议链为准，旧模拟器验证结论不再作为布局 oracle。当前 `CharacterDialog.cs` 与其 `AuditLegacyEiLayout()` 都把 Shoes 放 `(103,264)`、Poison 放 `(64,264)`，两处同错；需要在实施阶段修正并按真实 wire slot 独立验收。
+`equipment-panel-verification-evidence.json` 的旧模拟器验收把 F325 周边 8 格按旧视觉标签映射，并记录“鞋子/毒药”等身份；它不是槽位协议语义的独立原版证据。较新的 `equipment-slots-evidence.json` 追完 `0x44B720` hit index、`0x44BBD0` 暂存、`0x451690` 与 `0x452940` wire slot byte，并对齐 Server `EquipmentSlot` enum，明确：idx9 Shoes 的窗口相对矩形 `(64,264,38,38)`，idx10 Poison 为 `(103,264,38,38)`；资源画面上的旧标签解释明确标成未验证。故审计以此 primary-static 协议链为准，旧模拟器验证结论不再作为布局 oracle。2026-09-24 已修正 `CharacterDialog.cs` 的生产坐标表和自审计期望表；实际装备/拖放、服务端 wire byte 尚未验证。
 
 ### 属性文字尚未闭合
 
@@ -153,8 +153,8 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 | 编号 | 严重度 | 发现 | 验收/待决 |
 |---|---|---|---|
-| CHAR-01 | 高，已证实 | 鞋子/毒药两个装备 hit rect 交换，且 self-audit 复制相同错误 | 恢复原版 idx9=(64,264)、idx10=(103,264) 后，用非同源预期表和空/有装备时逐槽点击/拖动验证 wire slot |
-| CHAR-02 | 高，运行时抖动原因未决 | viewer API透明PNG独立解码F200 bbox `(6,92,241,327)`、F201 bbox `(252,92,518,327)`；当前`ApplyLegacyEiLayout()/ToggleLegacyView()`的背景offset正好抵消alpha bbox，根高固定328，toggle不写根`Position`。所以源代码几何预期根左上角和两状态背景有效像素左上角不变；这与用户实际观察的上下/左右抖动尚未解释。自审计中的Location相等只验证字段值，不能证明屏幕变换与绘制帧稳定 | 在800×600、1024×768及窗口缩放尺寸下真实点击切换；以root屏幕Rect、F200/F201有效像素锚、切换按钮hit rect、关闭按钮中心和展开面板边缘做逐帧差分，分别抓按下/释放/下一重绘；同步记录Viewport/CanvasTransform和clip rect，才判断是否是缩放取整、父级变换或事件时序 |
+| CHAR-01 | 高，几何已修正，行为未验 | Shoes idx9=`(64,264)`、Poison idx10=`(103,264)` 已按EI原版hit/wire映射修正；独立的原版 primary-static 证据闭合 | 在原版/Godot同数据下逐槽点击和拖动，核验发出的slot byte分别为9/10；测试空槽、有装备和使用毒药路径 |
+| CHAR-02 | 高，静态状态捕获暂未见公共左栏位移；真实点击仍未验 | viewer API透明PNG独立解码F200 bbox `(6,92,241,327)`、F201 bbox `(252,92,518,327)`；当前`ApplyLegacyEiLayout()/ToggleLegacyView()`的背景offset抵消各自alpha bbox、根高固定328，切换函数不写根`Position`。2026-09-24隔离Xvfb分别启动收起/展开的LegacyHudLayoutLab并截屏：两态根窗左上都在屏幕`(10,10)`，对固定244×328公共区域做像素绝对差得到510/80,032（约0.64%，差异位于两态属性文字显隐等内容），未见整幅左栏平移。该实验是分别初始化两种状态，不能排除真实鼠标按下/释放期间的重排或瞬时抖动 | 以同一实际窗口做连续点击/录帧，至少800×600、1024×768和窗口缩放；逐帧跟踪root屏幕Rect、F200/F201有效像素锚、切换按钮hit rect、关闭按钮中心、展开右边缘、Viewport/CanvasTransform与clip rect，覆盖按下/释放/重绘，再裁定剩余抖动 |
 | CHAR-03 | 高，待核 | 当前紧凑 7 标签和展开 12 标签与原版静态 17+11 标签/15 px 行距不一致；12 行截图候选与 EXE 属性绘制范围冲突 | 追踪绘制 mode/条件、区分表内常显/展开内容与禁用字段；逐字段对照原版画面与 `PlayerStats` |
 | CHAR-04 | 中 | 原版 11 hit records 中 3 个大区域不是普通装备 icon 格；当前 8 可见格/人物纸娃娃区域/属性文本的绘制次序与鼠标命中遮挡还未做整链复核 | 对齐 `0x44B5D9` paint order、`0x44B720` hit-test 与 Godot z-order/pass-through；验证装备拖入/拖出/直接使用 |
 

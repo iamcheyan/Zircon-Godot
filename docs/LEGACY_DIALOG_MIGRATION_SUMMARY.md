@@ -15,6 +15,13 @@
 
 ## 2. 事实来源与关键理解
 
+### 最近一轮：交易与行会旧版根框（2026-09-23）
+
+- `TradeDialog` 已增加旧版 EI F1050 布局：根矩形 `484×330`，GameInter F1050，双方物品格改为证据中的 5×6，位置分别为 `(14,91)` 和 `(246,91)`；原有物品链接、金币、确认和关闭网络逻辑保留。
+- `GuildDialog` 已增加旧版 EI F600 布局：根矩形 `446×596`，保留成员、仓库、公告和管理操作控件，不再使用新版 Interface 260 作为旧版迁移背景。
+- 两个窗口均纳入 `LegacyHudLayoutLab --legacy-audit`，本轮结果为 `trade=True guild=True`；独立测试场完整审计仍为 `PASS`。
+- 本轮只确认了静态根框、资源、格子几何和现有业务控件未被移除；双客户端交易、真实行会成员/仓库/公告数据的线上验收仍未宣称完成。
+
 事实来源按以下优先级使用：
 
 1. `/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/` 中的反编译 primary-static 证据。

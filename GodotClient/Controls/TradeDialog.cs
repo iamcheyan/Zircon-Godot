@@ -10,6 +10,8 @@ namespace ZirconClient.Controls;
 /// <summary>原版 TradeDialog(Interface 125)：双方 5×2 物品区、金币、确认状态。</summary>
 public partial class TradeDialog : DXWindow
 {
+    private readonly DXImageControl _background;
+    private readonly DXButton _closeButton;
     private readonly DXItemGrid _playerGrid;
     private readonly DXItemGrid _userGrid;
     private readonly ClientUserItem[] _playerItems = new ClientUserItem[10];
@@ -21,10 +23,11 @@ public partial class TradeDialog : DXWindow
     public TradeDialog()
     {
         HasTitle = false; HasFooter = false; Movable = true; Size = new Vector2I(428, 244);
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 125, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => CloseTrade(); AddControl(close);
+        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 125, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        AddControl(_background);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => CloseTrade(); AddControl(_closeButton);
         AddControl(new DXLabel { Text = Lang.TradeUi349Label, FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(428, 18), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogUserLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(15, 38), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogPlayerLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(226, 38), IsControl = false });
@@ -107,6 +110,43 @@ public partial class TradeDialog : DXWindow
         return valid;
     }
     public static bool CanOfferGold(long amount) => amount > 0;
+
+    /// <summary>旧版 EI F1050：484×330，双方各 5×6 格。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(484, 330);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 1050;
+        _background.FixedSize = true;
+        _background.StretchImage = false;
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 1050);
+        _background.Location = Vector2I.Zero;
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(456, 304);
+        _closeButton.Size = new Vector2I(28, 26);
+        _userGrid.GridSize = new Vector2I(5, 6);
+        _userGrid.Location = new Vector2I(14, 91);
+        _playerGrid.GridSize = new Vector2I(5, 6);
+        _playerGrid.Location = new Vector2I(246, 91);
+        _userGrid.RefreshGrid();
+        _playerGrid.RefreshGrid();
+        UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(484, 330)
+            && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1050
+            && _userGrid.GridSize == new Vector2I(5, 6)
+            && _playerGrid.GridSize == new Vector2I(5, 6)
+            && _userGrid.Location == new Vector2(14, 91)
+            && _playerGrid.Location == new Vector2(246, 91);
+        details = $"size={Size} frame={_background.Index} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location}";
+        return ok;
+    }
     public void Unlock() => _confirm.Enabled = true;
     public void ClearTrade()
     {

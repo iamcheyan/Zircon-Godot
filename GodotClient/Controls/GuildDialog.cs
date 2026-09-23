@@ -31,6 +31,7 @@ public partial class GuildDialog : DXWindow
     private DXButton _colourPicker;
     private DXImageControl _flagBase, _flagColour;
     private int _previewFlag;
+    private DXButton _closeButton;
 
     public bool HasGuild => _guild != null;
     public long GuildFunds => _guild?.GuildFunds ?? 0;
@@ -52,9 +53,9 @@ public partial class GuildDialog : DXWindow
     {
         HasTitle = false; HasFooter = false; Movable = true; Size = new Vector2I(456, 556);
         _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 260, MouseFilter = MouseFilterEnum.Ignore }; AddControl(_background);
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this); AddControl(close);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this); AddControl(_closeButton);
         AddControl(new DXLabel { Text = Lang.GuildDialogTitle, FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(456, 18), IsControl = false });
         string[] tabs = { Lang.GuildCreateLabel, Lang.GuildDialogMembersTabLabel, Lang.GuildDialogStorageTabLabel, Lang.GuildDialogWarTabLabel, Lang.GuildUi292Label, Lang.GuildDialogCastleTabLabel };
         for (int i = 0; i < tabs.Length; i++) AddTab(tabs[i], 14 + i * 76, i);
@@ -74,6 +75,39 @@ public partial class GuildDialog : DXWindow
         AddControl(_manageButton);
         UpdateTabVisibility();
         RefreshRows();
+    }
+
+    /// <summary>旧版 EI 行会窗口：GameInter F600，根 446×596。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(446, 596);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 600;
+        _background.FixedSize = true;
+        _background.StretchImage = false;
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 600);
+        _background.Location = Vector2I.Zero;
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(418, 570);
+        _closeButton.Size = new Vector2I(28, 26);
+        _content.Location = new Vector2I(18, 80);
+        _content.Size = new Vector2I(410, 415);
+        _scroll.Location = new Vector2I(428, 80);
+        _scroll.Size = new Vector2I(16, 415);
+        UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = Size == new Vector2I(446, 596)
+            && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600
+            && _content.Location == new Vector2(18, 80)
+            && _content.Size == new Vector2(410, 415);
+        details = $"size={Size} frame={_background.Index} content={_content.Size}@{_content.Location}";
+        return ok;
     }
 
     private void AddTab(string text, int x, int page)

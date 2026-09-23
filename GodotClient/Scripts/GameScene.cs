@@ -10469,6 +10469,18 @@ public partial class GameScene : Control
             return;
         }
 
+        // EI 的 E 与 Ctrl+E 都切换 id14 技能书；Ctrl+E 在现代模式用于 MagicBar。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.E
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (_magicDialog != null)
+            {
+                WindowManager.Toggle(_magicDialog, _uiLayer);
+                _magicDialog.Refresh();
+            }
+            return;
+        }
+
         // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
             && !key.AltPressed && !key.ShiftPressed)

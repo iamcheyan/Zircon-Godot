@@ -10489,6 +10489,14 @@ public partial class GameScene : Control
             return;
         }
 
+        // EI 的 G 与 Ctrl+G 都直接切换 id6 组队窗；不发送 HUD 点击链的通知包。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.G
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            HandleKeyBind(KeyBindAction.GroupWindow);
+            return;
+        }
+
         // EI 的 D 与 Ctrl+D 都切换 id11 信息/任务窗；现代模式保留 D 的自动跑步。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.D
             && !key.AltPressed && !key.ShiftPressed)

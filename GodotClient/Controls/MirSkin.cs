@@ -22,6 +22,29 @@ public static class MirSkin
 
     private static string ResolveDataPath()
     {
+        // 正式旧版 HUD 不能只替换坐标：GameInter/Interface 的帧尺寸也来自
+        // EI 资源库。--legacy-hud 优先选择专用路径，避免正式场景仍读到
+        // 新版 GameInter[50] (1024×68) 而测试场读到旧版 (800×136)。
+        if (Godot.OS.GetCmdlineUserArgs().Any(x =>
+                string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase)))
+        {
+            string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH")
+                ?? System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
+            if (!string.IsNullOrWhiteSpace(legacyOverride) && Directory.Exists(legacyOverride))
+                return Path.GetFullPath(legacyOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                    + Path.DirectorySeparatorChar;
+
+            string[] legacyCandidates =
+            {
+                "/home/tetsuya/mir3ei/LegacyEI/Data/",
+                "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
+            };
+            foreach (string candidate in legacyCandidates)
+                if (Directory.Exists(candidate)) return candidate;
+
+            GD.PrintErr("[MirSkin] --legacy-hud 已请求，但找不到 LegacyEI/Data；继续使用默认 UI 资源");
+        }
+
         string overridePath = System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
         if (!string.IsNullOrWhiteSpace(overridePath) && Directory.Exists(overridePath))
             return Path.GetFullPath(overridePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))

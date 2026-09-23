@@ -182,8 +182,9 @@ public partial class LegacyHudLayoutLab : Control
         bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);
         bool orb = _hud.AuditLegacyOrb(out string orbDetails);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && roots && roots2 && roots3;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} roots={roots && roots2 && roots3}");
+        bool hud = _hud.AuditLegacyHud(out string hudDetails);
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");
@@ -199,6 +200,7 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] minimap {minimapDetails}");
         GD.Print($"[LegacyAudit] lifecycle {lifecycleDetails}");
         GD.Print($"[LegacyAudit] orb {orbDetails}");
+        GD.Print($"[LegacyAudit] hud {hudDetails}");
         GetTree().Quit(pass ? 0 : 1);
     }
 

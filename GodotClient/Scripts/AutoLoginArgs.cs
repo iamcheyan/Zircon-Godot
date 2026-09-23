@@ -67,6 +67,8 @@ public static class AutoLoginArgs
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
     /// <summary>显式启用旧版 EI 核心窗口实验布局（未提供时保持现行正式布局）。</summary>
     public static bool LegacyUi => Has("--legacy-ui");
+    /// <summary>显式审计/启用正式场景的旧版 EI 主 HUD。</summary>
+    public static bool LegacyHud => Has("--legacy-hud") || LegacyUi;
 
     /// <summary>
     /// --window [=WxH]：强制窗口模式（覆盖 Zircon.ini 的全屏设置，直接开窗口）。

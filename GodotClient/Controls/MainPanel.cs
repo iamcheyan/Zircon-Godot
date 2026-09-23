@@ -445,6 +445,23 @@ public partial class MainPanel : DXImageControl
         return oneOrb;
     }
 
+    /// <summary>正式场景与独立测试场共用的旧版 EI HUD 几何审计。</summary>
+    public bool AuditLegacyHud(out string details)
+    {
+        bool panel = Index == 50 && Size == new Vector2I(LegacyHudLayout.LogicalWidth, 136);
+        bool buttons = ExchangeButton?.Location == new Vector2I(204, 2)
+            && MiniMapButton?.Location == new Vector2I(228, 2)
+            && SkillEntryButton?.Location == new Vector2I(252, 2)
+            && ExitButton?.Location == new Vector2I(161, 46)
+            && CharacterButton?.Location == new Vector2I(648, 70)
+            && InventoryButton?.Location == new Vector2I(648, 32)
+            && SpellButton?.Location == new Vector2I(703, 16)
+            && MenuButton?.Location == new Vector2I(703, 85);
+        bool orb = AuditLegacyOrb(out string orbDetails);
+        details = $"panel={Index}/{Size} buttons={buttons} {orbDetails}";
+        return panel && buttons && orb;
+    }
+
     public void SetAttackMode(AttackMode mode)
     {
         // 原版 (Client/Scenes/Views/MainPanel.cs:489-501): 标签构造 Visible=false,

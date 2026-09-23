@@ -8716,7 +8716,8 @@ public partial class GameScene : Control
 
         // 旧版 GameScene.cs:1073-1079: Ctrl 按住 + 悬停地面物品 -> 显示物品名 (MouseItem)。
         // Godot: _hoverLabel 复用, Ctrl 松开即清。
-        if (_combatController?.MouseObject?.Type == ObjectRenderer.Kind.Item
+        if (_hoverLabel != null
+            && _combatController?.MouseObject?.Type == ObjectRenderer.Kind.Item
             && Input.IsKeyPressed(Key.Ctrl))
         {
             _hoverLabel.Visible = true;
@@ -8725,7 +8726,7 @@ public partial class GameScene : Control
             var p = GetGlobalMousePosition() / UiScale;
             _hoverLabel.Position = new Vector2(p.X + 14, p.Y + 10);
         }
-        else if (_hoverItem == null)
+        else if (_hoverItem == null && _hoverLabel != null)
         {
             _hoverLabel.Visible = false;
         }

@@ -419,14 +419,22 @@ public partial class MainPanel : DXImageControl
     /// <summary>旧版 HUD 球体审计：红球与红蓝球必须共用左侧同一控件。</summary>
     public bool AuditLegacyOrb(out string details)
     {
+        Vector2I location = _playerOrb?.Location ?? new Vector2I(-1, -1);
+        SetMana(0);
+        bool fullRedState = _playerOrb?.Location == location;
+        SetMana(80);
+        bool splitState = _playerOrb?.Location == location;
+        SetClass(MirClass.Warrior);
         bool oneOrb = _playerOrb != null
             && _playerOrb.Visible
-            && _playerOrb.Location == new Vector2I(49, 13)
+            && location == new Vector2I(49, 13)
             && _playerOrb.Size == new Vector2I(112, 110)
             && !HealthBar.Visible
             && !ManaBar.Visible
-            && !MCImage.Visible;
-        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} single={oneOrb}";
+            && !MCImage.Visible
+            && fullRedState
+            && splitState;
+        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={!MCImage.Visible} states={fullRedState}/{splitState} single={oneOrb}";
         return oneOrb;
     }
 

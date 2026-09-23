@@ -10,6 +10,7 @@ namespace ZirconClient.Controls;
 /// </summary>
 public partial class HorseDialog : DXWindow
 {
+    private readonly DXImageControl _background;
     private readonly DXButton _mount;
     private readonly DXButton _lead;
     private readonly DXButton _hide;
@@ -21,16 +22,23 @@ public partial class HorseDialog : DXWindow
         HasTitle = false;
         HasFooter = false;
         Movable = true;
+        Clip = true;
         Size = new Vector2I(296, 332);
 
-        AddControl(new DXImageControl
+        _background = new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
             Index = 850,
             FixedSize = true,
+            // F850's 512×512 canvas has transparent margins. Its alpha bbox is
+            // (118,94,275,323); offset the canvas so the visible frame begins
+            // at the EI window origin and the baked action labels sit beneath
+            // their independently hittable child buttons.
+            Location = new Vector2I(-118, -94),
             Size = MirSkin.GetSize(LibraryFile.GameInter, 850),
             MouseFilter = Control.MouseFilterEnum.Ignore,
-        });
+        };
+        AddControl(_background);
 
         _mount = Action(860, 861, new Vector2I(28, 244), new Vector2I(44, 20), "@上马");
         _lead = Action(862, 863, new Vector2I(74, 244), new Vector2I(60, 20), "@遛马");
@@ -80,11 +88,15 @@ public partial class HorseDialog : DXWindow
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = Size == new Vector2I(296, 332)
+            && Clip
+            && _background.Index == 850
+            && _background.Location == new Vector2I(-118, -94)
+            && _background.Size == new Vector2I(512, 512)
             && _mount.Location == new Vector2I(28, 244)
             && _lead.Location == new Vector2I(74, 244)
             && _hide.Location == new Vector2I(133, 244)
             && _show.Location == new Vector2I(192, 244);
-        details = $"size={Size} F850 buttons={_mount.Location},{_lead.Location},{_hide.Location},{_show.Location} state={_state}";
+        details = $"size={Size} clip={Clip} background=F{_background.Index}@{_background.Location}/{_background.Size} buttons={_mount.Location},{_lead.Location},{_hide.Location},{_show.Location} state={_state}";
         return ok;
     }
 }

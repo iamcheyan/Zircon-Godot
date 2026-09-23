@@ -459,3 +459,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 2026-09-24 00:29 JST N 键修复运行记录：构建通过（3条既有警告）；`bash login_game.sh legacy` 重启后登录 TestHero，收到 `StartGame Success`，HUD 自检通过且进入地图。N/Ctrl+N 的 ConfigDialog 开窗仍只有代码与启动验证，尚无真实桌面按键截图。
 
 2026-09-24 00:31 JST G 键修复运行记录：构建通过（3条既有警告）；legacy 启动脚本重启成功，登录 TestHero 并收到 `StartGame Success`，进入地图且未见启动异常。G/Ctrl+G 目标窗仍未实际键入验证；组队窗自身内容和 HUD 点击的 GroupNotify 仍是独立未决项。
+
+2026-09-24 00:47 JST 技能书帧修复验证：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0 errors，3条既有警告）。检查到当前 legacy 客户端 PID 383044 已于 00:30 启动，早于 F460/F462/F464 代码变更；本轮没有重启它，也没有新桌面可交互应用，因此不能把现有客户端进程当作新帧的运行验证。SKL-08 目前只有静态帧号修正与编译证据，等待窗口可观察后逐类点击/比较普通与按下帧。

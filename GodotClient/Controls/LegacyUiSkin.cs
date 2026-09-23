@@ -86,6 +86,7 @@ public static class LegacyUiSkin
             "GuildDialog" => (600, new Vector2I(446, 596), Vector2I.Zero, false),
             "StorageDialog" => (1001, new Vector2I(205, 205), Vector2I.Zero, false),
             "ConfigDialog" => (750, new Vector2I(248, 264), Vector2I.Zero, false),
+            "NoticeDialog" => (602, new Vector2I(584, 252), Vector2I.Zero, false),
             // BeltDialog remains the modern quick-use belt and is deliberately
             // not aliased to the EI horse window.
             _ => (-1, Vector2I.Zero, Vector2I.Zero, false),
@@ -142,6 +143,8 @@ public static class LegacyUiSkin
                 return true;
             case ConfigDialog config:
                 config.ApplyLegacyEiLayout();
+                return true;
+            case NoticeDialog:
                 return true;
         }
         foreach (var child in window.Controls)

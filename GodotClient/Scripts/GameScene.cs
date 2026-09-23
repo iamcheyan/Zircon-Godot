@@ -69,6 +69,7 @@ public partial class GameScene : Control
     private StatusWindow _statusWindow;
     private MenuDialog _menuDialog;
     private ExitDialog _exitDialog;
+    private NoticeDialog _noticeDialog;
     private ChatLogPanel _chatLog;
     private ChatTextBox _chatTextBox;
     private HelpDialog _helpDialog;
@@ -337,7 +338,18 @@ public partial class GameScene : Control
         _net?.Connection?.SendGameStoreFavourite(index);
     }
     public void ReceiveChat(string text, MessageType type = MessageType.System, List<ClientUserItem> linkedItems = null)
-        => _chatLog?.AddMessage(text, type, Colors.Yellow, linkedItems);
+    {
+        _chatLog?.AddMessage(text, type, Colors.Yellow, linkedItems);
+        if (type == MessageType.Announcement && AutoLoginArgs.LegacyUi)
+            ShowLegacyNotice(text);
+    }
+
+    public void ShowLegacyNotice(string text)
+    {
+        if (_noticeDialog == null) return;
+        _noticeDialog.SetNotice(text);
+        WindowManager.Open(_noticeDialog, _uiLayer);
+    }
 
     public void StartPrivateMessage(string name) => _chatTextBox?.StartPM(name);
 
@@ -4518,6 +4530,9 @@ public partial class GameScene : Control
         _exitDialog.Location = new Vector2I(40, 80);
         _uiLayer.AddChild(_exitDialog);
 
+        _noticeDialog = new NoticeDialog { Location = new Vector2I(107, 110) };
+        _uiLayer.AddChild(_noticeDialog);
+
         _helpDialog = new HelpDialog();
         _uiLayer.AddChild(_helpDialog);
 
@@ -4686,6 +4701,7 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyLegacyTestWindow(_guildDialog, _guildDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_storageDialog, _storageDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_configDialog, _configDialog.Location);
+        LegacyUiSkin.ApplyLegacyTestWindow(_noticeDialog, new Vector2I(107, 110));
     }
 
     private void OnGameResized()

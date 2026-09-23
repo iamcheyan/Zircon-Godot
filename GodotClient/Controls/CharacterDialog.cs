@@ -39,6 +39,7 @@ public partial class CharacterDialog : DXWindow
     private int _statsPage;
     private readonly List<(DXLabel Label, Stat Stat)> _attributeValues = new();
     private readonly List<DXLabel> _legacyAttributeLabels = new();
+    private bool _legacyEiLayout;
     private DXLabel _disciplineLabel;
     private DXButton _disciplineButton;
     private DXImageControl _disciplineLevelImage;
@@ -305,6 +306,7 @@ public partial class CharacterDialog : DXWindow
     /// <summary>按最早 EI 客户端 GameInter F200 的装备页坐标重排。</summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(244, 328);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 200;
@@ -539,6 +541,13 @@ public partial class CharacterDialog : DXWindow
             cell.ReadOnly = false;
             cell.RefreshItem();
             cell.Visible = true;
+        }
+        if (_legacyEiLayout)
+        {
+            // 真实登录/换装路径会调用 ShowOwn；旧版模式下必须重新应用
+            // F200/F201 和已确认的 38×38 格子，不能恢复到现代 F110。
+            ApplyLegacyEiLayout();
+            RefreshLegacyAttributeLabels();
         }
         QueueRedraw();
     }

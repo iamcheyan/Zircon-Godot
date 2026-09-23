@@ -23,6 +23,8 @@ public partial class ConfigDialog : DXWindow
     private bool _dragging;
     private Vector2 _dragOffset;
     private readonly List<DXButton> _legacyOptionButtons = new();
+    private readonly List<LegacyEiVolumeSlider> _legacyVolumeSliders = new();
+    private bool _legacyAmbienceVisualState;
 
     public ConfigDialog()
     {
@@ -168,51 +170,92 @@ public partial class ConfigDialog : DXWindow
             button.QueueFree();
         }
         _legacyOptionButtons.Clear();
-
-        // F750 的标签、行和滑轨都已经烘焙在 GameInter 贴图中；这里只
-        // 放原版的状态控件，绝不再叠加新版文字。两组帧对和坐标来自
-        // system-window-render-evidence.json。
-        (Vector2I position, int onFrame, int offFrame, Func<bool> get, Action<bool> set)[] options =
+        foreach (var slider in _legacyVolumeSliders)
         {
-            (new(148, 43), 760, 761, () => !ClientSettings.MusicVolumeMuted, value => { ClientSettings.MusicVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
-            (new(185, 43), 762, 763, () => !ClientSettings.SystemVolumeMuted, value => { ClientSettings.SystemVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
-            (new(148, 116), 760, 761, () => !ClientSettings.PlayerVolumeMuted, value => { ClientSettings.PlayerVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
-            (new(185, 116), 762, 763, () => !ClientSettings.MonsterVolumeMuted, value => { ClientSettings.MonsterVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
-            (new(148, 190), 760, 761, () => !ClientSettings.MagicVolumeMuted, value => { ClientSettings.MagicVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
-            (new(185, 190), 762, 763, () => ClientSettings.SoundInBackground, value => { ClientSettings.SoundInBackground = value; ClientSettings.Save(); }),
-            (new(148, 217), 760, 761, () => ClientSettings.VSync, value => { ClientSettings.VSync = value; ClientSettings.ApplyDisplaySettings(); }),
-            (new(185, 217), 762, 763, () => ClientSettings.LimitFPS, value => { ClientSettings.LimitFPS = value; ClientSettings.ApplyDisplaySettings(); }),
+            RemoveControl(slider);
+            slider.QueueFree();
+        }
+        _legacyVolumeSliders.Clear();
+
+        // F750 labels/tracks are baked into the art. The paired controls are
+        // mutually exclusive state indicators, and F751 is the draggable
+        // thumb. Positions/frame states match the original constructor.
+        _legacyAmbienceVisualState = ClientSettings.LegacyAmbienceEnabled;
+        (Vector2I position, int onFrame, int onPressedFrame, int offFrame, int offPressedFrame, Func<bool> get, Action<bool> set)[] options =
+        {
+            (new(148, 43), 760, 761, 762, 763, () => ClientSettings.LegacyBgmEnabled, value => { ClientSettings.LegacyBgmEnabled = value; ClientSettings.ApplyAudioSettings(); ClientSettings.Save(); }),
+            (new(148, 116), 760, 761, 762, 763, () => ClientSettings.LegacyEffectSoundEnabled, value => { ClientSettings.LegacyEffectSoundEnabled = value; ClientSettings.ApplyAudioSettings(); ClientSettings.Save(); }),
+            (new(148, 190), 760, 761, 762, 763, () => _legacyAmbienceVisualState, value => _legacyAmbienceVisualState = value),
+            (new(148, 217), 760, 761, 762, 763, () => ClientSettings.LegacyShadowBlendEnabled, value => { ClientSettings.LegacyShadowBlendEnabled = value; ClientSettings.Save(); }),
         };
         foreach (var option in options)
         {
-            var button = new DXButton
+            var onButton = new DXButton
             {
                 LibraryFile = LibraryFile.GameInter,
-                Index = option.get() ? option.onFrame : option.offFrame,
+                Index = option.onFrame,
                 HoverIndex = option.onFrame,
-                PressedIndex = option.onFrame,
+                PressedIndex = option.onPressedFrame,
                 Location = option.position,
-                Size = new Vector2I(option.onFrame == 760 ? 32 : 40, 22),
+                Size = new Vector2I(32, 22),
             };
-            button.MouseClick += (_, _) =>
+            var offButton = new DXButton
             {
-                bool next = !option.get();
-                option.set(next);
-                button.Index = next ? option.onFrame : option.offFrame;
-                button.HoverIndex = option.onFrame;
-                button.PressedIndex = option.onFrame;
+                LibraryFile = LibraryFile.GameInter,
+                Index = option.offFrame,
+                HoverIndex = option.offFrame,
+                PressedIndex = option.offPressedFrame,
+                Location = option.position + new Vector2I(37, 0),
+                Size = new Vector2I(40, 22),
             };
-            AddControl(button);
-            _legacyOptionButtons.Add(button);
+            void RefreshVisibility()
+            {
+                bool enabled = option.get();
+                // Keep both original RECTs hittable. The inactive indicator
+                // is not painted, but its opposite-side click still changes
+                // state just like the two-control EI row.
+                onButton.DrawImage = enabled;
+                offButton.DrawImage = !enabled;
+            }
+            onButton.MouseDown += (_, _) => { if (!option.get()) onButton.DrawImage = true; };
+            offButton.MouseDown += (_, _) => { if (option.get()) offButton.DrawImage = true; };
+            onButton.MouseClick += (_, _) => { option.set(true); RefreshVisibility(); };
+            offButton.MouseClick += (_, _) => { option.set(false); RefreshVisibility(); };
+            AddControl(onButton);
+            AddControl(offButton);
+            _legacyOptionButtons.Add(onButton);
+            _legacyOptionButtons.Add(offButton);
+            RefreshVisibility();
         }
+
+        AddLegacyVolumeSlider(new Vector2I(34, 96), ClientSettings.LegacyBgmLevel, value =>
+        {
+            ClientSettings.LegacyBgmLevel = value;
+            ClientSettings.ApplyAudioSettings();
+            ClientSettings.Save();
+        });
+        AddLegacyVolumeSlider(new Vector2I(34, 170), ClientSettings.LegacyEffectSoundLevel, value =>
+        {
+            ClientSettings.LegacyEffectSoundLevel = value;
+            ClientSettings.ApplyAudioSettings();
+            ClientSettings.Save();
+        });
+    }
+
+    private void AddLegacyVolumeSlider(Vector2I location, int value, Action<int> changed)
+    {
+        var slider = new LegacyEiVolumeSlider { Location = location, Value = value, ValueChanged = changed };
+        AddControl(slider);
+        _legacyVolumeSliders.Add(slider);
     }
 
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = Size == new Vector2I(248, 264)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 750
-            && !_page.Visible && _legacyOptionButtons.Count == 8;
-        details = $"size={Size} frame={_background.Index} legacyButtons={_legacyOptionButtons.Count} pageVisible={_page.Visible}";
+            && !_page.Visible && _legacyOptionButtons.Count == 8 && _legacyVolumeSliders.Count == 2
+            && _legacyOptionButtons.Count(button => button.DrawImage) == 4;
+        details = $"size={Size} frame={_background.Index} legacyHitRects={_legacyOptionButtons.Count} paintedIndicators={_legacyOptionButtons.Count(button => button.DrawImage)} volumeSliders={_legacyVolumeSliders.Count} pageVisible={_page.Visible}";
         return ok;
     }
 
@@ -486,5 +529,91 @@ public partial class ConfigDialog : DXWindow
         details = $"size={Size} tabs={_tabs.Length} tab0={_tabs[0].Location}/{_tabs[0].Size} page={_page.Location}/{_page.Size} sections=g{graphicsSections}/s{soundSections}/game{gameSections}/net{networkSections}/ui{uiSections} soundBars={soundBars}";
         return Size == new Vector2I(364, 416) && tabs && _page.Location == new Vector2I(8, 62) && _page.Size == new Vector2I(348, 340)
             && graphicsSections == 3 && soundSections == 2 && soundBars && gameSections == 2 && networkSections == 1 && uiSections == 2;
+    }
+}
+
+/// <summary>GameInter F751 slider thumb with the EI 0..160 drag range.</summary>
+public partial class LegacyEiVolumeSlider : DXControl
+{
+    private readonly DXImageControl _thumb;
+    private bool _dragging;
+    private int _value;
+
+    public int Value
+    {
+        get => _value;
+        set
+        {
+            _value = Math.Clamp(value, -100, 0);
+            _thumb.Location = new Vector2I(Mathf.RoundToInt((_value + 100) * 1.6f), 0);
+        }
+    }
+
+    public Action<int> ValueChanged { get; set; }
+
+    public LegacyEiVolumeSlider()
+    {
+        Size = new Vector2I(180, 16);
+        MouseFilter = MouseFilterEnum.Stop;
+        _thumb = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 751,
+            FixedSize = true,
+            Size = new Vector2I(20, 16),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddControl(_thumb);
+    }
+
+    public override void _GuiInput(InputEvent e)
+    {
+        if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+        {
+            if (mb.Pressed)
+            {
+                _dragging = true;
+                SetFromPointer(mb.Position.X);
+            }
+            else if (_dragging)
+            {
+                SetFromPointer(mb.Position.X);
+                _dragging = false;
+            }
+            AcceptEvent();
+            return;
+        }
+
+        if (e is InputEventMouseMotion mm && _dragging)
+        {
+            SetFromPointer(mm.Position.X);
+            AcceptEvent();
+            return;
+        }
+
+        base._GuiInput(e);
+    }
+
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        if (!_dragging) return;
+        if (!Input.IsMouseButtonPressed(MouseButton.Left))
+        {
+            _dragging = false;
+            return;
+        }
+
+        Vector2 local = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
+        SetFromPointer(local.X);
+    }
+
+    private void SetFromPointer(float localX)
+    {
+        int travel = Mathf.Clamp(Mathf.RoundToInt(localX - 10), 0, 160);
+        int next = Mathf.Clamp(Mathf.RoundToInt(travel * 0.625f) - 100, -100, 0);
+        if (next == _value) return;
+        Value = next;
+        ValueChanged?.Invoke(_value);
     }
 }

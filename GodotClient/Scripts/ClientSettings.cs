@@ -63,6 +63,15 @@ public static class ClientSettings
     public static bool PlayerVolumeMuted { get; set; }
     public static bool MonsterVolumeMuted { get; set; }
     public static bool MagicVolumeMuted { get; set; }
+    // EI F750 uses two master switches and two shared dB sliders. Keep these
+    // values separate from the modern per-bus controls so legacy mode can
+    // reproduce the original 0..160 slider travel and Config.ini semantics.
+    public static bool LegacyBgmEnabled { get; set; } = true;
+    public static bool LegacyEffectSoundEnabled { get; set; } = true;
+    public static bool LegacyAmbienceEnabled { get; set; }
+    public static bool LegacyShadowBlendEnabled { get; set; }
+    public static int LegacyBgmLevel { get; set; }
+    public static int LegacyEffectSoundLevel { get; set; }
     public static bool UseNetworkConfig { get; set; }
     public static string IPAddress { get; set; } = "127.0.0.1";
     public static int Port { get; set; } = 7000;
@@ -211,6 +220,12 @@ public static class ClientSettings
         PlayerVolumeMuted = Read(file, "Sound", nameof(PlayerVolumeMuted), PlayerVolumeMuted);
         MonsterVolumeMuted = Read(file, "Sound", nameof(MonsterVolumeMuted), MonsterVolumeMuted);
         MagicVolumeMuted = Read(file, "Sound", nameof(MagicVolumeMuted), MagicVolumeMuted);
+        LegacyBgmEnabled = Read(file, "LegacyEI", nameof(LegacyBgmEnabled), LegacyBgmEnabled);
+        LegacyEffectSoundEnabled = Read(file, "LegacyEI", nameof(LegacyEffectSoundEnabled), LegacyEffectSoundEnabled);
+        LegacyAmbienceEnabled = Read(file, "LegacyEI", nameof(LegacyAmbienceEnabled), LegacyAmbienceEnabled);
+        LegacyShadowBlendEnabled = Read(file, "LegacyEI", nameof(LegacyShadowBlendEnabled), LegacyShadowBlendEnabled);
+        LegacyBgmLevel = Mathf.Clamp(Read(file, "LegacyEI", nameof(LegacyBgmLevel), LegacyBgmLevel), -100, 0);
+        LegacyEffectSoundLevel = Mathf.Clamp(Read(file, "LegacyEI", nameof(LegacyEffectSoundLevel), LegacyEffectSoundLevel), -100, 0);
         UseNetworkConfig = Read(file, "Network", nameof(UseNetworkConfig), UseNetworkConfig);
         IPAddress = Read(file, "Network", nameof(IPAddress), IPAddress);
         Port = Read(file, "Network", nameof(Port), Port);
@@ -273,6 +288,12 @@ public static class ClientSettings
         Write(file, "Sound", nameof(PlayerVolumeMuted), PlayerVolumeMuted);
         Write(file, "Sound", nameof(MonsterVolumeMuted), MonsterVolumeMuted);
         Write(file, "Sound", nameof(MagicVolumeMuted), MagicVolumeMuted);
+        Write(file, "LegacyEI", nameof(LegacyBgmEnabled), LegacyBgmEnabled);
+        Write(file, "LegacyEI", nameof(LegacyEffectSoundEnabled), LegacyEffectSoundEnabled);
+        Write(file, "LegacyEI", nameof(LegacyAmbienceEnabled), LegacyAmbienceEnabled);
+        Write(file, "LegacyEI", nameof(LegacyShadowBlendEnabled), LegacyShadowBlendEnabled);
+        Write(file, "LegacyEI", nameof(LegacyBgmLevel), LegacyBgmLevel);
+        Write(file, "LegacyEI", nameof(LegacyEffectSoundLevel), LegacyEffectSoundLevel);
         Write(file, "Network", nameof(UseNetworkConfig), UseNetworkConfig);
         Write(file, "Network", nameof(IPAddress), IPAddress);
         Write(file, "Network", nameof(Port), Port);
@@ -301,6 +322,14 @@ public static class ClientSettings
         {
             if (idx < 0 || idx >= AudioServer.BusCount) return;
             if (AudioServer.GetBusName(idx) != bus) return;
+            if (AutoLoginArgs.LegacyUi)
+            {
+                float legacyDb = bus == "Music" ? LegacyBgmLevel : LegacyEffectSoundLevel;
+                bool legacyMuted = bus == "Music" ? !LegacyBgmEnabled : !LegacyEffectSoundEnabled;
+                AudioServer.SetBusVolumeDb(idx, legacyDb);
+                AudioServer.SetBusMute(idx, legacyMuted);
+                return;
+            }
             AudioServer.SetBusVolumeDb(idx, volume <= 0 || muted ? -80f : Mathf.LinearToDb(volume / 100f));
             AudioServer.SetBusMute(idx, muted || volume <= 0);
         }

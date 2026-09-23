@@ -654,7 +654,13 @@ public partial class GameScene : Control
         return false;
     }
     public void OpenCommunicationDialog() { if (_communicationDialog != null) WindowManager.Open(_communicationDialog, _uiLayer); }
-    public void OpenGroupDialog() { if (_groupDialog != null) { _net?.Connection?.SendGroupNotify(true); WindowManager.Open(_groupDialog, _uiLayer); } }
+    public void OpenGroupDialog()
+    {
+        if (_groupDialog == null) return;
+        // EI 组队窗不订阅现代 LFG 广播；legacy 只切换原版窗口。
+        if (!AutoLoginArgs.LegacyUi) _net?.Connection?.SendGroupNotify(true);
+        WindowManager.Open(_groupDialog, _uiLayer);
+    }
     public void CloseGroupDialog() { if (_groupDialog != null) WindowManager.Close(_groupDialog); }
     public void OpenGameStoreDialog()
     {

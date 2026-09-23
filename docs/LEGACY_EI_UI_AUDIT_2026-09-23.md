@@ -253,7 +253,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | id 3 | 交易/交换，GameInter F1050 | 对玩家发交易请求并接收服务端响应→id3；HUD cap0文字「交易栏(Ctrl+C,C)」的实际动作是朝目标实体请求交易，不是直接打开窗 | 双方物品/金币、接受/取消/锁定等交互及消息门控见 TRADE-01..03；每个按钮字样与按下帧待逐控件验收 | `TradeDialog`；HUD 的 `ExchangeButton` 直接本地打开窗口，缺目标选择/0x401请求链；TRADE-01..03、HUD-04 |
 | id 4 | 行会，GameInter F600 | 行会状态/命令响应→id4；HUD cap6文字「行会(Ctrl+F,F)」点击发0x40C请求，不直接toggle | 公告/敌对/联盟/成员等列表状态与创建/邀请/解散等控制见 GUILD-01/02；窗内完整文字/状态逐项待转录 | `GuildDialog`可本地打开但HUD点击没有请求；根尺寸与控件次序有差异；GUILD-01/02、HUD-04 |
 | id 5 | 空 ID，无原版窗口对象 | toggle/点击表为空操作；不能据编号推导好友/社交窗口 | 原版16槽表中无此窗；见 `window-id-catalog.json` documented negative | Zircon好友/邮件等独立功能是扩展，不映射为原版 id5 |
-| id 6 | 组队，GameInter F900 | HUD cap5「组队(Ctrl+G,G)」/裸 G→toggle id6 | 成员列表、添加/移除/LFG及允许组队状态；文字、行数裁剪、F910..F921控件见 GROUP-01..04 | `GroupDialog`；入口额外发送GroupNotify；行高、下方控件位置/状态绑定不同；GROUP-01..04、HUD-04 |
+| id 6 | 组队，GameInter F900 | HUD cap5「组队(Ctrl+G,G)」/裸 G→toggle id6 | 成员列表、添加/移除/离队及允许组队状态；文字、行数裁剪、F910..F921控件见 GROUP-01..04 | `GroupDialog`；legacy 开合已抑制现代 `GroupNotify`，成员行几何及按钮入口依静态证据修正，邀请对话框/权限文字和真实点击仍未验收；GROUP-01..04、HUD-04 |
 | id 7 | 消息/日志显示窗，GameInter F200（与id1共用素材帧但对象/职责不同） | 游戏事件/状态→id7；有独立窗口对象和点击/toggle handler | 从消息环读取记录并在右上绘制文本；内容来源/角色仍有候选，见 `window-id-catalog.windows[7]` 与 CHAT-02 | `_chatLog`是常驻可配置消息面板，未证实映射id7；HUD聊天记录按钮当前打开CommunicationDialog，见 CHAT-02、HUD-04 |
 | id 8 | 聊天记录窗，GameInter F350 | HUD cap9「聊天记录(Ctrl+R,R)」/裸 R→toggle id8 | 聊天记录、输入/滚动/频道与提交；原版绘制、滚轮、消息路径见 CHAT-01/02 | `CommunicationDialog`显示好友/邮件/屏蔽；主HUD另有常驻`ChatLogPanel`/输入框，均未建立与 EI id8 的完整等价；CHAT-01/02、HUD-04 |
 | id 9 | NPC对话，GameInter F1100 | NPC交互/服务器业务状态→id9；选项点击成功后关闭id9并同时隐藏id2商店 | NPC头像、对话/选项文字、商品/任务分支；主对话和独立商品/任务对象见 NPC-01..03 | `NPCDialog`与`NPCGoodsPanel`；当前改为同一子树，按钮节流与原版对象关系未闭合；NPC-01..03 |

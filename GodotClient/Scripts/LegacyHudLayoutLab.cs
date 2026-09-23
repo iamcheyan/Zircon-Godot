@@ -28,6 +28,7 @@ public partial class LegacyHudLayoutLab : Control
     private TradeDialog _trade;
     private GuildDialog _guild;
     private StorageDialog _storage;
+    private ConfigDialog _config;
 
     public override void _Ready()
     {
@@ -84,6 +85,7 @@ public partial class LegacyHudLayoutLab : Control
         _trade = AddWindow(new TradeDialog(), new Vector2I(158, 110));
         _guild = AddWindow(new GuildDialog(), new Vector2I(12, 2));
         _storage = AddWindow(new StorageDialog(), new Vector2I(580, 180));
+        _config = AddWindow(new ConfigDialog(), new Vector2I(280, 160));
     }
 
     private T AddWindow<T>(T window, Vector2I location) where T : DXWindow
@@ -137,6 +139,7 @@ public partial class LegacyHudLayoutLab : Control
                 "trade" => _trade,
                 "guild" => _guild,
                 "storage" => _storage,
+                "config" or "settings" => _config,
                 _ => null,
             };
             if (window != null) WindowManager.Open(window, _canvas);
@@ -161,14 +164,15 @@ public partial class LegacyHudLayoutLab : Control
         bool trade = _trade.AuditLegacyEiLayout(out string tradeDetails);
         bool guild = _guild.AuditLegacyEiLayout(out string guildDetails);
         bool storage = _storage.AuditLegacyEiLayout(out string storageDetails);
+        bool config = _config.AuditLegacyEiLayout(out string configDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             && _chat.Size == new Vector2I(572, 388)
             && _menu.Size == new Vector2I(248, 264);
         bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
-        bool roots3 = _storage.Size == new Vector2I(205, 205);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && roots && roots2 && roots3;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} roots={roots && roots2 && roots3}");
+        bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264);
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && roots && roots2 && roots3;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} roots={roots && roots2 && roots3}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");
@@ -179,6 +183,7 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] trade {tradeDetails}");
         GD.Print($"[LegacyAudit] guild {guildDetails}");
         GD.Print($"[LegacyAudit] storage {storageDetails}");
+        GD.Print($"[LegacyAudit] config {configDetails}");
         GetTree().Quit(pass ? 0 : 1);
     }
 

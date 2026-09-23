@@ -10,6 +10,8 @@ namespace ZirconClient.Controls;
 /// <summary>原版 DXConfigWindow 的 Godot 外框与分类页。</summary>
 public partial class ConfigDialog : DXWindow
 {
+    private DXImageControl _background;
+    private DXButton _closeButton;
     private readonly DXControl _page;
     private DXControl _content;
     private DXVScrollBar _scroll;
@@ -26,12 +28,13 @@ public partial class ConfigDialog : DXWindow
         HasTitle = false;
         HasFooter = false;
         Size = new Vector2I(364, 416); // 原版 Interface 282
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 282, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
+        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 282, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        AddControl(_background);
 
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (o, e) => WindowManager.Close(this);
-        AddControl(close);
+        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
+        _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
+        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        AddControl(_closeButton);
         AddControl(new DXLabel { Text = Lang.CommonControlConfigWindowTitle, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I((int)Size.X, 18), IsControl = false });
 
         _tabs = new DXButton[5];
@@ -128,6 +131,45 @@ public partial class ConfigDialog : DXWindow
         // 鼠标滚轮在内容区任意位置都能滚动（不只限于滚动条本身）
         _page.MouseWheel += (s, e) => { if (_scroll != null) _scroll.DoMouseWheel(s, e); };
     }
+
+    /// <summary>旧版 EI 选项窗口：GameInter F750，根 248×264。</summary>
+    public void ApplyLegacyEiLayout()
+    {
+        Size = new Vector2I(248, 264);
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 750;
+        _background.FixedSize = true;
+        _background.StretchImage = false;
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 750);
+        _background.Location = Vector2I.Zero;
+        _closeButton.LibraryFile = LibraryFile.GameInter;
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
+        _closeButton.PressedIndex = 162;
+        _closeButton.Location = new Vector2I(216, 238);
+        _closeButton.Size = new Vector2I(28, 26);
+        for (int i = 0; i < _tabs.Length; i++)
+        {
+            _tabs[i].Location = new Vector2I(7 + i * 48, 34);
+            _tabs[i].Size = new Vector2I(46, 22);
+            _tabs[i].FontSize = 8;
+        }
+        _page.Location = new Vector2I(7, 60);
+        _page.Size = new Vector2I(234, 168);
+        UpdateClientAreaForLegacySkin();
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool tabs = _tabs.Length == 5 && _tabs[0].Location == new Vector2(7, 34)
+            && _tabs[4].Location == new Vector2(199, 34);
+        bool ok = Size == new Vector2I(248, 264)
+            && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 750
+            && _page.Size == new Vector2(234, 168) && tabs;
+        details = $"size={Size} frame={_background.Index} page={_page.Size}@{_page.Location} tabs={tabs}";
+        return ok;
+    }
+
     private ConfigCheckBox Check(string text, bool value, Action<bool> changed)
     {
         var check = new ConfigCheckBox(text) { Checked = value };

@@ -18,33 +18,14 @@ public static class MirSkin
     /// 实际检出目录是小写 zircon；Linux 大小写敏感导致 UI 图库加载静默失败、
     /// 背景贴图全部缺失。复用 LibraryCache 的动态解析（相对 res:// 探测），
     /// 与地图/角色/快捷栏图库的加载路径保持一致。</summary>
+    /// <summary>世界/角色/物品图库路径，始终保持正式客户端资源。</summary>
     public static string DataPath = ResolveDataPath();
+
+    /// <summary>界面图库路径；旧版 HUD 开启时可与世界资源分离。</summary>
+    public static string UiDataPath = ResolveUiDataPath();
 
     private static string ResolveDataPath()
     {
-        // 正式旧版 HUD 不能只替换坐标：GameInter/Interface 的帧尺寸也来自
-        // EI 资源库。--legacy-hud 优先选择专用路径，避免正式场景仍读到
-        // 新版 GameInter[50] (1024×68) 而测试场读到旧版 (800×136)。
-        if (Godot.OS.GetCmdlineUserArgs().Any(x =>
-                string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase)))
-        {
-            string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH")
-                ?? System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
-            if (!string.IsNullOrWhiteSpace(legacyOverride) && Directory.Exists(legacyOverride))
-                return Path.GetFullPath(legacyOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
-                    + Path.DirectorySeparatorChar;
-
-            string[] legacyCandidates =
-            {
-                "/home/tetsuya/mir3ei/LegacyEI/Data/",
-                "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
-            };
-            foreach (string candidate in legacyCandidates)
-                if (Directory.Exists(candidate)) return candidate;
-
-            GD.PrintErr("[MirSkin] --legacy-hud 已请求，但找不到 LegacyEI/Data；继续使用默认 UI 资源");
-        }
-
         string overridePath = System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
         if (!string.IsNullOrWhiteSpace(overridePath) && Directory.Exists(overridePath))
             return Path.GetFullPath(overridePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
@@ -74,6 +55,30 @@ public static class MirSkin
         return candidates[0];
     }
 
+    private static string ResolveUiDataPath()
+    {
+        bool legacyRequested = Godot.OS.GetCmdlineUserArgs().Any(x =>
+            string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase));
+        if (!legacyRequested) return DataPath;
+
+        string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH")
+            ?? System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
+        if (!string.IsNullOrWhiteSpace(legacyOverride) && Directory.Exists(legacyOverride))
+            return Path.GetFullPath(legacyOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                + Path.DirectorySeparatorChar;
+
+        string[] legacyCandidates =
+        {
+            "/home/tetsuya/mir3ei/LegacyEI/Data/",
+            "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
+        };
+        foreach (string candidate in legacyCandidates)
+            if (Directory.Exists(candidate)) return candidate;
+
+        GD.PrintErr("[MirSkin] --legacy-hud 已请求，但找不到 LegacyEI/Data；继续使用默认 UI 资源");
+        return DataPath;
+    }
+
     private static readonly Dictionary<LibraryFile, ZlLibrary> _libraries = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _textures = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _overlayTextures = new();
@@ -94,7 +99,8 @@ public static class MirSkin
         // LibraryList 路径是 Windows 格式 "Data\xxx.Zl": 先转正斜杠再剥 Data/ 前缀
         string p = path.Replace('\\', '/');
         if (p.StartsWith("Data/")) p = p.Substring(5);
-        string full = Path.Combine(DataPath, p);
+        string libraryDataPath = IsUiLibrary(file) ? UiDataPath : DataPath;
+        string full = Path.Combine(libraryDataPath, p);
         full = ResolvePath(full);
         if (!File.Exists(full)) return null;
 
@@ -102,6 +108,10 @@ public static class MirSkin
         _libraries[file] = lib;
         return lib;
     }
+
+    private static bool IsUiLibrary(LibraryFile file)
+        => file is LibraryFile.Interface or LibraryFile.Interface1c or LibraryFile.Interface1cExtended
+            or LibraryFile.GameInter or LibraryFile.GameInter2 or LibraryFile.ProgUse;
 
     private static string ResolvePath(string fullPath)
     {

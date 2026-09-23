@@ -507,6 +507,8 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 2026-09-24 00:31 JST G 键修复运行记录：构建通过（3条既有警告）；legacy 启动脚本重启成功，登录 TestHero 并收到 `StartGame Success`，进入地图且未见启动异常。G/Ctrl+G 目标窗仍未实际键入验证；组队窗自身内容和 HUD 点击的 GroupNotify 仍是独立未决项。
 
+2026-09-24 设置窗首次真实开窗记录：在 Xvfb `:100` 的 `ZirconClient - 1024x768` 游戏窗口中点击 HUD cap11 的实际按钮坐标，打开 `ConfigDialog`，截屏 [`settings-window-current-2026-09-24-1024x768.png`](evidence/legacy-ei-ui/settings-window-current-2026-09-24-1024x768.png)。窗口显示 EI GameInter F750 韩文背景与标签；对照当前 `ConfigDialog.CreateLegacyOptionButtons()` 可直接确认四行均同时叠放左右 ON/OFF 两个按钮（八个控件均可见），与原版 `system-window-render-evidence.json` 的八控件顺序、按状态显隐逻辑不符。两条背景音/效果音轨道显示了 F750 底图轨迹与端部箭头，但当前构造代码没有 F751 控件，故没有可拖动的滑块；截图也未显示独立圆形滑块。未点击任何设置选项或轨道，避免写入客户端设置。该记录首次把 SET-01/02/03 的代码差异连接到真实窗口画面；仅覆盖 1024×768 一次打开状态，没有验收 ON/OFF 初始值、点击后的状态保存、音量拖动、EI 800×600 几何或与原版同状态截图差分。禁止据此宣称设置窗通过。
+
 2026-09-24 00:47 JST 技能书帧修复验证：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0 errors，3条既有警告）。检查到当前 legacy 客户端 PID 383044 已于 00:30 启动，早于 F460/F462/F464 代码变更；本轮没有重启它，也没有新桌面可交互应用，因此不能把现有客户端进程当作新帧的运行验证。SKL-08 目前只有静态帧号修正与编译证据，等待窗口可观察后逐类点击/比较普通与按下帧。
 
 2026-09-24 00:48 JST 组队成员几何修复验证：从仓库根目录执行 `bash login_game.sh legacy`，脚本先关闭本轮审计旧客户端 PID 383044、复用 7000 服务，然后服务端/客户端构建均为 0 errors；自动登录 TestHero，收到 `StartGame Result=Success`，进入地图 7 / Sabuk Keep，贴图诊断 missingLibraries/textures 均为0。新客户端 PID 432180。`cua.getState()` 仍返回 apps/browsers 均为空，所以这次只确认登录/进游戏回归；GROUP-01/02 的实际成员行位置、列表溢出和窗口点击还没有运行时证据。

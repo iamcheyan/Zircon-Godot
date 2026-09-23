@@ -12,6 +12,7 @@ public partial class ConfigDialog : DXWindow
 {
     private DXImageControl _background;
     private DXButton _closeButton;
+    private DXLabel _titleLabel;
     private readonly DXControl _page;
     private DXControl _content;
     private DXVScrollBar _scroll;
@@ -21,6 +22,7 @@ public partial class ConfigDialog : DXWindow
     private KeyBindDialog _keyBind;
     private bool _dragging;
     private Vector2 _dragOffset;
+    private readonly List<DXButton> _legacyOptionButtons = new();
 
     public ConfigDialog()
     {
@@ -35,7 +37,8 @@ public partial class ConfigDialog : DXWindow
         _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
         _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
         AddControl(_closeButton);
-        AddControl(new DXLabel { Text = Lang.CommonControlConfigWindowTitle, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I((int)Size.X, 18), IsControl = false });
+        _titleLabel = new DXLabel { Text = Lang.CommonControlConfigWindowTitle, FontSize = 10, TextColour = new Color(1f, 0.85f, 0.3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I((int)Size.X, 18), IsControl = false };
+        AddControl(_titleLabel);
 
         _tabs = new DXButton[5];
         string[] names = { Lang.CommonControlConfigWindowGraphicsTabLabel, Lang.CommonControlConfigWindowSoundTabLabel, Lang.CommonControlConfigWindowGameTabLabel, Lang.CommonControlConfigWindowNetworkTabLabel, Lang.CommonControlConfigWindowUITabLabel };
@@ -141,32 +144,75 @@ public partial class ConfigDialog : DXWindow
         _background.FixedSize = true;
         _background.StretchImage = false;
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 750);
-        _background.Location = Vector2I.Zero;
+        // F750 的 WIL 画布上方带约 119px 透明边距；旧版窗口构造器
+        // 通过这个有效像素原点把设置框对齐到窗口矩形内。
+        _background.Location = new Vector2I(-4, -119);
+        _page.Visible = false;
+        _titleLabel.Visible = false;
+        foreach (var tab in _tabs) tab.Visible = false;
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(216, 238);
         _closeButton.Size = new Vector2I(28, 26);
-        for (int i = 0; i < _tabs.Length; i++)
-        {
-            _tabs[i].Location = new Vector2I(7 + i * 48, 34);
-            _tabs[i].Size = new Vector2I(46, 22);
-            _tabs[i].FontSize = 8;
-        }
-        _page.Location = new Vector2I(7, 60);
-        _page.Size = new Vector2I(234, 168);
+        CreateLegacyOptionButtons();
         UpdateClientAreaForLegacySkin();
+    }
+
+    private void CreateLegacyOptionButtons()
+    {
+        foreach (var button in _legacyOptionButtons)
+        {
+            RemoveControl(button);
+            button.QueueFree();
+        }
+        _legacyOptionButtons.Clear();
+
+        // F750 的标签、行和滑轨都已经烘焙在 GameInter 贴图中；这里只
+        // 放原版的状态控件，绝不再叠加新版文字。两组帧对和坐标来自
+        // system-window-render-evidence.json。
+        (Vector2I position, int onFrame, int offFrame, Func<bool> get, Action<bool> set)[] options =
+        {
+            (new(148, 43), 760, 761, () => !ClientSettings.MusicVolumeMuted, value => { ClientSettings.MusicVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
+            (new(185, 43), 762, 763, () => !ClientSettings.SystemVolumeMuted, value => { ClientSettings.SystemVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
+            (new(148, 116), 760, 761, () => !ClientSettings.PlayerVolumeMuted, value => { ClientSettings.PlayerVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
+            (new(185, 116), 762, 763, () => !ClientSettings.MonsterVolumeMuted, value => { ClientSettings.MonsterVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
+            (new(148, 190), 760, 761, () => !ClientSettings.MagicVolumeMuted, value => { ClientSettings.MagicVolumeMuted = !value; ClientSettings.ApplyAudioSettings(); }),
+            (new(185, 190), 762, 763, () => ClientSettings.SoundInBackground, value => { ClientSettings.SoundInBackground = value; ClientSettings.Save(); }),
+            (new(148, 217), 760, 761, () => ClientSettings.VSync, value => { ClientSettings.VSync = value; ClientSettings.ApplyDisplaySettings(); }),
+            (new(185, 217), 762, 763, () => ClientSettings.LimitFPS, value => { ClientSettings.LimitFPS = value; ClientSettings.ApplyDisplaySettings(); }),
+        };
+        foreach (var option in options)
+        {
+            var button = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = option.get() ? option.onFrame : option.offFrame,
+                HoverIndex = option.onFrame,
+                PressedIndex = option.onFrame,
+                Location = option.position,
+                Size = new Vector2I(option.onFrame == 760 ? 32 : 40, 22),
+            };
+            button.MouseClick += (_, _) =>
+            {
+                bool next = !option.get();
+                option.set(next);
+                button.Index = next ? option.onFrame : option.offFrame;
+                button.HoverIndex = option.onFrame;
+                button.PressedIndex = option.onFrame;
+            };
+            AddControl(button);
+            _legacyOptionButtons.Add(button);
+        }
     }
 
     public bool AuditLegacyEiLayout(out string details)
     {
-        bool tabs = _tabs.Length == 5 && _tabs[0].Location == new Vector2(7, 34)
-            && _tabs[4].Location == new Vector2(199, 34);
         bool ok = Size == new Vector2I(248, 264)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 750
-            && _page.Size == new Vector2(234, 168) && tabs;
-        details = $"size={Size} frame={_background.Index} page={_page.Size}@{_page.Location} tabs={tabs}";
+            && !_page.Visible && _legacyOptionButtons.Count == 8;
+        details = $"size={Size} frame={_background.Index} legacyButtons={_legacyOptionButtons.Count} pageVisible={_page.Visible}";
         return ok;
     }
 

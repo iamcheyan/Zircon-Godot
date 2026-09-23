@@ -79,7 +79,6 @@ public static class LegacyUiSkin
             "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6), false),
             "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36), false),
             "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62), false),
-            "MenuDialog" => (750, new Vector2I(248, 264), new Vector2I(4, 119), false),
             "HorseDialog" => (850, new Vector2I(296, 332), Vector2I.Zero, false),
             "NPCDialog" => (1100, new Vector2I(552, 176), Vector2I.Zero, false),
             "TradeDialog" => (1050, new Vector2I(484, 330), Vector2I.Zero, false),
@@ -116,9 +115,6 @@ public static class LegacyUiSkin
                 return true;
             case QuestDialog quest:
                 quest.ApplyLegacyEiLayout();
-                return true;
-            case MenuDialog menu:
-                menu.ApplyLegacyEiLayout();
                 return true;
             case CommunicationDialog communication:
                 communication.ApplyLegacyEiLayout();

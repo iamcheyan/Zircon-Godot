@@ -4645,7 +4645,12 @@ public partial class GameScene : Control
         };
         _mainPanel.MenuButton.MouseClick += (o, e) =>
         {
-            WindowManager.Toggle(_menuDialog, _uiLayer);
+            // 旧版没有当前客户端的通用 MenuDialog；菜单键对应 F750
+            // 选项窗口。新版模式继续保留原菜单入口。
+            if (AutoLoginArgs.LegacyUi)
+                OpenConfigDialog();
+            else
+                WindowManager.Toggle(_menuDialog, _uiLayer);
         };
         _mainPanel.MailButton.MouseClick += (o, e) => OpenCommunicationDialog();
         _mainPanel.GroupButton.MouseClick += (o, e) => OpenGroupDialog();
@@ -4700,7 +4705,6 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyLegacyTestWindow(_groupDialog, _groupDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_questDialog, _questDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_communicationDialog, _communicationDialog.Location);
-        LegacyUiSkin.ApplyLegacyTestWindow(_menuDialog, _menuDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_tradeDialog, _tradeDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_guildDialog, _guildDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_storageDialog, _storageDialog.Location);
@@ -4725,7 +4729,7 @@ public partial class GameScene : Control
             "quest" => _questDialog,
             "chat" => _communicationDialog,
             "group" => _groupDialog,
-            "menu" => _menuDialog,
+            "menu" => AutoLoginArgs.LegacyUi ? _configDialog : _menuDialog,
             "horse" => _horseDialog,
             "npc" => _npcDialog,
             "trade" => _tradeDialog,

@@ -18,7 +18,6 @@ public partial class LegacyHudLayoutLab : Control
     private InventoryDialog _inventory;
     private CharacterDialog _character;
     private GroupDialog _group;
-    private MenuDialog _menu;
     private QuestDialog _quest;
     private CommunicationDialog _chat;
     private MagicDialog _magic;
@@ -78,7 +77,6 @@ public partial class LegacyHudLayoutLab : Control
         _inventory = AddWindow(new InventoryDialog(), new Vector2I(518, 8));
         _character = AddWindow(new CharacterDialog(), new Vector2I(8, 8));
         _group = AddWindow(new GroupDialog(), new Vector2I(272, 105));
-        _menu = AddWindow(new MenuDialog(), new Vector2I(324, 180));
         _quest = AddWindow(new QuestDialog(), new Vector2I(34, 50));
         _chat = AddWindow(new CommunicationDialog(), new Vector2I(252, 80));
         _magic = AddWindow(new MagicDialog(), new Vector2I(348, 10));
@@ -115,7 +113,7 @@ public partial class LegacyHudLayoutLab : Control
         _hud.MailButton.MouseClick += (o, e) => Toggle(_chat);
         _hud.BeltButton.MouseClick += (o, e) => Toggle(_belt);
         _hud.GroupButton.MouseClick += (o, e) => Toggle(_group);
-        _hud.MenuButton.MouseClick += (o, e) => Toggle(_menu);
+        _hud.MenuButton.MouseClick += (o, e) => Toggle(_config);
         _hud.MiniMapButton.MouseClick += (o, e) => Toggle(_miniMap);
         _hud.SkillEntryButton.MouseClick += (o, e) => Toggle(_magic);
         _hud.ExitButton.MouseClick += (o, e) => Toggle(_exit);
@@ -139,7 +137,7 @@ public partial class LegacyHudLayoutLab : Control
                 "quest" => _quest,
                 "chat" => _chat,
                 "group" => _group,
-                "menu" => _menu,
+                "menu" => _config,
                 "belt" => _belt,
                 "horse" => _horse,
                 "npc" => _npc,
@@ -180,7 +178,7 @@ public partial class LegacyHudLayoutLab : Control
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             && _chat.Size == new Vector2I(572, 388)
-            && _menu.Size == new Vector2I(248, 264);
+            && _config.Size == new Vector2I(248, 264);
         bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);
         bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && roots && roots2 && roots3;
@@ -219,7 +217,7 @@ public partial class LegacyHudLayoutLab : Control
             case Key.F5: Toggle(_quest); break;
             case Key.F6: Toggle(_chat); break;
             case Key.F7: Toggle(_group); break;
-            case Key.F8: Toggle(_menu); break;
+            case Key.F8: Toggle(_config); break;
             case Key.F9: Toggle(_horse); break;
             case Key.Escape: WindowManager.CloseTop(); break;
         }

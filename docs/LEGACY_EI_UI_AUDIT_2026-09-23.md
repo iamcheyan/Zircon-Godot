@@ -316,7 +316,7 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | ProgUse | `ProgUse.wil/.wix`，无`.Zl` | `MirSkin`→legacy；`LibraryCache`→常规Data | 同一`LibraryFile`按调用入口会读不同根；`PaperDoll`使用LibraryCache，部分普通控件使用MirSkin |
 | Equip | `Equip.wil/.wix`，无`.Zl` | `LibraryCache`→常规Data | `PaperDoll`的EI图层当前读常规Data Zl；与EI WIL逐帧关系未核 |
 | StoreItem | `Storeitem.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | 背包/交易格默认走常规Data Zl；大小写与EI WIL不同，但加载器要找的是`.Zl` |
-| Inventory | `inventory.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | NPC特殊目标格等可从常规Data取图；与EI WIL帧映射未核 |
+| Inventory | `inventory.wil/.wix`，无`.Zl` | `MirSkin`→常规Data（不属于`IsUiLibrary`） | NPC socket target 等显式设 `LibraryFile.Inventory`，因此实际读取现代 `Data/Inventory.Zl`；不等于EI目录的 `Inventory.wil`。普通背包格并不选该 enum，而是默认 `StoreItem`（详见 INV-05） |
 | MIcon | `MIcon.wil/.wix`，无`.Zl` | `LibraryCache`→常规Data | `MagicBar`技能图标源于常规Data路径；legacy素材等价性未核 |
 | EquipEffect_UI | 未发现EI文件 | `LibraryCache`→常规Data | `PaperDoll`额外装备效果来自常规Data路径；是否属于目标EI版本待逐帧核 |
 

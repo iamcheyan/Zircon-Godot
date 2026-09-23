@@ -127,12 +127,12 @@ public partial class CharacterDialog : DXWindow
         _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
 
-        // EI 原版展开状态是在右侧并排再放一块 F200 状态面板。
-        // F201 是 520 宽的装备视图，不能拿来当右侧属性面板。
+        // EI 原版展开状态使用 GameInter F201 装备视图；F201 是大画布，
+        // 由窗口的 520×328 视口裁出右侧装备面板。
         _legacyExpandedBackground = new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = 200,
+            Index = 201,
             FixedSize = true,
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -329,9 +329,9 @@ public partial class CharacterDialog : DXWindow
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
         _legacyExpandedBackground.Visible = false;
-        _legacyExpandedBackground.Index = 200;
-        _legacyExpandedBackground.Location = new Vector2I(238, -92);
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
+        _legacyExpandedBackground.Index = 201;
+        _legacyExpandedBackground.Location = new Vector2I(244, -44);
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = false;
 
@@ -491,7 +491,7 @@ public partial class CharacterDialog : DXWindow
         ToggleLegacyView();
         bool expanded = _background.Index == 200
             && _legacyExpandedBackground.Visible
-            && _legacyExpandedBackground.Index == 200
+            && _legacyExpandedBackground.Index == 201
             && Size == new Vector2I(488, 328)
             && _legacyViewToggle.Index == 168
             && _legacyAttributeLabels.All(label => label.Visible)
@@ -541,9 +541,9 @@ public partial class CharacterDialog : DXWindow
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = _legacyEquipmentView;
         Size = _legacyEquipmentView ? new Vector2I(488, 328) : new Vector2I(244, 328);
-        _legacyExpandedBackground.Location = new Vector2I(238, -92);
-        _legacyExpandedBackground.Index = 200;
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
+        _legacyExpandedBackground.Location = new Vector2I(244, -44);
+        _legacyExpandedBackground.Index = 201;
+        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
         _legacyExpandedBackground.StretchImage = false;
         UpdateClientAreaForLegacySkin();
         QueueRedraw();

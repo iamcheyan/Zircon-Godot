@@ -2,7 +2,7 @@
 
 > 验收日期：2026-09-23  
 > 分支：`ui/legacy-layout-lab`  
-> 最新提交：`b64c0b37`  
+> 最新提交：待本轮提交后更新  
 > 验收范围：旧版 EI 测试场，不把正式游戏内替换当作本阶段的视觉验收依据。
 
 ## 1. 本轮结论
@@ -46,7 +46,7 @@ godot-mono --path GodotClient res://Scenes/LegacyHudLayoutLab.tscn -- \
 本轮实际输出：
 
 ```text
-[LegacyAudit] PASS character=True inventory=True magic=True horse=True npc=True chat=True quest=True trade=True guild=True storage=True config=True notice=True minimap=True roots=True
+[LegacyAudit] PASS character=True inventory=True magic=True horse=True npc=True chat=True quest=True trade=True guild=True storage=True config=True notice=True minimap=True lifecycle=True roots=True
 [LegacyAudit] character size=(244, 328) background=F200 toggle=(176, 264)/(36, 36) visibleSlots=8 slots=True switch=True
 [LegacyAudit] inventory size=(284, 324) background=F250 grid=(6, 6)@(25, 41) close=(249, 288) action=(176, 262)
 [LegacyAudit] magic size=(452, 380) background=F400 categories=8 skillSlots=12
@@ -60,6 +60,7 @@ godot-mono --path GodotClient res://Scenes/LegacyHudLayoutLab.tscn -- \
 [LegacyAudit] config size=(248, 264) frame=750 legacyButtons=8 pageVisible=False
 [LegacyAudit] notice size=(584, 252) frame=602 close=(548, 16) action=(496, 27) text=(500, 112)@(23, 94)
 [LegacyAudit] minimap size=(200, 200) area=(-6, 18), (212, 188) panel=(212, 188) resize=True buttons=(36, 18)@(161, 24)/(36, 18)@(161, 42)/(0, 0)@(197, 60)
+[LegacyAudit] lifecycle windows=15 open-close=True stack=0
 ```
 
 ## 4. 本轮重点修正
@@ -85,6 +86,7 @@ godot-mono --path GodotClient res://Scenes/LegacyHudLayoutLab.tscn -- \
 - 13 个窗口的旧版根尺寸、背景帧、主要按钮/格子、正文区域和窗口根路由通过自动审计。
 - 人物 F200/F201 可以切换并恢复，8 个已确认装备槽通过独立坐标校验。
 - 测试场截图中已看到旧版人物、背包、技能、设置、公告等真实贴图，不是黑色占位窗口。
+- 测试场生命周期审计逐个打开 15 个窗口，确认重复打开不会重复入栈，关闭最上层窗口后窗口栈恢复为 0。
 
 尚未宣称完成：
 
@@ -107,7 +109,7 @@ origin/ui/legacy-layout-lab
 最近提交：
 
 ```text
-b64c0b37 修正旧版人物装备槽枚举映射
+a932092d 补充旧版测试界面验收报告
 ```
 
 工作树在提交后应保持干净；任何后续窗口修改都必须重新执行构建和 `--legacy-audit`，不能仅凭 Godot 启动成功作为验收。

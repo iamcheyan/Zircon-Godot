@@ -175,14 +175,15 @@ public partial class LegacyHudLayoutLab : Control
         bool config = _config.AuditLegacyEiLayout(out string configDetails);
         bool notice = _notice.AuditLegacyEiLayout(out string noticeDetails);
         bool minimap = _miniMap.AuditLayout(out string minimapDetails);
+        bool lifecycle = AuditWindowLifecycle(out string lifecycleDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             && _chat.Size == new Vector2I(572, 388)
             && _config.Size == new Vector2I(248, 264);
         bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && roots && roots2 && roots3;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} roots={roots && roots2 && roots3}");
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && roots && roots2 && roots3;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} roots={roots && roots2 && roots3}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");
@@ -196,7 +197,48 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] config {configDetails}");
         GD.Print($"[LegacyAudit] notice {noticeDetails}");
         GD.Print($"[LegacyAudit] minimap {minimapDetails}");
+        GD.Print($"[LegacyAudit] lifecycle {lifecycleDetails}");
         GetTree().Quit(pass ? 0 : 1);
+    }
+
+    private bool AuditWindowLifecycle(out string details)
+    {
+        var windows = new[]
+        {
+            (Name: "character", Window: (DXWindow)_character),
+            (Name: "inventory", Window: (DXWindow)_inventory),
+            (Name: "magic", Window: (DXWindow)_magic),
+            (Name: "quest", Window: (DXWindow)_quest),
+            (Name: "chat", Window: (DXWindow)_chat),
+            (Name: "group", Window: (DXWindow)_group),
+            (Name: "config", Window: (DXWindow)_config),
+            (Name: "horse", Window: (DXWindow)_horse),
+            (Name: "npc", Window: (DXWindow)_npc),
+            (Name: "trade", Window: (DXWindow)_trade),
+            (Name: "guild", Window: (DXWindow)_guild),
+            (Name: "storage", Window: (DXWindow)_storage),
+            (Name: "notice", Window: (DXWindow)_notice),
+            (Name: "minimap", Window: (DXWindow)_miniMap),
+            (Name: "exit", Window: (DXWindow)_exit),
+        };
+
+        while (WindowManager.CloseTop()) { }
+        int opened = 0;
+        bool valid = true;
+        foreach (var entry in windows)
+        {
+            WindowManager.Open(entry.Window, _canvas);
+            bool openedOnce = entry.Window.Visible
+                && WindowManager.OpenWindows.Count == 1
+                && ReferenceEquals(WindowManager.OpenWindows[^1], entry.Window);
+            WindowManager.Open(entry.Window, _canvas);
+            bool duplicateSuppressed = WindowManager.OpenWindows.Count == 1;
+            valid &= openedOnce && duplicateSuppressed;
+            opened++;
+            valid &= WindowManager.CloseTop() && !entry.Window.Visible && WindowManager.OpenWindows.Count == 0;
+        }
+        details = $"windows={opened} open-close={valid} stack={WindowManager.OpenWindows.Count}";
+        return valid;
     }
 
     private void Toggle(DXWindow window) => WindowManager.Toggle(window, _canvas);

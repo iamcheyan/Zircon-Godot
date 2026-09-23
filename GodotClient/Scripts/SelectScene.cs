@@ -48,7 +48,7 @@ public partial class SelectScene : Control
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
         ClientSettings.UpdateWindowTitle();
-        GetViewport().SizeChanged += ClientSettings.UpdateWindowTitle;
+        ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
         SoundPlayback.Stop(SoundIndex.LoginScene);
         SoundPlayback.Play(this, SoundIndex.SelectScene);

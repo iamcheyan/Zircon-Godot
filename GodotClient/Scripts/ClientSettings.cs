@@ -11,6 +11,7 @@ public static class ClientSettings
     private const string WindowTitle = "ZirconClient";
     private static bool _loaded;
     private static bool _windowArgsApplied;
+    private static Viewport _titleViewport;
 
     public static bool DrawEffects { get; set; } = true;
     public static bool DrawParticles { get; set; } = true;
@@ -369,6 +370,14 @@ public static class ClientSettings
         if (DisplayServer.GetName() == "headless") return;
         Vector2I size = DisplayServer.WindowGetSize();
         DisplayServer.WindowSetTitle($"{WindowTitle} - {size.X}x{size.Y}");
+    }
+
+    /// <summary>为当前视口绑定一次标题刷新，避免登录/选人/游戏场景交接时重复连接。</summary>
+    public static void BindWindowTitle(Viewport viewport)
+    {
+        if (viewport == null || _titleViewport == viewport) return;
+        _titleViewport = viewport;
+        viewport.SizeChanged += UpdateWindowTitle;
     }
 
     private static void LoadColours(ConfigFile file)

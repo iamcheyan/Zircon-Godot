@@ -35,7 +35,7 @@ public partial class LoginScene : Control
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
         ClientSettings.UpdateWindowTitle();
-        GetViewport().SizeChanged += ClientSettings.UpdateWindowTitle;
+        ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
         SoundPlayback.Play(this, SoundIndex.LoginScene);
         _net = GetNode<Network.NetworkManager>("/root/NetworkManager");

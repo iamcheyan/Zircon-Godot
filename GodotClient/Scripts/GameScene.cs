@@ -959,7 +959,7 @@ public partial class GameScene : Control
         UiOverlay.Load();
         ClientSettings.ApplyDisplaySettings();
         ClientSettings.UpdateWindowTitle();
-        GetViewport().SizeChanged += ClientSettings.UpdateWindowTitle;
+        ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
         SoundPlayback.Stop(SoundIndex.LoginScene);
         SoundPlayback.Stop(SoundIndex.SelectScene);

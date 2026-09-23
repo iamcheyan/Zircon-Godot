@@ -282,13 +282,27 @@ public partial class MagicDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
+        (MagicSchool school, Vector2I location)[] expectedTabs =
+        {
+            (MagicSchool.Fire, new(5, 21)),
+            (MagicSchool.Ice, new(3, 56)),
+            (MagicSchool.Lightning, new(4, 91)),
+            (MagicSchool.Wind, new(2, 126)),
+            (MagicSchool.Holy, new(2, 161)),
+            (MagicSchool.Dark, new(2, 196)),
+            (MagicSchool.Phantom, new(1, 231)),
+            (MagicSchool.Physical, new(2, 266)),
+        };
+        bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
+            && button.Location == x.location);
         bool ok = Size == new Vector2I(452, 380)
             && _header.Index == 400
             && _legacySkillSlots.Count == 12
             && _schoolButtons.Count == 8
+            && tabsMatch
             && !_list.Visible
             && !_scrollBar.Visible;
-        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} skillSlots={_legacySkillSlots.Count}";
+        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} categoryPositions={tabsMatch} skillSlots={_legacySkillSlots.Count}";
         return ok;
     }
 
@@ -448,13 +462,16 @@ public partial class MagicDialog : DXWindow
     private void SelectSchool(MagicSchool school)
     {
         _selectedSchool = school;
-        int selectedIndex = _tabOrder.IndexOf(school);
-        if (selectedIndex >= 0)
+        if (!_legacyEiLayout)
         {
-            if (selectedIndex < _tabPageStart) _tabPageStart = selectedIndex;
-            else if (selectedIndex >= _tabPageStart + TabCapacity)
-                _tabPageStart = selectedIndex - TabCapacity + 1;
-            UpdateTabLayout();
+            int selectedIndex = _tabOrder.IndexOf(school);
+            if (selectedIndex >= 0)
+            {
+                if (selectedIndex < _tabPageStart) _tabPageStart = selectedIndex;
+                else if (selectedIndex >= _tabPageStart + TabCapacity)
+                    _tabPageStart = selectedIndex - TabCapacity + 1;
+                UpdateTabLayout();
+            }
         }
         foreach (var c in _cells)
         {

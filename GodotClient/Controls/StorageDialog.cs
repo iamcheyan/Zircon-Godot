@@ -284,6 +284,7 @@ public partial class StorageDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
+        RefreshStorage();
         bool ok = Size == new Vector2I(205, 205)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1001
             && Grid.GridSize == new Vector2I(4, 3)

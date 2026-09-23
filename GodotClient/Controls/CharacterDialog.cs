@@ -408,6 +408,7 @@ public partial class CharacterDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
+        ShowOwn();
         int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
         bool initial = _background.Index == 200;
         ToggleLegacyView();

@@ -34,6 +34,7 @@
 - NPC 背包模式接线补齐：出售入口继续使用 `[变卖]`，修理 NPC 回包现在调用 `SetInventoryLegacyMode(Repair)` 显示 `[修补]`，关闭 NPC 统一恢复 `[包袱]`；拿取/放下/拆分/丢弃仍复用现有 `DXItemCell` 业务逻辑。
 - 角色动态与 NPC 背包模式修改后的 `login_game.sh -R --legacy-ui` 回归通过：服务端、登录、StartGame 和进入 `TestHero` 地图均成功，未出现新的运行时错误。
 - 范围确认：商城、寄售、地下城和宠物功能当前均由 `GameScene` 的功能开关禁用，符合开发阶段先简化玩法的决定；这些窗口不再作为旧版核心 UI 迁移的未完成项。
+- 测试审计强化：`LegacyHudLayoutLab --legacy-audit` 现在会实际调用角色 `ShowOwn()` 和仓库 `RefreshStorage()` 后再检查旧版根框/格子，动态恢复路径也纳入 PASS 条件。
 - 完整 `login_game.sh -R --legacy-ui` 烟测再次通过：服务端重建并监听 7000，登录成功、StartGame 成功并进入 `TestHero` 地图；同时修复了 Login/Select/Game 场景重复绑定 `size_changed` 导致的 Godot 错误，复测日志已不再出现该警告。
 - 视觉验收补充完成：测试场分别在 800×600 和 1600×900 下运行并截图，`/tmp/legacy-ui-800x600.png`、`/tmp/legacy-ui-1600x900.png` 均目视确认旧版人物窗口保持原始比例，HUD 等比缩放且无强制拉伸。
 

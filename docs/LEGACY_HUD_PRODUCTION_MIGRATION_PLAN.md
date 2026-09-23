@@ -102,5 +102,5 @@ bash login_game.sh
 
 - 阶段 0：通过。构建 0 错误；`LegacyHudLayoutLab --legacy-audit` 全部通过；此前真实登录 smoke test 已通过。
 - 阶段 1：进行中。确认测试场与正式游戏已经共同复用 `MainPanel`；本轮新增 `LegacyHudLayout`，统一逻辑画布、HUD 原点和玩家球几何定义，构建与测试场审计通过。
-- 阶段 2：进行中。已加入 `--legacy-hud` 资源切换和正式 `MainPanel` 运行时审计；真实登录已确认正式场景加载 `GameInter[50]=800×136` 并输出 `LegacyHud PASS`。按钮输入、窗口快捷键和多分辨率视觉回归仍未完成。
+- 阶段 2：进行中。已加入 `--legacy-hud` 资源切换和正式 `MainPanel` 运行时审计；真实登录已确认正式场景加载 `GameInter[50]=800×136` 并输出 `LegacyHud PASS`。使用空格参数 `--window 800x600` 与 `--window 1600x900` 均成功登录并通过审计；逻辑 HUD 画布保持 `1024×768`，旧版 HUD 保持 `800×136` 底部居中。按钮输入、窗口快捷键和截图视觉回归仍未完成。
 - 阶段 3～5：未开始，不得将当前结果描述为正式 HUD 全部替换完成。

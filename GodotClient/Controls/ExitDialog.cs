@@ -4,7 +4,7 @@ using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
-/// <summary>原版 ExitDialog：退出前确认，而不是直接关闭客户端。</summary>
+/// <summary>Zircon 双操作退出对话框：返回角色选择或退出客户端。</summary>
 public partial class ExitDialog : DXWindow
 {
     public ExitDialog()

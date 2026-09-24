@@ -4632,7 +4632,8 @@ public partial class GameScene : Control
         // LegacyUiSkin.ApplyWindowProfile(window, geometry: true) 显式开启。
         ApplyLegacyCoreWindowProfiles();
 
-        // 数组注入: 先设 ItemGrid 再 CreateGrid (格子建立时快照 ItemGrid)
+        if (AutoLoginArgs.LegacyUi)
+            ApplyLegacyCoreTestLayouts();
         _inventoryDialog.Grid.ItemGrid = Inventory;
         if (AutoLoginArgs.LegacyUi)
             _inventoryDialog.ConfigureLegacyInventoryGrid();
@@ -4651,8 +4652,6 @@ public partial class GameScene : Control
 
         BeltLinks = _beltDialog.Links; // 与对话框共享同一数组 (QuickInfo/QuickItem 写回)
 
-        if (AutoLoginArgs.LegacyUi)
-            ApplyLegacyCoreTestLayouts();
         CallDeferred(nameof(OpenLegacyRequestedWindow));
 
         // M9: 主面板功能按钮 -> 对话框开关

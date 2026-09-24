@@ -23,7 +23,6 @@ public partial class CharacterDialog : DXWindow
     private DXLabel _marriageLabel;
     private DXControl _fameControl;
     private DXImageControl _background;
-    private DXImageControl _legacyExpandedBackground;
     private DXButton _closeButton;
     private DXButton _legacyViewToggle;
     private bool _legacyEquipmentView;
@@ -126,18 +125,6 @@ public partial class CharacterDialog : DXWindow
         _background.MouseMove += (_, _) => ApplyBackgroundDrag();
         _background.MouseUp += (_, _) => FinishBackgroundDrag();
         AddControl(_background);
-
-        // EI 原版展开状态使用 GameInter F201 装备视图；F201 是大画布，
-        // 由窗口的 520×328 视口裁出右侧装备面板。
-        _legacyExpandedBackground = new DXImageControl
-        {
-            LibraryFile = LibraryFile.GameInter,
-            Index = 201,
-            FixedSize = true,
-            Visible = false,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        AddControl(_legacyExpandedBackground);
 
         // 原版 CharacterTab_BeforeChildrenDraw 直接使用 (130,270) 绘制锚点。
         // 这里已经是窗口绘制坐标，不能再额外加 CharacterTab 的 Y 偏移。
@@ -323,15 +310,12 @@ public partial class CharacterDialog : DXWindow
         _legacyEiLayout = true;
         _legacyEquipmentView = false;
         Size = new Vector2I(244, 328);
+        Clip = true;
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 200;
         _background.Location = new Vector2I(-6, -92);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
-        _legacyExpandedBackground.Visible = false;
-        _legacyExpandedBackground.Index = 201;
-        _legacyExpandedBackground.Location = new Vector2I(244, -44);
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = false;
 
@@ -447,7 +431,7 @@ public partial class CharacterDialog : DXWindow
     {
         if (_legacyExpandedLabels.Count > 0) return;
 
-        // 右侧面板使用原版第二块 F200 状态面板；文字只使用当前服务端
+        // 右侧面板使用原版 F201 状态页；文字只使用当前服务端
         // PlayerStats，避免把现代属性页坐标或缩放参数带进 EI 窗口。
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
@@ -487,19 +471,21 @@ public partial class CharacterDialog : DXWindow
     {
         ShowOwn();
         int visibleSlots = Grid?.Count(cell => cell?.Visible == true) ?? 0;
+        Vector2I originalLocation = Location;
         bool initial = _background.Index == 200;
         ToggleLegacyView();
-        bool expanded = _background.Index == 200
-            && _legacyExpandedBackground.Visible
-            && _legacyExpandedBackground.Index == 201
-            && Size == new Vector2I(488, 328)
+        bool expanded = _background.Index == 201
+            && Size == new Vector2I(520, 328)
+            && Location == originalLocation
+            && _background.Location == new Vector2I(-252, -92)
             && _legacyViewToggle.Index == 168
-            && _legacyAttributeLabels.All(label => label.Visible)
+            && _legacyAttributeLabels.All(label => !label.Visible)
             && _legacyExpandedLabels.All(entry => entry.Label.Visible);
         ToggleLegacyView();
         bool restored = _background.Index == 200
-            && !_legacyExpandedBackground.Visible
             && Size == new Vector2I(244, 328)
+            && Location == originalLocation
+            && _background.Location == new Vector2I(-6, -92)
             && _legacyViewToggle.Index == 171;
         var expectedSlots = new Dictionary<EquipmentSlot, Vector2I>
         {
@@ -524,27 +510,28 @@ public partial class CharacterDialog : DXWindow
             && _legacyViewToggle.Size == new Vector2I(36, 36)
             && visibleSlots == 8
             && slotGeometry;
-        details = $"size={Size} background=F{_background.Index} expanded={expanded} right=F{_legacyExpandedBackground.Index} rightVisible={_legacyExpandedBackground.Visible} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
+        details = $"size={Size} background=F{_background.Index} expanded={expanded} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
         return ok;
     }
 
     private void ToggleLegacyView()
     {
         _legacyEquipmentView = !_legacyEquipmentView;
-        _background.Index = 200;
         _legacyViewToggle.Index = _legacyEquipmentView ? 168 : 171;
         _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
         _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
         foreach (var label in _legacyAttributeLabels)
-            label.Visible = true;
-        _legacyExpandedBackground.Visible = _legacyEquipmentView;
+            label.Visible = !_legacyEquipmentView;
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = _legacyEquipmentView;
-        Size = _legacyEquipmentView ? new Vector2I(488, 328) : new Vector2I(244, 328);
-        _legacyExpandedBackground.Location = new Vector2I(244, -44);
-        _legacyExpandedBackground.Index = 201;
-        _legacyExpandedBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 201);
-        _legacyExpandedBackground.StretchImage = false;
+        Size = _legacyEquipmentView ? new Vector2I(520, 328) : new Vector2I(244, 328);
+        Clip = true;
+        _background.Index = _legacyEquipmentView ? 201 : 200;
+        // 对齐 F200/F201 的有效像素左上角：F201 帧画布自身带约 252×93
+        // 透明边距。整体绘制后由 520×328 根窗口裁剪，左侧面板保持原点不变。
+        _background.Location = _legacyEquipmentView ? new Vector2I(-252, -92) : new Vector2I(-6, -92);
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, _background.Index);
+        _background.StretchImage = false;
         UpdateClientAreaForLegacySkin();
         QueueRedraw();
     }

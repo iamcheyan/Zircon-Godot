@@ -13,6 +13,8 @@ namespace ZirconClient.Controls;
 /// </summary>
 public partial class BeltDialog : DXWindow
 {
+    private const int LegacyEiBeltSlots = 6;
+    private static readonly Vector2I LegacyEiBeltSize = new(248, 46);
     public ClientBeltLink[] Links;
     public DXItemGrid Grid;
     private DXControl _dragHandle;
@@ -21,6 +23,7 @@ public partial class BeltDialog : DXWindow
     private Vector2 _dragStartMouse;
     private Vector2 _dragStartPosition;
     private DXImageControl _background;
+    private bool _legacyEiPotionBeltLayout;
 
     /// <summary>玩家是否拖动过腰带栏; LayoutHud 不能覆盖已自定义的位置。</summary>
     public bool UserMoved { get; private set; }
@@ -115,6 +118,46 @@ public partial class BeltDialog : DXWindow
         UpdateClientAreaForLegacySkin();
     }
 
+    /// <summary>
+    /// EI potion belt layout: native-size GameInter[51] backdrop and six visible
+    /// slots. Runtime/server link storage remains unchanged.
+    /// </summary>
+    public void ApplyLegacyEiPotionBeltLayout()
+    {
+        _legacyEiPotionBeltLayout = true;
+        DrawChrome = false;
+        DropShadow = false;
+        Size = LegacyEiBeltSize;
+        Grid.GridPadding = 1.5f;
+        _background ??= new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 51,
+            FixedSize = true,
+            StretchImage = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_background.GetParent() == null)
+        {
+            AddControl(_background);
+            MoveChild(_background, 0);
+            Controls.Remove(_background);
+            Controls.Insert(0, _background);
+        }
+
+        _background.LibraryFile = LibraryFile.GameInter;
+        _background.Index = 51;
+        _background.Location = Vector2I.Zero;
+        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 51);
+        _background.StretchImage = false;
+        Grid.BackColour = Colors.Transparent;
+        Grid.Border = false;
+        Grid.ShowCellDividers = false;
+        RefreshGridLayout();
+        GD.Print($"[LegacyBelt] frame=GameInter[51] art={_background.Size} window={Size} visibleSlots={Grid.Cells?.Length ?? 0} links={Links.Length}");
+        QueueRedraw();
+    }
+
     public override void _Ready()
     {
         base._Ready();
@@ -178,6 +221,21 @@ public partial class BeltDialog : DXWindow
     private void RefreshGridLayout()
     {
         if (Grid == null) return;
+
+        if (_legacyEiPotionBeltLayout)
+        {
+            Size = LegacyEiBeltSize;
+            if (_dragHandle != null) _dragHandle.Size = new Vector2(Size.X, 6);
+            Grid.Location = new Vector2I(3, 2);
+            bool rebuild = Grid.GridSize != new Vector2I(LegacyEiBeltSlots, 1)
+                || Grid.Cells?.Length != LegacyEiBeltSlots;
+            Grid.GridSize = new Vector2I(LegacyEiBeltSlots, 1);
+            if (!rebuild) return;
+
+            AddSlotLabels();
+            UpdateLinks();
+            return;
+        }
 
         if (_dragHandle != null) _dragHandle.Size = new Vector2(Size.X, 6);
         Grid.Location = new Vector2I(9, 6);

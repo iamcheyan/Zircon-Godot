@@ -4713,7 +4713,20 @@ public partial class GameScene : Control
         _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitDialog();
         _mainPanel.PartyButton.MouseClick += (o, e) => OpenGroupDialog();
         _mainPanel.GuildButton.MouseClick += (o, e) => OpenGuildDialog();
-        _mainPanel.ExchangeButton.MouseClick += (o, e) => _tradeDialog?.OpenTrade("交易");
+        _mainPanel.ExchangeButton.MouseClick += (o, e) =>
+        {
+            if (AutoLoginArgs.LegacyHud)
+            {
+                // EI cap0 selects a concrete player before sending 0x401.
+                // Zircon's request resolves a facing-cell player server-side;
+                // equivalent target selection remains unverified (HUD-04).
+                _net?.Connection?.Enqueue(new C.TradeRequest());
+            }
+            else
+            {
+                _tradeDialog?.OpenTrade("交易");
+            }
+        };
         _mainPanel.LogoutButton.MouseClick += (o, e) => OpenExitDialog();
 
         if (AutoLoginArgs.UiDiagnosticBorders)

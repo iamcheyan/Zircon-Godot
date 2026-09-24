@@ -82,6 +82,7 @@ public partial class LegacyHudLayoutLab : Control
         _chat = AddWindow(new CommunicationDialog(), new Vector2I(252, 80));
         _magic = AddWindow(new MagicDialog(), new Vector2I(348, 10));
         _belt = AddWindow(new BeltDialog(), new Vector2I(280, 330));
+        _belt.ApplyLegacyEiPotionBeltLayout();
         _horse = AddWindow(new HorseDialog(), new Vector2I(250, 130));
         _npc = AddWindow(new NPCDialog(), new Vector2I(120, 180));
         _trade = AddWindow(new TradeDialog(), new Vector2I(158, 110));
@@ -153,6 +154,15 @@ public partial class LegacyHudLayoutLab : Control
             };
             if (window != null) WindowManager.Open(window, _canvas);
             break;
+        }
+        bool expandedRequested = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            expandedRequested |= arg == "--legacy-character-expanded";
+        if (expandedRequested)
+        {
+            WindowManager.Open(_character, _canvas);
+            _character.ApplyLegacyEiLayout();
+            _character.SetLegacyExpandedForAudit();
         }
         bool auditRequested = false;
         foreach (string arg in OS.GetCmdlineUserArgs())

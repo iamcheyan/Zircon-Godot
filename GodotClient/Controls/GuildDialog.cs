@@ -9,7 +9,7 @@ using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
-/// <summary>原版 GuildDialog(Interface 260)：页签、成员滚动列表、仓库筛选和管理按钮。</summary>
+/// <summary>Zircon 行会窗：现代背景使用 Interface 260；EI legacy profile 使用 GameInter F600。</summary>
 public partial class GuildDialog : DXWindow
 {
     private readonly DXImageControl _background;

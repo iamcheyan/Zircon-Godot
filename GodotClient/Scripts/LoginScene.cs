@@ -30,6 +30,19 @@ public partial class LoginScene : Control
     private LegacyLoginDialog _accountDialog, _changeDialog, _requestResetDialog, _resetDialog, _activationDialog, _requestActivationDialog;
     private readonly List<Action> _unsubscribers = new();
 
+    private static LoginScene _activeInstance;
+
+    public override void _EnterTree()
+    {
+        if (_activeInstance != null && IsInstanceValid(_activeInstance))
+        {
+            GD.Print("[Login] 丢弃重复 LoginScene 实例");
+            QueueFree();
+            return;
+        }
+        _activeInstance = this;
+    }
+
     public override void _Ready()
     {
         ClientSettings.Load();
@@ -133,6 +146,7 @@ public partial class LoginScene : Control
             unsubscribe();
         _unsubscribers.Clear();
         base._ExitTree();
+        if (ReferenceEquals(_activeInstance, this)) _activeInstance = null;
     }
 
     private void AddAccountButton(VBoxContainer parent, string text, Action action)

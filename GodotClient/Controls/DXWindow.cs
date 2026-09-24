@@ -370,7 +370,7 @@ public abstract partial class DXWindow : DXControl
         base._GuiInput(e);
     }
 
-    /// <summary>把窗口挂到场景并显示 (旧客户端由 ActiveScene 管理, Godot 里显式挂载)</summary>
+    /// <summary>窗口首次显示时递归刷新子控件，确保延迟加载的 WIL 纹理不留空白帧。</summary>
     public void ShowWindow(Node parent)
     {
         if (GetParent() == null)
@@ -379,7 +379,23 @@ public abstract partial class DXWindow : DXControl
         }
         Visible = true;
         BringToFront();
-        QueueRedraw();
+        QueueRedrawTree(this);
+        CallDeferred(nameof(QueueVisibleDescendantsRedraw));
+    }
+
+    private void QueueVisibleDescendantsRedraw()
+    {
+        QueueRedrawTree(this);
+    }
+
+    private static void QueueRedrawTree(Node node)
+    {
+        foreach (Node child in node.GetChildren())
+        {
+            if (child is CanvasItem item)
+                item.QueueRedraw();
+            QueueRedrawTree(child);
+        }
     }
 
     public virtual void Close()

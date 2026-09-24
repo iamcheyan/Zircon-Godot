@@ -43,6 +43,19 @@ public partial class SelectScene : Control
     private readonly List<DXButton> _createGenderButtons = new();
     private readonly List<Action> _unsubscribers = new();
 
+    private static SelectScene _activeInstance;
+
+    public override void _EnterTree()
+    {
+        if (_activeInstance != null && IsInstanceValid(_activeInstance))
+        {
+            GD.Print("[Select] 丢弃重复 SelectScene 实例");
+            QueueFree();
+            return;
+        }
+        _activeInstance = this;
+    }
+
     public override void _Ready()
     {
         ClientSettings.Load();
@@ -137,6 +150,7 @@ public partial class SelectScene : Control
             unsubscribe();
         _unsubscribers.Clear();
         base._ExitTree();
+        if (ReferenceEquals(_activeInstance, this)) _activeInstance = null;
     }
 
     public override void _Process(double delta)

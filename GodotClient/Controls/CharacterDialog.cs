@@ -40,6 +40,11 @@ public partial class CharacterDialog : DXWindow
     private readonly List<(DXLabel Label, Stat Stat)> _attributeValues = new();
     private readonly List<DXLabel> _legacyAttributeLabels = new();
     private readonly List<(DXLabel Label, Stat? Stat, Stat? MaxStat)> _legacyExpandedLabels = new();
+    private static readonly string[] LegacyFirstAttributeNames =
+    {
+        "LEVEL", "HP", "MP", "经验", "包袱负重", "装备负重", "腕力",
+        "准确", "敏捷", "毒物躲避", "中毒恢复", "生命恢复", "魔法恢复",
+    };
     private bool _legacyEiLayout;
     private DXLabel _disciplineLabel;
     private DXButton _disciplineButton;
@@ -316,6 +321,8 @@ public partial class CharacterDialog : DXWindow
         _background.Location = new Vector2I(-6, -92);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
+        foreach (var label in _legacyAttributeLabels)
+            label.Visible = false;
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = false;
 
@@ -377,18 +384,17 @@ public partial class CharacterDialog : DXWindow
     private void BuildLegacyAttributeLabels()
     {
         if (_legacyAttributeLabels.Count > 0) return;
-        string[] names = { "等级", "HP", "MP", "攻击", "魔法", "防御", "魔御" };
-        for (int i = 0; i < names.Length; i++)
+        for (int i = 0; i < LegacyFirstAttributeNames.Length; i++)
         {
             var label = new DXLabel
             {
-                Text = names[i],
                 FontSize = 8,
                 TextColour = new Color(0.98f, 0.88f, 0.78f),
                 AutoSize = false,
-                Size = new Vector2I(78, 18),
-                Location = new Vector2I(160, 20 + i * 22),
+                Size = new Vector2I(128, 15),
+                Location = new Vector2I(0xFF, 0x43 + i * 15),
                 IsControl = false,
+                Visible = false,
             };
             AddControl(label);
             _legacyAttributeLabels.Add(label);
@@ -398,26 +404,36 @@ public partial class CharacterDialog : DXWindow
     private void RefreshLegacyAttributeLabels()
     {
         if (_legacyAttributeLabels.Count == 0) return;
-        var stats = GameScene.Game?.PlayerStats;
+        var game = GameScene.Game;
+        var stats = game?.PlayerStats;
         int value(Stat stat) => stats == null ? 0 : stats[stat];
+        string experience = game == null || game.PlayerMaxExperience <= 0
+            ? "0.00%"
+            : $"{game.PlayerExperience / game.PlayerMaxExperience * 100m:0.00}%";
         string[] values =
         {
-            (GameScene.Game?.PlayerLevel ?? 0).ToString(),
-            value(Stat.Health).ToString(),
-            value(Stat.Mana).ToString(),
-            $"{value(Stat.MinDC)}-{value(Stat.MaxDC)}",
-            $"{value(Stat.MinMC)}-{value(Stat.MaxMC)}",
-            $"{value(Stat.MinAC)}-{value(Stat.MaxAC)}",
-            $"{value(Stat.MinMR)}-{value(Stat.MaxMR)}",
+            (game?.PlayerLevel ?? 0).ToString(),
+            $"{game?.CurrentHealth ?? 0}/{value(Stat.Health)}",
+            $"{game?.CurrentMana ?? 0}/{value(Stat.Mana)}",
+            experience,
+            $"{game?.BagWeight ?? 0}/{value(Stat.BagWeight)}",
+            $"{game?.WearWeight ?? 0}/{value(Stat.WearWeight)}",
+            value(Stat.HandWeight).ToString(),
+            value(Stat.Accuracy).ToString(),
+            value(Stat.Agility).ToString(),
+            value(Stat.PoisonResistance).ToString(),
+            "—",
+            value(Stat.Healing).ToString(),
+            value(Stat.HealingCap).ToString(),
         };
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
-            _legacyAttributeLabels[i].Text = $"{_legacyAttributeLabels[i].Text.Split(' ')[0]} {values[i]}";
+            _legacyAttributeLabels[i].Text = $"{LegacyFirstAttributeNames[i]} {values[i]}";
 
         foreach (var entry in _legacyExpandedLabels)
         {
             string displayValue;
             if (entry.Stat == null)
-                displayValue = (GameScene.Game?.PlayerLevel ?? 0).ToString();
+                displayValue = (game?.PlayerLevel ?? 0).ToString();
             else
             {
                 int min = stats?[entry.Stat.Value] ?? 0;
@@ -431,22 +447,19 @@ public partial class CharacterDialog : DXWindow
     {
         if (_legacyExpandedLabels.Count > 0) return;
 
-        // 右侧面板使用原版 F201 状态页；文字只使用当前服务端
-        // PlayerStats，避免把现代属性页坐标或缩放参数带进 EI 窗口。
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
-            ("等级", null, null),
-            ("HP", Stat.Health, null),
-            ("MP", Stat.Mana, null),
+            ("防御", Stat.MinAC, Stat.MaxAC),
             ("攻击", Stat.MinDC, Stat.MaxDC),
             ("魔法", Stat.MinMC, Stat.MaxMC),
-            ("道术", Stat.MinSC, Stat.MaxSC),
-            ("防御", Stat.MinAC, Stat.MaxAC),
-            ("魔御", Stat.MinMR, Stat.MaxMR),
-            ("准确", Stat.Accuracy, null),
-            ("敏捷", Stat.Agility, null),
-            ("幸运", Stat.Luck, null),
-            ("攻速", Stat.AttackSpeed, null),
+            ("火(火焰)", Stat.FireAttack, null),
+            ("冰(冰冻)", Stat.IceAttack, null),
+            ("电(雷电)", Stat.LightningAttack, null),
+            ("风(狂风)", Stat.WindAttack, null),
+            ("治疗(神圣)", Stat.HolyAttack, null),
+            ("攻击(黑暗)", Stat.DarkAttack, null),
+            ("召唤(幻影)", Stat.PhantomAttack, null),
+            ("魔法防御力", Stat.MinMR, Stat.MaxMR),
         };
         for (int i = 0; i < rows.Length; i++)
         {
@@ -456,8 +469,8 @@ public partial class CharacterDialog : DXWindow
                 FontSize = 8,
                 TextColour = new Color(0.98f, 0.88f, 0.78f),
                 AutoSize = false,
-                Size = new Vector2I(198, 18),
-                Location = new Vector2I(244 + 22, 18 + i * 22),
+                Size = new Vector2I(137, 15),
+                Location = new Vector2I(0x17F, 0x1E + i * 15),
                 IsControl = false,
                 Visible = false,
                 Text = row.Name,
@@ -479,7 +492,7 @@ public partial class CharacterDialog : DXWindow
             && Location == originalLocation
             && _background.Location == new Vector2I(-252, -92)
             && _legacyViewToggle.Index == 168
-            && _legacyAttributeLabels.All(label => !label.Visible)
+            && _legacyAttributeLabels.All(label => label.Visible)
             && _legacyExpandedLabels.All(entry => entry.Label.Visible);
         ToggleLegacyView();
         bool restored = _background.Index == 200
@@ -521,7 +534,7 @@ public partial class CharacterDialog : DXWindow
         _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
         _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
         foreach (var label in _legacyAttributeLabels)
-            label.Visible = !_legacyEquipmentView;
+            label.Visible = _legacyEquipmentView;
         foreach (var entry in _legacyExpandedLabels)
             entry.Label.Visible = _legacyEquipmentView;
         Size = _legacyEquipmentView ? new Vector2I(520, 328) : new Vector2I(244, 328);

@@ -33,6 +33,8 @@ public partial class InventoryDialog : DXWindow
     private DXButton _legacyActionButton;
     private DXLabel _legacyModeLabel;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
+    private DXImageControl _legacyScrollTrack;
+    private DXVScrollBar _legacyScrollBar;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
     private bool _legacyEiLayout;
 
@@ -220,12 +222,49 @@ public partial class InventoryDialog : DXWindow
         _background.Location = new Vector2I(-114, -94);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 250);
         _background.StretchImage = false;
-
-        // 当前迁移使用六列×六行的可视/命中视口；旧版物品记录与可视格
-        // 并非一一对应，真正的滚动占位网格仍需按反编译布局重建。
-        Grid.GridPadding = .5f;
+        // EI F280 is a complete 16×424 vertical gauge. The six visible
+        // rows are a viewport; the record array is configured after the
+        // server inventory is injected, so scrolling is not hard-coded to
+        // the current item count.
+        Grid.GridPadding = 0;
         Grid.GridSize = new Vector2I(6, 6);
+        Grid.VisibleHeight = 6;
         Grid.Location = new Vector2I(25, 41);
+        Grid.Clip = true;
+
+        _legacyScrollTrack ??= new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 280,
+            FixedSize = true,
+            StretchImage = false,
+            Size = new Vector2I(16, 424),
+            Location = new Vector2I(248, -165),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_legacyScrollTrack.GetParent() == null) AddControl(_legacyScrollTrack);
+
+        _legacyScrollBar ??= new DXVScrollBar
+        {
+            Size = new Vector2I(16, 424),
+            Location = new Vector2I(248, -165),
+            Border = false,
+            BackColour = Colors.Transparent,
+            Change = 1,
+        };
+        if (_legacyScrollBar.GetParent() == null) AddControl(_legacyScrollBar);
+        _legacyScrollBar.UpButton.DrawImage = false;
+        _legacyScrollBar.DownButton.DrawImage = false;
+        _legacyScrollBar.PositionBar.DrawImage = false;
+        _legacyScrollBar.UpButton.FixedSize = true;
+        _legacyScrollBar.DownButton.FixedSize = true;
+        _legacyScrollBar.PositionBar.FixedSize = true;
+        _legacyScrollBar.UpButton.Size = new Vector2I(16, 16);
+        _legacyScrollBar.DownButton.Size = new Vector2I(16, 16);
+        _legacyScrollBar.PositionBar.Size = new Vector2I(16, 34);
+        _legacyScrollBar.MouseWheel += _legacyScrollBar.DoMouseWheel;
+        _legacyScrollBar.ValueChanged -= LegacyScrollChanged;
+        _legacyScrollBar.ValueChanged += LegacyScrollChanged;
 
         _titleLabel.Visible = false;
         _legacyModeLabel ??= new DXLabel
@@ -267,8 +306,11 @@ public partial class InventoryDialog : DXWindow
         CloseButton.Location = new Vector2I(249, 288);
         CloseButton.Size = new Vector2I(28, 26);
 
-        // EI 的 F280 仪表值在此版本始终为零；不绘制当前 F360 横向填充。
-        // 负重文案只在包袱模式出现，根相对绘制区为 (0x86,0x18)-(0xF0,0x26)。
+        // EI 负重/记录区使用 F280 垂直 gauge；旧版包袱模式的文本仍
+        // 单独绘制在根相对 (0x86,0x18)-(0xF0,0x26)。
+        // 现代 F360 横向填充不能冒充该资源，因此保持隐藏。
+
+
         WeightBar.Visible = false;
         WeightLabel.Location = new Vector2I(0x86, 0x18);
         WeightLabel.Size = new Vector2I(0xF0 - 0x86, 0x26 - 0x18);
@@ -292,6 +334,33 @@ public partial class InventoryDialog : DXWindow
         TrashButton.Visible = false;
         SellButton.Visible = false;
         UpdateClientAreaForLegacySkin();
+    }
+    /// <summary>
+    /// 将服务器记录数组映射为六列、六行可视窗口，并把行滚动状态
+    /// 写回 F280 控件。记录索引仍是 ItemGrid 的槽位；跨格占位表尚
+    /// 未在协议模型中提供，因此此处不伪造 footprint。
+    /// </summary>
+    public void ConfigureLegacyInventoryGrid()
+    {
+        if (!_legacyEiLayout || Grid == null) return;
+
+        int itemCount = Grid.ItemGrid?.Length ?? 0;
+        int rows = Math.Max(6, (itemCount + 5) / 6);
+        Grid.GridSize = new Vector2I(6, rows);
+        Grid.VisibleHeight = 6;
+        Grid.ScrollValue = Math.Min(Grid.ScrollValue, Math.Max(0, rows - 6));
+
+        if (_legacyScrollBar == null) return;
+        _legacyScrollBar.MinValue = 0;
+        _legacyScrollBar.VisibleSize = 6;
+        _legacyScrollBar.MaxValue = rows;
+        _legacyScrollBar.Value = Grid.ScrollValue;
+    }
+
+    private void LegacyScrollChanged(object sender, EventArgs e)
+    {
+        if (Grid == null || _legacyScrollBar == null) return;
+        Grid.ScrollValue = _legacyScrollBar.Value;
     }
 
     private void TrashItem()

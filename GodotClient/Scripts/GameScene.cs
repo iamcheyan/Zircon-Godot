@@ -133,6 +133,11 @@ public partial class GameScene : Control
     public int PlayerLevel => _playerLevel;
     private decimal _playerExperience, _playerMaxExperience;
     private int _currentHP, _currentMP, _currentFP;
+    public int CurrentHealth => _currentHP;
+    public int CurrentMana => _currentMP;
+    public decimal PlayerExperience => _playerExperience;
+    public decimal PlayerMaxExperience => _playerMaxExperience;
+
     private AttackMode _attackMode;
     private MagicType _attackMagic;
     private PetMode _petMode;
@@ -394,8 +399,8 @@ public partial class GameScene : Control
     {
         ClientSettings.HideChatBar = hidden;
         ClientSettings.Save();
-        if (_chatLog != null) _chatLog.Visible = !hidden;
-        if (_chatTextBox != null) _chatTextBox.Visible = !hidden;
+        if (_chatLog != null) _chatLog.Visible = AutoLoginArgs.LegacyUi || !hidden;
+        if (_chatTextBox != null) _chatTextBox.Visible = !hidden && !AutoLoginArgs.LegacyUi;
     }
 
     public void OpenChatOptionsDialog()
@@ -4470,7 +4475,7 @@ public partial class GameScene : Control
 
         _chatLog = new ChatLogPanel();
         _uiLayer.AddChild(_chatLog);
-        _chatLog.Visible = !ClientSettings.HideChatBar;
+        _chatLog.Visible = AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar;
         _chatTextBox = new ChatTextBox();
         _uiLayer.AddChild(_chatTextBox);
         _chatTextBox.Visible = !ClientSettings.HideChatBar && !AutoLoginArgs.LegacyUi;
@@ -4628,6 +4633,8 @@ public partial class GameScene : Control
 
         // 数组注入: 先设 ItemGrid 再 CreateGrid (格子建立时快照 ItemGrid)
         _inventoryDialog.Grid.ItemGrid = Inventory;
+        if (AutoLoginArgs.LegacyUi)
+            _inventoryDialog.ConfigureLegacyInventoryGrid();
         _inventoryDialog.Grid.CreateGrid();
         InventoryCells = _inventoryDialog.Grid.Cells;
 
@@ -4691,11 +4698,15 @@ public partial class GameScene : Control
         };
         _mainPanel.MailButton.MouseClick += (o, e) =>
         {
-            // EI cap9 is window id8 (chat log), not the modern client’s
-            // friends/mail/block communication dialog.
-            if (AutoLoginArgs.LegacyHud)
+            // EI cap9 opens id8/F350. The bottom chat log remains a HUD
+            // display; this button must not toggle its visibility or route
+            // into the modern friends/mail communication window.
+            if (AutoLoginArgs.LegacyUi)
             {
-                if (_chatLog != null) _chatLog.Visible = !_chatLog.Visible;
+                if (_legacyChatDialog?.Visible == true)
+                    _legacyChatDialog.CloseChat();
+                else
+                    _legacyChatDialog?.OpenChat(_uiLayer);
             }
             else
                 OpenCommunicationDialog();

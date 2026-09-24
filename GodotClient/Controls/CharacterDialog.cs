@@ -344,28 +344,30 @@ public partial class CharacterDialog : DXWindow
         BuildLegacyAttributeLabels();
         BuildLegacyExpandedPanel();
 
-        // 只有逆向编辑器已经确认的格子才显示；其余新版扩展槽绝不猜坐标。
-        var confirmed = new Dictionary<EquipmentSlot, Vector2I>
+        // 只有逆向证据已经确认的格子才显示；位置/尺寸直接采用
+        // equipment-slots-evidence.json 的窗口相对 RECT，而不是艺术标签推测。
+        var confirmed = new Dictionary<EquipmentSlot, (Vector2I Position, Vector2I Size)>
         {
-            // 旧版视觉标签不能直接当作 enum 顺序：primary-static
-            // 证据确认 Helmet(2) 在左下，Torch(3) 在顶部。
-            [EquipmentSlot.Helmet] = new(27, 264),
-            [EquipmentSlot.Torch] = new(177, 70),
-            [EquipmentSlot.BraceletL] = new(27, 186),
-            [EquipmentSlot.BraceletR] = new(175, 186),
-            [EquipmentSlot.RingL] = new(27, 227),
-            [EquipmentSlot.RingR] = new(175, 227),
-            [EquipmentSlot.Shoes] = new(64, 264),
-            [EquipmentSlot.Poison] = new(103, 264),
+            [EquipmentSlot.Weapon] = (new(86, 114), new(60, 90)),
+            [EquipmentSlot.Armour] = (new(38, 70), new(53, 84)),
+            [EquipmentSlot.Helmet] = (new(27, 264), new(38, 38)),
+            [EquipmentSlot.Torch] = (new(177, 70), new(38, 38)),
+            [EquipmentSlot.Necklace] = (new(94, 71), new(49, 33)),
+            [EquipmentSlot.BraceletL] = (new(27, 186), new(38, 38)),
+            [EquipmentSlot.BraceletR] = (new(175, 186), new(38, 38)),
+            [EquipmentSlot.RingL] = (new(27, 227), new(38, 38)),
+            [EquipmentSlot.RingR] = (new(175, 227), new(38, 38)),
+            [EquipmentSlot.Shoes] = (new(64, 264), new(38, 38)),
+            [EquipmentSlot.Poison] = (new(103, 264), new(38, 38)),
         };
         foreach (var cell in Grid)
         {
             if (cell == null) continue;
             var slot = (EquipmentSlot)cell.Slot;
-            cell.Visible = confirmed.TryGetValue(slot, out Vector2I position);
+            cell.Visible = confirmed.TryGetValue(slot, out var geometry);
             if (!cell.Visible) continue;
-            cell.Location = position;
-            cell.Size = new Vector2I(38, 38);
+            cell.Location = geometry.Position;
+            cell.Size = geometry.Size;
             cell.Hidden = false;
         }
 
@@ -500,28 +502,31 @@ public partial class CharacterDialog : DXWindow
             && Location == originalLocation
             && _background.Location == new Vector2I(-6, -92)
             && _legacyViewToggle.Index == 171;
-        var expectedSlots = new Dictionary<EquipmentSlot, Vector2I>
+        var expectedSlots = new Dictionary<EquipmentSlot, (Vector2I Position, Vector2I Size)>
         {
-            [EquipmentSlot.Helmet] = new(27, 264),
-            [EquipmentSlot.Torch] = new(177, 70),
-            [EquipmentSlot.BraceletL] = new(27, 186),
-            [EquipmentSlot.BraceletR] = new(175, 186),
-            [EquipmentSlot.RingL] = new(27, 227),
-            [EquipmentSlot.RingR] = new(175, 227),
-            [EquipmentSlot.Shoes] = new(64, 264),
-            [EquipmentSlot.Poison] = new(103, 264),
+            [EquipmentSlot.Weapon] = (new(86, 114), new(60, 90)),
+            [EquipmentSlot.Armour] = (new(38, 70), new(53, 84)),
+            [EquipmentSlot.Helmet] = (new(27, 264), new(38, 38)),
+            [EquipmentSlot.Torch] = (new(177, 70), new(38, 38)),
+            [EquipmentSlot.Necklace] = (new(94, 71), new(49, 33)),
+            [EquipmentSlot.BraceletL] = (new(27, 186), new(38, 38)),
+            [EquipmentSlot.BraceletR] = (new(175, 186), new(38, 38)),
+            [EquipmentSlot.RingL] = (new(27, 227), new(38, 38)),
+            [EquipmentSlot.RingR] = (new(175, 227), new(38, 38)),
+            [EquipmentSlot.Shoes] = (new(64, 264), new(38, 38)),
+            [EquipmentSlot.Poison] = (new(103, 264), new(38, 38)),
         };
         bool slotGeometry = expectedSlots.All(pair => Grid.Any(cell => cell != null
             && (EquipmentSlot)cell.Slot == pair.Key
             && cell.Visible
-            && cell.Location == pair.Value
-            && cell.Size == new Vector2I(38, 38)));
+            && cell.Location == pair.Value.Position
+            && cell.Size == pair.Value.Size));
         bool ok = initial && expanded && restored
             && Size == new Vector2I(244, 328)
             && _background.Index == 200
             && _legacyViewToggle.Location == new Vector2I(176, 264)
             && _legacyViewToggle.Size == new Vector2I(36, 36)
-            && visibleSlots == 8
+            && visibleSlots == expectedSlots.Count
             && slotGeometry;
         details = $"size={Size} background=F{_background.Index} expanded={expanded} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
         return ok;

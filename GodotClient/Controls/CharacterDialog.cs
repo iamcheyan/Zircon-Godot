@@ -433,15 +433,17 @@ public partial class CharacterDialog : DXWindow
 
         foreach (var entry in _legacyExpandedLabels)
         {
-            string displayValue;
+            string rowName = entry.Label.Text.Split(' ')[0];
             if (entry.Stat == null)
-                displayValue = "—"; // 原版字段与当前 Stat 语义未闭合。
-            else
             {
-                int min = stats?[entry.Stat.Value] ?? 0;
-                displayValue = entry.MaxStat == null ? min.ToString() : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
+                // EI draws 魔法/魔法防御力 as label-only rows in this paint region.
+                entry.Label.Text = rowName;
+                continue;
             }
-            entry.Label.Text = $"{entry.Label.Text.Split(' ')[0]} {displayValue}";
+
+            int min = stats?[entry.Stat.Value] ?? 0;
+            string displayValue = entry.MaxStat == null ? min.ToString() : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
+            entry.Label.Text = $"{rowName} {displayValue}";
         }
     }
 
@@ -549,8 +551,8 @@ public partial class CharacterDialog : DXWindow
         // 透明边距。整体绘制后由 520×328 根窗口裁剪，左侧面板保持原点不变。
         _background.Location = _legacyEquipmentView ? new Vector2I(-252, -92) : new Vector2I(-6, -92);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, _background.Index);
-        _background.StretchImage = false;
         UpdateClientAreaForLegacySkin();
+        RefreshLegacyAttributeLabels();
         QueueRedraw();
     }
 

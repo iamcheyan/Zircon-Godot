@@ -538,7 +538,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 1. 按“原版界面目录与导航关系”表复核目标 EI 的节点、文字、控件、点击/键盘边和服务器驱动转场；逐项对照既有研究文档，发现矛盾就标出来源、裁决或保留未决。
 2. 对当前 Zircon 控件树、真实资源加载路径和输入/协议源码做同一节点交叉映射；记录已匹配/不匹配/证据不足，不用自身自审计常量充当原版预期。
 3. 原版证据足以定案后，关联审计编号直接修复该项；先确认其资源/坐标/行为目标，再用独立数据核几何和素材，不把彼此共用同一错误假设的工具视作交叉验证。
-4. 每项修复运行仓库根目录 `bash login_game.sh legacy`，在规定窗口、输入顺序、分辨率及数据状态下做实际鼠标/键盘/业务验证并截图。截图记录状态/步骤；无法观察或窗口未聚焦时明确记为未验证，不以进程存活替代实际UI。
+4. 每项修复在条件安全且可观测时，运行仓库根目录 `bash login_game.sh legacy`，按规定窗口、输入顺序、分辨率及数据状态做实际鼠标/键盘/业务验证并截图。已识别会触发 Bad Request、需要第二名玩家，或输入采集不稳定的路径不得重复盲测；登记到阻塞清单后继续其它静态/视觉审计，直到可隔离复现条件具备再安排一次验证。截图记录状态/步骤；无法观察或窗口未聚焦时明确记为未验证，不以进程存活替代实际UI，也不把受阻项标为通过。
 5. 一项只有画面、控件、操作、流转和数据结果都达到“最终验收标准”才标为通过；每项保留残余风险。全部范围逐项核验后再复核矩阵并整理按风险/依赖排序的最终计划/完成记录。
 
 ## 工作区保护与当前限制
@@ -773,3 +773,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 **2026-09-24 CHAR-02 原版 reframe / Godot 控件静态补核：**重新核对目标审计工件 `status-window-render-evidence.json`、WIL frame header与 `CharacterDialog.ApplyLegacyEiLayout()/ToggleLegacyView()`。原版 close child F161/162 RECT `(212,298,28,26)` 与当前Godot关闭按钮 RECT 一致；但原版 `0x423E80` 在状态页切换时重建窗口rect，且 `[this+0x20]>0x320` 分支会将F201再以 `x+0x118` reframe一次。当前切换代码只更改同一窗口宽度、背景索引/offset和裁剪，没有该条件分支。该条件字段含义和触发上下文尚未由 `0x423E80` 输入调用链闭合，故归类“静态差异已见、实际触发/应有视觉效果待核”，未凭经验改坐标。按下/释放抖动、目标 EXE 对应资源版本和该分支的屏幕表现均列入 CHAR-02 阻塞项。本轮跳过坐骑 S/Ctrl+S、交易或其它可能触发Bad Request的运行期输入；未运行客户端、构建或测试。搜索中曾把 `Library/` 当作仓库路径、实际仓库对应 `LibraryCore/`，以及对全研究 docs 的 `0x423E80` 搜索范围过宽造成输出截断；随后限定到两个具体 JSON、纠正路径并完成核对。`git diff --check`通过。
 
 **2026-09-24 技能书分类与顶部控件静态几何续审：**对照 `skill-window-context.json`、`skill-window-render-loop-evidence.json` 与 `MagicDialog.BuildLegacySchoolButtons()/ApplyLegacyEiLayout()`。确认八个分类按钮当前根相对位置及 F450/452/454/456/458/460/462/464帧号与研究几何逐项吻合；但该几何吻合不闭合本机资源版本身份或 `MagicSchool`→EI分类状态/技能列表映射。另确认原版独立 F440/441、F410/411、F412/413 三个顶部子控件的静态RECT为 `(399,340)`、`(61,303)`、`(366,303)`，当前 legacy 布局没有创建它们并隐藏现代左右分页按钮；控件动作仍未从父窗事件分派链闭合。一次尝试读取 `research/ei-ui-layout/skill-window-input-evidence.json` 的路径不存在；`rg --files` 找到可用输入证据实际位于 `research/mir3-map-reconstruction/skill-window-input-evidence.json`，后续判断仅采用正确位置的通用输入证据及技能书专用 render-loop工件，未把错误路径当作缺失证据结论。未运行客户端、构建、输入或业务测试；`git diff --check`通过。
+
+**2026-09-24 MAP-01..03 源码路径复核与安全验收步骤修订：**按当前 `GameScene.LayoutHud()/HandleKeyBind()`、`MainPanel.MiniMapButton` 回调和 `MiniMapDialog` 构造/`SetMap()` 对照 `minimap.json`、`minimap-subsystem-verification-evidence.json`、`hud-caption-action-tail-evidence.json` 与 `hotkey-label-handler-consistency.json`。确认审计中“原版嵌入主世界对象、固定目标矩形(672,0)-(800,128)、T缩放surface、V/HUD入口共用开关字段但冷却门不同；当前为独立200/300窗、另有透明度/大图按钮、本地 `MapInfo.MiniMap`/`MiniMap.Zl`绘制”的身份与路由描述仍与当前源码相符，未发现应改写的新证据。一次以未转义的 `+0x6210` 写法运行 `rg` 造成正则“repetition operator missing expression”错误；改为 `rg -F` 固定字符串后完成只读检查。另将执行步骤4明确为：风险输入先列入阻塞并跳过，不盲测；仅安全、可观测的修复项安排实际UI验证，阻塞项不得标通过。未触发地图/业务输入，未运行客户端或测试；`git diff --check`通过。

@@ -117,6 +117,7 @@ public partial class GameScene : Control
     // 进图过渡遮罩
     private CanvasLayer _coverLayer;
     private ColorRect _startupCoverRect;
+    private bool _legacyRequestedWindowOpened;
 
     // M12: HUD + 键位
     private MainPanel _mainPanel;
@@ -4652,7 +4653,7 @@ public partial class GameScene : Control
 
         if (AutoLoginArgs.LegacyUi)
             ApplyLegacyCoreTestLayouts();
-        OpenLegacyRequestedWindow();
+        CallDeferred(nameof(OpenLegacyRequestedWindow));
 
         // M9: 主面板功能按钮 -> 对话框开关
         _mainPanel.CharacterButton.MouseClick += (o, e) =>
@@ -4800,7 +4801,12 @@ public partial class GameScene : Control
     /// <summary>真实登录场景的旧版窗口直达入口，便于逐窗截图和人工验收。</summary>
     private void OpenLegacyRequestedWindow()
     {
-        if (!AutoLoginArgs.LegacyUi) return;
+        if (_legacyRequestedWindowOpened) return;
+        if (_startupCoverRect != null && IsInstanceValid(_startupCoverRect))
+        {
+            GetTree().CreateTimer(0.5).Timeout += OpenLegacyRequestedWindow;
+            return;
+        }
         string name = OS.GetCmdlineUserArgs()
             .FirstOrDefault(arg => arg.StartsWith("--legacy-open=", StringComparison.OrdinalIgnoreCase))?
             ["--legacy-open=".Length..].ToLowerInvariant();
@@ -4832,7 +4838,10 @@ public partial class GameScene : Control
             _characterDialog.SetLegacyExpandedForAudit();
         if (window == _legacyChatDialog)
         {
+            if (_legacyChatDialog.Visible)
+                _legacyChatDialog.CloseChat();
             _legacyChatDialog.OpenChat(_uiLayer);
+            _legacyRequestedWindowOpened = true;
             GD.Print($"[LegacyOpen] requested={name} type={window.GetType().Name} visible={window.Visible} size={window.Size} location={window.Location} inputFocus={_legacyChatDialog.InputHasFocus}");
             return;
         }
@@ -4840,6 +4849,7 @@ public partial class GameScene : Control
         {
             WindowManager.Open(window, _uiLayer);
             GD.Print($"[LegacyOpen] requested={name} type={window.GetType().Name} visible={window.Visible} size={window.Size} location={window.Location}");
+            _legacyRequestedWindowOpened = true;
         }
         else
         {
@@ -10508,10 +10518,8 @@ public partial class GameScene : Control
     public override void _Input(InputEvent @event)
     {
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
-        if (_net?.Connection?.Connected != true) return;
-
-        // EI 的聊天弹窗使用 R 显隐；必须先于焦点保护分支，
-        // 否则关闭窗口后 LineEdit 仍是 Viewport focus owner 时 R 会被吞掉。
+        // EI 的聊天弹窗使用 R 显隐；必须先于连接/焦点保护分支，
+        // 否则连接状态短暂变化或关闭窗口后 LineEdit 仍是焦点 owner 时 R 会被吞掉。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.R
             && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
         {
@@ -10522,6 +10530,9 @@ public partial class GameScene : Control
             GetViewport()?.SetInputAsHandled();
             return;
         }
+
+        if (_net?.Connection?.Connected != true) return;
+
 
         // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
         // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车

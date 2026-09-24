@@ -29,6 +29,7 @@ public partial class LoginScene : Control
     private ConfigDialog _loginConfig;
     private LegacyLoginDialog _accountDialog, _changeDialog, _requestResetDialog, _resetDialog, _activationDialog, _requestActivationDialog;
     private readonly List<Action> _unsubscribers = new();
+    private bool _selectTransitionStarted;
 
     private static LoginScene _activeInstance;
 
@@ -190,8 +191,10 @@ public partial class LoginScene : Control
     private string _pendingLoginMessage;
     private void ShowLoginResult()
     {
+        if (_selectTransitionStarted) return;
         if (_pendingLoginResult == LoginResult.Success)
         {
+            _selectTransitionStarted = true;
             SoundPlayback.Stop(SoundIndex.LoginScene);
             SetStatus(string.Format(Lang.LoginCharacterLabel, _pendingCharacters.Count));
             GD.Print($"[Login] 登录成功, 角色数 {_pendingCharacters.Count}");

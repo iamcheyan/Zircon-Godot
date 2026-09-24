@@ -177,6 +177,7 @@ public partial class SelectScene : Control
     }
 
     private int _autoCharIndex = -1;
+    private bool _gameTransitionStarted;
     private int _lastStartIndex = -1;
 
     private void AutoCreateCharacter()
@@ -694,8 +695,10 @@ public partial class SelectScene : Control
     }
     private void ShowStartGameResult()
     {
+        if (_gameTransitionStarted) return;
         if (_pendingStartResult == StartGameResult.Success)
         {
+            _gameTransitionStarted = true;
             SoundPlayback.Stop(SoundIndex.SelectScene);
             GD.Print($"[Select] *** StartGame 成功! 进入游戏 ***");
             var gameScene = ResourceLoader.Load<PackedScene>("res://Scenes/GameScene.tscn");

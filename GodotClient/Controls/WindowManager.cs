@@ -19,7 +19,6 @@ public static class WindowManager
     public static void Open(DXWindow w, Node parent)
     {
         if (w == null || parent == null) return;
-        if (w.Visible) return;
         if (!OpenWindows.Contains(w)) OpenWindows.Add(w);
         w.ShowWindow(parent);
         RefreshZOrder();

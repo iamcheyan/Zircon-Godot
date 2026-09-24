@@ -105,7 +105,6 @@ public sealed partial class LegacyChatDialog : DXWindow
         AddControl(_close);
         Visible = false;
     }
-
     public override void _Process(double delta)
     {
         if (_draggingRail) UpdateRailScroll();
@@ -126,22 +125,29 @@ public sealed partial class LegacyChatDialog : DXWindow
         WindowManager.Open(this, parent);
         _input.GrabFocus();
         _input.CaretColumn = _input.Text.Length;
+        CallDeferred(nameof(RefreshVisuals));
     }
 
+    private void RefreshVisuals()
+    {
+        if (!Visible) return;
+        QueueRedraw();
+        foreach (Node child in GetChildren())
+            if (child is CanvasItem item)
+                item.QueueRedraw();
+    }
     public bool InputHasFocus => _input.HasFocus;
 
     public void CloseChat()
     {
         _input.ReleaseFocus();
-        GetViewport()?.GuiReleaseFocus();
         WindowManager.Close(this);
     }
 
     public override void Close()
     {
         _input.ReleaseFocus();
-        GetViewport()?.GuiReleaseFocus();
-        base.Close();
+        Visible = false;
     }
 
     public bool HandleGlobalKey(InputEventKey key, Node parent)
@@ -182,6 +188,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         _input.CaretColumn = _input.Text.Length;
         _input.GrabFocus();
     }
+
 
     public void StartPrivateMessage(string name, Node parent)
     {

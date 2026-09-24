@@ -23,6 +23,12 @@ public static class DatabaseLoader
             string projectDir = ProjectSettings.GlobalizePath("res://");
             string root = Path.GetFullPath(Path.Combine(projectDir, "..", "Debug", "Client", "Data"))
                 + Path.DirectorySeparatorChar;
+            string clientRoot = System.Environment.GetEnvironmentVariable("MIR3_EI_ROOT");
+            if (string.IsNullOrWhiteSpace(clientRoot))
+                clientRoot = "/home/tetsuya/mir2ei";
+            string localRoot = Path.Combine(clientRoot, "Data");
+            if (File.Exists(Path.Combine(localRoot, "System.db")))
+                root = localRoot + Path.DirectorySeparatorChar;
             if (!File.Exists(Path.Combine(root, "System.db")) && Directory.Exists("/home/tetsuya/mir3ei/Data"))
             {
                 root = "/home/tetsuya/mir3ei/Data" + Path.DirectorySeparatorChar;

@@ -27,7 +27,15 @@ public static class MirSkin
     private static string ResolveDataPath()
     {
         string overridePath = System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
-        if (!string.IsNullOrWhiteSpace(overridePath) && Directory.Exists(overridePath))
+        if (string.IsNullOrWhiteSpace(overridePath))
+        {
+            string clientRoot = System.Environment.GetEnvironmentVariable("MIR3_EI_ROOT");
+            if (!string.IsNullOrWhiteSpace(clientRoot))
+                overridePath = Path.Combine(clientRoot, "Data");
+        }
+        if (string.IsNullOrWhiteSpace(overridePath))
+            overridePath = "/home/tetsuya/mir2ei/Data";
+        if (Directory.Exists(overridePath))
             return Path.GetFullPath(overridePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
                 + Path.DirectorySeparatorChar;
 
@@ -69,6 +77,8 @@ public static class MirSkin
 
         string[] legacyCandidates =
         {
+            "/home/tetsuya/mir2ei/Data/",
+            "/home/tetsuya/mir2ei/LegacyEI/Data/",
             "/home/tetsuya/mir3ei/LegacyEI/Data/",
             "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
         };

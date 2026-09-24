@@ -21,7 +21,7 @@ Zircon-Godot 是《传奇 3》的跨平台客户端与服务端重实现项目�
 
 ## 环境与启动
 
-需要 .NET 10 SDK、Godot 4.x .NET（`godot-mono`）以及原版 `.Zl`、`.map`、`System.db` 和声音资源。开发机运行资源位于 `/home/tetsuya/mir3ei`，大型运行资源不复制进 Git。
+需要 .NET 10 SDK、Godot 4.x .NET（`godot-mono`）以及原版 `.Zl`、`.map`、`System.db` 和声音资源。开发机运行资源位于 `/home/tetsuya/mir2ei`，大型运行资源不复制进 Git。
 
 在仓库根目录构建：
 
@@ -33,7 +33,7 @@ dotnet build GodotClient/ZirconClient.csproj
 启动本地整套环境：
 
 ```bash
-cd /home/tetsuya/mir3ei
+cd /home/tetsuya/mir2ei
 ./login_game.sh
 ```
 

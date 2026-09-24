@@ -21,7 +21,7 @@ Zircon-Godot は『Legend of Mir 3』のクロスプラットフォーム版ク�
 
 ## 環境と起動
 
-必要なものは .NET 10 SDK、Godot 4.x .NET（`godot-mono`）、オリジナルの `.Zl`、`.map`、`System.db`、サウンドなどです。開発用ランタイムは `/home/tetsuya/mir3ei` に置かれ、大容量データは Git に複製しません。
+必要なものは .NET 10 SDK、Godot 4.x .NET（`godot-mono`）、オリジナルの `.Zl`、`.map`、`System.db`、サウンドなどです。開発用ランタイムは `/home/tetsuya/mir2ei` に置かれ、大容量データは Git に複製しません。
 
 リポジトリのルートでビルドします。
 
@@ -33,7 +33,7 @@ dotnet build GodotClient/ZirconClient.csproj
 ローカル環境全体を起動します。
 
 ```bash
-cd /home/tetsuya/mir3ei
+cd /home/tetsuya/mir2ei
 ./login_game.sh
 ```
 

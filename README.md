@@ -37,9 +37,9 @@ This repository is a fork of [Suprcode/Zircon](https://github.com/Suprcode/Zirco
 - .NET 10 SDK
 - Godot 4.x .NET (`godot-mono`)
 - Original `.Zl` libraries, `.map` files, `System.db`, sounds, and related client data
-- Development runtime directory: `/home/tetsuya/mir3ei`
+- Development runtime directory: `/home/tetsuya/mir2ei`
 
-Large runtime assets stay outside Git. On the development machine, `Debug/Client` and `development/Debug/Client` point to `/home/tetsuya/mir3ei`.
+Large runtime assets stay outside Git. On the development machine, `Debug/Client` and `development/Debug/Client` point to `/home/tetsuya/mir2ei`.
 
 ## Build
 
@@ -61,7 +61,7 @@ A successful build must report zero errors. Existing warnings in a few Godot scr
 ## Run locally
 
 ```bash
-cd /home/tetsuya/mir3ei
+cd /home/tetsuya/mir2ei
 ./login_game.sh
 ```
 

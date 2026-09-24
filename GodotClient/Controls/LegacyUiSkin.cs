@@ -74,7 +74,8 @@ public static class LegacyUiSkin
             // 用 alpha bbox 原点裁掉透明边距，不能把整张 512 画布缩进窗口。
             "InventoryDialog" => (250, new Vector2I(284, 324), new Vector2I(114, 94), false),
             "CharacterDialog" => (200, new Vector2I(244, 328), new Vector2I(6, 92), false),
-            // wrapper 0x439250 原始参数明确给出 452x380；F400 bbox 451x378。
+            // 452x380 是当前测试profile按本机F400 alpha bbox适配的尺寸；
+            // EI id14主初始化记录为296x332，wrapper参数不能代替根RECT证据。
             "MagicDialog" => (400, new Vector2I(452, 380), new Vector2I(30, 67), false),
             "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6), false),
             "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36), false),

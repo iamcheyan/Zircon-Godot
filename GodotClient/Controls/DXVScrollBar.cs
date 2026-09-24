@@ -136,7 +136,9 @@ public partial class DXVScrollBar : DXControl
             Location = new Vector2I(1, 17),
             Enabled = false,
             Movable = true,
-            CanBePressed = false,
+            // DXButton rejects left-button input when CanBePressed=false
+            // before DXControl can enter its Movable drag path.
+            CanBePressed = true,
         };
         PositionBar.Moving += PositionBarMoving;
         PositionBar.MouseWheel += DoMouseWheel;

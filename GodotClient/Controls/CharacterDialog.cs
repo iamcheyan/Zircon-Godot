@@ -435,7 +435,7 @@ public partial class CharacterDialog : DXWindow
         {
             string displayValue;
             if (entry.Stat == null)
-                displayValue = (game?.PlayerLevel ?? 0).ToString();
+                displayValue = "—"; // 原版字段与当前 Stat 语义未闭合。
             else
             {
                 int min = stats?[entry.Stat.Value] ?? 0;
@@ -453,7 +453,7 @@ public partial class CharacterDialog : DXWindow
         {
             ("防御", Stat.MinAC, Stat.MaxAC),
             ("攻击", Stat.MinDC, Stat.MaxDC),
-            ("魔法", Stat.MinMC, Stat.MaxMC),
+            ("魔法", null, null), // 原版仅有一个原始字段，不能冒称 MC 范围。
             ("火(火焰)", Stat.FireAttack, null),
             ("冰(冰冻)", Stat.IceAttack, null),
             ("电(雷电)", Stat.LightningAttack, null),
@@ -461,7 +461,7 @@ public partial class CharacterDialog : DXWindow
             ("治疗(神圣)", Stat.HolyAttack, null),
             ("攻击(黑暗)", Stat.DarkAttack, null),
             ("召唤(幻影)", Stat.PhantomAttack, null),
-            ("魔法防御力", Stat.MinMR, Stat.MaxMR),
+            ("魔法防御力", null, null), // 原版标签下有六个原始字段，不能冒称 MR 范围。
         };
         for (int i = 0; i < rows.Length; i++)
         {

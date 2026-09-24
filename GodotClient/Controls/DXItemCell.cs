@@ -52,8 +52,21 @@ public partial class DXItemCell : DXControl
     }
 
     public ClientUserItem[] ItemGrid;
-    public int Slot;
+    public int GridIndex;
+    private int _slot;
+    public int Slot
+    {
+        get => HostGrid?.UseLegacyFootprints == true
+            ? HostGrid.ResolveOperationSlot(GridIndex)
+            : _slot;
+        set => _slot = value;
+    }
 
+    /// <summary>EI footprint cells share the anchor record but draw it once.</summary>
+    public bool IsLegacyFootprintPlaceholder
+        => HostGrid?.IsLegacyFootprintPlaceholder(GridIndex) == true;
+
+    public int DataSlot => Slot;
     public DXItemGrid HostGrid;
     public bool Locked;
     public bool ReadOnly;
@@ -158,14 +171,17 @@ public partial class DXItemCell : DXControl
                 if (QuickInfo != null) return QuickInfoItem;
                 return QuickItem;
             }
-            if (ItemGrid == null || Slot >= ItemGrid.Length) return null;
+            if (HostGrid?.UseLegacyFootprints == true)
+                return HostGrid.GetItemForCell(GridIndex);
+            if (ItemGrid == null || Slot < 0 || Slot >= ItemGrid.Length) return null;
             return ItemGrid[Slot];
         }
         set
         {
-            if (ItemGrid == null || Slot >= ItemGrid.Length || ItemGrid[Slot] == value) return;
-            ItemGrid[Slot] = value;
-            if (value != null) value.Slot = Slot;
+            int slot = Slot;
+            if (ItemGrid == null || slot < 0 || slot >= ItemGrid.Length || ItemGrid[slot] == value) return;
+            ItemGrid[slot] = value;
+            if (value != null) value.Slot = slot;
             RefreshItem();
             ItemChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -220,9 +236,8 @@ public partial class DXItemCell : DXControl
     protected override void DrawControl()
     {
         // 装备栏的武器/衣服/头盔/盾牌由 PaperDoll 绘制；
-        // 格子仍保留鼠标命中区域用于卸下，但不重复绘制背包图标。
-        if (Hidden) return;
-        // 装备槽: 空槽图由面板画 (BeforeDraw), 有物品时这里画图标
+        // EI 多格记录只在首格绘制一次，其他格保留命中区但不重复图标。
+        if (Hidden || IsLegacyFootprintPlaceholder) return;
         var item = Item;
         // 原版 DXItemCell.LootBoxLocked：未揭示的宝箱格不显示普通物品图标，
         // 而显示 GameInter2 2930 的专用锁定图。

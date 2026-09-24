@@ -222,13 +222,13 @@ public partial class InventoryDialog : DXWindow
         _background.Location = new Vector2I(-114, -94);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 250);
         _background.StretchImage = false;
-        // EI F280 is a complete 16×424 vertical gauge. The six visible
-        // rows are a viewport; the record array is configured after the
-        // server inventory is injected, so scrolling is not hard-coded to
-        // the current item count.
+        // EI F280 is a complete 16×424 vertical gauge. Six rows are visible;
+        // the record array is placed into the separate six-column identity
+        // table so multi-cell items reserve every occupied cell.
+        Grid.UseLegacyFootprints = true;
+        Grid.ItemLibraryFile = LibraryFile.Inventory;
         Grid.GridPadding = 0;
         Grid.GridSize = new Vector2I(6, 6);
-        Grid.VisibleHeight = 6;
         Grid.Location = new Vector2I(25, 41);
         Grid.Clip = true;
 
@@ -336,16 +336,15 @@ public partial class InventoryDialog : DXWindow
         UpdateClientAreaForLegacySkin();
     }
     /// <summary>
-    /// 将服务器记录数组映射为六列、六行可视窗口，并把行滚动状态
-    /// 写回 F280 控件。记录索引仍是 ItemGrid 的槽位；跨格占位表尚
-    /// 未在协议模型中提供，因此此处不伪造 footprint。
+    /// 将服务器记录数组映射到 EI 的六列可视窗口。记录索引仍是
+    /// ItemGrid 的槽位，格子位置由 footprint first-fit 计算，不按
+    /// 46 条记录硬编码行数。
     /// </summary>
     public void ConfigureLegacyInventoryGrid()
     {
         if (!_legacyEiLayout || Grid == null) return;
 
-        int itemCount = Grid.ItemGrid?.Length ?? 0;
-        int rows = Math.Max(6, (itemCount + 5) / 6);
+        int rows = Grid.GetLegacyRequiredRows(6);
         Grid.GridSize = new Vector2I(6, rows);
         Grid.VisibleHeight = 6;
         Grid.ScrollValue = Math.Min(Grid.ScrollValue, Math.Max(0, rows - 6));

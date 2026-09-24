@@ -10,6 +10,7 @@ public static class LegacyHudLayout
 {
     public const int LogicalWidth = 800;
     public const int LogicalHeight = 600;
+    public const int MainPanelHeight = 136;
     public const int MainPanelY = 465;
 
     public static readonly Vector2I MainPanelLocation = new(0, MainPanelY);

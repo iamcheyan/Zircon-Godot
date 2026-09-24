@@ -87,6 +87,7 @@ public partial class DXItemGrid : DXControl
             // 格子在网格构造时就已经创建；旧版 DXItemGrid 的 ItemGrid
             // 变更会让所有 DXItemCell 继续指向同一数组，不能只更新网格自身。
             if (Cells == null) return;
+            RebuildLegacyFootprints();
             foreach (var cell in Cells)
             {
                 if (cell == null) continue;
@@ -113,11 +114,135 @@ public partial class DXItemGrid : DXControl
         }
     }
 
+    /// <summary>
+    /// EI F280 inventory uses a six-column cell identity table separate from
+    /// the 46 item records. The modern protocol only carries the record slot,
+    /// so the legacy view reconstructs first-fit placement from item frames.
+    /// </summary>
+    public bool UseLegacyFootprints { get; set; }
+    /// <summary>网格内图标使用的图库；EI legacy 背包切到 Inventory.wil。</summary>
+    public LibraryFile ItemLibraryFile { get; set; } = LibraryFile.StoreItem;
+
+    private int[] _legacyCellAnchors = Array.Empty<int>();
+
+
+    public int ResolveOperationSlot(int cellIndex)
+    {
+        if (!UseLegacyFootprints || ItemGrid == null || cellIndex < 0) return cellIndex;
+        if (cellIndex < _legacyCellAnchors.Length && _legacyCellAnchors[cellIndex] >= 0)
+            return _legacyCellAnchors[cellIndex];
+        if (cellIndex < ItemGrid.Length && ItemGrid[cellIndex] == null)
+            return cellIndex;
+        for (int slot = 0; slot < ItemGrid.Length; slot++)
+            if (ItemGrid[slot] == null) return slot;
+        return cellIndex;
+    }
+
+    public ClientUserItem GetItemForCell(int cellIndex)
+    {
+        if (!UseLegacyFootprints || ItemGrid == null || cellIndex < 0)
+            return cellIndex >= 0 && ItemGrid != null && cellIndex < ItemGrid.Length ? ItemGrid[cellIndex] : null;
+        int slot = cellIndex < _legacyCellAnchors.Length ? _legacyCellAnchors[cellIndex] : -1;
+        return slot >= 0 && slot < ItemGrid.Length ? ItemGrid[slot] : null;
+    }
+
+    public bool IsLegacyFootprintPlaceholder(int cellIndex)
+        => UseLegacyFootprints && cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length
+            && _legacyCellAnchors[cellIndex] >= 0 && _legacyCellAnchors[cellIndex] != cellIndex;
+
+    /// <summary>Returns the rows required by first-fit footprint placement.</summary>
+    public int GetLegacyRequiredRows(int minimumRows = 6)
+    {
+        if (!UseLegacyFootprints || ItemGrid == null) return Math.Max(1, minimumRows);
+        int rows = Math.Max(minimumRows, ItemGrid.Length);
+        var occupied = new bool[GridSize.X, rows];
+        int maxRow = minimumRows;
+        for (int slot = 0; slot < ItemGrid.Length; slot++)
+        {
+            var item = ItemGrid[slot];
+            if (item?.Info == null) continue;
+            GetLegacyFootprint(item, out int width, out int height);
+            if (!TryPlace(occupied, width, height, out int x, out int y)) continue;
+            MarkPlacement(occupied, x, y, width, height);
+            maxRow = Math.Max(maxRow, y + height);
+        }
+        return maxRow;
+    }
+
+    private void RebuildLegacyFootprints()
+    {
+        if (!UseLegacyFootprints || Cells == null)
+        {
+            _legacyCellAnchors = Array.Empty<int>();
+            return;
+        }
+
+        _legacyCellAnchors = new int[Cells.Length];
+        Array.Fill(_legacyCellAnchors, -1);
+        if (ItemGrid == null || GridSize.X <= 0 || GridSize.Y <= 0) return;
+
+        var occupied = new bool[GridSize.X, GridSize.Y];
+        for (int slot = 0; slot < ItemGrid.Length; slot++)
+        {
+            var item = ItemGrid[slot];
+            if (item?.Info == null) continue;
+            GetLegacyFootprint(item, out int width, out int height);
+            if (!TryPlace(occupied, width, height, out int x, out int y)) continue;
+            MarkPlacement(occupied, x, y, width, height);
+            for (int row = y; row < y + height; row++)
+                for (int col = x; col < x + width; col++)
+                    _legacyCellAnchors[row * GridSize.X + col] = slot;
+        }
+    }
+
+    private static bool TryPlace(bool[,] occupied, int width, int height, out int x, out int y)
+    {
+        int columns = occupied.GetLength(0);
+        int rows = occupied.GetLength(1);
+        width = Math.Min(width, columns);
+        for (y = 0; y + height <= rows; y++)
+        {
+            for (x = 0; x + width <= columns; x++)
+            {
+                bool free = true;
+                for (int row = y; row < y + height && free; row++)
+                    for (int col = x; col < x + width; col++)
+                        if (occupied[col, row]) { free = false; break; }
+                if (free) return true;
+            }
+        }
+        x = y = -1;
+        return false;
+    }
+
+    private static void MarkPlacement(bool[,] occupied, int x, int y, int width, int height)
+    {
+        for (int row = y; row < y + height; row++)
+            for (int col = x; col < x + width; col++)
+                occupied[col, row] = true;
+    }
+
+    private static void GetLegacyFootprint(ClientUserItem item, out int width, out int height)
+    {
+        width = height = 1;
+        if (item?.Info == null) return;
+        // EI 背包物品记录的 frame WORD 由 Inventory.wil selector 绘制；
+        // 现代 StoreItem.Zl 不能作为旧版 footprint 尺寸的同号替代。
+        var texture = MirSkin.GetTexture(LibraryFile.Inventory, item.Info.Image);
+        if (texture == null) return;
+        Vector2 size = texture.GetSize();
+        width = Math.Max(1, ((int)size.X + DXItemCell.CellWidth - 1) / DXItemCell.CellWidth);
+        height = Math.Max(1, ((int)size.Y + DXItemCell.CellHeight - 1) / DXItemCell.CellHeight);
+    }
+
+    public int LegacyFootprintAnchor(int cellIndex)
+        => cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length ? _legacyCellAnchors[cellIndex] : -1;
+
     public DXItemCell[] Cells;
 
     public DXItemCell this[int slot] => Cells[slot];
 
-    private float Step => DXItemCell.CellWidth - 1 + (GridPadding * 2);
+    private float Step => UseLegacyFootprints ? DXItemCell.CellWidth : DXItemCell.CellWidth - 1 + (GridPadding * 2);
 
     private void UpdateSize()
     {
@@ -152,8 +277,9 @@ public partial class DXItemGrid : DXControl
                     Location = new Vector2I(
                         (int)(x * Step + GridPadding),
                         (int)(y * Step + GridPadding)),
+                    GridIndex = slot,
                     Slot = slot,
-                    HostGrid = this,
+                    ItemLibraryFile = this.ItemLibraryFile,
                     ItemGrid = _itemGrid,
                     GridType = GridType,
                     ReadOnly = ReadOnly,
@@ -162,7 +288,7 @@ public partial class DXItemGrid : DXControl
                 Cells[slot] = cell;
             }
         }
-
+        RebuildLegacyFootprints();
         UpdateGridDisplay();
     }
 
@@ -196,12 +322,11 @@ public partial class DXItemGrid : DXControl
     public void RefreshGrid()
     {
         if (Cells == null) return;
+        RebuildLegacyFootprints();
         foreach (var cell in Cells)
-        {
             cell?.RefreshItem();
-        }
-    }
 
+    }
     public override void _Draw()
     {
         base._Draw();

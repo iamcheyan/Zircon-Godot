@@ -122,7 +122,8 @@ public static class MirSkin
 
     private static bool IsUiLibrary(LibraryFile file)
         => file is LibraryFile.Interface or LibraryFile.Interface1c or LibraryFile.Interface1cExtended
-            or LibraryFile.GameInter or LibraryFile.GameInter2 or LibraryFile.ProgUse or LibraryFile.MagicIcon;
+            or LibraryFile.GameInter or LibraryFile.GameInter2 or LibraryFile.ProgUse
+            or LibraryFile.MagicIcon or LibraryFile.Inventory;
 
     private static string ResolvePath(string fullPath)
     {

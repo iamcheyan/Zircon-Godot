@@ -39,7 +39,7 @@ public partial class MainPanel : DXImageControl
         LibraryFile = LibraryFile.GameInter;
         Index = 50; // 底图, Size 自动
         FixedSize = true;
-        Size = new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.LogicalHeight);
+        Size = new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.MainPanelHeight);
 
         // EI 原版主 HUD 使用 63 号经验条；51 是新版/转换资源里的外框，不能
         // 直接拿来当旧版经验填充。旧版屏幕矩形为 (61,586)-(400,597)，

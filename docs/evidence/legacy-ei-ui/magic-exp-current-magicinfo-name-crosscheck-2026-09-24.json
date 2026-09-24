@@ -1,0 +1,1263 @@
+{
+  "evidence_id": "legacy-ei-magic-exp-to-current-magicinfo-name-crosscheck-2026-09-24",
+  "method": "Read EI decoded Magic.exp records; use db_names.json zh labels to find English candidate keys; retain only exact Name matches in current MirDB MagicInfo rows. Read System.db with SessionMode.None; no database files were written. A follow-up compares EI element label to the analogous current MagicSchool label where directly named (e.g. 幻影→Phantom) and compares the first three numeric required-level values; these are corroborating fields, not an identity proof.",
+  "evidence_levels": {
+    "current_magicinfo": "source-confirmed current client database",
+    "ei_records": "primary-static-derived decoded research artifact, target source file unavailable for re-decode",
+    "name_join": "candidate only; not proof of EI ID identity"
+  },
+  "sources": {
+    "ei_records": {
+      "path": "/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/magic-exp-records.json",
+      "sha256": "15948c442ba205c1862e08798e0ea7b8aa1d3ea1afde7ead9d09c01939cb62ad",
+      "source_magic_exp_sha256": "5b2300ee587aea774cca8a5a3fc0ee35172d6dbdf8583b42254fbc28e22fc8e1",
+      "record_count": 50
+    },
+    "current_system_db": {
+      "path": "/home/tetsuya/development/Zircon/Debug/Client/Data/System.db",
+      "sha256": "2547c34522dc7bc850504bce58e7868cab5a31c1e39bf616aafc96dac0d4581c",
+      "magicinfo_count": 174
+    },
+    "translations": {
+      "path": "/home/tetsuya/development/Zircon/GodotClient/translations/db_names.json",
+      "sha256": "736758509bfed713234b7e1716171f32cdec0c5ef2f81f57074e6fb6e515322a"
+    }
+  },
+  "summary": {
+    "ei_records_with_current_name_candidates": 29,
+    "unique_current_magicinfo_candidates": 28,
+    "ambiguous_current_magicinfo_candidates": 1,
+    "ei_records_without_candidate": 21,
+    "candidates_matching_ei_element_and_levels": 12,
+    "ei_records_with_at_least_one_element_and_levels_match": 12
+  },
+  "matches": [
+    {
+      "ei_id": 3,
+      "ei_name": "基本剑术",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 100,
+          "magic_type": "Swordsmanship",
+          "name": "Swordsmanship",
+          "class": "Warrior",
+          "school": "Passive",
+          "icon": 4,
+          "required_levels": [
+            7,
+            9,
+            11
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Passive",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "current_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 7,
+      "ei_name": "攻杀剑术",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 102,
+          "magic_type": "Slaying",
+          "name": "Slaying",
+          "class": "Warrior",
+          "school": "Passive",
+          "icon": 12,
+          "required_levels": [
+            14,
+            16,
+            18
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Passive",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              14,
+              16,
+              18
+            ],
+            "current_required_levels_1_to_3": [
+              14,
+              16,
+              18
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 12,
+      "ei_name": "刺杀剑术",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 103,
+          "magic_type": "Thrusting",
+          "name": "Thrusting",
+          "class": "Warrior",
+          "school": "Toggle",
+          "icon": 22,
+          "required_levels": [
+            19,
+            21,
+            23
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Toggle",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              19,
+              21,
+              23
+            ],
+            "current_required_levels_1_to_3": [
+              19,
+              21,
+              23
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 25,
+      "ei_name": "半月弯刀",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 104,
+          "magic_type": "HalfMoon",
+          "name": "Half Moon",
+          "class": "Warrior",
+          "school": "Toggle",
+          "icon": 48,
+          "required_levels": [
+            24,
+            26,
+            28
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Toggle",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              24,
+              26,
+              28
+            ],
+            "current_required_levels_1_to_3": [
+              24,
+              26,
+              28
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 27,
+      "ei_name": "野蛮冲撞",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 105,
+          "magic_type": "ShoulderDash",
+          "name": "Shoulder Dash",
+          "class": "Warrior",
+          "school": "Active",
+          "icon": 52,
+          "required_levels": [
+            27,
+            29,
+            31
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Active",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              27,
+              29,
+              31
+            ],
+            "current_required_levels_1_to_3": [
+              27,
+              29,
+              31
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 26,
+      "ei_name": "烈火剑法",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 106,
+          "magic_type": "FlamingSword",
+          "name": "Flaming Sword",
+          "class": "Warrior",
+          "school": "Active",
+          "icon": 50,
+          "required_levels": [
+            32,
+            34,
+            36
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Active",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              32,
+              34,
+              36
+            ],
+            "current_required_levels_1_to_3": [
+              32,
+              34,
+              36
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 34,
+      "ei_name": "莲月剑法",
+      "ei_attribute": "无属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 108,
+          "magic_type": "BladeStorm",
+          "name": "Blade Storm",
+          "class": "Warrior",
+          "school": "Active",
+          "icon": 66,
+          "required_levels": [
+            38,
+            40,
+            42
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Active",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              38,
+              40,
+              42
+            ],
+            "current_required_levels_1_to_3": [
+              38,
+              40,
+              42
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 1,
+      "ei_name": "火球术",
+      "ei_attribute": "自然系",
+      "ei_element": "火(火 : 火力)",
+      "candidates": [
+        {
+          "enum_value": 201,
+          "magic_type": "FireBall",
+          "name": "Fire Ball",
+          "class": "Wizard",
+          "school": "Fire",
+          "icon": 0,
+          "required_levels": [
+            7,
+            9,
+            11
+          ],
+          "corroboration": {
+            "ei_element_token": "火",
+            "expected_school_from_element": "Fire",
+            "current_school": "Fire",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "current_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 8,
+      "ei_name": "抗拒火环",
+      "ei_attribute": "自然系",
+      "ei_element": "风(风 : 暴风)",
+      "candidates": [
+        {
+          "enum_value": 205,
+          "magic_type": "Repulsion",
+          "name": "Repulsion",
+          "class": "Wizard",
+          "school": "Wind",
+          "icon": 14,
+          "required_levels": [
+            12,
+            14,
+            16
+          ],
+          "corroboration": {
+            "ei_element_token": "风",
+            "expected_school_from_element": "Wind",
+            "current_school": "Wind",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              12,
+              14,
+              16
+            ],
+            "current_required_levels_1_to_3": [
+              12,
+              14,
+              16
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 20,
+      "ei_name": "诱惑之光",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 206,
+          "magic_type": "ElectricShock",
+          "name": "Electric Shock",
+          "class": "Wizard",
+          "school": "Lightning",
+          "icon": 38,
+          "required_levels": [
+            13,
+            15,
+            17
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Lightning",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              13,
+              15,
+              17
+            ],
+            "current_required_levels_1_to_3": [
+              13,
+              15,
+              17
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 5,
+      "ei_name": "大火球",
+      "ei_attribute": "自然系",
+      "ei_element": "火(火 : 火力)",
+      "candidates": [
+        {
+          "enum_value": 208,
+          "magic_type": "AdamantineFireBall",
+          "name": "Adamantine Fire Ball",
+          "class": "Wizard",
+          "school": "Fire",
+          "icon": 8,
+          "required_levels": [
+            15,
+            17,
+            19
+          ],
+          "corroboration": {
+            "ei_element_token": "火",
+            "expected_school_from_element": "Fire",
+            "current_school": "Fire",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              15,
+              17,
+              19
+            ],
+            "current_required_levels_1_to_3": [
+              15,
+              17,
+              19
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 11,
+      "ei_name": "雷电术",
+      "ei_attribute": "自然系",
+      "ei_element": "雷(雷 : 电击)",
+      "candidates": [
+        {
+          "enum_value": 202,
+          "magic_type": "LightningBall",
+          "name": "Lightning Ball",
+          "class": "Wizard",
+          "school": "Lightning",
+          "icon": 80,
+          "required_levels": [
+            8,
+            10,
+            12
+          ],
+          "corroboration": {
+            "ei_element_token": "雷",
+            "expected_school_from_element": "Lightning",
+            "current_school": "Lightning",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              16,
+              18,
+              20
+            ],
+            "current_required_levels_1_to_3": [
+              8,
+              10,
+              12
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 10,
+      "ei_name": "疾光电影",
+      "ei_attribute": "自然系",
+      "ei_element": "雷(雷 : 电击)",
+      "candidates": [
+        {
+          "enum_value": 213,
+          "magic_type": "LightningBeam",
+          "name": "Lightning Beam",
+          "class": "Wizard",
+          "school": "Lightning",
+          "icon": 18,
+          "required_levels": [
+            21,
+            23,
+            25
+          ],
+          "corroboration": {
+            "ei_element_token": "雷",
+            "expected_school_from_element": "Lightning",
+            "current_school": "Lightning",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              21,
+              23,
+              25
+            ],
+            "current_required_levels_1_to_3": [
+              21,
+              23,
+              25
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 73,
+      "ei_name": "风震天",
+      "ei_attribute": "自然系",
+      "ei_element": "风(风：暴风)",
+      "candidates": [
+        {
+          "enum_value": 204,
+          "magic_type": "GustBlast",
+          "name": "Gust Blast",
+          "class": "Wizard",
+          "school": "Wind",
+          "icon": 132,
+          "required_levels": [
+            10,
+            12,
+            14
+          ],
+          "corroboration": {
+            "ei_element_token": "风",
+            "expected_school_from_element": "Wind",
+            "current_school": "Wind",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              23,
+              25,
+              27
+            ],
+            "current_required_levels_1_to_3": [
+              10,
+              12,
+              14
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 22,
+      "ei_name": "火墙",
+      "ei_attribute": "自然系",
+      "ei_element": "火(火 : 火力)",
+      "candidates": [
+        {
+          "enum_value": 216,
+          "magic_type": "FireWall",
+          "name": "Fire Wall",
+          "class": "Wizard",
+          "school": "Fire",
+          "icon": 42,
+          "required_levels": [
+            24,
+            26,
+            28
+          ],
+          "corroboration": {
+            "ei_element_token": "火",
+            "expected_school_from_element": "Fire",
+            "current_school": "Fire",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              24,
+              26,
+              28
+            ],
+            "current_required_levels_1_to_3": [
+              24,
+              26,
+              28
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 32,
+      "ei_name": "圣言术",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 318,
+          "magic_type": "CelestialLight",
+          "name": "Celestial Light",
+          "class": "Taoist",
+          "school": "Holy",
+          "icon": 242,
+          "required_levels": [
+            46,
+            48,
+            50
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Holy",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              26,
+              28,
+              30
+            ],
+            "current_required_levels_1_to_3": [
+              46,
+              48,
+              50
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 31,
+      "ei_name": "魔法盾",
+      "ei_attribute": "自然系",
+      "ei_element": "风(风：暴风)",
+      "candidates": [
+        {
+          "enum_value": 219,
+          "magic_type": "MagicShield",
+          "name": "Magic Shield",
+          "class": "Wizard",
+          "school": "Phantom",
+          "icon": 60,
+          "required_levels": [
+            29,
+            31,
+            33
+          ],
+          "corroboration": {
+            "ei_element_token": "风",
+            "expected_school_from_element": "Wind",
+            "current_school": "Phantom",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              29,
+              31,
+              33
+            ],
+            "current_required_levels_1_to_3": [
+              29,
+              31,
+              33
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 33,
+      "ei_name": "冰咆哮",
+      "ei_attribute": "自然系",
+      "ei_element": "冰(冰 : 冰,水)",
+      "candidates": [
+        {
+          "enum_value": 210,
+          "magic_type": "IceBlades",
+          "name": "Ice Blades",
+          "class": "Wizard",
+          "school": "Ice",
+          "icon": 78,
+          "required_levels": [
+            17,
+            19,
+            21
+          ],
+          "corroboration": {
+            "ei_element_token": "冰",
+            "expected_school_from_element": "Ice",
+            "current_school": "Ice",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              34,
+              36,
+              38
+            ],
+            "current_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 72,
+      "ei_name": "龙卷风",
+      "ei_attribute": "自然系",
+      "ei_element": "风(风：暴风)",
+      "candidates": [
+        {
+          "enum_value": 211,
+          "magic_type": "Cyclone",
+          "name": "Cyclone",
+          "class": "Wizard",
+          "school": "Wind",
+          "icon": 146,
+          "required_levels": [
+            18,
+            20,
+            22
+          ],
+          "corroboration": {
+            "ei_element_token": "风",
+            "expected_school_from_element": "Wind",
+            "current_school": "Wind",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              35,
+              37,
+              39
+            ],
+            "current_required_levels_1_to_3": [
+              18,
+              20,
+              22
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 2,
+      "ei_name": "治愈术",
+      "ei_attribute": "灵魂系",
+      "ei_element": "神圣(神圣 : 神圣)",
+      "candidates": [
+        {
+          "enum_value": 300,
+          "magic_type": "Heal",
+          "name": "Heal",
+          "class": "Taoist",
+          "school": "Holy",
+          "icon": 2,
+          "required_levels": [
+            7,
+            9,
+            11
+          ],
+          "corroboration": {
+            "ei_element_token": "神圣",
+            "expected_school_from_element": "Holy",
+            "current_school": "Holy",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "current_required_levels_1_to_3": [
+              7,
+              9,
+              11
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 4,
+      "ei_name": "精神力战法",
+      "ei_attribute": "?属性",
+      "ei_element": "无",
+      "candidates": [
+        {
+          "enum_value": 301,
+          "magic_type": "SpiritSword",
+          "name": "Spirit Sword",
+          "class": "Taoist",
+          "school": "Physical",
+          "icon": 6,
+          "required_levels": [
+            8,
+            10,
+            12
+          ],
+          "corroboration": {
+            "ei_element_token": null,
+            "expected_school_from_element": null,
+            "current_school": "Physical",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              8,
+              10,
+              12
+            ],
+            "current_required_levels_1_to_3": [
+              8,
+              10,
+              12
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 6,
+      "ei_name": "施毒术",
+      "ei_attribute": "灵魂系",
+      "ei_element": "暗黑(暗黑 : 黑暗)",
+      "candidates": [
+        {
+          "enum_value": 302,
+          "magic_type": "PoisonDust",
+          "name": "Poison Dust",
+          "class": "Taoist",
+          "school": "Dark",
+          "icon": 10,
+          "required_levels": [
+            12,
+            14,
+            16
+          ],
+          "corroboration": {
+            "ei_element_token": "黑暗",
+            "expected_school_from_element": "Dark",
+            "current_school": "Dark",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              12,
+              14,
+              16
+            ],
+            "current_required_levels_1_to_3": [
+              12,
+              14,
+              16
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 13,
+      "ei_name": "灵魂火符",
+      "ei_attribute": "灵魂系",
+      "ei_element": "暗黑(暗黑 : 黑暗)",
+      "candidates": [
+        {
+          "enum_value": 303,
+          "magic_type": "ExplosiveTalisman",
+          "name": "Explosive Talisman",
+          "class": "Taoist",
+          "school": "Dark",
+          "icon": 24,
+          "required_levels": [
+            13,
+            15,
+            17
+          ],
+          "corroboration": {
+            "ei_element_token": "黑暗",
+            "expected_school_from_element": "Dark",
+            "current_school": "Dark",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              13,
+              15,
+              17
+            ],
+            "current_required_levels_1_to_3": [
+              13,
+              15,
+              17
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 17,
+      "ei_name": "召唤骷髅",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 304,
+          "magic_type": "EvilSlayer",
+          "name": "Evil Slayer",
+          "class": "Taoist",
+          "school": "Holy",
+          "icon": 72,
+          "required_levels": [
+            14,
+            16,
+            18
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Holy",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "current_required_levels_1_to_3": [
+              14,
+              16,
+              18
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        },
+        {
+          "enum_value": 332,
+          "magic_type": "SummonSkeleton",
+          "name": "Summon Skeleton",
+          "class": "Taoist",
+          "school": "Phantom",
+          "icon": 32,
+          "required_levels": [
+            17,
+            19,
+            21
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Phantom",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "current_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 18,
+      "ei_name": "隐身术",
+      "ei_attribute": "灵魂系",
+      "ei_element": "暗黑(暗黑 : 黑暗)",
+      "candidates": [
+        {
+          "enum_value": 305,
+          "magic_type": "Invisibility",
+          "name": "Invisibility",
+          "class": "Taoist",
+          "school": "Dark",
+          "icon": 34,
+          "required_levels": [
+            20,
+            22,
+            24
+          ],
+          "corroboration": {
+            "ei_element_token": "黑暗",
+            "expected_school_from_element": "Dark",
+            "current_school": "Dark",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              20,
+              22,
+              24
+            ],
+            "current_required_levels_1_to_3": [
+              20,
+              22,
+              24
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 14,
+      "ei_name": "幽灵盾",
+      "ei_attribute": "灵魂系",
+      "ei_element": "暗黑(暗黑 : 黑暗)",
+      "candidates": [
+        {
+          "enum_value": 312,
+          "magic_type": "ElementalSuperiority",
+          "name": "Elemental Superiority",
+          "class": "Taoist",
+          "school": "Dark",
+          "icon": 176,
+          "required_levels": [
+            29,
+            31,
+            33
+          ],
+          "corroboration": {
+            "ei_element_token": "黑暗",
+            "expected_school_from_element": "Dark",
+            "current_school": "Dark",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              21,
+              23,
+              25
+            ],
+            "current_required_levels_1_to_3": [
+              29,
+              31,
+              33
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 16,
+      "ei_name": "困魔咒",
+      "ei_attribute": "灵魂系",
+      "ei_element": "暗黑(暗黑 : 黑暗)",
+      "candidates": [
+        {
+          "enum_value": 310,
+          "magic_type": "TrapOctagon",
+          "name": "Trap Octagon",
+          "class": "Taoist",
+          "school": "Dark",
+          "icon": 30,
+          "required_levels": [
+            27,
+            29,
+            31
+          ],
+          "corroboration": {
+            "ei_element_token": "黑暗",
+            "expected_school_from_element": "Dark",
+            "current_school": "Dark",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              27,
+              29,
+              31
+            ],
+            "current_required_levels_1_to_3": [
+              27,
+              29,
+              31
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 30,
+      "ei_name": "召唤神兽",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 333,
+          "magic_type": "SummonShinsu",
+          "name": "Summon Shinsu",
+          "class": "Taoist",
+          "school": "Phantom",
+          "icon": 58,
+          "required_levels": [
+            30,
+            32,
+            34
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Phantom",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              30,
+              32,
+              34
+            ],
+            "current_required_levels_1_to_3": [
+              30,
+              32,
+              34
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    },
+    {
+      "ei_id": 105,
+      "ei_name": "超强召唤骷髅",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 308,
+          "magic_type": "GreaterEvilSlayer",
+          "name": "Greater Evil Slayer",
+          "class": "Taoist",
+          "school": "Holy",
+          "icon": 74,
+          "required_levels": [
+            24,
+            26,
+            28
+          ],
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Holy",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              33,
+              35,
+              37
+            ],
+            "current_required_levels_1_to_3": [
+              24,
+              26,
+              28
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    }
+  ],
+  "semantic_corroboration": {
+    "scope": "Only direct element-label and three-level comparisons; no claim about EI network IDs or icon-frame mapping.",
+    "notable_record_17": {
+      "ei_id": 17,
+      "ei_name": "召唤骷髅",
+      "ei_attribute": "灵魂系",
+      "ei_element": "幻影(幻影 : 幻想)",
+      "candidates": [
+        {
+          "enum_value": 304,
+          "magic_type": "EvilSlayer",
+          "name": "Evil Slayer",
+          "class": "Taoist",
+          "school": "Holy",
+          "icon": 72,
+          "required_levels": "1/4///1/6///1/8",
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Holy",
+            "school_matches_element": false,
+            "ei_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "current_required_levels_1_to_3": [
+              14,
+              16,
+              18
+            ],
+            "required_levels_match": false,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        },
+        {
+          "enum_value": 332,
+          "magic_type": "SummonSkeleton",
+          "name": "Summon Skeleton",
+          "class": "Taoist",
+          "school": "Phantom",
+          "icon": 32,
+          "required_levels": "1/7///1/9///2/1",
+          "corroboration": {
+            "ei_element_token": "幻影",
+            "expected_school_from_element": "Phantom",
+            "current_school": "Phantom",
+            "school_matches_element": true,
+            "ei_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "current_required_levels_1_to_3": [
+              17,
+              19,
+              21
+            ],
+            "required_levels_match": true,
+            "interpretation": "corroborating fields only; does not prove protocol ID or sprite-frame identity"
+          }
+        }
+      ]
+    }
+  }
+}

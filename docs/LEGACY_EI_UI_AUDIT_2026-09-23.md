@@ -148,6 +148,22 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 | INV-05 | 阻断高，逐物品映射/绘制仍未闭合（“实际背包图库必然错图”已撤销） | EI 原版背包 icon draw 使用 el82=`Inventory.wil`，frame 来自原始 item data `+0x28`；Zircon `DXItemCell` 使用现代 `StoreItem.Zl` 与 `ItemInfo.Image`，并以`CenterImage=true`居中在36×36子控件。独立像素抽查发现两图库322个同头部索引中320个alpha mask相同且多数颜色接近，但F8/F20等有明显差异；这既不能证明整体错误，也不能代替旧物品记录与现代`ItemInfo.Image`逐物品映射 | 用同一件可识别物品确认当前`Info.Image`与`StoreItem.Zl`帧，再追该物品EI `+0x28`；核验像素、alpha bbox、绘制原点、颜色/tint和多格脚印。若直接读取EI WIL，单独验证WIL解析器输出和offset；不得因enum名称不同整库替换，也不能按总体相似率跳过F8/F20类差异。 |
 | ITEMTIP-01 | 高，EI 背包悬停提示与当前全局物品提示在触发条件、时序、外观和数据入口上不同 | 目标 EI primary-static `item-tooltip-and-store-family-evidence.json`：背包鼠标链 `0x42FAB0→0x42F240` 命中46槽后，对占用记录调用 `0x4341F0`，坐标为指针`(+10,+10)`、icon flag=0；`0x4341F0` 按 `+0x64` 行数和 `+0x70+i*0x3C` 字符串画15px行距，提示框随指针浮动（输入锚点外扩约5px），带 `0x329696` 背景、物品类型允许时的 `0x5668C4` 图标、右边界800px裁切。当前 `DXItemCell.OnHoverEnter/OnHoverLeave/_Input` 对所有使用该格子的窗口直接设置 `GameScene._hoverItem`；`UpdateMouseItem()` 每帧显示一个全局 `_hoverLabel`，锚点为指针`(+14,+10)`、文本只用一色、没有 EI 图标路径，背景为近黑半透明和棕色边框；未见 EI `MouseControl == bag` 一类窗口/鼠标分派门，也未见一秒延迟。可用旧版 `Client/Scenes/GameScene.cs::CreateItemLabel()` 的一秒刷新延迟和富文本/图标 ItemLabelBuilder 属于该源码版本的“拿起物品(MouseItem)”路径，不能把它等同 EI F340 的格子悬停链。研究 `bag-tooltip-verification-evidence.json` 的“closed”结论只覆盖模拟器提示链/浏览器画面，不证明 Zircon 或目标 EI 同态通过。 | 将背包、人物特殊物品槽、交易双方、NPC/socket、腰带分别列出实际 hover owner、候选时延与提示调用；逐项核原版 `0x4341F0` 的行来源、图标flag与clip，独立比较 Godot label 的像素框、字体/颜色/背景/边缘和指针位置。先由 matched EI 源码/运行证据确定 hover 与拿起物品提示的差异，再修复统一 `_hoverItem` 把所有容器混为同一触发链的问题；持双人交易运行依赖的路径留阻塞，不以静态同名文本验收。 |
 
+#### 物品提示的 EI 跨容器调用链复核
+
+以下路径来自研究目录保存的原版反汇编工件（primary-static），调用来源和数据对象不同；不能因为多个分支最后调用 `0x4341F0`，便把它们折成同一种控件行为。Godot 一列是当前源码静态调用，不代表屏幕结果已经运行验证。
+
+| 容器/上下文 | EI 命中与提示入口 | EI 图标/数据差异 | 当前 Godot 路由与边界 |
+|---|---|---|---|
+| 背包 id0 | `0x42FAB0→0x42F240` 扫46条物品槽；占用槽传记录内 item 子对象到 `0x4341F0`，位置为鼠标`(+10,+10)`，flag=0 | 普通背包提示关闭 tooltip 内置图标；EI背包画格图另走 el82=`Inventory.wil` | `DXItemCell` hover 直接更新场景级 `_hoverItem`；物品格由 `DXItemGrid` 构造。此链与 EI 记录列表/6×6 viewport 不同（INV-01/05） |
+| 状态/装备 id1 | `0x44B6B0→0x44B720` 扫位置记录 `this+0x1C0+i*0x10`，对应物品记录 `this+0x2F4+i*0xC24`；命中后以`0x4341F0(x,y,0)`出详情提示，flag=0 | **tooltip caller**最后参数明确为0，故不启用提示框内置图标。另一个独立的 status paint slot loop 经`0x430A40`绘装备/角色区图像：普通槽 selector el82=`Inventory.wil`，特定索引0/1/4的角色区合成 selector el83=`Equip.wil`；这是窗口内容绘制资源路由，不能拿来当 hover tooltip 的flag | `CharacterDialog` 可见格也用`DXItemCell`；纸娃娃由`PaperDoll`单独绘制。当前全局 tooltip 与EI的状态窗 hit/record路径未分开，纸娃娃区域和特殊槽具体命中/hover还需按CHAR-01..04对照 |
+| 商店 id2 | `0x44E650→0x44E800` 仅 mode=1/2 解析相应列表物品；按 `[item+0x22]` 类型0xA/0xB设 tooltip 图标 flag 后调用`0x4341F0` | 图标显示由商店记录类型门控，不等同背包恒为 flag=0；这是同一 store 对象的模式切换。F340 ctor 的26个初始槽数组不等于商店总容量：后续 RESEARCH_LOG 的 `0x44D180` reset 链记录 `+0x660/+0x6B0/+0x720/+0x7F4/+0x804` 多数组合计约90槽；精确各状态页容量/消费者仍应按状态分列，不能继续把26写成全窗总槽数 | Zircon `NPCGoodsPanel.RefreshRows()`实际列表为`DXButton`加`DXImageControl`，不走`DXItemCell`通用 hover；出售来源的背包格仍走它。`GameStoreDialog`属现金商城扩展，虽有`DXItemCell`，不等同EI NPC store（WH-01/02） |
+| 交易 id3 | `0x415B10` 检查 hover 与 bag-active/state gate，再由 `0x416830` 命中、`0x4162E0` 解析双方物品并写入`0x7243DC`名称状态；primary-static 工件确认交易专属 item-hover helper。F341摘要称其走“tooltip via 0x4341F0-style”，但没有在这里独立列出与背包相同的绘制调用参数，故不能当作完全相同的提示绘制链 | 交易有独立pane/split hit区、状态门和物品名称缓冲；不能直接套用背包槽索引或icon flag | 当前交易 sides 是`DXItemGrid`/`DXItemCell`，因此汇入通用`_hoverItem`文本框，不保留EI pane与交易专属hover状态。两人真实交易受外部参与者条件阻塞；本轮仅登记静态差异，未作交易输入 |
+| 其他当前容器 | 现有 primary-static 样本没有证明 EI 为所有网格提供相同 hover 语义 | 当前 EI 证据不支持把自动药水、邮件、socket、商城或寄售等现代业务的格子 hover 外推到原版 | 可见业务若复用`DXItemCell`会共用全局提示；现金商城有该cell，socket/自动药水等亦有实例。相反 NPC 商品展示行为是按钮行而非`DXItemCell`，不能一概说其复用通用提示。哪些当前窗口应在 legacy 隐藏/隔离，需逐窗判 EI 节点身份 |
+
+坐标注意：背包 caller 的 `(+10,+10)` 是传给提示 renderer 的锚点；renderer 再将其外扩为浮动矩形，并在右侧800px边界裁切。不能直接将 EI tooltip 左上角记为“鼠标+10”，也不能拿当前 `_hoverLabel` 的位置 `(+14,+10)` 与锚点数字作像素等价结论。状态窗 hover 的确切鼠标偏移、商店的hover绘制锚点、交易helper对renderer的确切参数，以及窗口叠放/裁切关系仍需回到相应完整调用记录或目标运行画面核实。状态窗 paint 使用的 el82/el83 selector 分流是另一条静态链，不代表tooltip caller最后参数。
+
+计数冲突记录：`item-tooltip-and-store-family-evidence.json` 的首轮 constructor摘要只列`+0x660`处26槽循环；同一研究目录后续 `RESEARCH_LOG.md` 对 `0x44D180` reset 链的复核把多个数组（`+0x660/+0x6B0/+0x720/+0x7F4/+0x804`）合计为约90槽，并明确更正“26槽=首网格”。故本审计只将26写作F340首数组/首网格证据，整体容量仍需逐mode、逐数组映射，不能继续引用模拟器的26项为原版总量。
+
 ## 人物状态/装备窗首轮核对
 
 ### 素材边界复核（独立于 Godot 布局常量）
@@ -608,3 +624,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 **2026-09-24 物品提示静态对照：**以 primary-static `item-tooltip-and-store-family-evidence.json` 的背包 `0x42FAB0→0x42F240→0x4341F0` 和当前 Godot `DXItemCell`/`GameScene.UpdateMouseItem()` 逐段比对，新增 ITEMTIP-01。EI 背包提示由占用格命中后传入指针偏移坐标，经独立行记录绘制 15px 行距、`0x329696` 底板、按类型条件绘制的图标并裁到800px；Godot 对通用 `DXItemCell` hover 即更新同一个全局 `_hoverItem`，每帧按(+14,+10)显示单色文本标签、近黑底/棕框，没有 EI 的图标/clip/窗口所有者门控。可用旧版 `Client` 的 ItemLabelBuilder/一秒刷新是其 `MouseItem`（拿起物品）源码链，不可用来替目标 EI 鼠标悬停链背书。`bag-tooltip-verification-evidence.json` 的“closed”是模拟器范围，不是 Zircon 验收。一次针对目标 EXE 的重放仍受目标构建原件缺失约束；本项静态差异可证，但 hover 时延、各容器触发 owner 与原版像素仍列入验收。未做鼠标/输入或交易运行测试，未改游戏代码。
 
 本轮 ITEMTIP-01 审计文档已单独提交并推送；现存四个 UI 源码工作区改动及 `docs/LOCAL_TOOL_SERVICES_STATUS_2026-09-23.md` 未纳入。
+
+**2026-09-24 物品提示跨窗口静态续审：**按 `status-window-render-evidence.json`、`store-window-render-evidence.json`、`trade-window-render-evidence.json` 与 F341 的 trade hover 摘要补出背包、状态/装备、商店、交易和其他当前容器调用表。关闭了两个可能误推广的说法：交易有独立 `0x416830/0x4162E0` hover helper，但现有摘录没有独立列出与背包一致的 renderer 参数；EI 商店 F340 的26槽只是首数组/网格，不是全窗总量，RESEARCH_LOG 后续 `0x44D180` reset 链把多个数组合计修正为约90槽，仍需各状态独立映射。另外按 `NPCGoodsPanel.RefreshRows()` 核实其 NPC 商品显示为 `DXButton + DXImageControl`，不经过 `DXItemCell`；现金商城商品槽、交易和人物格则存在 `DXItemCell` 路由。**再核 `RESEARCH_LOG.md` Round 103/34 的状态窗调用后，修正一处容易混淆的资源flag：**状态窗鼠标 hit链调用 `0x4341F0(x,y,0)`，提示自身flag为0；el82/el83 的分流来自 status paint 的 `0x430A40` 装备/人物图像绘制链，不能外推到 tooltip 图标。更新 ITEMTIP-01 表，记录这种同一窗口内不同调用链。过程中以结构化查询提取各 JSON 中 hover/mouse 记录后核回原文；未运行游戏或触发输入，未改 UI 代码。`git diff --check` 待提交前执行。
+
+本轮 ITEMTIP-01 跨窗口静态续审已单独提交并推送；既有四个 UI 源码工作区改动及 `docs/LOCAL_TOOL_SERVICES_STATUS_2026-09-23.md` 未纳入。

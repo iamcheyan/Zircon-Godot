@@ -112,3 +112,9 @@ cd /home/tetsuya/mir3ei
 - 完整截图 `/tmp/legacy-chat-f350-full-20260924.png` 证明窗口运行于完整 viewport；普通文本 `safe-chat-0924` 通过输入行和 Enter 发送，`/tmp/legacy-chat-f350-clean-input-20260924.png` 显示历史回显且输入清空。六个模板命令均未发送。
 - 运行未通过 F350 画面/控件/滚动验收：普通 ZL 没有 F350 帧，且同号 380 帧头是 380×140，不是 EI 证据的16×502；六按钮、关闭、上下箭头、轨道拖动和新消息锚点均保持未验收。研究侧证据索引：`Mir3-Research/docs/research/ei-ui-layout/chat-runtime-acceptance-2026-09-24.json`。
 - 运行资源或显示阻塞解除前，不再用普通 `GameInter.Zl` 做 F350 视觉结论；优先取得可核验的 EI `GameInter.wil/.wix`，再复测同一命令和相同完整 viewport。
+### 2026-09-24 当前请求克隆复测与后续静态审计
+
+- 在 `/home/tetsuya/development/zircon` 当前 `ui/legacy-layout-lab` checkout 重跑了隔离 Xvfb `:100`、1024×768 窗口和 `/tmp/zircon-ei-server` 服务端副本；stdout 再次记录 `[LegacyOpen] requested=chat type=LegacyChatDialog visible=True size=(572, 388) location=(225, 175) inputFocus=True` 与 `[Game] 进入游戏! 玩家: TestHero`。
+- `/tmp/legacy-chat-f350-full-current.png` 为完整桌面证据；普通文本 `safe-chat-current-0924` 经 Enter 发送后，`/tmp/legacy-chat-f350-clean-current.png` 显示历史回显且输入行清空。六个模板命令没有发送。资源根和资源身份、命令、结论索引见 `Mir3-Research/docs/research/ei-ui-layout/chat-runtime-rerun-2026-09-24.json`。
+- 当前 `/home/tetsuya/development/zircon/Debug/Client/Data` 仍只有普通 `GameInter.Zl`；EI `GameInter.wil/.wix` 未找到且身份未证明。F350背景、六按钮、关闭/上下控件、轨道拖动、新消息滚动锚点继续是资源阻塞，不能把普通ZL同号帧当EI证据。
+- 聊天继续保留“焦点/普通输入已验收，视觉控件/滚动未验收”的边界。后续静态工作推进 MODAL-01：EI F950 的 Tab/Enter/Space 与 `0x7EE` type/tag 分派及 type=3、`0x66`、6、9 调用已和当前 `ConfirmDialog`/`ItemAmountDialog`/`GuildDialog` 对照；当前 Godot 尚无共享 `0x7EE` 模型，MODAL-01 仍阻断，未触发金币/行会/删除业务。

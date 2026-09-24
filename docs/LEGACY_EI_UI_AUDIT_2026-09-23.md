@@ -171,13 +171,13 @@ Mir3-Research 的旧模拟器验收记录 `skill-detail-verification-evidence.js
 
 ### 属性文字尚未闭合
 
-`status-window-render-evidence.json` 的 `attribute_text_draw_chain` 列出第一列 17 项与第二列 11 项原版 GBK 标签（包含等级、HP/MP、经验、背包/装备负重、腕力、准确、敏捷、毒物躲避、中毒恢复、生命/魔法恢复、防御、攻击及火冰电风/治疗/攻击等分类与魔法防御力），并给出精确双列原点、15 px 行距和颜色；其中部分 value 的语义仍特意保留为原始字段候选。当前 `BuildLegacyAttributeLabels()` 只造 7 个标签并按 22 px 纵向排布；`BuildLegacyExpandedPanel()` 造 12 个标签，固定 `(266,18+22*i)`，没有复用原版两列 15 px 渲染链。用户截图中的 12 行状态单列是有价值的 visual/runtime candidate，但不能覆盖 primary-static 中另外的属性项。需先从 paint mode 分支和条件跳转确认这些字段分别在哪个状态绘制，再使用游戏角色数据逐字段对照，避免把截图可见子集误当全量。
+`status-window-render-evidence.json` 的 `attribute_text_draw_chain` 列出第一列 17 项与第二列 11 项原版 GBK 标签（包含等级、HP/MP、经验、背包/装备负重、腕力、准确、敏捷、毒物躲避、中毒恢复、生命/魔法恢复、防御、攻击及火冰电风/治疗/攻击等分类与魔法防御力），并给出精确双列原点、15 px 行距和颜色；其中部分 value 的语义仍特意保留为原始字段候选。进一步核对 `paint_state.primary_disassembly_details` 后发现，state 0 和 state 1 两条分支都调用同一 `0x44BC80` 属性文字链，剪裁表达式也相同；静态证据不支持“F201 切页后整条属性链应被替换/隐藏”的当前逻辑。当前 `BuildLegacyAttributeLabels()` 只造 7 个标签并按 22 px 纵向排布；`BuildLegacyExpandedPanel()` 另造 12 个标签，固定 `(266,18+22*i)`，而 `ToggleLegacyView()` 在展开时隐藏前者、显示后者。这与原版两状态均进入完整属性绘制助手的已知调用事实直接冲突。原版 state 1 还绘制 F201 底图和 11 个装备/物品槽，因此后续应按绘制层和实际剪裁区域确认双列文字在两个底图上的可见结果，不能仅据“共享调用”推断每个字段在两态都无遮挡可见。用户截图中的 12 行状态单列是有价值的 visual/runtime candidate，但不能覆盖 primary-static 中的字段。数值字段到当前 `PlayerStats` 的映射仍未证实；需逐调用回溯原始操作数和服务端字段来源，再按原版文本基线坐标/行距重建两态布局。
 
 | 编号 | 严重度 | 发现 | 验收/待决 |
 |---|---|---|---|
 | CHAR-01 | 高，几何已修正，行为未验 | Shoes idx9=`(64,264)`、Poison idx10=`(103,264)` 已按EI原版hit/wire映射修正；独立的原版 primary-static 证据闭合 | 在原版/Godot同数据下逐槽点击和拖动，核验发出的slot byte分别为9/10；测试空槽、有装备和使用毒药路径 |
 | CHAR-02 | 高，稳定态左栏锚点本轮实屏复核；点击瞬态仍未验 | viewer API透明PNG独立解码F200 bbox `(6,92,241,327)`、F201 bbox `(252,92,518,327)`；当前`ApplyLegacyEiLayout()/ToggleLegacyView()`背景offset抵消各自alpha bbox、根高固定328，切换函数不写根`Position`。此前隔离测试场的收起/展开态根窗均在屏幕`(10,10)`，公共244×328区差异约0.64%。本轮同一真实游戏窗口中鼠标打开cap15状态窗、点击开关，稳定态根左上均为客户端`(0,25)`，展开宽520；截图见`evidence/legacy-ei-ui/character-collapsed-2026-09-24.png`和`character-expanded-2026-09-24.png`。本轮尝试用ffmpeg录连续画面失败（当前构建无x11grab输入格式），所以只确认完成后的锚点，没有排除按下/释放瞬态抖动；第二次F201 reframe的宽屏行为也未验 | 用支持X11采集的独立逐帧方式在同一实际窗口连续记录切换前后，至少800×600、1024×768和窗口缩放；逐帧跟踪root屏幕Rect、F200/F201有效像素锚、切换按钮hit rect、关闭按钮中心、展开右边缘、Viewport/CanvasTransform与clip rect，覆盖按下/释放/重绘，再裁定剩余抖动 |
-| CHAR-03 | 高，待核 | 当前紧凑 7 标签和展开 12 标签与原版静态 17+11 标签/15 px 行距不一致；12 行截图候选与 EXE 属性绘制范围冲突 | 追踪绘制 mode/条件、区分表内常显/展开内容与禁用字段；逐字段对照原版画面与 `PlayerStats` |
+| CHAR-03 | 高，静态调用链已确认行为不符 | 原版 state 0/state 1 都调用 `0x44BC80`，共用同一属性文字助手与剪裁表达式；Godot 展开时隐藏7项并改显12项，且行距22 px而原版基线间隔15 px；原始数值操作数到现代属性的映射未证实 | 静态回溯各 formatter 操作数及来源；确定 F200/F201 两种底图下的裁剪/遮挡后，以原版基线和逐字段数据映射实现并对照验证 |
 | CHAR-04 | 中 | 原版 11 hit records 中 3 个大区域不是普通装备 icon 格；当前 8 可见格/人物纸娃娃区域/属性文本的绘制次序与鼠标命中遮挡还未做整链复核 | 对齐 `0x44B5D9` paint order、`0x44B720` hit-test 与 Godot z-order/pass-through；验证装备拖入/拖出/直接使用 |
 
 ## 社交/交易/任务窗首轮几何审计

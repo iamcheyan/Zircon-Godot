@@ -140,6 +140,11 @@ public partial class ConfigDialog : DXWindow
     /// <summary>旧版 EI 选项窗口：GameInter F750，根 248×264。</summary>
     public void ApplyLegacyEiLayout()
     {
+        // The shared legacy test wrapper clips to each root by default. EI's
+        // base window painter clips backgrounds to the 800x600 viewport, while
+        // F750's non-transparent pixels extend 9px below this 248x264 root.
+        // Keep those source pixels visible outside the root, like EI.
+        Clip = false;
         Size = new Vector2I(248, 264);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 750;

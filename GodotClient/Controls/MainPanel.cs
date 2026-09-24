@@ -53,6 +53,9 @@ public partial class MainPanel : DXImageControl
             Location = new Vector2I(61, 121),
             Clip = true,
         };
+        // F63 同时承担经验填充纹理；DXImageControl 默认 DrawImage 会在
+        // BeforeDraw 后再次绘制整帧，覆盖按比例裁切的填充，因此只保留自定义绘制。
+        ExperienceBar.DrawImage = false;
         ExperienceBar.BeforeDraw += DrawExperienceFill;
         AddControl(ExperienceBar);
 

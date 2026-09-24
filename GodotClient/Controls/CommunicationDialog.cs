@@ -106,7 +106,7 @@ public partial class CommunicationDialog : DXWindow
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(536, 354);
+        _closeButton.Location = new Vector2I(532, 350);
         _closeButton.Size = new Vector2I(28, 26);
         UpdateClientAreaForLegacySkin();
     }
@@ -140,7 +140,7 @@ public partial class CommunicationDialog : DXWindow
             && _background.Index == 350
             && _body.Modulate.A > 0.99f
             && _scroll.Modulate.A > 0.99f
-            && _closeButton.Location == new Vector2I(536, 354);
+            && _closeButton.Location == new Vector2I(532, 350);
         details = $"size={Size} background=F{_background.Index} bodyAlpha={_body.Modulate.A:0.##} close={_closeButton.Location}";
         return ok;
     }

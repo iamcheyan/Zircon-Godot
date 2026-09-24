@@ -104,3 +104,11 @@ cd /home/tetsuya/mir3ei
 2. 先修聊天窗输入焦点/按钮可见性并完成完整 viewport 截图和普通聊天回显；不发六个可能有副作用的模板命令。
 3. 更新 CHAT-02/04 与证据链接，按用户要求每个可交付改动及时 commit/push。
 4. 再按审计表从尚未闭合的窗口逐项推进；静态源码、EI 原始素材、屏幕截图/命中测试分别记证据，不用代码结构不同作为停止比较的理由。
+
+### 2026-09-24 F350 真实运行结果
+
+- 使用目标克隆代码、隔离 Xvfb `:100`、隔离服务端副本 `/tmp/zircon-ei-server`，完整窗口为 1024×768；stdout 已记录 `S.StartGame Result=Success`、`[Game] 进入游戏! 玩家: TestHero` 和 `[LegacyOpen] requested=chat type=LegacyChatDialog visible=True size=(572, 388) location=(225, 175) inputFocus=True`。
+- `/home/tetsuya/development/zircon/Debug/Client/Data` 只有普通 `GameInter.Zl`，SHA-256=`32157af8ec3bd8506f6ef9488610f9090e54e6266d2d8df6a6af82e24f3fa09d`；`GameInter.wil/.wix` 和 `/home/tetsuya/mir3ei/LegacyEI/Data` 对应文件均缺失。不得把普通 ZL 同号帧升级为 EI 证据。
+- 完整截图 `/tmp/legacy-chat-f350-full-20260924.png` 证明窗口运行于完整 viewport；普通文本 `safe-chat-0924` 通过输入行和 Enter 发送，`/tmp/legacy-chat-f350-clean-input-20260924.png` 显示历史回显且输入清空。六个模板命令均未发送。
+- 运行未通过 F350 画面/控件/滚动验收：普通 ZL 没有 F350 帧，且同号 380 帧头是 380×140，不是 EI 证据的16×502；六按钮、关闭、上下箭头、轨道拖动和新消息锚点均保持未验收。研究侧证据索引：`Mir3-Research/docs/research/ei-ui-layout/chat-runtime-acceptance-2026-09-24.json`。
+- 运行资源或显示阻塞解除前，不再用普通 `GameInter.Zl` 做 F350 视觉结论；优先取得可核验的 EI `GameInter.wil/.wix`，再复测同一命令和相同完整 viewport。

@@ -72,6 +72,7 @@ public partial class GameScene : Control
     private NoticeDialog _noticeDialog;
     private ChatLogPanel _chatLog;
     private ChatTextBox _chatTextBox;
+    private LegacyChatDialog _legacyChatDialog;
     private HelpDialog _helpDialog;
     private ConfigDialog _configDialog;
     private ChatOptionsDialog _chatOptionsDialog;
@@ -339,9 +340,15 @@ public partial class GameScene : Control
     }
     public void ReceiveChat(string text, MessageType type = MessageType.System, List<ClientUserItem> linkedItems = null)
     {
-        _chatLog?.AddMessage(text, type, Colors.Yellow, linkedItems);
+        AddChatMessage(text, type, Colors.Yellow, linkedItems);
         if (type == MessageType.Announcement && AutoLoginArgs.LegacyUi)
             ShowLegacyNotice(text);
+    }
+
+    private void AddChatMessage(string text, MessageType type, Color colour, List<ClientUserItem> linkedItems = null)
+    {
+        _chatLog?.AddMessage(text, type, colour, linkedItems);
+        _legacyChatDialog?.AddMessage(text, type, colour);
     }
 
     public void ShowLegacyNotice(string text)
@@ -351,7 +358,13 @@ public partial class GameScene : Control
         WindowManager.Open(_noticeDialog, _uiLayer);
     }
 
-    public void StartPrivateMessage(string name) => _chatTextBox?.StartPM(name);
+    public void StartPrivateMessage(string name)
+    {
+        if (AutoLoginArgs.LegacyUi && _legacyChatDialog != null)
+            _legacyChatDialog.StartPrivateMessage(name, _uiLayer);
+        else
+            _chatTextBox?.StartPM(name);
+    }
 
     public void OpenExitDialog()
     {
@@ -2670,7 +2683,7 @@ public partial class GameScene : Control
         if (p == null || string.IsNullOrWhiteSpace(p.Text)) return;
         string sender = p.ObjectID == _playerObjectID ? (StartInfo?.Name ?? Lang.GameUi561Label) :
             (_objects.TryGetValue(p.ObjectID, out var chatObject) ? chatObject.DisplayName : Lang.GameSystemLabel);
-        _chatLog?.AddMessage($"[{p.Type}] {sender}: {p.Text}", p.Type, ChatColour(p.Type), p.LinkedItems);
+        AddChatMessage($"[{p.Type}] {sender}: {p.Text}", p.Type, ChatColour(p.Type), p.LinkedItems);
         if (p.ObjectID == _playerObjectID) _player?.SetChat(p.Text);
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player)) player.SetChat(p.Text);
         else if (_objects.TryGetValue(p.ObjectID, out var ob)) ob.SetChat(p.Text);
@@ -4460,7 +4473,11 @@ public partial class GameScene : Control
         _chatLog.Visible = !ClientSettings.HideChatBar;
         _chatTextBox = new ChatTextBox();
         _uiLayer.AddChild(_chatTextBox);
-        _chatTextBox.Visible = !ClientSettings.HideChatBar;
+        _chatTextBox.Visible = !ClientSettings.HideChatBar && !AutoLoginArgs.LegacyUi;
+        _legacyChatDialog = new LegacyChatDialog();
+        _legacyChatDialog.Location = new Vector2I(Math.Max(0, ((int)Size.X - 572) / 2), Math.Max(0, ((int)Size.Y - 388) / 2));
+        _uiLayer.AddChild(_legacyChatDialog);
+        _legacyChatDialog.Visible = false;
 
         _miniMap = new MiniMapDialog();
         _uiLayer.AddChild(_miniMap);
@@ -4784,7 +4801,7 @@ public partial class GameScene : Control
             "inventory" => _inventoryDialog,
             "magic" => _magicDialog,
             "quest" => _questDialog,
-            "chat" => _communicationDialog,
+            "chat" => _legacyChatDialog,
             "group" => _groupDialog,
             "menu" => AutoLoginArgs.LegacyUi ? _configDialog : _menuDialog,
             "horse" => _horseDialog,
@@ -4802,6 +4819,12 @@ public partial class GameScene : Control
             _npcDialog.ApplyLegacyEiLayout();
         if (string.Equals(name, "character-expanded", StringComparison.OrdinalIgnoreCase))
             _characterDialog.SetLegacyExpandedForAudit();
+        if (window == _legacyChatDialog)
+        {
+            _legacyChatDialog.OpenChat(_uiLayer);
+            GD.Print($"[LegacyOpen] requested={name} type={window.GetType().Name} visible={window.Visible} size={window.Size} location={window.Location} inputFocus={_legacyChatDialog.InputHasFocus}");
+            return;
+        }
         if (window != null)
         {
             WindowManager.Open(window, _uiLayer);
@@ -6508,7 +6531,13 @@ public partial class GameScene : Control
         if (IsObserver) return;
         _net?.Connection?.Enqueue(new C.MarriageTeleport());
     }
-    public void LinkItemToChat(ClientUserItem item) => _chatTextBox?.LinkItem(item);
+    public void LinkItemToChat(ClientUserItem item)
+    {
+        if (AutoLoginArgs.LegacyUi && _legacyChatDialog != null)
+            _legacyChatDialog.LinkItem(item);
+        else
+            _chatTextBox?.LinkItem(item);
+    }
 
     public void SendAutoPathWaypoint(int mapIndex, int x, int y)
     {
@@ -10476,8 +10505,22 @@ public partial class GameScene : Control
         if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
             return;
 
-        if (_chatTextBox?.HandleGlobalKey(key) == true)
+        if (AutoLoginArgs.LegacyUi
+            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
+            : _chatTextBox?.HandleGlobalKey(key) == true)
             return;
+
+        // EI 的聊天弹窗使用 R 显隐；R 在现代客户端的功能键映射为排行榜。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.R
+            && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
+        {
+            if (_legacyChatDialog?.Visible == true)
+                _legacyChatDialog.CloseChat();
+            else
+                _legacyChatDialog?.OpenChat(_uiLayer);
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
 
         // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，
         // 该复位尚未对应到 Zircon 字段，先保留为单独审计缺口。

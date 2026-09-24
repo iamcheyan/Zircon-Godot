@@ -156,7 +156,7 @@ public partial class ConfigDialog : DXWindow
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(216, 238);
+        _closeButton.Location = new Vector2I(218, 238);
         _closeButton.Size = new Vector2I(28, 26);
         CreateLegacyOptionButtons();
         UpdateClientAreaForLegacySkin();

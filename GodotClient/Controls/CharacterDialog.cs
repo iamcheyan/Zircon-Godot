@@ -425,8 +425,8 @@ public partial class CharacterDialog : DXWindow
             value(Stat.Agility).ToString(),
             value(Stat.PoisonResistance).ToString(),
             "—",
-            value(Stat.Healing).ToString(),
-            value(Stat.HealingCap).ToString(),
+            "—", // 原版生命恢复字段尚无当前 Stat 证据映射。
+            "—", // 原版魔法恢复字段尚无当前 Stat 证据映射。
         };
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
             _legacyAttributeLabels[i].Text = $"{LegacyFirstAttributeNames[i]} {values[i]}";

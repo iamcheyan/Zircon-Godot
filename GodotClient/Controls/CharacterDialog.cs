@@ -43,7 +43,7 @@ public partial class CharacterDialog : DXWindow
     private static readonly string[] LegacyFirstAttributeNames =
     {
         "LEVEL", "HP", "MP", "经验", "包袱负重", "装备负重", "腕力",
-        "准确", "敏捷", "毒物躲避", "中毒恢复", "生命恢复", "魔法恢复",
+        "准确", "敏捷", "魔法躲避", "毒物躲避", "中毒恢复", "生命恢复", "魔法恢复",
     };
     private bool _legacyEiLayout;
     private DXLabel _disciplineLabel;
@@ -423,8 +423,9 @@ public partial class CharacterDialog : DXWindow
             value(Stat.HandWeight).ToString(),
             value(Stat.Accuracy).ToString(),
             value(Stat.Agility).ToString(),
-            value(Stat.PoisonResistance).ToString(),
-            "—",
+            "—", // 原版魔法躲避字段尚无当前 Stat 证据映射。
+            "—", // 原版毒物躲避字段不等同于当前 PoisonResistance。
+            "—", // 原版中毒恢复字段尚无当前 Stat 证据映射。
             "—", // 原版生命恢复字段尚无当前 Stat 证据映射。
             "—", // 原版魔法恢复字段尚无当前 Stat 证据映射。
         };
@@ -454,8 +455,7 @@ public partial class CharacterDialog : DXWindow
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
             ("防御", Stat.MinAC, Stat.MaxAC),
-            ("攻击", Stat.MinDC, Stat.MaxDC),
-            ("魔法", null, null), // 原版仅有一个原始字段，不能冒称 MC 范围。
+            ("魔法", null, null), // EI 本窗口仅绘制标签，不显示值。
             ("火(火焰)", Stat.FireAttack, null),
             ("冰(冰冻)", Stat.IceAttack, null),
             ("电(雷电)", Stat.LightningAttack, null),
@@ -463,7 +463,7 @@ public partial class CharacterDialog : DXWindow
             ("治疗(神圣)", Stat.HolyAttack, null),
             ("攻击(黑暗)", Stat.DarkAttack, null),
             ("召唤(幻影)", Stat.PhantomAttack, null),
-            ("魔法防御力", null, null), // 原版标签下有六个原始字段，不能冒称 MR 范围。
+            ("魔法防御力", null, null), // EI 本窗口仅绘制标签，不显示值。
         };
         for (int i = 0; i < rows.Length; i++)
         {

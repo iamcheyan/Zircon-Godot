@@ -133,12 +133,14 @@ public sealed partial class LegacyChatDialog : DXWindow
     public void CloseChat()
     {
         _input.ReleaseFocus();
+        GetViewport()?.GuiReleaseFocus();
         WindowManager.Close(this);
     }
 
     public override void Close()
     {
         _input.ReleaseFocus();
+        GetViewport()?.GuiReleaseFocus();
         base.Close();
     }
 

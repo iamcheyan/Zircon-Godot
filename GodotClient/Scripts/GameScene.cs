@@ -10510,18 +10510,8 @@ public partial class GameScene : Control
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
         if (_net?.Connection?.Connected != true) return;
 
-        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
-        // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车
-        // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
-        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
-            return;
-
-        if (AutoLoginArgs.LegacyUi
-            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
-            : _chatTextBox?.HandleGlobalKey(key) == true)
-            return;
-
-        // EI 的聊天弹窗使用 R 显隐；R 在现代客户端的功能键映射为排行榜。
+        // EI 的聊天弹窗使用 R 显隐；必须先于焦点保护分支，
+        // 否则关闭窗口后 LineEdit 仍是 Viewport focus owner 时 R 会被吞掉。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.R
             && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
         {
@@ -10532,6 +10522,17 @@ public partial class GameScene : Control
             GetViewport()?.SetInputAsHandled();
             return;
         }
+
+        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
+        // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车
+        // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+            return;
+
+        if (AutoLoginArgs.LegacyUi
+            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
+            : _chatTextBox?.HandleGlobalKey(key) == true)
+            return;
 
         // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，
         // 该复位尚未对应到 Zircon 字段，先保留为单独审计缺口。

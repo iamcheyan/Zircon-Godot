@@ -134,6 +134,7 @@ public sealed partial class DXTextInput : DXControl
         _edit.GrabFocus();
     }
 
+
     public override void _Ready()
     {
         base._Ready();
@@ -188,5 +189,15 @@ public sealed partial class DXTextInput : DXControl
             _edit.Position = new Vector2(2, _textOffsetY);
             _edit.Size = Size - new Vector2(4, 2);
         };
+    }
+
+    public override void _GuiInput(InputEvent e)
+    {
+        base._GuiInput(e);
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+        {
+            _edit.GrabFocus();
+            _edit.CaretColumn = _edit.Text.Length;
+        }
     }
 }

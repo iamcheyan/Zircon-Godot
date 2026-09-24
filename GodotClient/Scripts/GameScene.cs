@@ -10517,11 +10517,12 @@ public partial class GameScene : Control
     public override void _Input(InputEvent @event)
     {
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
-        // EI 的聊天弹窗使用 R 显隐；必须先于连接/焦点保护分支，
-        // 否则连接状态短暂变化或关闭窗口后 LineEdit 仍是焦点 owner 时 R 会被吞掉。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.R
             && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
         {
+            // 文本输入获得焦点时，R 是聊天内容，不是 EI 的显隐快捷键。
+            if (_legacyChatDialog?.InputHasFocus == true)
+                return;
             if (_legacyChatDialog?.Visible == true)
                 _legacyChatDialog.CloseChat();
             else

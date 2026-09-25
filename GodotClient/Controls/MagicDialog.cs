@@ -31,6 +31,7 @@ public partial class MagicDialog : DXWindow
     private DXButton _closeButton;
     private bool _legacyEiLayout;
     private const int LegacyPageSize = 6;
+    private static readonly int[] LegacySkillRowY = { 26, 72, 118, 164, 210, 256 };
     private const int LegacyDetailX = 235;
     private const int LegacyDetailY = 30;
     private const int LegacyDetailWidth = 165;
@@ -244,13 +245,14 @@ public partial class MagicDialog : DXWindow
         }
         _legacySkillRows.Clear();
 
-        // F400 左页确实有六条横向行槽；具体 RECT 写入仍是
-        // 0x43A370 外部状态，位置按帧图配准并保留为 candidate。
+        // F400 左页六个浅色技能影槽按 Frame400 的(-30,-67)绘制原点
+        // 配准到窗口：32px 图标框中心落在约(74,46+46*i)，行首 y=26+46*i。
+        // 0x43A370 的运行时RECT写入仍待确认，所以点击区高度仍标为候选。
         for (int i = 0; i < LegacyPageSize; i++)
         {
             var row = new LegacySkillRowView
             {
-                Location = new Vector2I(61, 51 + i * 37),
+                Location = new Vector2I(55, LegacySkillRowY[i]),
                 Size = new Vector2I(145, 36),
                 Visible = false,
             };
@@ -384,19 +386,23 @@ public partial class MagicDialog : DXWindow
             && _tabPrevious.Index == 410
             && _tabNext.Location == new Vector2I(366, 303)
             && _tabNext.Index == 412;
+        bool rowsMatch = _legacySkillRows.Count == LegacyPageSize
+            && _legacySkillRows.Select((row, i) => row.Location == new Vector2I(55, LegacySkillRowY[i])
+                && row.Size == new Vector2I(145, 36)).All(x => x);
         bool ok = Size == new Vector2I(452, 380)
             && _header.Index == 400
             && _legacyAuxControl != null
             && _legacyAuxControl.Location == new Vector2I(399, 340)
             && _legacyAuxControl.Index == 440
             && _legacySkillRows.Count == LegacyPageSize
+            && rowsMatch
             && _schoolButtons.Count == LegacySchoolOrder.Length
             && tabsMatch
             && navigationMatch
             && !_list.Visible
             && !_scrollBar.Visible;
         details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} " +
-            $"categoryPositions={tabsMatch} nav={navigationMatch} rows={_legacySkillRows.Count} " +
+            $"categoryPositions={tabsMatch} nav={navigationMatch} rows={_legacySkillRows.Count} rowsAligned={rowsMatch} " +
             $"page={_legacyPage + 1}/{Math.Max(1, LegacyPageCount())}";
         return ok;
     }
@@ -755,7 +761,7 @@ public partial class LegacySkillRowView : DXControl
             float scale = Mathf.Min(1f, Mathf.Min(32f / icon.GetWidth(), 32f / icon.GetHeight()));
             float width = icon.GetWidth() * scale;
             float height = icon.GetHeight() * scale;
-            DrawTextureRect(icon, new Rect2(3 + (32 - width) / 2f, 2 + (32 - height) / 2f, width, height),
+            DrawTextureRect(icon, new Rect2(3 + (32 - width) / 2f, 4 + (32 - height) / 2f, width, height),
                 false, new Color(1f, 1f, 1f, opacity));
         }
 
@@ -767,12 +773,12 @@ public partial class LegacySkillRowView : DXControl
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
         try
         {
-            Vector2 namePos = new(40 * canvasScale, 14 * canvasScale);
+            Vector2 namePos = new(43 * canvasScale, 14 * canvasScale);
             DrawString(font, namePos, _info.Local() ?? _info.Name ?? string.Empty,
                 HorizontalAlignment.Left, 100 * canvasScale, drawSize,
                 new Color(0.24f, 0.24f, 0.24f, opacity));
             string state = _magic == null ? $"需 {_info.NeedLevel1} 级" : $"等级 {_magic.Level}";
-            DrawString(font, new Vector2(40 * canvasScale, 29 * canvasScale), state,
+            DrawString(font, new Vector2(43 * canvasScale, 29 * canvasScale), state,
                 HorizontalAlignment.Left, 100 * canvasScale, drawSize,
                 new Color(0.22f, 0.33f, 0.22f, opacity));
         }

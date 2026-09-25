@@ -1283,3 +1283,10 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 **2026-09-25 STATUS-07 EI 槽 hover/pressed 视觉边界修复：**独立反汇编 `0x0044B6B0-0x0044B78C` 确认原版悬停入口调用 `0x0044B720` 遍历 11 个槽位矩形，命中占用槽后仅调用 `0x004341F0` tooltip；没有 hover/pressed 状态写入，也没有槽边框/红底绘制分支。`DXItemCell` 新增 `DrawInteractionHighlightEnabled`，EI `CharacterDialog` 的 11 个装备格关闭通用绿色边框/半透明红底，命中、tooltip、选择和拖放输入链保留，非 EI 窗口不变。
 
 在真实 `/home/tetsuya/mir2ei/login_game.sh legacy`、Xvfb `:100`、完整 1024×768 viewport 中复测，stdout 再次记录 `S.StartGame Result=Success`、`[LegacyCharacter] ... hitRecords=11 paperDoll=(122,164)`；`status-no-highlight-open.png`、`status-no-highlight-hover.png`、`status-no-highlight-pressed.png` 证明空 Torch 槽打开/悬停/按下三态均保持原始槽框，无现代高亮 fallback。耐久/强化/绑定/职业等级限制/红点的 EI 专用语义贴图仍无独立证据，继续保持证据边界。
+
+**2026-09-25 STATUS-08 / SKL-UI-01 / HUD-ORB-01 用户截图复核与修正：**用户提供的 1024×768 legacy UI 截图指出状态窗纸娃娃向技能书一侧偏、技能书六个技能图标没有落在 F400 的六个底图影槽、红/蓝血球数值常驻且压在球面上。
+
+- 纸娃娃锚点改为窗口相对 `(97,200)`：`status-window-render-evidence.json` primary-static 记录特殊人物绘制目标 `window origin + (0x61,0xC8)`。此前 `CharacterDialog.ApplyLegacyEiLayout()` 使用 `(122,164)`，两个坐标不能以 PaperDoll Control 外框居中来替代原版合成目标。
+- 技能行重新按本机 `/home/tetsuya/mir3ei/LegacyEI/Data/GameInter.wil` 的 F400 底图像素配准。使用独立 `wilsdk.py` 解码得帧头画布 `512×512`、offset `(7,-44)`；Godot 当前背景配准原点 `(-30,-67)`。六个左页浅色行影槽的图标中心约为窗口相对 `(74,46+46*i)`，故将行位置改为 x=55、y=`26/72/118/164/210/256`，图标缩放框居中于影槽，名称/等级列移至 x=98。原版 6 个命中 RECT 的实际写入值仍未闭合；此处修的是可见像素位置，不宣称点击区域字节级一致。
+- 红/蓝血球数字改为默认隐藏；鼠标悬停血球区域时分别在左右球下显示 HP、MP 当前值/上限。悬停命中区域延伸到数字下方，使指针移到数字上仍保持可见。该交互按用户此次明确提出的截图验收要求实现；尚无独立原版运行截图证明 EI 的悬停文字时序。
+- `dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功，0 errors、3 个现有 warning。构建时已发现一个运行中的 Godot 客户端，因此没有关闭它或另起进程；本次三项修改的完整 viewport/悬停实机截图仍待下一次安全重启后验收，不能标为运行通过。

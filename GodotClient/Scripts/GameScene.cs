@@ -926,6 +926,7 @@ public partial class GameScene : Control
     private double _moveVisualLockUntilMs;
     private bool _runningTestStarted;
     private bool _interactionAuditStarted;
+    private bool _legacyNpcResponseSelfTestStarted;
     private int _interactionInspectSent;
     private int _interactionInspectLeftSent;
     private int _interactionInspectReceived;
@@ -1024,7 +1025,7 @@ public partial class GameScene : Control
         _escapeCloseAll = ClientSettings.EscapeCloseAll;
         DrawWeather = ClientSettings.DrawWeather;
         QuestTrackerVisible = ClientSettings.QuestTrackerVisible;
-
+        _legacyNpcResponseSelfTestStarted = false;
         // 世界坐标使用原版 48x32 逻辑格，最终整体按 2 倍输出。
         // UI CanvasLayer 有独立缩放，不会被这里重复缩放。
         Scale = Vector2.One * WorldScale;
@@ -7053,6 +7054,52 @@ public partial class GameScene : Control
         _npcObjectId = response.ObjectID;
         _npcDialog?.ShowPage(response);
     }
+
+    /// <summary>
+    /// Headless acceptance hook for the real GameScene response dispatch. It reuses a
+    /// loaded NPCPage (so MirDB bindings are valid), changes only the in-memory text,
+    /// then calls the same NPCResponse -> OnNPCResponse -> ShowPage path as a packet.
+    /// The process is never allowed to persist this temporary text.
+    /// </summary>
+    private void RunLegacyNpcResponseSelfTest()
+    {
+        var page = Globals.NPCPageList?.Binding?.FirstOrDefault(x => x?.Say != null);
+        if (page == null)
+        {
+            GD.PrintErr("[LegacyNpcResponseSelfTest] FAIL no bound NPCPage");
+            return;
+        }
+
+        page.Say = string.Join("\n", new[]
+        {
+            "尊敬的顾客，欢迎光临本店。",
+            "{本店经营：} 武器、防具、药水。",
+            "您可以选择以下服务：",
+            "[购买物品:1]",
+            "[出售物品:2]",
+            "[修理装备:3]",
+            "[升级武器:4]",
+            "今日特价：金创药半价。",
+            "库存充足，数量有限，售完即止。",
+            "{温馨提示：} 交易前请先确认。",
+            "请勿离开发售柜台太远。",
+            "营业时间：全天开放。",
+            "祝您游戏愉快，再见！",
+        });
+
+        var response = new S.NPCResponse
+        {
+            ObjectID = 0,
+            Index = page.Index,
+            Page = page,
+        };
+        GD.Print($"[LegacyNpcResponseSelfTest] dispatch NPCResponse page={page.Index}");
+        OnNPCResponse(response);
+        var state = _npcDialog?.LegacyEiSelfState();
+        GD.Print($"[LegacyNpcResponseSelfTest] state ok={state?.Ok} "
+            + $"line={state?.Line}/{state?.MaxLine} offsetY={state?.TextOffsetY} "
+            + $"options={_npcDialog?.LegacyText.ButtonAreas.Count}");
+    }
     public void SendMagicKey(MagicType magic, Library.SpellKey s1, Library.SpellKey s2, Library.SpellKey s3, Library.SpellKey s4)
         => _net.Connection.SendMagicKey(magic, s1, s2, s3, s4);
 
@@ -8791,6 +8838,14 @@ public partial class GameScene : Control
         // refresh both the rendered node and its hit proxy in the same frame.
         foreach (var remotePlayer in _otherPlayers.Values)
             UpdateOtherPlayerPosition(remotePlayer);
+
+        if (!_legacyNpcResponseSelfTestStarted
+            && OS.GetCmdlineUserArgs().Contains("--legacy-npc-response-selftest")
+            && _startGameShown && _mapView?.Map != null)
+        {
+            _legacyNpcResponseSelfTestStarted = true;
+            GetTree().CreateTimer(1.0).Timeout += RunLegacyNpcResponseSelfTest;
+        }
 
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)

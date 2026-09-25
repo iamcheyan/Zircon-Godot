@@ -38,6 +38,8 @@
 | `skill-book-current-closed-audit-2026-09-25.png` | 当前构建关闭态 | 在当前详情态按裸 `e`，`DISPLAY=:100 scrot` | 书页隐藏，主 HUD 与常驻快捷栏仍可见。 |
 | `skill-book-current-reopen-audit-2026-09-25.png` | 当前构建重开态 | 再按裸 `e`，`DISPLAY=:100 scrot` | 书页恢复到 Fire 第 1 页并保留当前 Fire Ball 选中详情；当前实现保留窗口实例状态，原版复位语义仍需证据。 |
 | `skill-book-current-selected-audit-2026-09-25.png` | 当前提交构建后的最终详情态 | 在打开态点击第一行，`DISPLAY=:100 scrot` | 当前构建显示选中边框、MIcon 图标、右页详情与裁剪换行。 |
+| `skill-book-entry-f1-f12-2026-09-25.png` | 当前构建 F1-F12 全量入口 | 在技能书选中 Fire Ball 后依次发送 F1..F12，`DISPLAY=:100 scrot` | 控制台记录 `Spell01..Spell12` 全部绑定，技能书与快捷栏同时保持可见。 |
+| `skill-book-entry-shift-f1-f12-2026-09-25.png` | 当前构建 Shift+F1-F12 全量入口 | 依次发送 Shift+F1..Shift+F12，`DISPLAY=:100 scrot` | 控制台记录 `Spell13..Spell24` 全部绑定，Shift 分派未被技能书吞掉；原版语义仍需 byte-level 证据。 |
 ## 输入与控制台证据
 
 - `E`：技能书打开/关闭均成功。

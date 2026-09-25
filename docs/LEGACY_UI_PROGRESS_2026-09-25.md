@@ -176,6 +176,6 @@
 - `[~]` 已生成离线 MAP-BASELINE：627 条 MapInfo、544 个本地英雄杀地图文件、794 个 Zircon 地图文件；exact/renamed 538 条允许点级检查后复用，89 条 variant/replacement/pending 禁止盲拷坐标。
 - `[~]` NPC 全量 294 条已生成只读 dry-run manifest；171 条 exact/renamed 可行走候选，123 条因身份/地图关系进入人工复核；未删除 NPC，未改业务字段，未写 System.db。
 - `[!]` 怪物身份仅 6/432 条英雄杀定义达到可靠别名映射；半兽人/Oma、祖玛/Zuma、白野猪和 Boss/变体冲突仍需属性、资源帧、掉落和刷新配置交叉确认。
-- `[!]` Hero-kill `Mon_Def/*.gen`/`MonGen` 刷新源当前本地不可用；2475 条 Zircon RespawnInfo 只做旧点盘点，全部 blocked，未创建、删除或改写刷新关系。
+- `[!]` 原始 Hero-kill `Mon_Def/*.gen`/`MonGen` 仍不可用；已接入 recovered `Tools/DbMigrationTool/data/import_plan_v2.json` 的 742 条刷新计划，但缺少 range，且仅 517 条与当前点唯一匹配、133 条当前点冲突、124 条 YXS-only、1825 条 Zircon-only，全部保持 pending/blocked，未创建、删除或改写刷新关系。
 - `[~]` 独立地图解析器通过逻辑一致性检查，但发现 50 个 malformed/truncated `.map` 解析事件；NPC-only 目标重叠为 0，怪物目标联合重叠待刷新源补齐。
 - `[~]` sandbox overlay、机器清单和报告位于 Mir3-Research `docs/research/ei-ui-layout/`；写库、双库 round-trip、客户端逐地图验收和远端 SHA 尚未完成，不能宣称世界数据已对齐。

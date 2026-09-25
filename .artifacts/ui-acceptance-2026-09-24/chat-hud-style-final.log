@@ -1,0 +1,17 @@
+# 主HUD聊天视觉最终验收（2026-09-25）
+# command: DISPLAY=:100 MIR3_EI_ROOT=/home/tetsuya/mir2ei ZIRCON_UI_DATA_PATH=/home/tetsuya/mir2ei/Data ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/Data /home/tetsuya/mir2ei/login_game.sh all legacy
+# viewport: 1024x768
+[Select] AutoStartGame: 发送 StartGame, charIndex=1
+[Net] SendStartGame charIndex=1, Connected=True, SendList=0
+[Net] 收到 S.StartGame: Result=Success, Magics=174, 前3个Set1=[59:None,130:Spell12,133:Spell11]
+[Select] *** StartGame 成功! 进入游戏 ***
+[LegacyChat] scroll button frames 380/381 unavailable; using (19, 14) hit zone without sprite
+[LegacyChat] scroll button frames 382/383 unavailable; using (19, 14) hit zone without sprite
+[LegacyHud] PASS viewport=(1022, 739) location=(111, 603) panel=50/(800, 136) buttons=True legacyStats=True vis(level/class/fp/cp/ac/dc/mac/mc/sc)=True/False/False/False/True/True/False/False/False level=@(665, 60) ac=AC 0-0@(580, 108) dc=DC 0-0@(680, 108) orb=(49, 13)/(112, 110) visible=True duplicateIcon=False hiddenAttributeIcon=True states=True/True/True single=True
+[LegacyChat] receive type=Announcement textLength=19 hudVisible=True hudMessages=1 hudTypeEnabled=True hudLines=1 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[Game] 加载地图: MapIndex=6 -> 2 (Banya Village)
+[ChatInput] focus owner=ChatTextBox size=(354, 16) textLength=0
+[ChatInput] submit owner=ChatTextBox textLength=15 legacyHud=True
+[LegacyChat] receive type=Normal textLength=25 hudVisible=True hudMessages=2 hudTypeEnabled=True hudLines=2 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+# screenshot: chat-hud-style-final.png
+# conclusion: StartGame success; HUD geometry and normal-message receive path pass; final screenshot shows opaque white normal text with transparent per-message backgrounds.

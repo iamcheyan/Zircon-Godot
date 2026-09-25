@@ -1,0 +1,85 @@
+{
+  "date": "2026-09-25",
+  "runtime": {
+    "command": "DISPLAY=:100 MIR3_EI_ROOT=/home/tetsuya/mir2ei ZIRCON_UI_DATA_PATH=/home/tetsuya/mir2ei/Data ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/Data /home/tetsuya/mir2ei/login_game.sh all legacy",
+    "viewport": "1024x768",
+    "resource_root": "/home/tetsuya/mir2ei/Data",
+    "login": "StartGame Result=Success"
+  },
+  "screenshots": [
+    {
+      "file": "chat-hud-fixed-baseline.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-fixed-baseline.png",
+      "state": "主HUD空聊天框基线",
+      "conclusion": "F50主面板、血球、经验条、右侧操作栏和354x74聊天槽同屏可见；无F350覆盖。"
+    },
+    {
+      "file": "chat-hud-fixed-focus.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-fixed-focus.png",
+      "state": "点击主HUD输入条后获得焦点",
+      "conclusion": "输入条显示光标；运行日志记录ChatInput size=(354,16)。"
+    },
+    {
+      "file": "chat-hud-r-input-fixed.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-r-input-fixed.png",
+      "state": "普通文本未提交，内容含R字符HUD_R_TEST",
+      "conclusion": "R不再触发F350快捷键；文本留在主HUD输入条。"
+    },
+    {
+      "file": "chat-hud-r-message-final.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-r-message-final.png",
+      "state": "Enter提交含R普通文本",
+      "conclusion": "主HUD出现TestHero消息，输入条清空；日志为submit textLength=10和Normal textLength=20。"
+    },
+    {
+      "file": "chat-hud-fixed-multiline.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-fixed-multiline.png",
+      "state": "连续普通消息与下一条输入同时存在",
+      "conclusion": "消息顺序保持，主HUD不会被下一帧清空。"
+    },
+    {
+      "file": "chat-hud-long-input-fixed.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-long-input-fixed.png",
+      "state": "89字符长文本未提交",
+      "conclusion": "输入条水平显示尾部，未误打开F350；焦点和窄条尺寸保持。"
+    },
+    {
+      "file": "chat-hud-long-message-fixed.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-long-message-fixed.png",
+      "state": "89字符长文本提交后",
+      "conclusion": "日志为submit textLength=89、Normal textLength=99；消息在354x74裁剪区内显示。"
+    },
+    {
+      "file": "chat-hud-right-button-open-f350.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-right-button-open-f350.png",
+      "state": "点击右侧MailButton/聊天记录入口",
+      "conclusion": "日志为LegacyOpen requested=chat，F350 size=(572,388)，入口未打开现代通信窗口。"
+    },
+    {
+      "file": "chat-hud-f350-closed-final.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-f350-closed-final.png",
+      "state": "关闭F350返回主HUD",
+      "conclusion": "F350消失，主HUD原有消息和输入条仍在，消息模型未被清空。"
+    },
+    {
+      "file": "chat-hud-chinese-input-final.png",
+      "command": "scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-chinese-input-final.png",
+      "state": "XTest注入单个中文字符中",
+      "conclusion": "中文字体和光标在主HUD输入条显示；Xvfb无IME，未宣称多字符IME注入已验证。"
+    },
+    {
+      "file": "chat-hud-visual-baseline-clean.png",
+      "command": "xdotool click 420 740; xdotool type VISUAL_NORMAL; xdotool key Return; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-visual-baseline-clean.png",
+      "state": "视觉样式修复前普通消息基线",
+      "conclusion": "普通消息为可见白字；作为最终字体/透明度回归对照，完整1024x768视口。"
+    },
+    {
+      "file": "chat-hud-style-final.png",
+      "command": "xdotool click 420 740; xdotool type HUD_STYLE_FINAL; xdotool key Return; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-style-final.png",
+      "state": "最终视觉样式与消息底色",
+      "conclusion": "普通消息保持不透明白字、8px/14px行距；主HUD无逐条白色消息底，F50底板/边框保持可见。"
+    }
+  ],
+  "console_log": "chat-hud-runtime-final.log",
+  "visual_style_log": "chat-hud-style-final.log"
+}

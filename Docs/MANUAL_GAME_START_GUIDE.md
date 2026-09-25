@@ -39,7 +39,18 @@ bash login_game.sh legacy
 
 # 重启服务端并使用旧版 EI HUD
 bash login_game.sh all legacy
+
+# 在 Debian（ssh debian）现有 Zircon 工作树上构建并重启测试服务端，
+# 然后由本机旧版 EI 客户端经 SSH 隧道连接 82 上的服务端
+bash login_game.sh remote 192.168.3.82 legacy
 ```
+
+`remote <IP>` 模式不会同步源码：它使用 Debian 上 `/home/tetsuya/development/zircon`
+当前检出的代码与该工作树 `Debug/ServerCore` 的配置/资源构建服务端，再重启从这个目录运行的
+测试服务端。本机只构建和运行 Godot 客户端，并经 SSH 本地转发连接远程配置的 loopback 端口；
+这样不用改远程绑定或开放游戏端口。客户端退出时脚本自动关闭 SSH 转发。SSH 默认使用 `debian` 主机别名，也可通过
+`ZIRCON_REMOTE_SSH_TARGET` 覆盖；连接账号需能在该工作树写入构建输出。此模式只重启 cwd
+匹配该工作树 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 进程，不会重启 systemd 服务。
 
 ---
 

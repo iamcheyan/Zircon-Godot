@@ -12,6 +12,10 @@ public sealed partial class LegacyChatDialog : DXWindow
     private const int VisibleRows = 19;
     private const int LineStep = 14;
     private const int MaxMessages = 250;
+    // 0x417960 constructs the vertical F380 gauge with a 12px inset and
+    // 260px travel area; the sprite itself is 16x502.
+    private const float RailInset = 12f;
+    private const float RailTravel = 260f;
     private readonly List<(string Text, Color Colour)> _messages = new();
     private readonly List<DXLabel> _rows = new();
     private readonly DXControl _historyClip;
@@ -50,8 +54,15 @@ public sealed partial class LegacyChatDialog : DXWindow
         public override void _Process(double delta)
         {
             base._Process(delta);
-            if (_dragging && !Input.IsMouseButtonPressed(MouseButton.Left))
+            if (!_dragging) return;
+            if (!Input.IsMouseButtonPressed(MouseButton.Left))
+            {
                 _dragging = false;
+                return;
+            }
+            // Keep receiving drag motion even after the pointer briefly leaves
+            // the narrow chain texture; Godot only sends GuiInput while hovered.
+            UpdateScroll();
         }
 
         private void UpdateScroll() => ScrollRequested?.Invoke(GetLocalMousePosition().Y);
@@ -269,7 +280,9 @@ public sealed partial class LegacyChatDialog : DXWindow
 
     private void OnHistoryWheel(object sender, MouseWheelEventArgs mouseEvent)
     {
-        ScrollBy(mouseEvent.Delta > 0 ? VisibleRows : -VisibleRows);
+        // EI's id8 wheel dispatch changes its history offset by one record per
+        // wheel notch (0x42C8A8 / 0x42C9B0), not by a full 19-row page.
+        ScrollBy(mouseEvent.Delta > 0 ? 1 : -1);
     }
 
     private void ScrollBy(int rows) => SetScrollOffset(_scrollOffset + rows);
@@ -277,8 +290,8 @@ public sealed partial class LegacyChatDialog : DXWindow
     private void UpdateRailScroll(float localY)
     {
         int maxOffset = Math.Max(0, _messages.Count - VisibleRows);
-        float railRange = Math.Max(1, _scrollRail.Size.Y - 1);
-        int value = Mathf.RoundToInt(Mathf.Clamp(localY / railRange, 0f, 1f) * maxOffset);
+        float fraction = Mathf.Clamp((localY - RailInset) / RailTravel, 0f, 1f);
+        int value = Mathf.RoundToInt(fraction * maxOffset);
         SetScrollOffset(value);
     }
 

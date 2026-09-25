@@ -1,0 +1,22 @@
+主 HUD 聊天最终验收（2026-09-25）
+命令：DISPLAY=:100 MIR3_EI_ROOT=/home/tetsuya/mir2ei ZIRCON_UI_DATA_PATH=/home/tetsuya/mir2ei/Data ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/Data /home/tetsuya/mir2ei/login_game.sh all legacy
+客户端：完整 1024x768 viewport；资源根固定 /home/tetsuya/mir2ei/Data
+
+[Display] --window 初始尺寸: 1024x768
+[Select] *** StartGame 成功! 进入游戏 ***
+[LegacyHud] PASS viewport=(1024, 768) location=(112, 632) panel=50/(800, 136) buttons=True legacyStats=True ... orb=(49, 13)/(112, 110) visible=True duplicateIcon=False hiddenAttributeIcon=True states=True/True/True single=True
+[LegacyChat] receive type=Announcement textLength=19 hudVisible=True hudMessages=1 hudLines=1 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[ChatInput] focus owner=ChatTextBox size=(354, 16) textLength=0
+[ChatInput] submit owner=ChatTextBox textLength=10 legacyHud=True
+[LegacyChat] receive type=Normal textLength=20 hudVisible=True hudMessages=2 hudLines=2 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[ChatInput] focus owner=ChatTextBox size=(354, 16) textLength=0
+[ChatInput] submit owner=ChatTextBox textLength=89 legacyHud=True
+[LegacyChat] receive type=Normal textLength=99 hudVisible=True hudMessages=3 hudLines=3 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[LegacyOpen] requested=chat type=LegacyChatDialog visible=True size=(572, 388) location=(226, 190) inputFocus=True
+[LegacyChat] receive type=Hint textLength=18 hudVisible=True hudMessages=3 hudLines=3 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=True
+[LegacyChat] receive type=Hint textLength=16 hudVisible=True hudMessages=4 hudLines=4 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=True
+[LegacyChat] scroll button frames 380/381 unavailable; using (19, 14) hit zone without sprite
+[LegacyChat] scroll button frames 382/383 unavailable; using (19, 14) hit zone without sprite
+
+结果：普通消息、含 R 字符消息和 89 字长消息均进入主 HUD；HUD 消息未被 F350 清空；关闭 F350 后主 HUD 保留消息；提交后输入框为空；含 R 输入期间未误开 F350。
+已知环境噪声：Xvfb 无音频设备导致 ALSA ERR_CANT_OPEN/dummy audio，不影响登录或 HUD。

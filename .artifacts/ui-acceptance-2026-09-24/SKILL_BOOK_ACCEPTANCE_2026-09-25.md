@@ -35,6 +35,8 @@
 | `skill-book-entry-e-2026-09-25.png`、`skill-book-entry-e-closed-2026-09-25.png`、`skill-book-entry-ctrl-e-2026-09-25.png` | E/Ctrl+E 入口 | `xdotool key --window <id> e/ctrl+e; DISPLAY=:100 scrot` | 裸 E 与 Ctrl+E 入口截图已归档；最终构建后裸小写 e 复核见最终截图。 |
 | `skill-book-entry-f1-2026-09-25.png`、`skill-book-entry-f1-diagnostic-2026-09-25.png`、`skill-book-entry-shift-f1-2026-09-25.png`、`skill-book-entry-shift-f1-diagnostic-2026-09-25.png`、`skill-book-entry-shift-f1-fixed-2026-09-25.png`、`skill-book-entry-ctrl-f1-diagnostic-2026-09-25.png`、`skill-book-entry-ctrl-f1-fixed-2026-09-25.png` | F1/Shift+F1/Ctrl+F1 入口 | `xdotool key --window <id> F1/shift+F1/ctrl+F1; DISPLAY=:100 scrot` | 普通 F1、Shift 与 Ctrl 诊断/修复截图均保留；Ctrl+F1 组标签缺少独立视觉证据，见未闭合项。 |
 | `skill-book-current-audit-2026-09-25.png` | 当前提交构建后的最终打开态 | 重跑 `dotnet build --no-incremental`，重启 `skill-login`，`DISPLAY=:100 xdotool key --window 2097154 e; scrot` | 当前工作区构建真实登录后，书页、8 类按钮、6 行技能和常驻快捷栏同时可见。 |
+| `skill-book-current-closed-audit-2026-09-25.png` | 当前构建关闭态 | 在当前详情态按裸 `e`，`DISPLAY=:100 scrot` | 书页隐藏，主 HUD 与常驻快捷栏仍可见。 |
+| `skill-book-current-reopen-audit-2026-09-25.png` | 当前构建重开态 | 再按裸 `e`，`DISPLAY=:100 scrot` | 书页恢复到 Fire 第 1 页并保留当前 Fire Ball 选中详情；当前实现保留窗口实例状态，原版复位语义仍需证据。 |
 | `skill-book-current-selected-audit-2026-09-25.png` | 当前提交构建后的最终详情态 | 在打开态点击第一行，`DISPLAY=:100 scrot` | 当前构建显示选中边框、MIcon 图标、右页详情与裁剪换行。 |
 ## 输入与控制台证据
 

@@ -1294,3 +1294,10 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 **2026-09-25 CHAT-05 用户截图复核：EI 聊天控件改用原始 WIL 帧：**用户最新截图显示 F350 内容区为空、输入栏不可见/不可输入、滚动锁链和频道按钮缺失。回查 `chat-window-unified-model.json`、`chat-window-render-evidence.json`：原版 id8/F350 为572×388，历史区 `(40,29,491,279)`、19行×14px，输入区 `(25,311,499,15)`；F360–371 是六个36×34频道控件，F380 是16×502纵向锁链轨道，F381/F382/F383 在目标本地 WIL 为空帧，故上下按钮仅保留已核定的命中区。
 
 定位到 EI UI 帧取图的资源优先级问题：`LegacyEI/Data/GameInter.wil/.wix` 与转换后的 `GameInter.Zl` 同时存在，但 `MirSkin` 原先优先读取 `.Zl`，会让当前聊天按钮/滚动条的显示受转换产物内容影响。`--legacy-hud` 下现优先从原始 WIL/WIX 解码帧，同时统一 `GetSize`/`GetOffset` 的来源；非 legacy/world 资源仍走 ZL。独立读取目标 WIL 确认 F350 1024×512、F360–371 各36×34、F380 16×502。消息接收链已在 `GameScene.AddChatMessage` 分发到 `_chatLog` 与 `_legacyChatDialog`；当前空白历史本身无法在没有消息包时填充，本次没有伪造历史消息。构建通过；现有 `DISPLAY=:0` 登录进程仍在使用旧程序集，本轮未关闭它或重复登录抢占账号，因此 WIL 优先修正后的完整屏幕/键盘实机截图待下一次安全重启验收。
+
+**2026-09-25 CHAT-06 用户反馈：常驻消息保留、输入基线与历史滚动：**
+
+- 对照原版 `Client/Controls/DXTextBox.cs` 的 `MirTextBox` 构造：原生输入控件 `BackColor=Black`、`ForeColor=White`；外层 `DXTextBox` 使用 `Constants.PrimaryColour` 细边。Godot legacy HUD 输入现仅在焦点时用纯黑底，失焦恢复透明，保留主色边框；F350 输入也采用同一焦点态。输入 RECT 依旧是原版 499×15，本次仅将内部 LineEdit 文字节点上移 2px、增加 4px 绘制高度，并将 F350 字号调到 8，避免窄框中的字形贴底/裁切。该行基线仍需当前用户屏幕实测验收。
+- `ChatLogPanel.ApplyLegacyHudLayout()` 原先保留现代 ChatTab 默认 `FadeOut=true`，`_Process()` 在空闲10秒后把 legacy HUD 历史区 Opacity 置0，造成已显示聊天内容周期性消失。legacy HUD 现关闭 FadeOut 和 CleanUp，维持历史文本；F350 `_messages` 自身没有淡出逻辑。原版窗口 id8 是消息列表/滚动偏移状态而非自动清空计时器，原版绘制证据见 `chat-window-render-evidence.json` 与 `chat-window-mouse-dispatch.json`。
+- F350 历史区保留 `(40,29,491,279)` clip 和19×14px行。滚轮在历史区内以19行页步移动；F380 原图确认为16×502竖向链条轨道。`chat-scrollbar-verification-evidence.json` 将 F380 定义为装饰轨道、共享 gauge F1070 为滚动位置控件；当前 Godot F380 拖动按轨道 Y 映射历史 offset，滚轮及轨道可操作性有之前运行记录（CHAT-05）。因此这不是原版 gauge 的像素/比例实现证明；F1070 gauge 的真实绘制、拖柄命中和映射仍列为精度待验项，不能把轨道拖动近似描述为已与原版完全一致。
+- 本次修改构建结果：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。按用户指定启动脚本 `bash login_game.sh legacy` 会先结束当前 Godot 客户端并重建后启动；端口7000已开启时会复用当前服务器。

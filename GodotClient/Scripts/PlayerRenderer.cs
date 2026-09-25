@@ -955,7 +955,7 @@ public partial class PlayerRenderer : Node2D
             RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, nameY), NameColour, 9f);
         if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
             RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
-        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
+        if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
             RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, nameY - 22f), Colors.White, 9f);
 
         // 玩家头顶血条 (受击显示 5 秒)
@@ -983,6 +983,14 @@ public partial class PlayerRenderer : Node2D
         ChatText = text;
         _chatUntil = Godot.Time.GetTicksMsec() + 5000;
         QueueRedraw();
+        if (IsInsideTree())
+        {
+            GetTree().CreateTimer(5.05).Timeout += () =>
+            {
+                if (IsInsideTree() && Godot.Time.GetTicksMsec() >= _chatUntil)
+                    QueueRedraw();
+            };
+        }
     }
 
     // 供 GameScene 调用: 计算本节点屏幕位置

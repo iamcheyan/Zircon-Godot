@@ -63,6 +63,7 @@ public sealed partial class DXTextInput : DXControl
     private readonly LineEdit _edit;
     private bool _focusWhenReady;
     private int _fontSize = 10;
+    private float _textHeightExtra;
     /// <summary>输入文字相对输入框顶部的垂直微调。</summary>
     public float TextOffsetY
     {
@@ -74,8 +75,20 @@ public sealed partial class DXTextInput : DXControl
         }
     }
     private float _textOffsetY;
+    /// <summary>窄版旧式输入框允许内部文字节点超出外框高度，避免字体基线被裁切。</summary>
+    public float TextHeightExtra
+    {
+        get => _textHeightExtra;
+        set
+        {
+            _textHeightExtra = value;
+            if (_edit != null) _edit.Size = new Vector2(Size.X - 4, Size.Y + value);
+        }
+    }
     public event Action<string> TextChanged;
     public event Action<string> TextSubmitted;
+    /// <summary>内部 LineEdit 获得或失去焦点时通知外层旧式输入控件。</summary>
+    public event Action<bool> FocusChanged;
     /// <summary>输入框按 Escape 时触发（原版 DXTextBox 的 KeyPress Escape 路径）。</summary>
     public event Action Canceled;
     /// <summary>输入框按 ↑/↓ 时触发（聊天历史导航）。</summary>
@@ -162,6 +175,8 @@ public sealed partial class DXTextInput : DXControl
         _edit.AddThemeColorOverride("font_placeholder_color", new Color(1f, 1f, 1f, .55f));
         _edit.AddThemeColorOverride("caret_color", new Color(1f, .85f, .3f));
         AddChild(_edit);
+        _edit.FocusEntered += () => FocusChanged?.Invoke(true);
+        _edit.FocusExited += () => FocusChanged?.Invoke(false);
         _edit.TextChanged += value => TextChanged?.Invoke(value);
         _edit.TextSubmitted += value => TextSubmitted?.Invoke(value);
         _edit.GuiInput += e =>
@@ -187,7 +202,7 @@ public sealed partial class DXTextInput : DXControl
         Resized += () =>
         {
             _edit.Position = new Vector2(2, _textOffsetY);
-            _edit.Size = Size - new Vector2(4, 2);
+            _edit.Size = new Vector2(Size.X - 4, Size.Y + _textHeightExtra);
         };
     }
 

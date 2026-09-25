@@ -67,6 +67,12 @@ public sealed partial class ChatTextBox : DXWindow
         };
         _input.MaxLength = Globals.MaxChatLength;
         _input.TextSubmitted += SubmitChat;
+        _input.FocusChanged += focused =>
+        {
+            if (AutoLoginArgs.LegacyUi)
+                // 原版 DXTextBox.MirTextBox 获得焦点后使用纯黑底、白字。
+                _input.BackColour = focused ? Colors.Black : Colors.Transparent;
+        };
         _input.HistoryUp += () => NavigateHistory(true);
         _input.HistoryDown += () => NavigateHistory(false);
         AddControl(_input);
@@ -92,9 +98,16 @@ public sealed partial class ChatTextBox : DXWindow
         _optionsButton.Visible = false;
         _input.Position = Vector2.Zero;
         _input.Size = Size;
-        _input.Border = false;
+        // 原版 DXTextBox 始终保留主色细边框；激活时原生黑底编辑框才显示。
+        _input.Border = true;
+        _input.BorderColour = DXTextInput.DefaultBorderColour;
+        _input.BackColour = Colors.Transparent;
         _input.FontSize = 9;
-        _input.TextOffsetY = -1f;
+        // F350 的输入 RECT 只有 15px 高。Godot LineEdit 的字体基线比
+        // 原生 WinForms EDIT 更靠下，因此上移并给内部文本节点留出额外高度，
+        // 避免数字/汉字贴底或被裁切。
+        _input.TextOffsetY = -2f;
+        _input.TextHeightExtra = 4f;
     }
 
 

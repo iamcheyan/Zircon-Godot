@@ -36,6 +36,12 @@ public partial class DXItemCell : DXControl
     /// equipment cells must leave this disabled rather than borrow ZL frames.
     /// </summary>
     public bool DrawItemBadgesEnabled = true;
+    /// <summary>
+    /// EI status hit records show the tooltip/drag behavior without a
+    /// DXItemCell hover fill or border. Keep the visual highlight opt-out
+    /// separate from input state so drag selection still works.
+    /// </summary>
+    public bool DrawInteractionHighlightEnabled = true;
 
 
     /// <summary>拿起状态: 记录源格子, 点另一格完成移动 (原版静态 SelectedCell)</summary>
@@ -356,6 +362,14 @@ public partial class DXItemCell : DXControl
         {
             BackColour = Colors.Transparent;
             Border = false;
+            return;
+        }
+
+        if (!DrawInteractionHighlightEnabled)
+        {
+            BackColour = Colors.Transparent;
+            Border = false;
+            QueueRedraw();
             return;
         }
 

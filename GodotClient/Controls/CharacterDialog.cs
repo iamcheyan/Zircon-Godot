@@ -367,6 +367,7 @@ public partial class CharacterDialog : DXWindow
             bool characterArea = slot is EquipmentSlot.Weapon or EquipmentSlot.Armour or EquipmentSlot.Necklace;
             cell.DrawItemIconEnabled = !characterArea;
             cell.DrawItemBadgesEnabled = false;
+            cell.DrawInteractionHighlightEnabled = false;
             cell.ItemLibraryFile = characterArea ? LibraryFile.Equip : LibraryFile.Inventory;
             cell.RefreshItem();
         }

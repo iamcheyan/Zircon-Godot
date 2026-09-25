@@ -85,18 +85,28 @@ public partial class ChatLogPanel : Control
         _tabBar.Size = Size;
         _textArea.Position = Vector2I.Zero;
         _textArea.Size = Size;
-        _scroll.Position = Vector2I.Zero;
-        _scroll.Size = Vector2I.One;
+        // 原版聊天面板的滚动条贴在面板右缘，并且只在历史溢出时出现
+        // （HideWhenNoScroll 语义）。旧实现把它压成 1x1 且永久 Visible=false，
+        // 等于永远没有滚动条。
+        const int legacyScrollWidth = 14;
+        _scroll.Position = new Vector2I((int)Size.X - legacyScrollWidth, 0);
+        _scroll.Size = new Vector2I(legacyScrollWidth, (int)Size.Y);
         _scroll.VisibleSize = (int)Size.Y;
         _scroll.Change = 14;
-        _scroll.Visible = false;
+        _scroll.HideWhenNoScroll = true;
+        // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图），
+        // 改用原版聊天滚动条同族的竖向 gauge 帧 GameInter F380。
+        if (MirSkin.GetSize(LibraryFile.GameInter, 380) != Vector2I.Zero)
+        {
+            _scroll.PositionBar.LibraryFile = LibraryFile.GameInter;
+            _scroll.PositionBar.Index = 380;
+        }
+        GD.Print($"[LegacyChatPanel] scrollbar pos={_scroll.Position} size={_scroll.Size} "
+            + $"art=GameInter[380] size={MirSkin.GetSize(LibraryFile.GameInter, 380)} "
+            + $"visible={_scroll.Visible}");
         // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
         // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。
         GetTabSettings().EnabledTypes.Add(MessageType.System);
-        // EI 常驻聊天窗保留历史内容；现代 ChatTab 的 10 秒淡出策略会让
-        // 已收到的消息从旧版固定聊天区域消失，与原版历史列表不符。
-        GetTabSettings().FadeOut = false;
-        GetTabSettings().CleanUp = false;
         ApplySettings();
         RebuildVisibleLines(false);
     }
@@ -462,9 +472,6 @@ public partial class ChatLogPanel : Control
                 // 阴影也不是原版路径，会给 8px 文字增加一圈脏边。
                 DrawShadow = false,
                 IsControl = false,
-                // Legacy HUD rows use a measured multiline height below. Leave
-                // DXLabel's default AutoSize on for modern chat tabs only.
-                AutoSize = !_legacyHudLayout,
                 Size = new Vector2I(Math.Max(1, (int)_textArea.Size.X - 8), _legacyHudLayout ? 14 : 16),
             };
             line.Size = new Vector2I((int)line.Size.X,

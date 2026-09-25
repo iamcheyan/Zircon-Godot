@@ -67,10 +67,11 @@ public sealed partial class ChatTextBox : DXWindow
         };
         _input.MaxLength = Globals.MaxChatLength;
         _input.TextSubmitted += SubmitChat;
+        // 原版 DXTextBox.MirTextBox：未激活时透明无边框，按回车激活后为纯黑底、
+        // 白字。82 的未提交 WIP 把这段删掉了，导致激活后看不到输入背景色。
         _input.FocusChanged += focused =>
         {
             if (AutoLoginArgs.LegacyUi)
-                // 原版 DXTextBox.MirTextBox 获得焦点后使用纯黑底、白字。
                 _input.BackColour = focused ? Colors.Black : Colors.Transparent;
         };
         _input.HistoryUp += () => NavigateHistory(true);
@@ -98,16 +99,9 @@ public sealed partial class ChatTextBox : DXWindow
         _optionsButton.Visible = false;
         _input.Position = Vector2.Zero;
         _input.Size = Size;
-        // 原版 DXTextBox 始终保留主色细边框；激活时原生黑底编辑框才显示。
-        _input.Border = true;
-        _input.BorderColour = DXTextInput.DefaultBorderColour;
-        _input.BackColour = Colors.Transparent;
+        _input.Border = false;
         _input.FontSize = 9;
-        // F350 的输入 RECT 只有 15px 高。Godot LineEdit 的字体基线比
-        // 原生 WinForms EDIT 更靠下，因此上移并给内部文本节点留出额外高度，
-        // 避免数字/汉字贴底或被裁切。
-        _input.TextOffsetY = -2f;
-        _input.TextHeightExtra = 4f;
+        _input.TextOffsetY = -1f;
     }
 
 
@@ -169,6 +163,10 @@ public sealed partial class ChatTextBox : DXWindow
         if (_input.HasFocus)
             return true;
 
+        var focused = GetViewport()?.GuiGetFocusOwner();
+        if (focused != null && IsAncestorOf(focused))
+            return true;
+
         // 以下分支只处理聊天尚未获得焦点时的“打开聊天”快捷键。
         if (ClientSettings.ShiftOpenChat && key.ShiftPressed && key.Keycode is >= Key.Key0 and <= Key.Key9)
         {
@@ -180,9 +178,6 @@ public sealed partial class ChatTextBox : DXWindow
         if (key.Keycode == Key.Space || key.Keycode == Key.Enter)
         {
             OpenChat();
-            // 第一次回车/空格只负责打开并聚焦聊天框。若不消费当前事件，
-            // 同一个 Enter 会继续传给刚刚获得焦点的 LineEdit，立即提交
-            // 空文本并释放焦点，表现为必须再用鼠标点击输入框。
             GetViewport()?.SetInputAsHandled();
             return true;
         }

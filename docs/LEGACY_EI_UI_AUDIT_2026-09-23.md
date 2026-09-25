@@ -1262,7 +1262,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 | 装备槽状态 | 已装备物品走当前 `DXItemCell` 图标/提示/兼容检查/拖放链；锁定格保留中键解锁事件，不再被 `_GuiInput` 前置守卫吞掉 | `DXItemCell.cs`；静态代码检查 + 编译；未做会改变生产装备的左键取下/替换 |
 | 属性页 | F201 双列布局与原版证据基线：左列 `x=0xFF,y=0x43,15px`，右列 `x=0x17F,y=0x1E,15px`；HP/MP 当前值/上限、经验百分比、包袱/装备负重接入已有 GameScene 数据；无独立语义的腕力/恢复/魔法躲避/毒物躲避值保持空白，不伪造数值 | `status-attributes-final.png`；`RefreshLegacyAttributeLabels`；证据清单 `status-window-render-evidence.json` |
 | 动态同步 | HP、MP、等级、经验、上限、Stats、批量装备/物品刷新都会触发人物页重绘；关闭任意窗口先清理全局 hover item | `GameScene.cs` 事件处理、`RefreshItemGrids`、`WindowManager.Close`；实机 stdout 无异常 |
-| 交互/状态保持 | W（本机持久化键位映射）打开人物页，箭头切换 F200/F201，Esc 关闭；关闭后再开保持展开态 | `status-equipment-final.png`、`status-attributes-final.png`、`status-esc-final.png`、`status-reopen-final.png`；`status-esc-final.png` 无残留物品 tooltip |
+| 交互/状态保持 | Q（当前 `KeyBindAction.CharacterWindow` 默认绑定；本机持久化映射以运行时为准）打开人物页，箭头切换 F200/F201，Esc 关闭；关闭后再开保持展开态 | `status-equipment-final.png`、`status-attributes-final.png`、`status-esc-final.png`、`status-reopen-final.png`；`status-esc-final.png` 无残留物品 tooltip |
 
 本轮没有执行真实装备左键取下、从背包拖入、交易、坐骑或写库操作；这些路径仍以静态兼容检查和 hover/命中证据为界。装备耐久/强化/绑定等 EI 专用角标没有独立贴图证据，当前不以现代 ZL 或自绘图标冒充原版。
 

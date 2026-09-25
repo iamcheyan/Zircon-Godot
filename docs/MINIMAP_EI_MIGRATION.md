@@ -100,3 +100,85 @@ EI 小地图迁移表中的 `FMMap f17 -> MiniMap.Zl frame 18`。旧 Zircon 的
 frame 18 为 `300×200, offset=(0,0)`；总帧数 287、有效 payload 183。地图几何
 重构中已记录的 `3.map/Sabak.Zl` 索引偏移问题属于另一条独立问题，不能用小地图修正
 代替，见 `Sabak_Map_Migration_Audit_2026-08-11.md`。
+
+## 2026-09-26 修正：沙巴克覆盖了 frame 7，导致 4.map 显示成沙巴克
+
+### 问题
+
+2026-08-11 的「混合资源修正」把沙巴克小地图写进了 **frame 7**，但按 EI 布局
+`frame 1-31 = FMMap f0-30`，**frame 7 = EI `FMMap` f6，是地图 `4` 的帧位**
+（`4.map` 与 EI 同名图 md5 相同，见下表）。于是：
+
+```
+客户端 System.db:  FileName=3 (Sabuk Keep)  -> MiniMap 7
+                  FileName=4 (Numa Village) -> MiniMap 7     ← 两个图共用一帧
+MiniMap.Zl frame 7 = 沙巴克的 Zircon 原版小地图 (800×600)
+```
+
+结果 `4.map` 的小地图显示成沙巴克。
+
+地图文件 md5 对照（Zircon `Debug/Client/Map` vs EI `mir2ei/Map`）：
+
+| 地图 | 是否相同 | 含义 |
+|---|---|---|
+| `2.map` | 相同 | 对照组，按文件名绑定成立 |
+| `3.map` | **不同** | 沙巴克是 Zircon 原版地图，确实需要 Zircon 小地图 |
+| `4.map` | 相同 | 所以 `4.map` 就该用 EI `FMMap` f6 的小地图 |
+
+### 修正做法
+
+EI 布局的 287 帧全被 EI 帧位占满，Zircon 专属地图**没有任何可用帧位** —— 写进
+哪个 EI 帧位都会覆盖另一张 EI 地图。所以改为把 Zircon 专属地图的小地图**追加在
+EI 布局之后**（frame 287 起）：
+
+```
+frame 0-286  = 与 convert_ei_minimap.py 输出逐帧一致（EI 布局，未改动）
+frame 287    = 沙巴克 Zircon 原版小地图 (800×600, offset (0,0))
+```
+
+工具：`Tools/apply_zircon_minimap_overrides.py`（在 EI 基准库上追加
+`Tools/minimap_overrides/<地图文件名>.png`）。完整流程：
+
+```bash
+PYTHONPATH=<Mir3-Research>/Tools/common \
+  python3 Tools/convert_ei_minimap.py <EI Data 目录> /tmp/minimap-base.zl
+python3 Tools/apply_zircon_minimap_overrides.py \
+  /tmp/minimap-base.zl Tools/minimap_overrides <输出 MiniMap.Zl>
+# 脚本会打印追加得到的帧号，再写回两份 System.db：
+#   DbMigrationTool --root <dir> set-minimap 3 287
+```
+
+> 顺序不能反：`convert_ei_minimap.py` 会重建全部 287 帧，必须在其之后叠加
+> Zircon 追加帧，否则沙巴克的小地图会被 EI 原图覆盖。
+
+### 变更结果
+
+| 项 | 修正前 | 修正后 |
+|---|---|---|
+| `MiniMap.Zl` 帧数 | 287 | 288 |
+| frame 7 | 沙巴克 (800×600) | EI `FMMap` f6 (1200×800) |
+| frame 18 | 300×200（来源不明的手改值） | EI `FMMap` f17 (600×600)，回归 EI 布局 |
+| frame 287 | — | 沙巴克 (800×600) |
+| 客户端 DB `3` | MiniMap 7 | MiniMap 287 |
+| 客户端 DB `4` | MiniMap 7（错） | MiniMap 7（正确，EI `FMMap` f6） |
+| 服务器 DB `3` | MiniMap 7 | MiniMap 287 |
+
+frame 18 的还原对画面无影响：客户端 DB 中没有任何地图引用 frame 18，
+且服务端不向客户端发送 MiniMap（客户端用自己 `System.db` 的 `MapInfo.MiniMap`
+渲染，见 `DatabaseLoader` → `Globals.MapInfoList`）。
+
+`MiniMap.Zl` md5：`f83f6ec4…`（修正前）→ `ea09c837…`（修正后）。
+
+### 验证
+
+- 重建库与 EI 基准逐帧比对：前 287 帧**零差异**；frame 7/18/287 尺寸符合预期；
+  沙巴克图与修正前 frame 7 逐像素一致。
+- 客户端 DB 读回：`3 -> 287`、`4 -> 7`；服务器 DB 读回：`3 -> 287`。
+- 游戏内：角色位于 `4.map`（Numa Village）时小地图显示正确（用户确认）。
+
+### 遗留（本次未处理）
+
+两份 `System.db` 的 `MapInfo.MiniMap` 存在既有多处不一致，例如服务器 DB
+`FileName=4 -> 8`、`FileName=5 -> 9`，而客户端为 `4 -> 7`、`5 -> 8`；服务器 DB
+还有 `D10032 -> 18`（洞穴指向城镇帧位）。服务端不发送 MiniMap，所以这些不影响
+客户端画面，但双库同步问题独立存在，需要单独核对。

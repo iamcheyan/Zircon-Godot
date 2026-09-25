@@ -30,11 +30,28 @@ public partial class MagicDialog : DXWindow
     private DXButton _tabNext;
     private DXButton _closeButton;
     private bool _legacyEiLayout;
-    private readonly List<DXImageControl> _legacySkillSlots = new();
-    private readonly List<DXLabel> _legacySkillLabels = new();
+    private const int LegacyPageSize = 6;
+    private const int LegacyDetailX = 235;
+    private const int LegacyDetailY = 30;
+    private const int LegacyDetailWidth = 165;
+    private const int LegacyLineHeight = 15;
+    private static readonly MagicSchool[] LegacySchoolOrder =
+    {
+        MagicSchool.Fire,
+        MagicSchool.Ice,
+        MagicSchool.Lightning,
+        MagicSchool.Wind,
+        MagicSchool.Holy,
+        MagicSchool.Dark,
+        MagicSchool.Phantom,
+        MagicSchool.Physical,
+    };
+    private readonly List<LegacySkillRowView> _legacySkillRows = new();
     private readonly List<(MagicInfo Info, ClientUserMagic UserMagic)> _legacyRuntimeEntries = new();
     private (MagicInfo Info, ClientUserMagic UserMagic)? _legacySelectedSkill;
-
+    private int _legacyPage;
+    private LegacySkillDetailView _legacyDetail;
+    private DXImageControl _legacyAuxControl;
     public MagicDialog()
     {
         // 原版 MagicDialog 自己在背景图上创建 TitleLabel，位置为 y=8；
@@ -123,7 +140,12 @@ public partial class MagicDialog : DXWindow
         Visible = false;
     }
 
-    /// <summary>按最早 EI 客户端 GameInter F400 的书本界面重排。</summary>
+    /// <summary>
+    /// EI 技能书使用 GameInter F400 的原始透明帧；根控件保留当前 452x380
+    /// 配准（F400 有效绘制区从 (-30,-67) 开始）。296x332 是另一路
+    /// 主初始化元数据，和 wrapper 的最终 SetRect 仍存在研究证据冲突，不能
+    /// 在这里伪称已闭合。
+    /// </summary>
     public void ApplyLegacyEiLayout()
     {
         _legacyEiLayout = true;
@@ -133,11 +155,30 @@ public partial class MagicDialog : DXWindow
         _header.Location = new Vector2I(-30, -67);
         _header.Size = MirSkin.GetSize(LibraryFile.GameInter, 400);
         _header.StretchImage = false;
+        if (_legacyDetail == null)
+        {
+            _legacyDetail = new LegacySkillDetailView
+            {
+                Size = Size,
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            AddControl(_legacyDetail);
+        }
+        if (_legacyAuxControl == null)
+        {
+            _legacyAuxControl = new DXImageControl
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 440,
+                HoverIndex = 441,
+                FixedSize = true,
+                Size = MirSkin.GetSize(LibraryFile.GameInter, 440),
+                Location = new Vector2I(399, 340),
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            AddControl(_legacyAuxControl);
+        }
         _background.Visible = false;
-        _tabPrevious.Visible = false;
-        _tabNext.Visible = false;
-        // 当前 legacy 技能格仍是未验收的模拟器候选布局；隐藏现代列表，
-        // 避免刷新时把新版行控件混进该候选画面。
         _list.Visible = false;
         _scrollBar.Visible = false;
 
@@ -147,83 +188,125 @@ public partial class MagicDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(418, 348);
         _closeButton.Size = new Vector2I(28, 26);
+
+        ConfigureLegacyPageControls();
         BuildLegacySchoolButtons();
-        BuildLegacySkillSlots();
+        BuildLegacySkillRows();
         UpdateClientAreaForLegacySkin();
     }
 
-    private void BuildLegacySkillSlots()
+    private void ConfigureLegacyPageControls()
     {
-        foreach (var slot in _legacySkillSlots)
-        {
-            RemoveControl(slot);
-            slot.QueueFree();
-        }
-        _legacySkillSlots.Clear();
-        foreach (var label in _legacySkillLabels)
-        {
-            RemoveControl(label);
-            label.QueueFree();
-        }
-        _legacySkillLabels.Clear();
+        _tabPrevious.LibraryFile = LibraryFile.GameInter;
+        _tabPrevious.Index = 410;
+        _tabPrevious.HoverIndex = 411;
+        _tabPrevious.PressedIndex = 411;
+        _tabPrevious.Text = string.Empty;
+        _tabPrevious.Location = new Vector2I(61, 303);
+        _tabPrevious.Size = new Vector2I(32, 14);
+        _tabPrevious.Visible = true;
+        _tabPrevious.MouseClick -= OnLegacyPreviousPage;
+        _tabPrevious.MouseClick += OnLegacyPreviousPage;
 
-        // 12 个格子仅来自 simulator/layout.json 的候选布局，尚未由 EI 几何证据确认。
-        // F410/F412 属于已确认的导航控件状态帧，不能当作技能图标序列。
-        for (int i = 0; i < 12; i++)
+        _tabNext.LibraryFile = LibraryFile.GameInter;
+        _tabNext.Index = 412;
+        _tabNext.HoverIndex = 413;
+        _tabNext.PressedIndex = 413;
+        _tabNext.Text = string.Empty;
+        _tabNext.Location = new Vector2I(366, 303);
+        _tabNext.Size = new Vector2I(32, 14);
+        _tabNext.Visible = true;
+        _tabNext.MouseClick -= OnLegacyNextPage;
+        _tabNext.MouseClick += OnLegacyNextPage;
+    }
+
+    private void OnLegacyPreviousPage(object sender, EventArgs e) => ChangeLegacyPage(-1);
+    private void OnLegacyNextPage(object sender, EventArgs e) => ChangeLegacyPage(1);
+
+    private void ChangeLegacyPage(int delta)
+    {
+        if (!_legacyEiLayout) return;
+        int pageCount = LegacyPageCount();
+        int next = Math.Clamp(_legacyPage + delta, 0, Math.Max(0, pageCount - 1));
+        if (next == _legacyPage) return;
+        _legacyPage = next;
+        _legacySelectedSkill = null;
+        RefreshLegacySkillRows(_legacyRuntimeEntries);
+        GD.Print($"[MagicLegacy] page={_legacyPage + 1}/{pageCount} school={_selectedSchool}");
+    }
+
+    private void BuildLegacySkillRows()
+    {
+        foreach (var row in _legacySkillRows)
         {
+            RemoveControl(row);
+            row.QueueFree();
+        }
+        _legacySkillRows.Clear();
+
+        // F400 左页确实有六条横向行槽；具体 RECT 写入仍是
+        // 0x43A370 外部状态，位置按帧图配准并保留为 candidate。
+        for (int i = 0; i < LegacyPageSize; i++)
+        {
+            var row = new LegacySkillRowView
+            {
+                Location = new Vector2I(61, 51 + i * 37),
+                Size = new Vector2I(145, 36),
+                Visible = false,
+            };
             int index = i;
-            var slot = new DXImageControl
+            row.Selected += () =>
             {
-                LibraryFile = LibraryFile.GameInter,
-                Index = 410 + i,
-                FixedSize = true,
-                Location = new Vector2I(30 + (i % 4) * 40, 60 + (i / 4) * 40),
-                Size = new Vector2I(36, 36),
-                IsControl = true,
-                MouseFilter = MouseFilterEnum.Pass,
-                TooltipText = $"候选技能格 {i + 1}（EI布局未验收）",
+                int absolute = _legacyPage * LegacyPageSize + index;
+                if (absolute < 0 || absolute >= _legacyRuntimeEntries.Count) return;
+                _legacySelectedSkill = _legacyRuntimeEntries[absolute];
+                _legacyDetail?.SetSkill(_legacySelectedSkill);
+                RefreshLegacySkillRows(_legacyRuntimeEntries);
+                QueueRedraw();
+                GD.Print($"[MagicLegacy] selected={_legacySelectedSkill.Value.Info.Name} id={_legacySelectedSkill.Value.Info.Magic}");
             };
-            slot.MouseClick += (_, _) =>
-            {
-                if (index < _legacyRuntimeEntries.Count)
-                    _legacySelectedSkill = _legacyRuntimeEntries[index];
-                if (index < _cells.Count)
-                    _cells[index].GrabFocus();
-            };
-            AddControl(slot);
-            _legacySkillSlots.Add(slot);
+            AddControl(row);
+            _legacySkillRows.Add(row);
         }
     }
 
-    private void RefreshLegacySkillSlots(IEnumerable<(MagicInfo Info, ClientUserMagic UserMagic)> entries)
+    private void RefreshLegacySkillRows(IEnumerable<(MagicInfo Info, ClientUserMagic UserMagic)> entries)
     {
-        // Keep the hidden tuple index used by click/F-key binding aligned with
-        // the visible MagicCellView order built in SelectSchool below.
-        var visible = entries
+        var all = entries
             .OrderBy(x => x.Info.NeedLevel1)
             .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
-            .Take(12)
             .ToArray();
         _legacyRuntimeEntries.Clear();
-        _legacyRuntimeEntries.AddRange(visible);
-        for (int i = 0; i < _legacySkillSlots.Count; i++)
+        _legacyRuntimeEntries.AddRange(all);
+
+        int pageCount = LegacyPageCount();
+        _legacyPage = Math.Clamp(_legacyPage, 0, Math.Max(0, pageCount - 1));
+        int first = _legacyPage * LegacyPageSize;
+        for (int i = 0; i < _legacySkillRows.Count; i++)
         {
-            var slot = _legacySkillSlots[i];
-            if (i >= visible.Length)
+            var row = _legacySkillRows[i];
+            int absolute = first + i;
+            if (absolute >= all.Length)
             {
-                slot.Visible = false;
+                row.Visible = false;
                 continue;
             }
 
-            var (info, userMagic) = visible[i];
-            slot.Visible = true;
-            // Runtime skills supply the icon and level/status. The GameInter
-            // background frames above are not established as EI skill icons.
-            slot.LibraryFile = LibraryFile.MagicIcon;
-            slot.Index = info.Icon;
-            slot.TooltipText = $"{info.Local()} · {(userMagic == null ? "未学习" : $"等级 {userMagic.Level}")}";
+            var entry = all[absolute];
+            row.Visible = true;
+            row.SetEntry(entry.Info, entry.UserMagic,
+                _legacySelectedSkill is { } selected && selected.Info == entry.Info);
         }
+        _legacyDetail?.SetPage(_legacyPage, pageCount);
+        _legacyDetail?.SetSkill(_legacySelectedSkill);
+
+        _tabPrevious.Visible = _legacyPage > 0;
+        _tabNext.Visible = _legacyPage + 1 < pageCount;
+        QueueRedraw();
     }
+
+    private int LegacyPageCount()
+        => (_legacyRuntimeEntries.Count + LegacyPageSize - 1) / LegacyPageSize;
 
     private void BuildLegacySchoolButtons()
     {
@@ -282,40 +365,68 @@ public partial class MagicDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
-        (MagicSchool school, Vector2I location)[] expectedTabs =
+        (MagicSchool school, Vector2I location, int frame)[] expectedTabs =
         {
-            (MagicSchool.Fire, new(5, 21)),
-            (MagicSchool.Ice, new(3, 56)),
-            (MagicSchool.Lightning, new(4, 91)),
-            (MagicSchool.Wind, new(2, 126)),
-            (MagicSchool.Holy, new(2, 161)),
-            (MagicSchool.Dark, new(2, 196)),
-            (MagicSchool.Phantom, new(1, 231)),
-            (MagicSchool.Physical, new(2, 266)),
+            (MagicSchool.Fire, new(5, 21), 450),
+            (MagicSchool.Ice, new(3, 56), 452),
+            (MagicSchool.Lightning, new(4, 91), 454),
+            (MagicSchool.Wind, new(2, 126), 456),
+            (MagicSchool.Holy, new(2, 161), 458),
+            (MagicSchool.Dark, new(2, 196), 460),
+            (MagicSchool.Phantom, new(1, 231), 462),
+            (MagicSchool.Physical, new(2, 266), 464),
         };
         bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
-            && button.Location == x.location);
+            && button.Location == x.location
+            && button.Index == x.frame
+            && button.Size == MirSkin.GetSize(LibraryFile.GameInter, x.frame));
+        bool navigationMatch = _tabPrevious.Location == new Vector2I(61, 303)
+            && _tabPrevious.Index == 410
+            && _tabNext.Location == new Vector2I(366, 303)
+            && _tabNext.Index == 412;
         bool ok = Size == new Vector2I(452, 380)
             && _header.Index == 400
-            && _legacySkillSlots.Count == 12
-            && _schoolButtons.Count == 8
+            && _legacyAuxControl != null
+            && _legacyAuxControl.Location == new Vector2I(399, 340)
+            && _legacyAuxControl.Index == 440
+            && _legacySkillRows.Count == LegacyPageSize
+            && _schoolButtons.Count == LegacySchoolOrder.Length
             && tabsMatch
+            && navigationMatch
             && !_list.Visible
             && !_scrollBar.Visible;
-        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} categoryPositions={tabsMatch} skillSlots={_legacySkillSlots.Count}";
+        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} " +
+            $"categoryPositions={tabsMatch} nav={navigationMatch} rows={_legacySkillRows.Count} " +
+            $"page={_legacyPage + 1}/{Math.Max(1, LegacyPageCount())}";
         return ok;
     }
-
     /// <summary>从 GameScene.UserMagics 刷新技能列表。</summary>
     public void Refresh()
     {
         var game = GameScene.Game;
         if (game == null) return;
 
-        // StartInfo 在窗口创建之后才到达，头图必须在刷新时重新选职业。
         if (!_legacyEiLayout) _header.Index = HeaderIndex();
 
-        var grouped = GetVisibleMagicInfos(game)
+        var visible = GetVisibleMagicInfos(game).ToList();
+        if (_legacyEiLayout)
+        {
+            _tabOrder = LegacySchoolOrder.ToList();
+            if (!_tabOrder.Contains(_selectedSchool))
+                _selectedSchool = _tabOrder[0];
+            foreach (var button in _schoolButtons.Values)
+            {
+                RemoveControl(button);
+                button.QueueFree();
+            }
+            _schoolButtons.Clear();
+            BuildLegacySchoolButtons();
+            SelectSchool(_selectedSchool);
+            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count}");
+            return;
+        }
+
+        var grouped = visible
             .GroupBy(x => x.Info.School)
             .Where(g => g.Any())
             .OrderBy(g => g.Key)
@@ -331,21 +442,10 @@ public partial class MagicDialog : DXWindow
         }
         _schoolButtons.Clear();
 
-        if (_legacyEiLayout)
-        {
-            BuildLegacySchoolButtons();
-            if (grouped.Count > 0 && !grouped.Any(g => g.Key == _selectedSchool))
-                _selectedSchool = grouped[0].Key;
-            SelectSchool(_selectedSchool);
-            return;
-        }
-
         if (grouped.Count == 0) return;
         if (!grouped.Any(g => g.Key == _selectedSchool))
             _selectedSchool = grouped[0].Key;
 
-        // 原版是按 School 切换的 Tab；这里保留同样语义，用文字按钮兼容没有
-        // 对应 Interface tab 素材的情况。
         for (int i = 0; i < grouped.Count; i++)
         {
             var school = grouped[i].Key;
@@ -364,7 +464,6 @@ public partial class MagicDialog : DXWindow
         }
 
         UpdateTabLayout();
-
         SelectSchool(_selectedSchool);
     }
 
@@ -385,6 +484,7 @@ public partial class MagicDialog : DXWindow
         };
         button.MouseClick += (o, e) =>
         {
+            if (_legacyEiLayout) return;
             // 原版 DXTabControl 的左右按钮每次移动一个 tab，而不是整页
             // 跳跃；这样选中项的相邻切换行为一致。
             int delta = previous ? -1 : 1;
@@ -427,18 +527,6 @@ public partial class MagicDialog : DXWindow
         _tabNext.Visible = overflow && _tabPageStart + capacity < _tabOrder.Count;
     }
 
-    private int HeaderIndex()
-    {
-        return GameScene.Game?.StartInfo?.Class switch
-        {
-            MirClass.Warrior => 160,
-            MirClass.Wizard => 161,
-            MirClass.Taoist => 162,
-            MirClass.Assassin => 163,
-            _ => 160,
-        };
-    }
-
     private static int SchoolTabIndex(MagicSchool school) => school switch
     {
         MagicSchool.Active => 166,
@@ -459,9 +547,23 @@ public partial class MagicDialog : DXWindow
         _ => 170,
     };
 
+    private int HeaderIndex()
+    {
+        return GameScene.Game?.StartInfo?.Class switch
+        {
+            MirClass.Warrior => 160,
+            MirClass.Wizard => 161,
+            MirClass.Taoist => 162,
+            MirClass.Assassin => 163,
+            _ => 160,
+        };
+    }
     private void SelectSchool(MagicSchool school)
     {
         _selectedSchool = school;
+        _legacyPage = 0;
+        _legacySelectedSkill = null;
+
         if (!_legacyEiLayout)
         {
             int selectedIndex = _tabOrder.IndexOf(school);
@@ -473,6 +575,7 @@ public partial class MagicDialog : DXWindow
                 UpdateTabLayout();
             }
         }
+
         foreach (var c in _cells)
         {
             _list.RemoveControl(c);
@@ -482,12 +585,23 @@ public partial class MagicDialog : DXWindow
 
         var game = GameScene.Game;
         if (game == null) return;
+
+        var schoolEntries = GetVisibleMagicInfos(game)
+            .Where(x => x.Info.School == school)
+            .OrderBy(x => x.Info.NeedLevel1)
+            .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
+            .ToArray();
+
         if (_legacyEiLayout)
-            RefreshLegacySkillSlots(GetVisibleMagicInfos(game).Where(x => x.Info.School == school));
-        foreach (var entry in GetVisibleMagicInfos(game)
-                     .Where(x => x.Info.School == school)
-                     .OrderBy(x => x.Info.NeedLevel1)
-                     .ThenBy(x => x.Info.Name, StringComparer.Ordinal))
+        {
+            RefreshLegacySkillRows(schoolEntries);
+            foreach (var pair in _schoolButtons)
+                pair.Value.Visible = true;
+            GD.Print($"[MagicLegacy] category={school} count={schoolEntries.Length} page={_legacyPage + 1}/{Math.Max(1, LegacyPageCount())}");
+            return;
+        }
+
+        foreach (var entry in schoolEntries)
         {
             var cell = new MagicCellView(entry.Info, entry.UserMagic, game.MagicBarSpellSet);
             _list.AddControl(cell);
@@ -505,6 +619,8 @@ public partial class MagicDialog : DXWindow
     {
         if (!_legacyEiLayout || @event is not InputEventKey key || !key.Pressed || key.Echo)
             return;
+        if (key.CtrlPressed || key.AltPressed) return;
+
         int slot = key.Keycode switch
         {
             Key.F1 => 0, Key.F2 => 1, Key.F3 => 2, Key.F4 => 3,
@@ -526,9 +642,20 @@ public partial class MagicDialog : DXWindow
             case 3: magic.Set3Key = spellKey; break;
             case 4: magic.Set4Key = spellKey; break;
         }
+        foreach (var pair in game.UserMagics)
+        {
+            if (pair.Key == selected.Info || pair.Value == null) continue;
+            switch (game.MagicBarSpellSet)
+            {
+                case 1 when pair.Value.Set1Key == spellKey: pair.Value.Set1Key = Library.SpellKey.None; break;
+                case 2 when pair.Value.Set2Key == spellKey: pair.Value.Set2Key = Library.SpellKey.None; break;
+                case 3 when pair.Value.Set3Key == spellKey: pair.Value.Set3Key = Library.SpellKey.None; break;
+                case 4 when pair.Value.Set4Key == spellKey: pair.Value.Set4Key = Library.SpellKey.None; break;
+            }
+        }
         game.SendMagicKey(selected.Info.Magic, magic.Set1Key, magic.Set2Key, magic.Set3Key, magic.Set4Key);
         game.RefreshMagicBars();
-        GD.Print($"[MagicLegacy] 绑定 {selected.Info.Name} -> Set{game.MagicBarSpellSet}=F{(int)spellKey}");
+        GD.Print($"[MagicLegacy] bind skill={selected.Info.Name} set={game.MagicBarSpellSet} key={spellKey}");
         GetViewport().SetInputAsHandled();
     }
 
@@ -566,6 +693,216 @@ public partial class MagicDialog : DXWindow
     }
 }
 
+public partial class LegacySkillRowView : DXControl
+{
+    private MagicInfo _info;
+    private ClientUserMagic _magic;
+    private bool _selected;
+    public event Action Selected;
+
+    public LegacySkillRowView()
+    {
+        MouseFilter = MouseFilterEnum.Stop;
+        IsControl = true;
+    }
+
+    public void SetEntry(MagicInfo info, ClientUserMagic magic, bool selected)
+    {
+        _info = info;
+        _magic = magic;
+        _selected = selected;
+        QueueRedraw();
+    }
+
+    public override void _GuiInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+        {
+            Selected?.Invoke();
+            AcceptEvent();
+        }
+    }
+
+    public override void _Draw()
+    {
+        if (_info == null) return;
+        float opacity = _magic == null ? 0.55f : 1f;
+        if (_selected)
+        {
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.78f, 0.58f, 0.17f, 0.22f), true);
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.42f, 0.23f, 0.05f, 0.8f), false, 1f);
+        }
+
+        var icon = MirSkin.GetTexture(LibraryFile.MagicIcon, _info.Icon);
+        if (icon != null)
+        {
+            float scale = Mathf.Min(1f, Mathf.Min(32f / icon.GetWidth(), 32f / icon.GetHeight()));
+            float width = icon.GetWidth() * scale;
+            float height = icon.GetHeight() * scale;
+            DrawTextureRect(icon, new Rect2(3 + (32 - width) / 2f, 2 + (32 - height) / 2f, width, height),
+                false, new Color(1f, 1f, 1f, opacity));
+        }
+
+        var font = MirSkin.GetFont();
+        if (font == null) return;
+        float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+        if (canvasScale < 0.01f) canvasScale = 1f;
+        int drawSize = MirSkin.PhysicalSize(10);
+        DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
+        try
+        {
+            Vector2 namePos = new(40 * canvasScale, 14 * canvasScale);
+            DrawString(font, namePos, _info.Local() ?? _info.Name ?? string.Empty,
+                HorizontalAlignment.Left, 100 * canvasScale, drawSize,
+                new Color(0.24f, 0.24f, 0.24f, opacity));
+            string state = _magic == null ? $"需 {_info.NeedLevel1} 级" : $"等级 {_magic.Level}";
+            DrawString(font, new Vector2(40 * canvasScale, 29 * canvasScale), state,
+                HorizontalAlignment.Left, 100 * canvasScale, drawSize,
+                new Color(0.22f, 0.33f, 0.22f, opacity));
+        }
+        finally
+        {
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
+    }
+}
+
+public partial class LegacySkillDetailView : DXControl
+{
+    private const int DetailX = 235;
+    private const int DetailWidth = 165;
+    private (MagicInfo Info, ClientUserMagic UserMagic)? _selected;
+    private int _page;
+    private int _pageCount = 1;
+
+    public LegacySkillDetailView()
+    {
+        MouseFilter = MouseFilterEnum.Ignore;
+        IsControl = false;
+    }
+
+    public void SetSkill((MagicInfo Info, ClientUserMagic UserMagic)? selected)
+    {
+        _selected = selected;
+        QueueRedraw();
+    }
+
+    public void SetPage(int page, int pageCount)
+    {
+        _page = Math.Max(0, page);
+        _pageCount = Math.Max(1, pageCount);
+        QueueRedraw();
+    }
+
+    public override void _Draw()
+    {
+        var font = MirSkin.GetFont();
+        if (font == null) return;
+        float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+        if (canvasScale < 0.01f) canvasScale = 1f;
+        int drawSize = MirSkin.PhysicalSize(10);
+        var lines = new List<string>();
+        if (_selected is { } selected)
+        {
+            var info = selected.Info;
+            var magic = selected.UserMagic;
+            lines.Add($"[{info.Local() ?? info.Name ?? string.Empty}]");
+            lines.Add($"属性 : {info.Property}");
+            lines.Add($"元素 : {SchoolText(info.School)}");
+            lines.Add(magic == null ? "状态 : 未学习" : $"等级 : {magic.Level}");
+            lines.Add(magic == null
+                ? $"修炼1级需要等级 : {info.NeedLevel1}"
+                : $"修炼值 : {magic.Experience}");
+            if (magic == null && info.NeedLevel2 > 0)
+                lines.Add($"修炼2级需要等级 : {info.NeedLevel2}");
+            if (magic == null && info.NeedLevel3 > 0)
+                lines.Add($"修炼3级需要等级 : {info.NeedLevel3}");
+            if (!string.IsNullOrWhiteSpace(info.Description))
+                lines.Add($"说明 : {info.Description}");
+        }
+
+        DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
+        try
+        {
+            float y = 30f;
+            foreach (var source in lines)
+            {
+                foreach (string line in Wrap(source, font, drawSize, DetailWidth * canvasScale))
+                {
+                    if (y > 290f) break;
+                    DrawDetailLine(font, line, new Vector2(DetailX * canvasScale, y * canvasScale),
+                        drawSize, canvasScale);
+                    y += 15f;
+                }
+                if (y > 290f) break;
+            }
+
+            DrawString(font, new Vector2(117 * canvasScale, 299 * canvasScale), (_page + 1).ToString(),
+                HorizontalAlignment.Left, -1, drawSize, new Color("323232"));
+            DrawString(font, new Vector2(118 * canvasScale, 309 * canvasScale), _pageCount.ToString(),
+                HorizontalAlignment.Left, -1, drawSize, new Color("6496c8"));
+        }
+        finally
+        {
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
+        }
+    }
+
+    private static IEnumerable<string> Wrap(string text, Font font, int drawSize, float maxWidth)
+    {
+        if (string.IsNullOrEmpty(text)) yield break;
+        string current = string.Empty;
+        foreach (char ch in text)
+        {
+            string candidate = current + ch;
+            if (current.Length > 0 &&
+                font.GetStringSize(candidate, HorizontalAlignment.Left, -1, drawSize).X > maxWidth)
+            {
+                yield return current;
+                current = ch.ToString();
+            }
+            else
+            {
+                current = candidate;
+            }
+        }
+        if (current.Length > 0) yield return current;
+    }
+
+    private void DrawDetailLine(Font font, string line, Vector2 position, int drawSize, float canvasScale)
+    {
+        Color colour = line.StartsWith("[", StringComparison.Ordinal)
+            ? new Color("96c8fa")
+            : new Color("0a320a");
+        if (line.StartsWith("[", StringComparison.Ordinal))
+        {
+            foreach (Vector2 offset in new[]
+            {
+                new Vector2(-1, -1), new Vector2(1, -1),
+                new Vector2(-1, 1), new Vector2(1, 1),
+            })
+            {
+                DrawString(font, position + offset * canvasScale, line,
+                    HorizontalAlignment.Left, -1, drawSize, new Color("0a0a0a"));
+            }
+        }
+        DrawString(font, position, line, HorizontalAlignment.Left, -1, drawSize, colour);
+    }
+
+    private static string SchoolText(MagicSchool school) => school switch
+    {
+        MagicSchool.Fire => "火",
+        MagicSchool.Ice => "冰",
+        MagicSchool.Lightning => "电",
+        MagicSchool.Wind => "风",
+        MagicSchool.Holy => "神圣",
+        MagicSchool.Dark => "黑暗",
+        MagicSchool.Phantom => "幻影",
+        MagicSchool.Physical => "无",
+        _ => school.ToString(),
+    };
+}
+
 /// <summary>单个技能行 (移植自原版 MagicCell：图标、名称、等级、经验和快捷键绑定)。</summary>
 public partial class MagicCellView : DXControl
 {
@@ -595,7 +932,8 @@ public partial class MagicCellView : DXControl
     // (原版 Image_KeyDown 支持 Spell01~Spell24)。
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (@event is not InputEventKey key || !key.Pressed) return;
+        if (AutoLoginArgs.LegacyUi) return;
+        if (@event is not InputEventKey key || !key.Pressed || key.CtrlPressed || key.AltPressed) return;
         Vector2 localMouse = GetGlobalMousePosition() - GlobalPosition;
         if (!new Rect2(9, 9, 36, 36).HasPoint(localMouse)) return; // 原版 MouseControl == Image
 

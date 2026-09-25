@@ -10677,6 +10677,16 @@ public partial class GameScene : Control
                 return;
             }
         }
+        // Ctrl+F1..F4 切换技能栏组即使技能书打开也必须可达；
+        // 不能被“有窗口时屏蔽全局动作”的门控吞掉，更不能被技能书
+        // 的 F1..F12 绑定逻辑当成普通快捷键。
+        KeyBindAction spellSetBind = KeyBindManager.GetAction(key);
+        if (spellSetBind >= KeyBindAction.SpellSet01 && spellSetBind <= KeyBindAction.SpellSet04)
+        {
+            HandleKeyBind(spellSetBind);
+            return;
+        }
+
 
         // 窗口快捷键必须独立于其它窗口状态：Q/W 等键既要能在已有窗口
         // 打开时继续打开自己的窗口，也要能再次按下关闭自己的窗口。

@@ -288,7 +288,9 @@ public sealed partial class LegacyChatDialog : DXWindow
                 FontSize = 9,
                 TextColour = _messages[i].Colour,
                 DrawOutline = true,
-                AutoSize = false,
+                // EI renders one record per fixed 14px row; the parent clip
+                // truncates text horizontally instead of wrapping it.
+                AutoSize = true,
                 Size = new Vector2I(491, LineStep),
                 Location = new Vector2I(0, (i - start) * LineStep),
                 MouseFilter = MouseFilterEnum.Ignore,

@@ -1267,3 +1267,5 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 本轮没有执行真实装备左键取下、从背包拖入、交易、坐骑或写库操作；这些路径仍以静态兼容检查和 hover/命中证据为界。装备耐久/强化/绑定等 EI 专用角标没有独立贴图证据，当前不以现代 ZL 或自绘图标冒充原版。
 
 截图归档：`/home/tetsuya/development/zircon/.artifacts/ui-acceptance-2026-09-24/`。本段新增关键文件：`status-equipment-final.png`、`status-attributes-final.png`、`status-body-hit-hover.png`、`status-esc-final.png`、`status-reopen-final.png`。
+
+剩余阻塞明确为证据边界：本轮未做切换地图/重新登录后的人物窗状态保持回放；本轮也未重复会改动装备的左键拖放。研究矩阵中既有 Round 787 的安全 Wood Sword 往返记录仍保留，不能与本轮 `hover-only` 复测混淆。EI 专用耐久、强化、绑定、职业/等级限制角标的目标版贴图与绘制链仍未取得独立证据，故“状态标记像素级一致”和跨地图/重新登录保持不宣布已闭合。

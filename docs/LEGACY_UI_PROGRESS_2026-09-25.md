@@ -168,8 +168,8 @@
 ## 英雄杀地图 NPC + 怪物对齐（2026-09-25）
 
 - `[~]` 已生成离线 MAP-BASELINE：627 条 MapInfo、544 个本地英雄杀地图文件、794 个 Zircon 地图文件；exact/renamed 538 条允许点级检查后复用，89 条 variant/replacement/pending 禁止盲拷坐标。
-- `[~]` NPC 全量 294 条已生成只读 dry-run manifest；Merchant 坐标快照已固定 318 条记录，其中 130 条脚本/地图唯一匹配（含 34 条按历史地图消歧）；171 条 exact/renamed 可行走候选，123 条因身份/地图关系进入人工复核；未删除 NPC，未改业务字段，未写 System.db。
+- `[~]` NPC 全量 294 条已生成只读 dry-run manifest；Merchant 坐标快照已固定 318 条记录，其中 130 条脚本/地图唯一匹配（含 34 条按历史地图消歧）；223 条目标点通过独立 13-byte 地图可行走检查、104 条可进入 dry-run，190 条因身份/地图关系进入人工复核；未删除 NPC，未改业务字段，未写 System.db。
 - `[~]` 怪物身份已接入 138 个公开 YXS/Mud3 语义别名，当前 41/432 条英雄杀定义可稳定映射；Legacy Atlas 已核对 `old-only=229`、`unverified=197`、`changed=6`，并将 `monster.dat` 属性、`MonsterInfo` Index/Image/Stats、`monsters_zircon.json` 当前属性、`Enum.cs + MonsterLookup.cs` 的图库/shape 写入四方证据；半兽人/Oma、祖玛/Zuma、白野猪和 Boss/变体冲突仍需属性、资源帧、掉落和刷新配置交叉确认。
 - `[~]` Hero-kill/Mud3 文本源已公开固定于 Mir3-Research `docs/research/ei-ui-layout/sources/hero-kill-mud3-2026-09-25/`，来源说明及 SHA 在 `LOCAL_YXS_MUD3_TEXT_SOURCES_2026-09-25.md`；YXS `Mongen.txt` 激活 17/18 个 `Mon_Def/*.gen`，解析 679 条 active refresh rows，1 条 parse warning。当前与 Zircon RespawnInfo 唯一坐标匹配 328 条；YXS-only 307、Zircon-only 2058、刷新冲突 44，匹配行仍 pending-review，其余 blocked；recovered `import_plan_v2.json` 的 742 行仍只作为旧审计输入，不能替代文本源或补造 range。
-- `[~]` dry-run 应用计划已生成，明确 `database_write=false`，列出 171 条 NPC 可行走候选、328 条唯一刷新候选及前置条件；未删除/创建 MonsterInfo，未写 System.db。写库、双库 round-trip 和客户端逐地图验收仍因 NPC 123 条 pending-review、RespawnInfo 2147 条 blocked、刷新匹配 328 条 pending-review 而阻塞。
-- `[~]` 独立地图解析器通过逻辑一致性检查，但发现 50 个 malformed/truncated `.map` 解析事件；NPC-only 目标重叠为 0，怪物目标联合重叠待刷新源补齐。
+- `[~]` dry-run 应用计划已生成，明确 `database_write=false`，列出 104 条 NPC 可行走候选、328 条唯一刷新候选及前置条件；未删除/创建 MonsterInfo，未写 System.db。写库、双库 round-trip 和客户端逐地图验收仍因 NPC 190 条 pending-review、RespawnInfo 2147 条 blocked、刷新匹配 328 条 pending-review 而阻塞。
+- `[~]` 独立地图解析器通过逻辑一致性检查；已依据 Zircon `BotRunner/BotMap.cs` 校正 Segment 2 为每格 13 字节，当前 malformed/truncated `.map` 解析事件为 0；NPC-only 目标重叠为 0，怪物目标联合重叠待刷新源补齐。

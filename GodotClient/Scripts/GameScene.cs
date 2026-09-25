@@ -10576,9 +10576,9 @@ public partial class GameScene : Control
         if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
             return;
 
-        if (AutoLoginArgs.LegacyUi
-            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
-            : _chatTextBox?.HandleGlobalKey(key) == true)
+        // EI Enter/Space 打开主 HUD 的 ChatTextBox 输入条；R 单独开关
+        // F350 聊天记录窗。两者是原版中的不同控件，不能把 Enter 路由到 F350。
+        if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
         // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，

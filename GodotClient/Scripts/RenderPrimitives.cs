@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Godot;
 using ZirconClient.Controls;
 using ZirconClient.Formats;
@@ -136,6 +138,71 @@ internal static class RenderPrimitives
         canvas.DrawString(font, p + new Vector2(1f, 1f), text,
             HorizontalAlignment.Left, -1f, drawSize, new Color(0f, 0f, 0f, 0.85f));
         canvas.DrawString(font, p, text, HorizontalAlignment.Left, -1f, drawSize, colour);
+    }
+
+    /// <summary>
+    /// Legacy MapObject.Chat uses a 200px DXLabel with WordBreak/WordEllipsis.
+    /// bottomCenter is anchored to the original DrawY - 60 bubble bottom.
+    /// </summary>
+    public static void DrawChatBubble(CanvasItem canvas, string text, Vector2 bottomCenter,
+        Color colour, float size = 9f, float maxWidth = 200f)
+    {
+        if (canvas == null || string.IsNullOrWhiteSpace(text)) return;
+        Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+        if (font == null) return;
+
+        int drawSize = MirSkin.PhysicalSize((int)size);
+        var lines = WrapChatText(font, text, drawSize, maxWidth);
+        float lineHeight = font.GetHeight(drawSize);
+        float blockHeight = lineHeight * lines.Count;
+        float blockWidth = 1f;
+        foreach (string line in lines)
+            blockWidth = Math.Max(blockWidth, font.GetStringSize(line, HorizontalAlignment.Left, -1f, drawSize).X);
+
+        Vector2 topLeft = bottomCenter - new Vector2(blockWidth / 2f, blockHeight);
+        canvas.DrawRect(new Rect2(topLeft - new Vector2(1f, 1f),
+            new Vector2(blockWidth + 2f, blockHeight + 2f)), new Color(0f, 0f, 0f, 40f / 255f), true);
+        float ascent = font.GetAscent(drawSize);
+        for (int i = 0; i < lines.Count; i++)
+        {
+            string line = lines[i];
+            Vector2 baseline = new(bottomCenter.X - blockWidth / 2f,
+                topLeft.Y + ascent + i * lineHeight);
+            canvas.DrawStringOutline(font, baseline, line, HorizontalAlignment.Left, -1f,
+                drawSize, 1, Colors.Black);
+            canvas.DrawString(font, baseline, line, HorizontalAlignment.Left, -1f,
+                drawSize, colour);
+        }
+    }
+
+    private static List<string> WrapChatText(Font font, string text, int drawSize, float maxWidth)
+    {
+        var result = new List<string>();
+        foreach (string paragraph in (text ?? string.Empty).Replace("\r", string.Empty).Split('\n'))
+        {
+            string line = string.Empty;
+            foreach (char ch in paragraph)
+            {
+                string candidate = line + ch;
+                if (line.Length > 0 && font.GetStringSize(candidate, HorizontalAlignment.Left, -1f, drawSize).X > maxWidth)
+                {
+                    int wordBreak = line.LastIndexOf(' ');
+                    if (wordBreak >= 0)
+                    {
+                        result.Add(line[..wordBreak].TrimEnd());
+                        line = line[(wordBreak + 1)..].TrimStart() + ch;
+                    }
+                    else
+                    {
+                        result.Add(line);
+                        line = char.IsWhiteSpace(ch) ? string.Empty : ch.ToString();
+                    }
+                }
+                else line = candidate;
+            }
+            result.Add(line);
+        }
+        return result.Count == 0 ? new List<string> { string.Empty } : result;
     }
 
     public static float MeasureLabelWidth(string text, float size = 10f)

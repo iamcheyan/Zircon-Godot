@@ -93,6 +93,10 @@ public partial class ChatLogPanel : Control
         // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
         // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。
         GetTabSettings().EnabledTypes.Add(MessageType.System);
+        // EI 常驻聊天窗保留历史内容；现代 ChatTab 的 10 秒淡出策略会让
+        // 已收到的消息从旧版固定聊天区域消失，与原版历史列表不符。
+        GetTabSettings().FadeOut = false;
+        GetTabSettings().CleanUp = false;
         ApplySettings();
         RebuildVisibleLines(false);
     }
@@ -458,6 +462,9 @@ public partial class ChatLogPanel : Control
                 // 阴影也不是原版路径，会给 8px 文字增加一圈脏边。
                 DrawShadow = false,
                 IsControl = false,
+                // Legacy HUD rows use a measured multiline height below. Leave
+                // DXLabel's default AutoSize on for modern chat tabs only.
+                AutoSize = !_legacyHudLayout,
                 Size = new Vector2I(Math.Max(1, (int)_textArea.Size.X - 8), _legacyHudLayout ? 14 : 16),
             };
             line.Size = new Vector2I((int)line.Size.X,

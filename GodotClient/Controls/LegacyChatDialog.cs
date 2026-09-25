@@ -126,6 +126,10 @@ public sealed partial class LegacyChatDialog : DXWindow
             Size = new Vector2(499, 15),
             MaxLength = Globals.MaxChatLength,
         };
+        _input.FontSize = 8;
+        _input.TextOffsetY = -2f;
+        _input.TextHeightExtra = 4f;
+        _input.FocusChanged += focused => _input.BackColour = focused ? Colors.Black : Colors.Transparent;
         _input.TextSubmitted += Submit;
         AddControl(_input);
 

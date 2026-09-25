@@ -1290,3 +1290,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 - 技能行重新按本机 `/home/tetsuya/mir3ei/LegacyEI/Data/GameInter.wil` 的 F400 底图像素配准。使用独立 `wilsdk.py` 解码得帧头画布 `512×512`、offset `(7,-44)`；Godot 当前背景配准原点 `(-30,-67)`。六个左页浅色行影槽的图标中心约为窗口相对 `(74,46+46*i)`，故将行位置改为 x=55、y=`26/72/118/164/210/256`，图标缩放框居中于影槽，名称/等级列移至 x=98。原版 6 个命中 RECT 的实际写入值仍未闭合；此处修的是可见像素位置，不宣称点击区域字节级一致。
 - 红/蓝血球数字改为默认隐藏；鼠标悬停血球区域时分别在左右球下显示 HP、MP 当前值/上限。悬停命中区域延伸到数字下方，使指针移到数字上仍保持可见。该交互按用户此次明确提出的截图验收要求实现；尚无独立原版运行截图证明 EI 的悬停文字时序。
 - `dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功，0 errors、3 个现有 warning。构建时已发现一个运行中的 Godot 客户端，因此没有关闭它或另起进程；本次三项修改的完整 viewport/悬停实机截图仍待下一次安全重启后验收，不能标为运行通过。
+
+**2026-09-25 CHAT-05 用户截图复核：EI 聊天控件改用原始 WIL 帧：**用户最新截图显示 F350 内容区为空、输入栏不可见/不可输入、滚动锁链和频道按钮缺失。回查 `chat-window-unified-model.json`、`chat-window-render-evidence.json`：原版 id8/F350 为572×388，历史区 `(40,29,491,279)`、19行×14px，输入区 `(25,311,499,15)`；F360–371 是六个36×34频道控件，F380 是16×502纵向锁链轨道，F381/F382/F383 在目标本地 WIL 为空帧，故上下按钮仅保留已核定的命中区。
+
+定位到 EI UI 帧取图的资源优先级问题：`LegacyEI/Data/GameInter.wil/.wix` 与转换后的 `GameInter.Zl` 同时存在，但 `MirSkin` 原先优先读取 `.Zl`，会让当前聊天按钮/滚动条的显示受转换产物内容影响。`--legacy-hud` 下现优先从原始 WIL/WIX 解码帧，同时统一 `GetSize`/`GetOffset` 的来源；非 legacy/world 资源仍走 ZL。独立读取目标 WIL 确认 F350 1024×512、F360–371 各36×34、F380 16×502。消息接收链已在 `GameScene.AddChatMessage` 分发到 `_chatLog` 与 `_legacyChatDialog`；当前空白历史本身无法在没有消息包时填充，本次没有伪造历史消息。构建通过；现有 `DISPLAY=:0` 登录进程仍在使用旧程序集，本轮未关闭它或重复登录抢占账号，因此 WIL 优先修正后的完整屏幕/键盘实机截图待下一次安全重启验收。

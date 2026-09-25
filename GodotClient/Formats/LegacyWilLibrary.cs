@@ -7,7 +7,8 @@ namespace ZirconClient.Formats;
 
 /// <summary>
 /// Read-only loader for the original Mir3 EI WIL/WIX image format.
-/// It is used only when a legacy UI library has no converted .Zl counterpart.
+/// In EI UI mode it provides the original source frames; converted .Zl files
+/// remain the fallback for libraries without a matching WIL/WIX pair.
 /// </summary>
 public sealed class LegacyWilLibrary : IDisposable
 {

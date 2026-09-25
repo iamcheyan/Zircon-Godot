@@ -30,6 +30,12 @@ public partial class DXItemCell : DXControl
     /// not draw a second icon at the record rectangle.
     /// </summary>
     public bool DrawItemIconEnabled = true;
+    /// <summary>
+    /// Whether generic modern Interface badges may be drawn over this item.
+    /// EI's status-window item loop has no separate badge draw path, so its
+    /// equipment cells must leave this disabled rather than borrow ZL frames.
+    /// </summary>
+    public bool DrawItemBadgesEnabled = true;
 
 
     /// <summary>拿起状态: 记录源格子, 点另一格完成移动 (原版静态 SelectedCell)</summary>
@@ -295,15 +301,20 @@ public partial class DXItemCell : DXControl
             ? Colors.White : new Color(0.5f, 0.5f, 0.5f, 1f);
         DrawTextureRect(tex, new Rect2(x, y, imgSize.X, imgSize.Y), false, colour);
 
-        // 角标: New=47, Lock=48, 不可用=49, ItemPart=103 (Interface)
-        if (item.New)
-            DrawBadge(47, colour);
-        if (item.Flags.HasFlag(UserItemFlags.Locked) && !Hidden && GridType != GridType.Inspect)
-            DrawBadge(48, colour);
-        if (GameScene.Game != null && !GameScene.Game.CanUseItem(item) && !Hidden && GridType != GridType.Inspect)
-            DrawBadge(49, colour);
-        if (item.Info.ItemEffect == ItemEffect.ItemPart)
-            DrawBadge(103, colour);
+        // Modern Interface badges are not part of the EI status-window item
+        // loop. Callers using that window opt out instead of borrowing ZL
+        // frames whose meaning and resource identity are unverified for EI.
+        if (DrawItemBadgesEnabled)
+        {
+            if (item.New)
+                DrawBadge(47, colour);
+            if (item.Flags.HasFlag(UserItemFlags.Locked) && !Hidden && GridType != GridType.Inspect)
+                DrawBadge(48, colour);
+            if (GameScene.Game != null && !GameScene.Game.CanUseItem(item) && !Hidden && GridType != GridType.Inspect)
+                DrawBadge(49, colour);
+            if (item.Info.ItemEffect == ItemEffect.ItemPart)
+                DrawBadge(103, colour);
+        }
 
         DrawSpecialItemEffect(item);
     }

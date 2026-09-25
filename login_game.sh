@@ -110,7 +110,7 @@ if [ "$LEGACY_HUD" = "1" ]; then
     echo "  HUD: 旧版 EI（--legacy-ui --legacy-hud）"
 fi
 if [ -n "$REMOTE_SERVER_IP" ]; then
-    echo "  服务端: SSH $REMOTE_SSH_TARGET 工作树（$REMOTE_SERVER_IP:$PORT，经本地隧道连接）"
+    echo "  服务端: SSH $REMOTE_SSH_TARGET 工作树（$REMOTE_SERVER_IP:${PORT}，经本地隧道连接）"
 fi
 echo "══════════════════════════════════════"
 
@@ -154,7 +154,7 @@ else
     REMAIN=$(pgrep -f "[g]odot-mono.*--path $ROOT/GodotClient" || true)
 fi
 if [ -n "$REMAIN" ]; then
-    echo "  ⚠️ 残留进程: $REMAIN，再杀一次"
+    echo "  ⚠️ 残留进程: ${REMAIN}，再杀一次"
     kill -KILL $REMAIN 2>/dev/null || true
     sleep 2
 fi
@@ -236,7 +236,7 @@ nohup dotnet ServerCore.dll >/tmp/servercore_login_remote.log 2>&1 </dev/null &
 echo "远程服务端 PID $!"
 for i in $(seq 1 30); do
     if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
-        echo "远程服务端已就绪（端口 $PORT）"
+        echo "远程服务端已就绪（端口 ${PORT}）"
         exit 0
     fi
     sleep 1

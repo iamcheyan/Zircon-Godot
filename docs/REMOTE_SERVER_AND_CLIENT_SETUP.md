@@ -520,7 +520,7 @@ BotRunner 读取 DatabasePath 主要是为了得到地图、怪物、物品和�
 ## 18. 本机客户端调试 82 上当前工作树
 
 如果代码直接在 82 的 `/home/tetsuya/development/zircon` 工作树开发，而希望用本机的
-Godot 窗口和本机 `/home/tetsuya/mir3ei` 素材登录这份服务端，可在本机 Zircon 仓库根目录运行：
+Godot 窗口和本机 EI 素材登录这份服务端，可在本机 Zircon 仓库根目录运行：
 
 ```bash
 cd /home/tetsuya/development/Zircon
@@ -551,3 +551,88 @@ bash login_game.sh remote 192.168.3.82 legacy
 ```bash
 bash login_game.sh remote 192.168.3.82
 ```
+
+### 18.1 macOS 本机客户端（2026-09-26 实测通过）
+
+macOS 的目录结构与 82 不同，且不能直接照抄 82 的环境变量（原因见下），需要用包装器
+显式设置。已验证可用的入口：
+
+```bash
+/Users/tetsuya/mir2ei/LegacyEI/login_game.sh remote 192.168.3.82 legacy
+```
+
+#### 平台路径对照
+
+| 用途 | 82（Debian） | macOS |
+|---|---|---|
+| 仓库工作树 | `/home/tetsuya/development/zircon` | `/Users/tetsuya/Development/Zircon` |
+| 现代客户端资源（`.Zl`） | `<repo>/Debug/Client/Data` | `<repo>/Debug/Client/Data`（软链到 `/Users/tetsuya/mir2ei`） |
+| 旧版 EI 素材（`.wil`/`.wix`） | `/home/tetsuya/mir2ei/Data` | `/Users/tetsuya/mir2ei/LegacyEI/Data` |
+| EI 原版客户端（含 exe/dll） | `/home/tetsuya/mir2ei` | 未复制，只取 `Data` |
+| 启动包装器 | `/home/tetsuya/mir2ei/login_game.sh` | `/Users/tetsuya/mir2ei/LegacyEI/login_game.sh` |
+
+#### 环境变量契约
+
+| 变量 | 作用 | 是否必须 |
+|---|---|---|
+| `ZIRCON_UI_DATA_PATH` | 世界/角色/物品/地图图库根（现代 `.Zl`）。**变量名含 UI，实际决定世界数据路径。** | 必须显式设置 |
+| `ZIRCON_LEGACY_UI_DATA_PATH` | 旧版界面图库根（EI `.wil`/`.wix`），仅 `--legacy-hud` 时生效 | 用 legacy HUD 时必须 |
+| `MIR3_EI_ROOT` | 只作为上面两者的后备默认（`$MIR3_EI_ROOT/Data`） | 可选 |
+
+`MirSkin.ResolveDataPath()` 的解析顺序：
+
+1. `$ZIRCON_UI_DATA_PATH` —— 存在即用
+2. `$MIR3_EI_ROOT/Data` —— 存在即用
+3. 硬编码 `/home/tetsuya/mir2ei/Data` —— **存在即用（陷阱）**
+4. `res://../Debug/Client/Data`
+
+**第 3 条是坑。** 82 上 `/home/tetsuya/mir2ei/Data` 存在，但里面只有 EI 的 `.wil`/`.wix`，
+没有任何 `.Zl`；而地形图库只走 `.Zl`（`MapView` → `LibraryCache`，没有 WIL 回退）。
+一旦解析落到第 3 条，地形会整片消失。所以 `ZIRCON_UI_DATA_PATH` 必须显式指向现代 `.Zl`
+目录，**绝不能指向 EI 的 WIL 目录**。
+
+实测对照（同一张地图 Sabuk Keep、同一坐标 `(203,112)`）：
+
+| 机器 | 环境变量 | `[MapView] 首帧绘制` | `[MapView] 贴图诊断` |
+|---|---|---|---|
+| macOS | 显式设 `ZIRCON_UI_DATA_PATH` | 480 格 | `missingLibraries=0, missingTextures=0` |
+| 82 | 仅 `MIR3_EI_ROOT`+`ZIRCON_UI_DATA_PATH` → EI 目录 | **0 格** | `missingLibraries=2076` |
+
+#### 自检方法
+
+客户端日志中这两行即可判断配置是否正确：
+
+```
+[DB] 加载 System.db 从: <repo>/Debug/Client/Data/
+[MapView] 贴图诊断: missingLibraries=0, missingTextures=0
+```
+
+`missingLibraries` 不为 0，说明 `ZIRCON_UI_DATA_PATH` 落到了没有 `.Zl` 的目录。
+另外 `[MirSkin] legacy UI WIL source: GameInter -> <EI 根>/Data/GameInter.wil (1103 frames)`
+出现即表示旧版 WIL 素材路由正确。
+
+#### 前置条件：本机客户端构建需要 82 的未提交改动
+
+`ui/legacy-layout-lab` 的**已提交状态编译不过**：`GameScene.cs` 调用的
+`NPCTextControl.ButtonAreas` 只存在于 82 工作树**未提交**的 `NPCTextControl.cs` 中，
+构建会报 `CS1061: 'NPCTextControl' に 'ButtonAreas' の定義が含まれておらず`。
+因此本机客户端必须先同步 82 的未提交改动：
+
+```bash
+cd <repo>
+git checkout -- . && ssh debian 'cd /home/tetsuya/development/zircon && git diff' | git apply -
+```
+
+> ⚠️ `git checkout -- .` 会丢弃本机该 worktree 的未提交改动，执行前确认没有自己的内容。
+> 82 改动后重新同步时重复这条命令即可。
+
+#### bash 陷阱：`$VAR` 紧跟全角标点
+
+`login_game.sh` 原先有三处把变量紧贴全角标点：`$PORT，`、`$REMAIN，`、`$PORT）`。
+在 UTF-8 locale 下 bash 会把全角标点的首字节（`0xEF`）算进变量名，`set -u` 于是报
+`PORT<0xEF>: 未割り当ての変数です` / `unbound variable`，脚本在打印模式行后立即中断。
+已改为 `${PORT}` / `${REMAIN}`。
+
+复现范围：bash 5.3 在默认 locale 即复现；bash 3.2 仅在 UTF-8 locale 复现。
+**写含中文的 shell 脚本时，全角标点不要紧贴变量名。**
+

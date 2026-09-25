@@ -53,6 +53,23 @@ bash login_game.sh remote 192.168.3.82 legacy
 匹配该工作树 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 进程，不会重启 systemd 服务。
 远程工作树路径、端口转发方式和故障限制详见 [`REMOTE_SERVER_AND_CLIENT_SETUP.md`](../docs/REMOTE_SERVER_AND_CLIENT_SETUP.md#18-本机客户端调试-82-上当前工作树)。
 
+### macOS 上使用 `remote` 模式
+
+macOS 的路径与 82 不同，且不能直接照抄 82 的环境变量（会让地形图库全部失效），
+请用包装器（它已显式设好 `ZIRCON_UI_DATA_PATH` 与 `ZIRCON_LEGACY_UI_DATA_PATH`）：
+
+```bash
+/Users/tetsuya/mir2ei/LegacyEI/login_game.sh remote 192.168.3.82 legacy
+```
+
+- EI 旧版素材根：`/Users/tetsuya/mir2ei/LegacyEI/Data`
+- 现代客户端资源：`<repo>/Debug/Client/Data`（软链到 `/Users/tetsuya/mir2ei`）
+- 客户端日志出现 `[MapView] 贴图诊断: missingLibraries=0` 才算配置正确
+- 若客户端构建报 `NPCTextControl` 缺少 `ButtonAreas`，说明本机没同步 82 的未提交改动
+
+完整的环境变量契约、平台路径对照表与实测对照见
+[`REMOTE_SERVER_AND_CLIENT_SETUP.md` §18.1](../docs/REMOTE_SERVER_AND_CLIENT_SETUP.md#181-macos-本机客户端2026-09-26-实测通过)。
+
 ---
 
 ## 方式三：手动分步启动（双终端独立调试）

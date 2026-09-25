@@ -20,3 +20,4 @@
 
 结果：普通消息、含 R 字符消息和 89 字长消息均进入主 HUD；HUD 消息未被 F350 清空；关闭 F350 后主 HUD 保留消息；提交后输入框为空；含 R 输入期间未误开 F350。
 已知环境噪声：Xvfb 无音频设备导致 ALSA ERR_CANT_OPEN/dummy audio，不影响登录或 HUD。
+中文输入：通过 XTest 输入 `中`，截图 `chat-hud-chinese-input.png` / `chat-hud-chinese-input-final.png` 显示中文字体和主 HUD 光标；当前无可用 IME 注入完整多字串，未将该工具限制误报为客户端失败。

@@ -303,6 +303,9 @@ public partial class GameScene : Control
         OS.ShellOpen(address);
     }
 
+    /// <summary>主 HUD 聊天输入是否占用键盘焦点。</summary>
+    public bool ChatInputHasFocus => _chatTextBox?.InputHasFocus == true;
+ 
     public void SendChat(string text)
         => SendChat(text, new List<int>());
 
@@ -358,7 +361,8 @@ public partial class GameScene : Control
         if (AutoLoginArgs.LegacyUi)
             GD.Print($"[LegacyChat] receive type={type} textLength={text?.Length ?? 0} "
                 + $"hudVisible={_chatLog?.Visible} hudMessages={_chatLog?.MessageCount} "
-                + $"hudLines={_chatLog?.VisibleLineCount} hudSize={_chatLog?.Size} hudTextArea={_chatLog?.TextAreaSize} "
+                + $"hudTypeEnabled={_chatLog?.IsTypeEnabled(type)} hudLines={_chatLog?.VisibleLineCount} "
+                + $"hudSize={_chatLog?.Size} hudTextArea={_chatLog?.TextAreaSize} "
                 + $"f350Visible={_legacyChatDialog?.Visible}");
     }
 

@@ -24,8 +24,9 @@ public partial class ChatLogPanel : Control
     private int _selectedTab;
     private double _idleSeconds;
     private bool _legacyHudLayout;
+    private const float LegacyHudChatOpacity = 0.5f;
     private const int MaxLines = 250;
-
+ 
     public sealed class ChatTabSettings
     {
         public string Title = Lang.ChatLogPanelChatLabel;
@@ -89,6 +90,9 @@ public partial class ChatLogPanel : Control
         _scroll.VisibleSize = (int)Size.Y;
         _scroll.Change = 14;
         _scroll.Visible = false;
+        // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
+        // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。
+        GetTabSettings().EnabledTypes.Add(MessageType.System);
         ApplySettings();
         RebuildVisibleLines(false);
     }
@@ -100,10 +104,10 @@ public partial class ChatLogPanel : Control
     public override void _Process(double delta)
     {
         if (_tabSettings.Count == 0) return;
-
+ 
         _idleSeconds += delta;
         var settings = _tabSettings[_selectedTab];
-
+ 
         if (settings.CleanUp && _idleSeconds > 5.0 && _messages.Count > 0)
         {
             // 原版 Remove Old 只清理普通聊天历史；保留公告/系统消息，避免重要提示消失。
@@ -111,8 +115,11 @@ public partial class ChatLogPanel : Control
             RebuildVisibleLines(false);
             _idleSeconds = 0;
         }
-
-        float opacity = settings.FadeOut && settings.Transparent && _idleSeconds > 10.0 ? 0.15f : 1f;
+ 
+        bool faded = settings.FadeOut && settings.Transparent && _idleSeconds > 10.0;
+        float opacity = faded
+            ? (_legacyHudLayout ? 0f : 0.15f)
+            : (_legacyHudLayout ? LegacyHudChatOpacity : 1f);
         _textArea.Opacity = opacity;
         // 透明/淡出时禁止滚动条被 HideWhenNoScroll 重新打开（地图中「悬空滑块」）。
         UpdateChromeVisibility(opacity);
@@ -132,16 +139,16 @@ public partial class ChatLogPanel : Control
 
     public void AddMessage(string text, Color colour)
         => AddMessage(text, MessageType.Announcement, colour, null);
-
+ 
     public void AddMessage(string text, MessageType type, Color colour)
         => AddMessage(text, type, colour, null);
-
+ 
     public void AddMessage(string text, MessageType type, Color colour, List<ClientUserItem> linkedItems)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
         _idleSeconds = 0;
-        _textArea.Opacity = 1f;
-        _messages.Add(new ChatMessage(text, type, ClientSettings.ChatForeColour(type), ClientSettings.ChatBackColour(type), linkedItems));
+        _textArea.Opacity = _legacyHudLayout ? LegacyHudChatOpacity : 1f;
+        _messages.Add(new ChatMessage(text, type, colour, ClientSettings.ChatBackColour(type), linkedItems));
         if (ClientSettings.LogChat)
         {
             using var file = FileAccess.Open("user://Chat Logs.txt", FileAccess.ModeFlags.WriteRead);
@@ -442,10 +449,12 @@ public partial class ChatLogPanel : Control
             var line = new DXLabel
             {
                 Text = displayText,
-                FontSize = _legacyHudLayout ? 9 : 10,
+                FontSize = _legacyHudLayout ? 8 : 10,
                 TextColour = message.Colour,
                 BackColour = ResolveMessageBackColour(message.BackColour, _tabSettings[_selectedTab].Transparent),
-                DrawShadow = true,
+                // EI ChatTab 的消息标签明确关闭 Outline；当前 DXLabel 的
+                // 阴影也不是原版路径，会给 8px 文字增加一圈脏边。
+                DrawShadow = false,
                 IsControl = false,
                 Size = new Vector2I(Math.Max(1, (int)_textArea.Size.X - 8), _legacyHudLayout ? 14 : 16),
             };

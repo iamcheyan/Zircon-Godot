@@ -23,9 +23,6 @@ public static class RenderOrder
     // 之上——与旧端的绘制顺序一致。曾用常量 50，恰好落在视野中部：行 13+
     // 的地形盖住地板特效，行 0-12 的对象反而被地板特效压住。
     public const int FloorEffects = 0;
-    // 自身持续 Buff 光环/护盾在角色身体后方，避免特效帧的透明键或矩形
-    // 覆盖腿部；仍高于所有地图前景地形。
-    public const int PlayerBuffEffect = 3198;
     public const int LocalPlayer = 3200;
     public const int Particles = 3300;
     public const int FinalEffects = 3400;

@@ -1046,7 +1046,7 @@ public partial class GameScene : Control
         UpdateViewRange();
 
         _player = new PlayerRenderer();
-        _player.ZIndex = RenderOrder.LocalPlayer;
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         _player.FrameChanged = (animation, frame, magic) => OnPlayerFrameChanged(_player, animation, frame, magic);
             _player.SoundCue = PlaySound;
         AddChild(_player);
@@ -1880,9 +1880,16 @@ public partial class GameScene : Control
             GD.Print($"[OfflineMove] IGNORE UserLocation location=({loc.X},{loc.Y})");
             return;
         }
-        // S.UserLocation 是服务端对非法/过早移动的纠正，不是 S.ObjectMove。
-        // 原客户端收到它会校正格子并停止当前移动，不能再播放一次 Walking。
-        if (_player == null) return;
+        // 施法期间的迟到移动纠正只更新权威位置，不能切回 Standing；
+        // 否则旧 C.Move 回包会打断抬手动作，随后再次进入 Walking。
+        if (_player.IsSpellAnimation)
+        {
+            _moveServerLockUntilMs = 0;
+            _playerDirection = dir;
+            ApplyAuthoritativePlayerLocation(loc);
+            _canRun = false;
+            return;
+        }
         _moveServerLockUntilMs = 0;  // 服务端纠正(拒绝移动), 同样解除门控
         _playerDirection = dir;
         _player.Direction = dir;
@@ -3175,6 +3182,19 @@ public partial class GameScene : Control
         {
             if (_player != null)
             {
+                // 施法回包到达时可能仍有上一段移动插值；
+                // 原版 MagicAction 会等移动动作边界后才释放，客户端必须
+                // 先结束本地移动时间轴，不能让施法姿势继续沿 Offset 飘移。
+                if (_moveFrameCount > 1)
+                {
+                    _moveFrameCount = 1;
+                    _player.OffsetX = 0f;
+                    _player.OffsetY = 0f;
+                    _mapView.CameraOffset = Vector2.Zero;
+                    UpdatePlayerPosition();
+                }
+                _pendingMagicPacket = null;
+                _canRun = false;
                 _player.Direction = dir;
                 renderer = _player;
                 spellInstance = _player.PlaySpell(type);
@@ -7775,11 +7795,23 @@ public partial class GameScene : Control
             _moveServerLockUntilMs = 0;
             return;
         }
+        // 施法动画期间，迟到的移动回包只用于校正权威位置；
+        // 不得进入 BeginMove，否则 Walking/Running 会覆盖抬手动作。
+        MirDirection dir = (MirDirection)direction;
+        if (_player.IsSpellAnimation)
+        {
+            _moveServerLockUntilMs = 0;
+            _canRun = false;
+            _playerDirection = dir;
+            _player.Direction = dir;
+            if (_playerLocation.X != x || _playerLocation.Y != y)
+                ApplyAuthoritativePlayerLocation(new System.Drawing.Point(x, y));
+            return;
+        }
         // 只有在本次服务器回包真正应用到客户端状态后，才允许下一次
         // MouseWalker 请求。这样预测坐标与旧回包不会交叉覆盖。
         _moveServerLockUntilMs = 0;
         _canRun = true;
-        MirDirection dir = (MirDirection)direction;
         _playerDirection = dir;
 
         // 原版 S.ObjectMove 正常只解锁+设 Slow, 不重 SetAction, 插值由发包时的
@@ -9607,7 +9639,7 @@ public partial class GameScene : Control
         _mapView.CenterOn(_player.CellX, _player.CellY);
         _player.Position = _mapView.CellToScreen(_player.CellX, _player.CellY, true)
             + new Vector2(_player.OffsetX, _player.OffsetY);
-        _player.ZIndex = RenderOrder.LocalPlayer;
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         UpdateObjectPositions();
     }
 
@@ -9909,6 +9941,11 @@ public partial class GameScene : Control
     {
         if (@event is not InputEventKey key || !key.Pressed) return;
         if (_net?.Connection?.Connected != true) return;
+
+        // 任意 LineEdit/TextEdit 获得焦点时，文本框独占键盘；
+        // 不得继续进入 KeyBindManager，否则输入 q/w 等字母会同时打开游戏窗口。
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+            return;
 
         if (_chatTextBox?.HandleGlobalKey(key) == true)
             return;

@@ -245,6 +245,12 @@ public partial class PlayerRenderer : Node2D
     // 切换动画帧表 (Start/Count/OffSet), 参考 FrameSet.Players
     public void SetAnimation(MirAnimation anim)
     {
+        bool movementAnimation = anim is MirAnimation.Walking or MirAnimation.Running
+            or MirAnimation.HorseWalking or MirAnimation.HorseRunning
+            or MirAnimation.CreepWalkSlow or MirAnimation.CreepWalkFast;
+        if (IsSpellAnimation && movementAnimation)
+            return; // 施法中拒绝迟到移动/自动寻路动作，避免覆盖抬手动画。
+
         // 原版 SetFrame: Standing/Dead 立即打断；其它动作在当前一次性
         // 动作播完后衔接，避免攻击/受击/施法互相覆盖第一帧。
         if (!_animationComplete && _oneShotAnim != MirAnimation.Standing

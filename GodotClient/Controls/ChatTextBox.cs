@@ -122,9 +122,10 @@ public sealed partial class ChatTextBox : DXWindow
     {
         if (!key.Pressed) return false;
         var focused = GetViewport()?.GuiGetFocusOwner();
-        // _Input 在 Godot GUI 控件处理前触发。输入框已经获得焦点时，
-        // 必须告诉 GameScene 停止快捷键分发，但不能把事件标记为已处理，
-        // 这样后续 LineEdit 仍能接收到字母、数字和退格。
+        // 输入框获得焦点时，所有字母/数字快捷键完全留给 LineEdit。
+        if (focused == _input || (focused != null && IsAncestorOf(focused)))
+            return true;
+
         if (ClientSettings.ShiftOpenChat && key.ShiftPressed && key.Keycode is >= Key.Key0 and <= Key.Key9)
         {
             OpenChat();
@@ -135,9 +136,6 @@ public sealed partial class ChatTextBox : DXWindow
         if (key.Keycode == Key.Space || key.Keycode == Key.Enter)
         {
             OpenChat();
-            // 第一次回车/空格只负责打开并聚焦聊天框。若不消费当前事件，
-            // 同一个 Enter 会继续传给刚刚获得焦点的 LineEdit，立即提交
-            // 空文本并释放焦点，表现为必须再用鼠标点击输入框。
             GetViewport()?.SetInputAsHandled();
             return true;
         }

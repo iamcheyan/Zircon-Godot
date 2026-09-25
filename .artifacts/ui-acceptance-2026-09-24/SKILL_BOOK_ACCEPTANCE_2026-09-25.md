@@ -25,6 +25,14 @@
 | `skill-book-final-open-recheck-2026-09-25.png` | 构建后最终打开态复核 | 重启 `skill-login` 后用裸小写 `e` 打开 | 真实客户端重新登录成功，F400 书页、八类纵列、六行技能与独立快捷栏均可见。 |
 | `skill-book-final-selected-recheck-2026-09-25.png` | 构建后最终详情复核 | 点击第一行 Fire Ball | 选中边框、真实 MIcon 图标、右页字段与受限换行均可见。 |
 
+| 补充截图 | 用途 | 运行命令 | 状态/结论 |
+|---|---|---|---|
+| `skill-book-long-description-2026-09-25.png` | 长描述换行/底边裁剪 | `DISPLAY=:100 scrot -o <文件>` | 详情长文本在右页受限区域内换行，未进入书外；原版 formatter 语义仍列为阻塞。 |
+| `skill-book-row-hover-2026-09-25.png`、`skill-book-row-pressed-2026-09-25.png` | 技能行悬停/按下 | `xdotool mousemove/click; DISPLAY=:100 scrot` | 行 hover/pressed 高亮与选中边框可见；按钮状态路径已实屏记录。 |
+| `skill-book-category-fire-2026-09-25.png`、`skill-book-category-fire-2026-09-25-rerun.png`、`skill-book-category-ice-2026-09-25.png`、`skill-book-category-ice-2026-09-25-rerun.png`、`skill-book-category-lightning-2026-09-25.png`、`skill-book-category-lightning-2026-09-25-rerun.png`、`skill-book-category-wind-2026-09-25.png`、`skill-book-category-wind-2026-09-25-rerun.png`、`skill-book-category-holy-2026-09-25.png`、`skill-book-category-holy-2026-09-25-rerun.png`、`skill-book-category-dark-2026-09-25.png`、`skill-book-category-dark-2026-09-25-rerun.png`、`skill-book-category-dark-2026-09-25-fixed.png`、`skill-book-category-phantom-2026-09-25.png`、`skill-book-category-phantom-2026-09-25-rerun.png`、`skill-book-category-physical-2026-09-25.png`、`skill-book-category-physical-2026-09-25-rerun.png` | 八类切换态 | `xdotool mousemove/click; DISPLAY=:100 scrot` | 八类纵列均逐项采集；类别图标、页码归一与列表刷新成立。 |
+| `skill-book-next-pressed-2026-09-25.png`、`skill-book-previous-pressed-2026-09-25.png` | 翻页按钮状态 | `xdotool mousemove/click; DISPLAY=:100 scrot` | F410/F412 pressed 状态与页码切换可见；边界行为由日志验证。 |
+| `skill-book-entry-e-2026-09-25.png`、`skill-book-entry-e-closed-2026-09-25.png`、`skill-book-entry-ctrl-e-2026-09-25.png` | E/Ctrl+E 入口 | `xdotool key --window <id> e/ctrl+e; DISPLAY=:100 scrot` | 裸 E 与 Ctrl+E 入口截图已归档；最终构建后裸小写 e 复核见最终截图。 |
+| `skill-book-entry-f1-2026-09-25.png`、`skill-book-entry-f1-diagnostic-2026-09-25.png`、`skill-book-entry-shift-f1-2026-09-25.png`、`skill-book-entry-shift-f1-diagnostic-2026-09-25.png`、`skill-book-entry-shift-f1-fixed-2026-09-25.png`、`skill-book-entry-ctrl-f1-diagnostic-2026-09-25.png`、`skill-book-entry-ctrl-f1-fixed-2026-09-25.png` | F1/Shift+F1/Ctrl+F1 入口 | `xdotool key --window <id> F1/shift+F1/ctrl+F1; DISPLAY=:100 scrot` | 普通 F1、Shift 与 Ctrl 诊断/修复截图均保留；Ctrl+F1 组标签缺少独立视觉证据，见未闭合项。 |
 ## 输入与控制台证据
 
 - `E`：技能书打开/关闭均成功。

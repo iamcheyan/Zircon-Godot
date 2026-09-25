@@ -22,6 +22,8 @@
 | `skill-book-reopen-2026-09-25.png` | 关闭后重开 | 再次 `E` 打开 | 书页重建为 Ice 页 1，旧 Fire 选中详情不残留；关闭/重开路径有效。
 | `skill-book-empty-category-2026-09-25.png` | 类别边界检查 | 点击 Phantom 类别 | 列表刷新为该类技能，6 行布局不改变；类别切换不产生现代滚动条。
 | `skill-book-physical-category-2026-09-25.png` | 少于一页状态 | 点击 Physical 类别 | 仅 3 条技能，其余槽为空；布局和页码稳定，未用伪技能补满。
+| `skill-book-final-open-recheck-2026-09-25.png` | 构建后最终打开态复核 | 重启 `skill-login` 后用裸小写 `e` 打开 | 真实客户端重新登录成功，F400 书页、八类纵列、六行技能与独立快捷栏均可见。 |
+| `skill-book-final-selected-recheck-2026-09-25.png` | 构建后最终详情复核 | 点击第一行 Fire Ball | 选中边框、真实 MIcon 图标、右页字段与受限换行均可见。 |
 
 ## 输入与控制台证据
 
@@ -31,7 +33,7 @@
 - `Shift+F1..F12`：实现映射为 `Spell13..Spell24`，代码排除 Ctrl/Alt；本次 Xvfb xdotool 仅稳定捕获了普通 F1 日志，未将 Shift 单独列为实屏通过。
 - `Ctrl+F1..F4`：GameScene 在可见窗口门控前处理 `SpellSet01..04`，避免被技能书普通 F 键处理吞掉；需后续以快捷栏组标签截图补强。
 - 日志关键行：`[MagicLegacy] category=Fire count=8 page=1/2`、`refresh school=Fire skills=161`、`selected=Fire Ball id=FireBall`、`page=2/2 school=Fire`、`category=Ice count=7 page=1/2`、`selected=Ice Bolt id=IceBolt`。
-- 未发现技能书打开期间的空纹理、零尺寸、异常或 fallback；`MagicIcon` 使用 `/home/tetsuya/mir2ei/Data/MIcon.wil`。
+- 已生成当前客户端 DB 的完整映射与 MIcon 元数据：`/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/magic-icon-map-2026-09-25.txt`（174 条）及 `magic-icon-metadata-2026-09-25.json`（164 个唯一帧，含 header offset/尺寸与 alpha bbox）；这闭合 Zircon 当前资源链，不等同于 EI `[skill+6]` 逐项映射。
 
 ## 未闭合项
 

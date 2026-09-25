@@ -3,13 +3,23 @@ using Library.SystemModels;
 using MirDB;
 
 // Read-only dump of MagicInfo Power fields for warrior passive skills.
-// Usage: MagicInfoDump <RootDir>   (RootDir must contain System.db)
+// Usage: MagicInfoDump <RootDir> [--icons] (RootDir must contain System.db)
 string root = args.Length > 0 ? args[0] : "/tmp/magicdb/";
+bool dumpIcons = args.Contains("--icons", StringComparer.OrdinalIgnoreCase);
 
 var session = new Session(SessionMode.System, root: root, backup: root + "Backup/");
 session.Initialize(typeof(MagicInfo).Assembly);
 
 var magics = session.GetCollection<MagicInfo>().Binding;
+
+if (dumpIcons)
+{
+    Console.WriteLine($"{"Magic",-32}{"Name",-28}{"Class",-9}{"School",-12}{"Icon",6}{"NeedL1",7}");
+    Console.WriteLine(new string('-', 96));
+    foreach (var magic in magics.OrderBy(x => (int)x.Magic))
+        Console.WriteLine($"{magic.Magic,-32}{magic.Name ?? "",-28}{magic.Class,-9}{magic.School,-12}{magic.Icon,6}{magic.NeedLevel1,7}");
+    return;
+}
 
 var targets = new HashSet<MagicType>
 {

@@ -324,9 +324,9 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Lightning, 454, new(4, 91)),
             (MagicSchool.Wind, 456, new(2, 126)),
             (MagicSchool.Holy, 458, new(2, 161)),
-            (MagicSchool.Dark, 460, new(2, 196)),
-            (MagicSchool.Phantom, 462, new(1, 231)),
-            (MagicSchool.Physical, 464, new(2, 266)),
+            (MagicSchool.Dark, 450, new(2, 196)),
+            (MagicSchool.Phantom, 452, new(1, 231)),
+            (MagicSchool.Physical, 454, new(2, 266)),
         };
         _tabOrder = schools.Select(x => x.school).ToList();
         foreach (var entry in schools)
@@ -372,9 +372,9 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Lightning, new(4, 91), 454),
             (MagicSchool.Wind, new(2, 126), 456),
             (MagicSchool.Holy, new(2, 161), 458),
-            (MagicSchool.Dark, new(2, 196), 460),
-            (MagicSchool.Phantom, new(1, 231), 462),
-            (MagicSchool.Physical, new(2, 266), 464),
+            (MagicSchool.Dark, new(2, 196), 450),
+            (MagicSchool.Phantom, new(1, 231), 452),
+            (MagicSchool.Physical, new(2, 266), 454),
         };
         bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
             && button.Location == x.location
@@ -421,7 +421,7 @@ public partial class MagicDialog : DXWindow
             }
             _schoolButtons.Clear();
             BuildLegacySchoolButtons();
-            SelectSchool(_selectedSchool);
+            SelectSchool(_selectedSchool, preserveState: true);
             GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count}");
             return;
         }
@@ -558,11 +558,13 @@ public partial class MagicDialog : DXWindow
             _ => 160,
         };
     }
-    private void SelectSchool(MagicSchool school)
+    private void SelectSchool(MagicSchool school, bool preserveState = false)
     {
+        var priorSelection = preserveState ? _legacySelectedSkill : null;
+        int priorPage = preserveState ? _legacyPage : 0;
         _selectedSchool = school;
-        _legacyPage = 0;
-        _legacySelectedSkill = null;
+        _legacyPage = priorPage;
+        _legacySelectedSkill = priorSelection;
 
         if (!_legacyEiLayout)
         {
@@ -591,6 +593,9 @@ public partial class MagicDialog : DXWindow
             .OrderBy(x => x.Info.NeedLevel1)
             .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
             .ToArray();
+        if (_legacySelectedSkill is { } selected &&
+            !schoolEntries.Any(x => x.Info == selected.Info))
+            _legacySelectedSkill = null;
 
         if (_legacyEiLayout)
         {
@@ -619,8 +624,8 @@ public partial class MagicDialog : DXWindow
     {
         if (!_legacyEiLayout || @event is not InputEventKey key || !key.Pressed || key.Echo)
             return;
+        GD.Print($"[MagicLegacy] key-event key={key.Keycode} shift={key.ShiftPressed} ctrl={key.CtrlPressed} alt={key.AltPressed}");
         if (key.CtrlPressed || key.AltPressed) return;
-
         int slot = key.Keycode switch
         {
             Key.F1 => 0, Key.F2 => 1, Key.F3 => 2, Key.F4 => 3,
@@ -716,6 +721,7 @@ public partial class LegacySkillRowView : DXControl
 
     public override void _GuiInput(InputEvent @event)
     {
+        base._GuiInput(@event);
         if (@event is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
         {
             Selected?.Invoke();
@@ -731,6 +737,16 @@ public partial class LegacySkillRowView : DXControl
         {
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.78f, 0.58f, 0.17f, 0.22f), true);
             DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.42f, 0.23f, 0.05f, 0.8f), false, 1f);
+        }
+        else if (IsPressed)
+        {
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.76f, 0.54f, 0.12f, 0.24f), true);
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.66f, 0.42f, 0.08f, 0.9f), false, 1f);
+        }
+        else if (IsHovered)
+        {
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.84f, 0.67f, 0.28f, 0.12f), true);
+            DrawRect(new Rect2(0, 0, Size.X, Size.Y), new Color(0.52f, 0.36f, 0.12f, 0.65f), false, 1f);
         }
 
         var icon = MirSkin.GetTexture(LibraryFile.MagicIcon, _info.Icon);

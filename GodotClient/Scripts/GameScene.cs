@@ -1997,6 +1997,7 @@ public partial class GameScene : Control
         {
             MagicBarSpellSet = (int)(action - KeyBindAction.SpellSet01) + 1;
             _magicBar?.Refresh();
+            GD.Print($"[MagicLegacy] spell-set={MagicBarSpellSet}");
             return;
         }
         switch (action)
@@ -10598,6 +10599,7 @@ public partial class GameScene : Control
         {
             if (_magicDialog != null)
             {
+                GD.Print($"[MagicLegacy] toggle-key=E ctrl={key.CtrlPressed}");
                 WindowManager.Toggle(_magicDialog, _uiLayer);
                 _magicDialog.Refresh();
             }

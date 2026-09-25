@@ -1,0 +1,24 @@
+NPC F1100 headless acceptance — 2026-09-26
+
+Environment:
+- DISPLAY=:100
+- Xvfb :100, openbox, godot-mono 4.6.3, scrot
+- Client args: --server 127.0.0.1 --port 7000 --user test@test.com --pass test123 --char TestHero --window --legacy-ui --legacy-hud --legacy-npc-response-selftest
+- Client runtime resources: /home/tetsuya/mir2ei
+
+Observed client log:
+[Game] 加载地图: MapIndex=1 -> 0 (Bichon Town)
+[MapView] 加载 0: 800x800
+[LegacyNpcResponseSelfTest] dispatch NPCResponse page=1
+[LegacyNpcResponseSelfTest] state ok=True line=0/7 offsetY=0 optionIds=4 glyphHitAreas=16
+
+Interaction sequence:
+1. NPCResponse selftest dispatches through GameScene.OnNPCResponse -> NPCDialog.ShowPage with a bound NPCPage; open screenshot saved as 01-open-top.png.
+2. Clicked the centered down arrow at screen (312,165); dialogue moved by one 21px line; saved 02-scroll-one.png.
+3. Clicked down arrow six more times; reached the bottom viewport; saved 03-scroll-max.png.
+4. Clicked up arrow twice; text moved upward by two lines; saved 04-scroll-up.png.
+5. Clicked the close control at screen (21,179); F1100 disappeared; saved 05-closed-button.png.
+6. Started a second session with the same NPCResponse hook, pressed Escape; F1100 disappeared; saved 06-closed-escape.png.
+7. Started a third session, clicked the first inline option at screen (175,135); option rendered red on hover and remained in the dialogue; saved 07-option-clicked.png.
+
+Evidence files are full 1024x768 viewport captures in this directory.

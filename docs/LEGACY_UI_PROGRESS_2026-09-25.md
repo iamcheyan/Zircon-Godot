@@ -175,3 +175,11 @@
 - `[~]` 独立地图解析器通过逻辑一致性检查；已依据 Zircon `BotRunner/BotMap.cs` 校正 Segment 2 为每格 13 字节，当前 malformed/truncated `.map` 解析事件为 0；NPC-only 目标重叠为 0，怪物目标联合重叠待刷新源补齐。
 - `[~]` 已完成一次部分客户端登录烟测：本地 ServerCore 7000 启动、测试账号 `test@test.com` 的 `TestHero` 成功 `StartGame`，加载比奇地图；本次未执行 GM 传送和 Respawn 逐点检查，客户端日志仍报告首帧无可绘制格子，因此不作为全量地图验收结论。证据在 Mir3-Research `artifacts/.../client-login-smoke.json`。
 - `[~]` 继续复核本地资源后，`/home/tetsuya/mir2ei/Map` 仍只有 544 个 EI 地图源；研究缓存、NAS 挂载目标和 Mir3-Research 均未发现新增二进制地图。328 条 matched 刷新中仅 19 条有本地源图，18 条通过可行走性/坐标证据并已批准，其余 309 条仍保持 `needs-evidence`；Zircon `Debug` 同名地图不作为 Hero-kill 证据。
+
+## NPC F1100 对话窗口续验收（2026-09-26）
+
+- `[~]` 已修正 `NPCDialog.ApplyLegacyEiLayout()` 的 F1100 静态子控件位置：根框 `552×176`、正文原点 `(150,40)`、关闭控件 `(7,141)`、上箭头 `(290,145)`、下箭头 `(306,136)`；这些位置来自 `npc-window-render-evidence.json` 的 primary-static hit-test 记录。资源帧只作为 normal/highlight 视觉状态使用，正文裁剪宽 `290`、高 `136` 明确记录为实现推导值。
+- `[~]` 已加入 `--legacy-npc-response-selftest` 运行入口：复用已绑定的 `NPCPage`，构造 `NPCResponse` 并实际经过 `GameScene.OnNPCResponse -> NPCDialog.ShowPage`。headless 日志确认 `state ok=True line=0/7 offsetY=0 optionIds=4`，正文、4 个选项、21px 行距和长文本可见。
+- `[~]` 已完成 Xvfb `:100` + openbox + godot-mono + scrot 的 1024×768 全 viewport 运行证据：正文打开、选项 hover/click、下滚一行、滚动触底、上滚、关闭按钮和 Escape 关闭均有截图。证据目录：`Zircon/.artifacts/npc-f1100-acceptance-2026-09-26/`，运行日志为 `runtime-log.txt`。
+- `[!]` 独立 `LegacyHudLayoutLab --legacy-npc-selftest` 仍因其临时 `new NPCPage { Say = ... }` 没有 MirDB Collection 而触发 `DBObject.OnChanged` 空引用；本批次不以该失败作为运行结论，改用正式 `GameScene` 的已绑定页面响应路径完成验收。
+- `[~]` 原版 `mode=1 && overflow=1` 的 14px 行距分支需要 token/layout state；当前 `NPCPage` 路径统一使用 primary-static 默认 21px，不能宣称该分支已复原。目标 EI EXE/WIL/WIX 版本身份阻塞仍按全局规则保留。

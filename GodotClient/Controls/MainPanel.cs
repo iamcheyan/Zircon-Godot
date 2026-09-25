@@ -16,6 +16,7 @@ namespace ZirconClient.Controls;
 public partial class MainPanel : DXImageControl
 {
     public DXImageControl ExperienceBar;
+    public DXImageControl WeightBar;
     public DXControl HealthBar, ManaBar, FocusBar;
     public DXButton CharacterButton, InventoryButton, SpellButton, QuestButton, MailButton,
         BeltButton, GroupButton, MenuButton, CashShopButton;
@@ -30,6 +31,7 @@ public partial class MainPanel : DXImageControl
     // 数据状态 (GameScene 注入)
     private int _currentHP, _currentMP, _currentFP;
     private decimal _experience, _maxExperience;
+    private int _bagWeight, _maxBagWeight;
     private bool _expBarDiagnosed;
     private Stats _stats = new Stats();
     private DXControl _playerOrb;
@@ -61,6 +63,23 @@ public partial class MainPanel : DXImageControl
         ExperienceBar.DrawImage = false;
         ExperienceBar.BeforeDraw += DrawExperienceFill;
         AddControl(ExperienceBar);
+
+        // 原版竖着的背包负重条 = GameInter F67 (4x70)。旧版屏幕矩形候选为
+        // (206,499)-(215,574)，转主面板相对坐标即 (206,34)，高 75；
+        // 这里按 F67 原生尺寸 4x70 居中放进该槽位，并按负重比例自下而上填充。
+        WeightBar = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 67,
+            FixedSize = true,
+            Size = MirSkin.GetSize(LibraryFile.GameInter, 67),
+            Location = new Vector2I(208, 36),
+            Clip = true,
+            Visible = false,
+        };
+        WeightBar.DrawImage = false;
+        WeightBar.BeforeDraw += DrawWeightFill;
+        AddControl(WeightBar);
 
         // 原版左侧不是两条细横条，而是 60/61 两个半球资源。它们在旧版
         // 800x600 屏幕中的绘制矩形分别是 (61,496,43,70) 和
@@ -229,6 +248,8 @@ public partial class MainPanel : DXImageControl
     public void ApplyLegacyEiStatsLayout()
     {
         _legacyEiStats = true;
+        // 原版旧版主 HUD 有竖着的背包负重条（F67）；新版属性栏没有。
+        WeightBar.Visible = true;
 
         // 旧版没有新版属性栏的图标列，也没有职业、FP/CP、MR/MC/SC 文本。
         foreach (DXImageControl image in new[]
@@ -554,6 +575,31 @@ public partial class MainPanel : DXImageControl
         _experience = experience;
         _maxExperience = maxExperience;
         ExperienceBar.QueueRedraw();
+    }
+
+    /// <summary>旧版主 HUD 的竖条背包负重条（GameInter F67）。</summary>
+    public void SetWeight(int bagWeight, int maxBagWeight)
+    {
+        _bagWeight = bagWeight;
+        _maxBagWeight = maxBagWeight;
+        WeightBar.QueueRedraw();
+    }
+
+    private void DrawWeightFill(object sender, EventArgs e)
+    {
+        if (sender is not DXControl bar) return;
+        if (_maxBagWeight <= 0) return;
+        float p = Math.Clamp((float)_bagWeight / _maxBagWeight, 0f, 1f);
+        if (p <= 0) return;
+
+        var tex = MirSkin.GetTexture(LibraryFile.GameInter, 67);
+        if (tex == null) return;
+
+        // 竖向 gauge：与球体同样自下而上填充，父控件 Clip 裁掉未达到的上半部。
+        var imgSize = tex.GetSize();
+        float h = bar.Size.Y > 0 ? Math.Min(imgSize.Y, bar.Size.Y) : imgSize.Y;
+        float visible = h * p;
+        bar.DrawTextureRect(tex, new Rect2(0, h - visible, imgSize.X, visible), false);
     }
 
     public void SetQuestIndicators(bool hasAvailable, bool hasCompleted)

@@ -95,14 +95,14 @@ public partial class ChatLogPanel : Control
         _scroll.Change = 14;
         _scroll.HideWhenNoScroll = true;
         // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图），
-        // 改用原版聊天滚动条同族的竖向 gauge 帧 GameInter F380。
-        if (MirSkin.GetSize(LibraryFile.GameInter, 380) != Vector2I.Zero)
+        // 改用原版聊天框右侧那条锁链滚动条的帧 GameInter F68 (12x154)。
+        if (MirSkin.GetSize(LibraryFile.GameInter, 68) != Vector2I.Zero)
         {
             _scroll.PositionBar.LibraryFile = LibraryFile.GameInter;
-            _scroll.PositionBar.Index = 380;
+            _scroll.PositionBar.Index = 68;
         }
         GD.Print($"[LegacyChatPanel] scrollbar pos={_scroll.Position} size={_scroll.Size} "
-            + $"art=GameInter[380] size={MirSkin.GetSize(LibraryFile.GameInter, 380)} "
+            + $"art=GameInter[68] size={MirSkin.GetSize(LibraryFile.GameInter, 68)} "
             + $"visible={_scroll.Visible}");
         // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
         // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。

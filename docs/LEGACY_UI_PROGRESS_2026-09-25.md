@@ -181,5 +181,5 @@
 - `[~]` 已修正 `NPCDialog.ApplyLegacyEiLayout()` 的 F1100 静态子控件位置：根框 `552×176`、正文原点 `(150,40)`、关闭控件 `(7,141)`、上箭头 `(290,145)`、下箭头 `(306,136)`；这些位置来自 `npc-window-render-evidence.json` 的 primary-static hit-test 记录。资源帧只作为 normal/highlight 视觉状态使用，正文裁剪宽 `290`、高 `136` 明确记录为实现推导值。
 - `[~]` 已加入 `--legacy-npc-response-selftest` 运行入口：复用已绑定的 `NPCPage`，构造 `NPCResponse` 并实际经过 `GameScene.OnNPCResponse -> NPCDialog.ShowPage`。headless 日志确认 `state ok=True line=0/7 offsetY=0 optionIds=4`，正文、4 个选项、21px 行距和长文本可见。
 - `[~]` 已完成 Xvfb `:100` + openbox + godot-mono + scrot 的 1024×768 全 viewport 运行证据：正文打开、选项 hover/click、下滚一行、滚动触底、上滚、关闭按钮和 Escape 关闭均有截图。证据目录：`Zircon/.artifacts/npc-f1100-acceptance-2026-09-26/`，运行日志为 `runtime-log.txt`。
-- `[!]` 独立 `LegacyHudLayoutLab --legacy-npc-selftest` 仍因其临时 `new NPCPage { Say = ... }` 没有 MirDB Collection 而触发 `DBObject.OnChanged` 空引用；本批次不以该失败作为运行结论，改用正式 `GameScene` 的已绑定页面响应路径完成验收。
+- `[~]` 本次最早运行独立 `LegacyHudLayoutLab --legacy-npc-selftest` 时，旧的临时 `new NPCPage { Say = ... }` 曾因没有 MirDB Collection 触发 `DBObject.OnChanged` 空引用；随后发现工作树已有用户未提交的 harness 修订，改为优先复用绑定页面并提供私有字段回退。本 goal 未修改或提交该文件/其 `2026-09-25` 未跟踪截图；本批次正式结论仍以 `GameScene` 已绑定页面响应路径为准。
 - `[~]` 原版 `mode=1 && overflow=1` 的 14px 行距分支需要 token/layout state；当前 `NPCPage` 路径统一使用 primary-static 默认 21px，不能宣称该分支已复原。目标 EI EXE/WIL/WIX 版本身份阻塞仍按全局规则保留。

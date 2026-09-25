@@ -4478,8 +4478,10 @@ public partial class GameScene : Control
         _uiLayer.AddChild(_chatLog);
         _chatLog.Visible = AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar;
         _chatTextBox = new ChatTextBox();
+        if (AutoLoginArgs.LegacyUi)
+            _chatTextBox.ApplyLegacyHudLayout();
         _uiLayer.AddChild(_chatTextBox);
-        _chatTextBox.Visible = !ClientSettings.HideChatBar && !AutoLoginArgs.LegacyUi;
+        _chatTextBox.Visible = AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar;
         _legacyChatDialog = new LegacyChatDialog();
         _legacyChatDialog.Location = new Vector2I(Math.Max(0, ((int)Size.X - 572) / 2), Math.Max(0, ((int)Size.Y - 388) / 2));
         _uiLayer.AddChild(_legacyChatDialog);
@@ -5121,9 +5123,13 @@ public partial class GameScene : Control
                 Math.Max(0, _mainPanel.Position.X),
                 Math.Max(0, _mainPanel.Position.Y - _chatLog.Size.Y - 29));
         if (_chatTextBox != null && _mainPanel != null)
-            _chatTextBox.Location = new Vector2I(
-                Math.Max(0, (int)_mainPanel.Position.X),
-                Math.Max(0, (int)(_mainPanel.Position.Y - _chatTextBox.Size.Y - 2)));
+        {
+            _chatTextBox.Location = AutoLoginArgs.LegacyUi
+                ? LegacyUiSkin.ToGodotLocation(new Vector2I(223, 570))
+                : new Vector2I(
+                    Math.Max(0, (int)_mainPanel.Position.X),
+                    Math.Max(0, (int)(_mainPanel.Position.Y - _chatTextBox.Size.Y - 2)));
+        }
         if (_miniMap != null)
             _miniMap.Location = new Vector2I(
                 Math.Max(0, (int)(vp.X - _miniMap.Size.X)), 0);

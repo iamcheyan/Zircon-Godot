@@ -69,6 +69,32 @@ public sealed partial class ChatTextBox : DXWindow
         _input.HistoryDown += () => NavigateHistory(false);
         AddControl(_input);
     }
+    /// <summary>
+    /// EI 主 HUD 的原生聊天编辑框是独立于 F350 记录窗的窄条。
+    /// 旧版模式只保留编辑区；频道/选项按钮属于较新的 ChatTextBox，
+    /// 不能叠加到主 HUD 的输入条带。
+    /// </summary>
+    public void ApplyLegacyHudLayout()
+    {
+        HasTitle = false;
+        HasTopBorder = false;
+        HasFooter = false;
+        ShowCloseButton = false;
+        Movable = false;
+        AllowResize = false;
+        Border = false;
+        BackColour = Colors.Transparent;
+        Opacity = 1f;
+        Size = LegacyUiSkin.ToGodotSize(new Vector2I(354, 16));
+        _modeButton.Visible = false;
+        _optionsButton.Visible = false;
+        _input.Position = Vector2.Zero;
+        _input.Size = Size;
+        _input.Border = false;
+        _input.FontSize = 9;
+        _input.TextOffsetY = -1f;
+    }
+
 
     public void CycleMode()
     {

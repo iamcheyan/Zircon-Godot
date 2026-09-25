@@ -17,12 +17,45 @@ public sealed partial class LegacyChatDialog : DXWindow
     private readonly DXControl _historyClip;
     private readonly DXTextInput _input;
     private readonly DXImageControl _background;
-    private readonly DXImageControl _scrollRail;
+    private readonly ChatScrollRail _scrollRail;
     private readonly DXButton _scrollUp, _scrollDown, _close;
     private readonly List<int> _linkedItems = new();
     private int _scrollOffset;
-    private bool _draggingRail;
 
+    private sealed partial class ChatScrollRail : DXImageControl
+    {
+        public Action<float> ScrollRequested;
+        private bool _dragging;
+
+        public override void _GuiInput(InputEvent e)
+        {
+            if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } button)
+            {
+                _dragging = button.Pressed;
+                if (_dragging) UpdateScroll();
+                AcceptEvent();
+                return;
+            }
+
+            if (_dragging && e is InputEventMouseMotion)
+            {
+                UpdateScroll();
+                AcceptEvent();
+                return;
+            }
+
+            base._GuiInput(e);
+        }
+
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+            if (_dragging && !Input.IsMouseButtonPressed(MouseButton.Left))
+                _dragging = false;
+        }
+
+        private void UpdateScroll() => ScrollRequested?.Invoke(GetLocalMousePosition().Y);
+    }
     public LegacyChatDialog()
     {
         HasTitle = false;
@@ -45,7 +78,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         };
         AddControl(_background);
 
-        _scrollRail = new DXImageControl
+        _scrollRail = new ChatScrollRail
         {
             LibraryFile = LibraryFile.GameInter,
             Index = 380,
@@ -54,9 +87,7 @@ public sealed partial class LegacyChatDialog : DXWindow
             Size = MirSkin.GetSize(LibraryFile.GameInter, 380),
             MouseFilter = MouseFilterEnum.Stop,
         };
-        _scrollRail.MouseDown += (_, _) => _draggingRail = true;
-        _scrollRail.MouseUp += (_, _) => _draggingRail = false;
-        _scrollRail.MouseClick += (_, _) => UpdateRailScroll();
+        _scrollRail.ScrollRequested = UpdateRailScroll;
         AddControl(_scrollRail);
 
         _historyClip = new DXControl
@@ -105,10 +136,6 @@ public sealed partial class LegacyChatDialog : DXWindow
         AddControl(_close);
         Visible = false;
     }
-    public override void _Process(double delta)
-    {
-        if (_draggingRail) UpdateRailScroll();
-    }
 
     private static DXButton CreateSpriteButton(int frame, int hover, Vector2I location) => new()
     {
@@ -117,7 +144,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         HoverIndex = hover,
         PressedIndex = hover,
         Location = location,
-        CanBePressed = false,
+        CanBePressed = true,
     };
 
     public void OpenChat(Node parent)
@@ -229,11 +256,11 @@ public sealed partial class LegacyChatDialog : DXWindow
 
     private void ScrollBy(int rows) => SetScrollOffset(_scrollOffset + rows);
 
-    private void UpdateRailScroll()
+    private void UpdateRailScroll(float localY)
     {
         int maxOffset = Math.Max(0, _messages.Count - VisibleRows);
         float railRange = Math.Max(1, _scrollRail.Size.Y - 1);
-        int value = Mathf.RoundToInt(Mathf.Clamp(_scrollRail.GetLocalMousePosition().Y / railRange, 0f, 1f) * maxOffset);
+        int value = Mathf.RoundToInt(Mathf.Clamp(localY / railRange, 0f, 1f) * maxOffset);
         SetScrollOffset(value);
     }
 

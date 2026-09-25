@@ -956,7 +956,7 @@ public partial class PlayerRenderer : Node2D
         if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
             RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
         if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
-            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, nameY - 22f), Colors.White, 9f);
+            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, -60f), Colors.White, 9f);
 
         // 玩家头顶血条 (受击显示 5 秒)
         if (ShowHealthBar && ClientSettings.ShowUserHealth && !Dead && MaxHealth > 0 && Godot.Time.GetTicksMsec() <= DrawHealthUntilMs)

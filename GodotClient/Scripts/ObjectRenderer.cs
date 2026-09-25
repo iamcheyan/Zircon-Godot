@@ -575,10 +575,7 @@ public partial class ObjectRenderer : MapObjectNode
         bool groundItemVisible = Type == Kind.Item && ClientSettings.ShowGroundItemNames;
         bool chatVisible = !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil;
         if (chatVisible)
-        {
-            float chatY = RenderPrimitives.OriginalNameBaseline(9f) - 18f;
-            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, chatY), Colors.White, 9f);
-        }
+            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, -60f), Colors.White, 9f);
         if (!NameHovered && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;

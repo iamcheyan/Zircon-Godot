@@ -1304,7 +1304,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 **2026-09-25 CHAT-07 用户截图：聊天记录与头顶气泡换行：**
 
-- 原版人物气泡在 `Client/Models/MapObject.Chat()` 将内容清理后创建 `DXLabel`：宽度约束200px、`WordBreak | WordEllipsis`，并通过 `DXLabel.GetHeight(label, chatWidth)` 按换行后高度摆在角色头顶；背景为 `Color.FromArgb(40,0,0,0)`，寿命5秒。Godot 原先调用单行 `RenderPrimitives.DrawLabel()`，所以长句横跨屏幕。本次新增200px多行气泡绘制，使用 Godot 字体布局的 `WordBound | Adaptive` 换行，配原版半透明黑底及黑色描边；玩家、NPC/怪物对象共用此绘制路径。
+- 原版人物气泡在 `Client/Models/MapObject.Chat()` 将内容清理后创建 `DXLabel`：宽度约束200px、`WordBreak | WordEllipsis`，并通过 `DXLabel.GetHeight(label, chatWidth)` 按换行后高度摆在角色头顶；`DrawChat()` 的锚点为 `x=DrawX+(48-labelWidth)/2`、`y=DrawY-(60+labelHeight)`，背景 `Color.FromArgb(40,0,0,0)`，文字白色/死亡时灰色，黑色描边，寿命5秒。Godot 原先调用单行 `RenderPrimitives.DrawLabel()`，所以长句横跨屏幕。第一次用 multiline API 改造后的截图被用户指出气泡偏位；本次改为按原版底边 `DrawY-60`、最大宽200、块宽居中，并以逐行 DrawString 保持文本锚点和描边稳定。玩家、NPC/怪物对象共用此路径。修正后仍需实机长句截图验收。
 - 原版 `Client/Scenes/Views/ChatTab.cs` 的消息 label 明确 `AutoSize=false`、`WordBreak | WordEllipsis`，并按 `TextPanel` 宽度调用 `DXLabel.GetHeight()`。Godot legacy HUD 先前已算出多行所需高度，但新建 `DXLabel` 保持默认 `AutoSize=true`，使其 `GetLines()` 绕过宽度换行；本次只对 legacy HUD 行关闭 AutoSize，让既有逐行布局和滚动高度生效。改动不影响现代聊天页的单行/自动尺寸策略。
 - F350 id8 原版 paint 逐记录走 `0x45DD70`/`TextOutA`，宽度参数为0，按19×14px视口显示消息记录；与 ChatTab 和头顶气泡的 `WordBreak` 控件不同。故本次不把 F350 窄行强行改成多行，避免改变原版记录窗口的行数/滚动逻辑。
-- `dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。本次用户截图本身证明旧版单行问题；该换行修改需重启后的同句运行截图验收。
+- `dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。本次用户截图本身证明旧版单行与气泡错位问题；逐行居中锚点修正需重启后的同句运行截图验收。

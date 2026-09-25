@@ -43,10 +43,10 @@
 ## 输入与控制台证据
 
 - `E`：技能书打开/关闭均成功。
-- `Ctrl+E`：代码路径保留独立窗口入口；本次实屏重点验证裸 `E`。
-- `F1`：选中 Ice Bolt 后日志出现 `[MagicLegacy] bind skill=Ice Bolt set=1 key=Spell01`，说明技能书内绑定链可达。
-- `Shift+F1..F12`：实现映射为 `Spell13..Spell24`，代码排除 Ctrl/Alt；本次 Xvfb xdotool 仅稳定捕获了普通 F1 日志，未将 Shift 单独列为实屏通过。
-- `Ctrl+F1..F4`：GameScene 在可见窗口门控前处理 `SpellSet01..04`，避免被技能书普通 F 键处理吞掉；需后续以快捷栏组标签截图补强。
+- `Ctrl+E`：独立入口截图已归档；当前构建运行重点用裸 `E`，代码路径仍由 legacy GameScene 直接切换技能书。
+- `F1-F12`：当前构建日志完整出现 `Spell01..Spell12`，截图为 `skill-book-entry-f1-f12-2026-09-25.png`。
+- `Shift+F1-F12`：当前构建日志完整出现 `Spell13..Spell24`，截图为 `skill-book-entry-shift-f1-f12-2026-09-25.png`；原版语义仍需 byte-level 对照。
+- `Ctrl+F1..F4`：GameScene 在可见窗口门控前处理 `SpellSet01..04`，避免被技能书普通 F 键处理吞掉；快捷栏组标签的独立视觉对照仍缺。
 - 日志关键行：`[MagicLegacy] category=Fire count=8 page=1/2`、`refresh school=Fire skills=161`、`selected=Fire Ball id=FireBall`、`page=2/2 school=Fire`、`category=Ice count=7 page=1/2`、`selected=Ice Bolt id=IceBolt`。
 - 已生成当前客户端 DB 的完整映射与 MIcon 元数据：`/home/tetsuya/development/Mir3-Research/docs/research/ei-ui-layout/magic-icon-map-2026-09-25.txt`（174 条）及 `magic-icon-metadata-2026-09-25.json`（164 个唯一帧，含 header offset/尺寸与 alpha bbox）；这闭合 Zircon 当前资源链，不等同于 EI `[skill+6]` 逐项映射。
 
@@ -54,5 +54,5 @@
 
 1. 原版 F400 的 296×332 初始化记录与当前 452×380 包装/资源配准仍有静态证据冲突。
 2. 原版六个左页 hit RECT 的最终写入值、F440/F441 业务动作、完整 EI 分类链表/排序尚未获得独立运行时证据。
-3. `MagicInfo.Icon` 对 EI `[skill+6]` 的逐项帧、offset、有效 alpha bbox 尚未完全导出交叉验证。
-4. Shift 快捷键与 Ctrl+F1..F4 需追加带快捷栏组标签的实屏截图；当前实现与日志路径已检查但截图证据不足。
+3. `MagicInfo.Icon` 对 EI `[skill+6]` 的逐项 ID/帧对应仍未证明；当前客户端资源链的 offset/alpha bbox 已完整导出到研究分支，不能冒充 EI 对照。
+4. Ctrl+F1..F4 的快捷栏组标签视觉对照及原版书内 F1/Shift/Ctrl 语义仍缺；当前实现的普通/Shift 全量运行证据已归档。

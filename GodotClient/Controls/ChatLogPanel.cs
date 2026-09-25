@@ -462,6 +462,9 @@ public partial class ChatLogPanel : Control
                 // 阴影也不是原版路径，会给 8px 文字增加一圈脏边。
                 DrawShadow = false,
                 IsControl = false,
+                // Legacy HUD rows use a measured multiline height below. Leave
+                // DXLabel's default AutoSize on for modern chat tabs only.
+                AutoSize = !_legacyHudLayout,
                 Size = new Vector2I(Math.Max(1, (int)_textArea.Size.X - 8), _legacyHudLayout ? 14 : 16),
             };
             line.Size = new Vector2I((int)line.Size.X,

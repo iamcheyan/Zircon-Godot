@@ -577,7 +577,7 @@ public partial class ObjectRenderer : MapObjectNode
         if (chatVisible)
         {
             float chatY = RenderPrimitives.OriginalNameBaseline(9f) - 18f;
-            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, chatY), Colors.White, 9f);
+            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, chatY), Colors.White, 9f);
         }
         if (!NameHovered && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;

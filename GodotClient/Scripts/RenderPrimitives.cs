@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using ZirconClient.Controls;
 using ZirconClient.Formats;
@@ -136,6 +137,34 @@ internal static class RenderPrimitives
         canvas.DrawString(font, p + new Vector2(1f, 1f), text,
             HorizontalAlignment.Left, -1f, drawSize, new Color(0f, 0f, 0f, 0.85f));
         canvas.DrawString(font, p, text, HorizontalAlignment.Left, -1f, drawSize, colour);
+    }
+
+    /// <summary>
+    /// Legacy MapObject.Chat uses a 200px DXLabel with WordBreak/WordEllipsis.
+    /// Draw the same bounded, multiline speech bubble above the actor.
+    /// </summary>
+    public static void DrawChatBubble(CanvasItem canvas, string text, Vector2 baseline,
+        Color colour, float size = 9f, float maxWidth = 200f)
+    {
+        if (canvas == null || string.IsNullOrWhiteSpace(text)) return;
+        Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+        if (font == null) return;
+
+        int drawSize = MirSkin.PhysicalSize((int)size);
+        const TextServer.LineBreakFlag breakFlags = TextServer.LineBreakFlag.WordBound
+            | TextServer.LineBreakFlag.Adaptive;
+        Vector2 extent = font.GetMultilineStringSize(text, HorizontalAlignment.Left,
+            maxWidth, drawSize, 0, breakFlags);
+        float width = Math.Min(maxWidth, Math.Max(1f, extent.X));
+        float height = Math.Max(font.GetHeight(drawSize), extent.Y);
+        Vector2 topLeft = baseline - new Vector2(width / 2f, font.GetAscent(drawSize));
+
+        canvas.DrawRect(new Rect2(topLeft - new Vector2(1f, 1f),
+            new Vector2(width + 2f, height + 2f)), new Color(0f, 0f, 0f, 40f / 255f), true);
+        canvas.DrawMultilineStringOutline(font, topLeft, text, HorizontalAlignment.Left,
+            maxWidth, drawSize, 0, 1, Colors.Black, breakFlags);
+        canvas.DrawMultilineString(font, topLeft, text, HorizontalAlignment.Left,
+            maxWidth, drawSize, 0, colour, breakFlags);
     }
 
     public static float MeasureLabelWidth(string text, float size = 10f)

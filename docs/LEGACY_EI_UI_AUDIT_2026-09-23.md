@@ -1301,3 +1301,10 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 - `ChatLogPanel.ApplyLegacyHudLayout()` 原先保留现代 ChatTab 默认 `FadeOut=true`，`_Process()` 在空闲10秒后把 legacy HUD 历史区 Opacity 置0，造成已显示聊天内容周期性消失。legacy HUD 现关闭 FadeOut 和 CleanUp，维持历史文本；F350 `_messages` 自身没有淡出逻辑。原版窗口 id8 是消息列表/滚动偏移状态而非自动清空计时器，原版绘制证据见 `chat-window-render-evidence.json` 与 `chat-window-mouse-dispatch.json`。
 - F350 历史区保留 `(40,29,491,279)` clip 和19×14px行。滚轮在历史区内以19行页步移动；F380 原图确认为16×502竖向链条轨道。`chat-scrollbar-verification-evidence.json` 将 F380 定义为装饰轨道、共享 gauge F1070 为滚动位置控件；当前 Godot F380 拖动按轨道 Y 映射历史 offset，滚轮及轨道可操作性有之前运行记录（CHAT-05）。因此这不是原版 gauge 的像素/比例实现证明；F1070 gauge 的真实绘制、拖柄命中和映射仍列为精度待验项，不能把轨道拖动近似描述为已与原版完全一致。
 - 本次修改构建结果：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。按用户指定启动脚本 `bash login_game.sh legacy` 会先结束当前 Godot 客户端并重建后启动；端口7000已开启时会复用当前服务器。
+
+**2026-09-25 CHAT-07 用户截图：聊天记录与头顶气泡换行：**
+
+- 原版人物气泡在 `Client/Models/MapObject.Chat()` 将内容清理后创建 `DXLabel`：宽度约束200px、`WordBreak | WordEllipsis`，并通过 `DXLabel.GetHeight(label, chatWidth)` 按换行后高度摆在角色头顶；背景为 `Color.FromArgb(40,0,0,0)`，寿命5秒。Godot 原先调用单行 `RenderPrimitives.DrawLabel()`，所以长句横跨屏幕。本次新增200px多行气泡绘制，使用 Godot 字体布局的 `WordBound | Adaptive` 换行，配原版半透明黑底及黑色描边；玩家、NPC/怪物对象共用此绘制路径。
+- 原版 `Client/Scenes/Views/ChatTab.cs` 的消息 label 明确 `AutoSize=false`、`WordBreak | WordEllipsis`，并按 `TextPanel` 宽度调用 `DXLabel.GetHeight()`。Godot legacy HUD 先前已算出多行所需高度，但新建 `DXLabel` 保持默认 `AutoSize=true`，使其 `GetLines()` 绕过宽度换行；本次只对 legacy HUD 行关闭 AutoSize，让既有逐行布局和滚动高度生效。改动不影响现代聊天页的单行/自动尺寸策略。
+- F350 id8 原版 paint 逐记录走 `0x45DD70`/`TextOutA`，宽度参数为0，按19×14px视口显示消息记录；与 ChatTab 和头顶气泡的 `WordBreak` 控件不同。故本次不把 F350 窄行强行改成多行，避免改变原版记录窗口的行数/滚动逻辑。
+- `dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。本次用户截图本身证明旧版单行问题；该换行修改需重启后的同句运行截图验收。

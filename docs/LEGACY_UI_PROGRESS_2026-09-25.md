@@ -178,4 +178,4 @@
 - `[!]` 怪物身份仅 6/432 条英雄杀定义达到可靠别名映射；半兽人/Oma、祖玛/Zuma、白野猪和 Boss/变体冲突仍需属性、资源帧、掉落和刷新配置交叉确认。
 - `[!]` 原始 Hero-kill `Mon_Def/*.gen`/`MonGen` 仍不可用；已接入 recovered `Tools/DbMigrationTool/data/import_plan_v2.json` 的 742 条刷新计划，但缺少 range，且仅 517 条与当前点唯一匹配、133 条当前点冲突、124 条 YXS-only、1825 条 Zircon-only，全部保持 pending/blocked，未创建、删除或改写刷新关系。
 - `[~]` 独立地图解析器通过逻辑一致性检查，但发现 50 个 malformed/truncated `.map` 解析事件；NPC-only 目标重叠为 0，怪物目标联合重叠待刷新源补齐。
-- `[~]` sandbox overlay、机器清单和报告位于 Mir3-Research `docs/research/ei-ui-layout/`；写库、双库 round-trip、客户端逐地图验收和远端 SHA 尚未完成，不能宣称世界数据已对齐。
+- `[~]` sandbox overlay、机器清单和报告位于 Mir3-Research `docs/research/ei-ui-layout/`；本轮研究提交 `7cc733baed1c56c0d5871669aa41c77714434990`、Zircon 进度提交 `79903434e53d8c95cde6be8a8cdb582ceaed6f88` 已推送；写库、双库 round-trip 和客户端逐地图验收仍未完成，不能宣称世界数据已对齐。

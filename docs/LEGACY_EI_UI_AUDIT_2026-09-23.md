@@ -1299,7 +1299,7 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 
 - 对照原版 `Client/Controls/DXTextBox.cs` 的 `MirTextBox` 构造：原生输入控件 `BackColor=Black`、`ForeColor=White`；外层 `DXTextBox` 使用 `Constants.PrimaryColour` 细边。Godot legacy HUD 输入现仅在焦点时用纯黑底，失焦恢复透明，保留主色边框；F350 输入也采用同一焦点态。输入 RECT 依旧是原版 499×15，本次仅将内部 LineEdit 文字节点上移 2px、增加 4px 绘制高度，并将 F350 字号调到 8，避免窄框中的字形贴底/裁切。该行基线仍需当前用户屏幕实测验收。
 - `ChatLogPanel.ApplyLegacyHudLayout()` 原先保留现代 ChatTab 默认 `FadeOut=true`，`_Process()` 在空闲10秒后把 legacy HUD 历史区 Opacity 置0，造成已显示聊天内容周期性消失。legacy HUD 现关闭 FadeOut 和 CleanUp，维持历史文本；F350 `_messages` 自身没有淡出逻辑。原版窗口 id8 是消息列表/滚动偏移状态而非自动清空计时器，原版绘制证据见 `chat-window-render-evidence.json` 与 `chat-window-mouse-dispatch.json`。
-- F350 历史区保留 `(40,29,491,279)` clip 和19×14px行。滚轮在历史区内以19行页步移动；F380 原图确认为16×502竖向链条轨道。`chat-scrollbar-verification-evidence.json` 将 F380 定义为装饰轨道、共享 gauge F1070 为滚动位置控件；当前 Godot F380 拖动按轨道 Y 映射历史 offset，滚轮及轨道可操作性有之前运行记录（CHAT-05）。因此这不是原版 gauge 的像素/比例实现证明；F1070 gauge 的真实绘制、拖柄命中和映射仍列为精度待验项，不能把轨道拖动近似描述为已与原版完全一致。
+- F350 历史区保留 `(40,29,491,279)` clip 和19×14px行。旧 `chat-scrollbar-verification-evidence.json` (F402) 把 F380 视为装饰轨道、F1070 视为 gauge；较晚的 `chat-window-render-evidence.json` (F599) 与 `chat-window-render-full-evidence.json` 已闭合构造器 `0x417960`：id8 的 gauge 本身使用 F380 (16×502)，可拖动填充行程260px、边距12px。F402 的 F1070 解释不适用于该控件，现以 F599/F341 的窗口专用构造证据为准。原版 id8 滚轮分派 `0x42C8A8/0x42C9B0` 每 notch 修改偏移1；Godot 本次把滚轮步进修为一条记录，链条拖动按12px inset/260px travel映射历史范围，并在拖出窄轨后继续采样指针位置。仍需真实窗口交互截图验收拖动方向与端点。
 - 本次修改构建结果：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 成功（0错误，3条既有警告）。按用户指定启动脚本 `bash login_game.sh legacy` 会先结束当前 Godot 客户端并重建后启动；端口7000已开启时会复用当前服务器。
 
 **2026-09-25 CHAT-07 用户截图：聊天记录与头顶气泡换行：**

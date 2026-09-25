@@ -30,6 +30,7 @@ public partial class MainPanel : DXImageControl
     // 数据状态 (GameScene 注入)
     private int _currentHP, _currentMP, _currentFP;
     private decimal _experience, _maxExperience;
+    private bool _expBarDiagnosed;
     private Stats _stats = new Stats();
     private DXControl _playerOrb;
     private DXControl _playerOrbHoverArea;
@@ -343,6 +344,12 @@ public partial class MainPanel : DXImageControl
     private void DrawExperienceFill(object sender, EventArgs e)
     {
         if (sender is not DXControl bar) return;
+        if (!_expBarDiagnosed)
+        {
+            _expBarDiagnosed = true;
+            var t = MirSkin.GetTexture(LibraryFile.GameInter, 63);
+            GD.Print($"[ExpBarDiag] exp={_experience} max={_maxExperience} tex={(t == null ? "null" : t.GetSize().ToString())} legacy={_legacyEiStats} visible={ExperienceBar.Visible} pos={ExperienceBar.Location} size={ExperienceBar.Size}");
+        }
         if (_maxExperience <= 0) return;
         float p = Math.Clamp((float)(_experience / _maxExperience), 0f, 1f);
         if (p <= 0) return;

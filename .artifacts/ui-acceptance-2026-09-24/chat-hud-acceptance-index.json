@@ -78,8 +78,33 @@
       "command": "xdotool click 420 740; xdotool type HUD_STYLE_FINAL; xdotool key Return; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-style-final.png",
       "state": "最终视觉样式与消息底色",
       "conclusion": "普通消息保持不透明白字、8px/14px行距；主HUD无逐条白色消息底，F50底板/边框保持可见。"
+    },
+    {
+      "file": "chat-hud-final-audit-input.png",
+      "command": "xdotool mousemove 420 740; xdotool click 1; xdotool type FINAL_AUDIT_R; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-final-audit-input.png",
+      "state": "终局审计输入获得焦点、普通文本未提交",
+      "conclusion": "完整1024x768截图显示输入条内容和光标，未打开F350。"
+    },
+    {
+      "file": "chat-hud-final-audit-message-refocused.png",
+      "command": "xdotool key Escape; xdotool click 420 740; xdotool type FINAL_TWO; xdotool key Return; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-final-audit-message-refocused.png",
+      "state": "失焦后重新聚焦并提交第二条普通消息",
+      "conclusion": "日志显示第二次 focus/submit、hudMessages=5，输入提交后清空，消息顺序保留。"
+    },
+    {
+      "file": "chat-hud-final-audit-f350-open-correct.png",
+      "command": "xdotool mousemove 830 664; xdotool click 1; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-final-audit-f350-open-correct.png",
+      "state": "终局审计点击F102/F103聊天记录入口",
+      "conclusion": "F350打开，运行日志为 LegacyOpen requested=chat、size=(572,388)，HUD消息仍可见。"
+    },
+    {
+      "file": "chat-hud-final-audit-f350-return.png",
+      "command": "xdotool mousemove 770 560; xdotool click 1; scrot -o .artifacts/ui-acceptance-2026-09-24/chat-hud-final-audit-f350-return.png",
+      "state": "终局审计关闭F350返回主HUD",
+      "conclusion": "完整视口保留，主HUD消息与底板返回，未清空接收链。"
     }
   ],
   "console_log": "chat-hud-runtime-final.log",
-  "visual_style_log": "chat-hud-style-final.log"
+  "visual_style_log": "chat-hud-style-final.log",
+  "final_audit_log": "chat-hud-final-audit.log"
 }

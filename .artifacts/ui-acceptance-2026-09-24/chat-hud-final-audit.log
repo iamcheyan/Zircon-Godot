@@ -1,0 +1,23 @@
+# 终局现态审计（2026-09-25）
+# command: DISPLAY=:100 MIR3_EI_ROOT=/home/tetsuya/mir2ei ZIRCON_UI_DATA_PATH=/home/tetsuya/mir2ei/Data ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/Data /home/tetsuya/mir2ei/login_game.sh all legacy
+# viewport: 1024x768; resource_root: /home/tetsuya/mir2ei/Data
+[Select] *** StartGame 成功! 进入游戏 ***
+[LegacyChat] scroll button frames 380/381 unavailable; using (19, 14) hit zone without sprite
+[LegacyChat] scroll button frames 382/383 unavailable; using (19, 14) hit zone without sprite
+[LegacyHud] PASS viewport=(1022, 739) location=(111, 603) panel=50/(800, 136) buttons=True legacyStats=True vis(level/class/fp/cp/ac/dc/mac/mc/sc)=True/False/False/False/True/True/False/False/False level=@(665, 60) ac=AC 0-0@(580, 108) dc=DC 0-0@(680, 108) orb=(49, 13)/(112, 110) visible=True duplicateIcon=False hiddenAttributeIcon=True states=True/True/True single=True
+[LegacyChat] receive type=Announcement textLength=19 hudVisible=True hudMessages=1 hudTypeEnabled=True hudLines=1 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[LegacyChat] receive type=System textLength=13 hudVisible=True hudMessages=2 hudTypeEnabled=True hudLines=2 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[LegacyChat] receive type=System textLength=3 hudVisible=True hudMessages=3 hudTypeEnabled=True hudLines=3 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[ChatInput] focus owner=ChatTextBox size=(354, 16) textLength=0
+[ChatInput] submit owner=ChatTextBox textLength=13 legacyHud=True
+[LegacyChat] receive type=Normal textLength=23 hudVisible=True hudMessages=4 hudTypeEnabled=True hudLines=4 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[ChatInput] focus owner=ChatTextBox size=(354, 16) textLength=0
+[ChatInput] submit owner=ChatTextBox textLength=9 legacyHud=True
+[LegacyChat] receive type=Normal textLength=19 hudVisible=True hudMessages=5 hudTypeEnabled=True hudLines=5 hudSize=(354, 74) hudTextArea=(354, 74) f350Visible=False
+[LegacyOpen] requested=chat type=LegacyChatDialog visible=True size=(572, 388) location=(226, 190) inputFocus=True
+# screenshots:
+# xdotool mousemove 420 740; xdotool click 1; xdotool type FINAL_AUDIT_R; scrot -> chat-hud-final-audit-input.png
+# xdotool key Return; refocus; type FINAL_TWO; submit; scrot -> chat-hud-final-audit-message-refocused.png
+# xdotool mousemove 830 664; xdotool click 1; scrot -> chat-hud-final-audit-f350-open-correct.png
+# xdotool mousemove 770 560; xdotool click 1; scrot -> chat-hud-final-audit-f350-return.png
+# conclusion: current build logged successful StartGame, HUD PASS, two normal messages with monotonically increasing HUD counts, input focus/submit at (354,16), F350 open at (572,388), and complete 1024x768 screenshots.

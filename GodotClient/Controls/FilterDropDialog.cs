@@ -198,6 +198,8 @@ public sealed partial class DXTextInput : DXControl
         {
             _edit.GrabFocus();
             _edit.CaretColumn = _edit.Text.Length;
+            GD.Print($"[ChatInput] focus owner={GetParent()?.GetType().Name ?? "<none>"} "
+                + $"size={Size} textLength={_edit.Text.Length}");
         }
     }
 }

@@ -29,6 +29,8 @@ public sealed partial class ChatTextBox : DXWindow
 
     public ChatMode Mode { get; private set; }
     public string LastPM { get; private set; } = string.Empty;
+    /// <summary>主 HUD 输入框是否拥有键盘焦点。</summary>
+    public bool InputHasFocus => _input.HasFocus;
 
     public ChatTextBox()
     {
@@ -85,7 +87,7 @@ public sealed partial class ChatTextBox : DXWindow
         Border = false;
         BackColour = Colors.Transparent;
         Opacity = 1f;
-        Size = LegacyUiSkin.ToGodotSize(new Vector2I(354, 16));
+        Size = LegacyHudLayout.ChatInputSize;
         _modeButton.Visible = false;
         _optionsButton.Visible = false;
         _input.Position = Vector2.Zero;
@@ -194,6 +196,7 @@ public sealed partial class ChatTextBox : DXWindow
     {
         if (!string.IsNullOrWhiteSpace(text))
         {
+            GD.Print($"[ChatInput] submit owner={GetType().Name} textLength={text.Length} legacyHud={AutoLoginArgs.LegacyUi}");
             GameScene.Game?.SendChat(text, new List<int>(_linkedItemIndexes));
             if (text.StartsWith('/')) LastPM = text.Split(' ')[0];
 

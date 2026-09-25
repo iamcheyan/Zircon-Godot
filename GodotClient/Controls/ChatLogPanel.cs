@@ -23,6 +23,7 @@ public partial class ChatLogPanel : Control
     private readonly List<DXLabel> _linkedLabels = new();
     private int _selectedTab;
     private double _idleSeconds;
+    private bool _legacyHudLayout;
     private const int MaxLines = 250;
 
     public sealed class ChatTabSettings
@@ -69,6 +70,32 @@ public partial class ChatLogPanel : Control
         ApplySettings();
         Visible = !ClientSettings.HideChatBar;
     }
+
+    /// <summary>
+    /// 将记录面板放入 EI F50 的常驻聊天槽。F350 仍使用
+    /// LegacyChatDialog 的独立 572×388 几何，不能共享这个根框。
+    /// </summary>
+    public void ApplyLegacyHudLayout()
+    {
+        _legacyHudLayout = true;
+        Size = LegacyHudLayout.ChatLogSize;
+        ClipContents = true;
+        _tabBar.Visible = false;
+        _tabBar.Size = Size;
+        _textArea.Position = Vector2I.Zero;
+        _textArea.Size = Size;
+        _scroll.Position = Vector2I.Zero;
+        _scroll.Size = Vector2I.One;
+        _scroll.VisibleSize = (int)Size.Y;
+        _scroll.Change = 14;
+        _scroll.Visible = false;
+        ApplySettings();
+        RebuildVisibleLines(false);
+    }
+
+    public int MessageCount => _messages.Count;
+    public int VisibleLineCount => _lines.Count(line => line.Visible);
+    public Vector2I TextAreaSize => new((int)_textArea.Size.X, (int)_textArea.Size.Y);
 
     public override void _Process(double delta)
     {
@@ -366,7 +393,7 @@ public partial class ChatLogPanel : Control
     {
         if (_tabSettings.Count == 0) return;
         var settings = _tabSettings[_selectedTab];
-        _tabBar.Visible = !settings.HideTab || _tabs.Count > 1;
+        _tabBar.Visible = !_legacyHudLayout && (!settings.HideTab || _tabs.Count > 1);
         UpdateChromeVisibility(_textArea.Opacity);
         QueueRedraw();
     }
@@ -415,14 +442,15 @@ public partial class ChatLogPanel : Control
             var line = new DXLabel
             {
                 Text = displayText,
-                FontSize = 10,
+                FontSize = _legacyHudLayout ? 9 : 10,
                 TextColour = message.Colour,
                 BackColour = ResolveMessageBackColour(message.BackColour, _tabSettings[_selectedTab].Transparent),
                 DrawShadow = true,
                 IsControl = false,
-                Size = new Vector2I((int)_textArea.Size.X - 8, 16),
+                Size = new Vector2I(Math.Max(1, (int)_textArea.Size.X - 8), _legacyHudLayout ? 14 : 16),
             };
-            line.Size = new Vector2I((int)line.Size.X, MeasureTextHeight(displayText, (int)line.Size.X, line.FontSize));
+            line.Size = new Vector2I((int)line.Size.X,
+                MeasureTextHeight(displayText, (int)line.Size.X, line.FontSize, _legacyHudLayout ? 14 : 16));
             _textArea.AddControl(line);
             _lines.Add(line);
             AttachPlayerNameAction(line, message.Type);
@@ -460,11 +488,11 @@ public partial class ChatLogPanel : Control
         }
     }
 
-    private static int MeasureTextHeight(string text, int width, int fontSize)
+    private static int MeasureTextHeight(string text, int width, int fontSize, int minimumLineHeight)
     {
         float lineWidth = 0;
         int lines = 1;
-        float lineHeight = MirSkin.MeasureText(Lang.ChatLogPanelUi114Label, fontSize).Y;
+        float lineHeight = Math.Max(minimumLineHeight, MirSkin.MeasureText(Lang.ChatLogPanelUi114Label, fontSize).Y);
         foreach (char ch in text ?? string.Empty)
         {
             if (ch == '\n')
@@ -481,7 +509,7 @@ public partial class ChatLogPanel : Control
             }
             lineWidth += charWidth;
         }
-        return Math.Max(16, (int)Math.Ceiling(lines * lineHeight));
+        return Math.Max(minimumLineHeight, (int)Math.Ceiling(lines * lineHeight));
     }
 
     private static bool IsMessageEnabled(HashSet<MessageType> filter, MessageType type)

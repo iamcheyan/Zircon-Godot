@@ -355,6 +355,11 @@ public partial class GameScene : Control
     {
         _chatLog?.AddMessage(text, type, colour, linkedItems);
         _legacyChatDialog?.AddMessage(text, type, colour);
+        if (AutoLoginArgs.LegacyUi)
+            GD.Print($"[LegacyChat] receive type={type} textLength={text?.Length ?? 0} "
+                + $"hudVisible={_chatLog?.Visible} hudMessages={_chatLog?.MessageCount} "
+                + $"hudLines={_chatLog?.VisibleLineCount} hudSize={_chatLog?.Size} hudTextArea={_chatLog?.TextAreaSize} "
+                + $"f350Visible={_legacyChatDialog?.Visible}");
     }
 
     public void ShowLegacyNotice(string text)
@@ -2689,7 +2694,11 @@ public partial class GameScene : Control
         if (p == null || string.IsNullOrWhiteSpace(p.Text)) return;
         string sender = p.ObjectID == _playerObjectID ? (StartInfo?.Name ?? Lang.GameUi561Label) :
             (_objects.TryGetValue(p.ObjectID, out var chatObject) ? chatObject.DisplayName : Lang.GameSystemLabel);
-        AddChatMessage($"[{p.Type}] {sender}: {p.Text}", p.Type, ChatColour(p.Type), p.LinkedItems);
+        // 服务端普通聊天已包装为“发送者: 文本”。EI 原版 CConnection
+        // 直接把 S.Chat.Text 送入 ReceiveChat；只在现代路径保留 Zircon
+        // 的类型/对象前缀，避免 legacy HUD/F350 重复显示发送者。
+        string displayText = AutoLoginArgs.LegacyUi ? p.Text : $"[{p.Type}] {sender}: {p.Text}";
+        AddChatMessage(displayText, p.Type, ChatColour(p.Type), p.LinkedItems);
         if (p.ObjectID == _playerObjectID) _player?.SetChat(p.Text);
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player)) player.SetChat(p.Text);
         else if (_objects.TryGetValue(p.ObjectID, out var ob)) ob.SetChat(p.Text);
@@ -4475,8 +4484,11 @@ public partial class GameScene : Control
         _uiLayer.AddChild(_mainPanel);
 
         _chatLog = new ChatLogPanel();
+        if (AutoLoginArgs.LegacyUi)
+            _chatLog.ApplyLegacyHudLayout();
         _uiLayer.AddChild(_chatLog);
         _chatLog.Visible = AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar;
+
         _chatTextBox = new ChatTextBox();
         if (AutoLoginArgs.LegacyUi)
             _chatTextBox.ApplyLegacyHudLayout();
@@ -5119,13 +5131,19 @@ public partial class GameScene : Control
             _beltDialog.ApplyDefaultAnchor(vp, _mainPanel.Location, _mainPanel.Size);
 
         if (_chatLog != null && _mainPanel != null)
-            _chatLog.Position = new Vector2(
-                Math.Max(0, _mainPanel.Position.X),
-                Math.Max(0, _mainPanel.Position.Y - _chatLog.Size.Y - 29));
+        {
+            _chatLog.Position = AutoLoginArgs.LegacyUi
+                ? _mainPanel.Position + new Vector2(LegacyHudLayout.ChatLogLocation.X, LegacyHudLayout.ChatLogLocation.Y)
+                : new Vector2(
+                    Math.Max(0, _mainPanel.Position.X),
+                    Math.Max(0, _mainPanel.Position.Y - _chatLog.Size.Y - 29));
+        }
         if (_chatTextBox != null && _mainPanel != null)
         {
             _chatTextBox.Location = AutoLoginArgs.LegacyUi
-                ? LegacyUiSkin.ToGodotLocation(new Vector2I(223, 570))
+                ? new Vector2I(
+                    (int)_mainPanel.Position.X + LegacyHudLayout.ChatInputLocation.X,
+                    (int)_mainPanel.Position.Y + LegacyHudLayout.ChatInputLocation.Y)
                 : new Vector2I(
                     Math.Max(0, (int)_mainPanel.Position.X),
                     Math.Max(0, (int)(_mainPanel.Position.Y - _chatTextBox.Size.Y - 2)));
@@ -10527,7 +10545,7 @@ public partial class GameScene : Control
             && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
         {
             // 文本输入获得焦点时，R 是聊天内容，不是 EI 的显隐快捷键。
-            if (_legacyChatDialog?.InputHasFocus == true)
+            if (_legacyChatDialog?.InputHasFocus == true || _chatTextBox?.InputHasFocus == true)
                 return;
             if (_legacyChatDialog?.Visible == true)
                 _legacyChatDialog.CloseChat();

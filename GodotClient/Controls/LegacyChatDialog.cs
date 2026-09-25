@@ -100,10 +100,10 @@ public sealed partial class LegacyChatDialog : DXWindow
         _historyClip.MouseWheel += OnHistoryWheel;
         AddControl(_historyClip);
 
-        _scrollUp = CreateSpriteButton(380, 381, new Vector2I(539, 25));
+        _scrollUp = CreateSpriteButton(380, 381, new Vector2I(539, 25), new Vector2I(19, 14));
         _scrollUp.MouseClick += (_, _) => ScrollBy(VisibleRows);
         AddControl(_scrollUp);
-        _scrollDown = CreateSpriteButton(382, 383, new Vector2I(539, 311));
+        _scrollDown = CreateSpriteButton(382, 383, new Vector2I(539, 311), new Vector2I(19, 14));
         _scrollDown.MouseClick += (_, _) => ScrollBy(-VisibleRows);
         AddControl(_scrollDown);
 
@@ -137,15 +137,29 @@ public sealed partial class LegacyChatDialog : DXWindow
         Visible = false;
     }
 
-    private static DXButton CreateSpriteButton(int frame, int hover, Vector2I location) => new()
+    private static DXButton CreateSpriteButton(int frame, int hover, Vector2I location, Vector2I? fallbackHitSize = null)
     {
-        LibraryFile = LibraryFile.GameInter,
-        Index = frame,
-        HoverIndex = hover,
-        PressedIndex = hover,
-        Location = location,
-        CanBePressed = true,
-    };
+        var button = new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = frame,
+            HoverIndex = hover,
+            PressedIndex = hover,
+            Location = location,
+            CanBePressed = true,
+        };
+        if (fallbackHitSize.HasValue
+            && (MirSkin.GetSize(LibraryFile.GameInter, frame) == Vector2I.Zero
+                || MirSkin.GetSize(LibraryFile.GameInter, hover) == Vector2I.Zero))
+        {
+            GD.Print($"[LegacyChat] scroll button frames {frame}/{hover} unavailable; using {fallbackHitSize.Value} hit zone without sprite");
+            button.Index = -1;
+            button.HoverIndex = -1;
+            button.PressedIndex = -1;
+            button.Size = fallbackHitSize.Value;
+        }
+        return button;
+    }
 
     public void OpenChat(Node parent)
     {

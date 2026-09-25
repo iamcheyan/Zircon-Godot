@@ -1269,3 +1269,10 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 截图归档：`/home/tetsuya/development/zircon/.artifacts/ui-acceptance-2026-09-24/`。本段新增关键文件：`status-equipment-final.png`、`status-attributes-final.png`、`status-body-hit-hover.png`、`status-esc-final.png`、`status-reopen-final.png`。
 
 剩余阻塞明确为证据边界：本轮未做切换地图/重新登录后的人物窗状态保持回放；本轮也未重复会改动装备的左键拖放。研究矩阵中既有 Round 787 的安全 Wood Sword 往返记录仍保留，不能与本轮 `hover-only` 复测混淆。EI 专用耐久、强化、绑定、职业/等级限制角标的目标版贴图与绘制链仍未取得独立证据，故“状态标记像素级一致”和跨地图/重新登录保持不宣布已闭合。
+**2026-09-25 STATUS-02 跨地图/重新登录回归补证：**在同一真实登录会话中先打开人物面板并保持 F201 展开态，使用安全 GM 命令 `@move D202` 切换到废矿二层；stdout 记录 `MapIndex=137 -> D202 (Deserted Mine Lv 2)`、`MapView 加载 D202: 200x200`。该成功切图路径没有客户端异常；同一实验前置尝试的 `@move D201` 因本地服务端缺少对应地图索引而返回找不到地图，未作为状态面板通过条件。`status-map-before.png` 与 `status-map-after.png` 证明成功切图后人物窗口仍可见、人物/装备区域未被重置，地图标题已变为“废矿山2层”。
+
+随后停止并重新通过 `/home/tetsuya/mir2ei/login_game.sh legacy` 登录同一账号角色；stdout 再次记录 `S.StartGame Result=Success`、`进入游戏` 与 D202 加载。`status-relogin-final2.png` 证明重新登录后窗口可重新打开并显示装备页，未残留 Esc 关闭前的 tooltip；这是重新建立的初始窗口状态，不将跨进程“展开态持久化”误报为已保持。
+
+本次补证将“切换地图后窗口状态”从未执行更新为已运行验证；“重新登录后可重新打开且装备状态可显示”已验证，但跨进程展开页是否应持久化仍无原版语义证据。Round 787 的 Wood Sword 安全装备往返记录仍是当前 `DXItemCell` 拖放链的真实回包证据；本轮没有重复写入装备。EI 专用耐久/强化/绑定/职业等级限制角标仍缺少目标版独立贴图和绘制链，继续保持证据边界。
+
+本次补充截图：`status-map-before.png`、`status-map-after.png`、`status-relogin-final2.png`。

@@ -51,6 +51,7 @@ bash login_game.sh remote 192.168.3.82 legacy
 这样不用改远程绑定或开放游戏端口。客户端退出时脚本自动关闭 SSH 转发。SSH 默认使用 `debian` 主机别名，也可通过
 `ZIRCON_REMOTE_SSH_TARGET` 覆盖；连接账号需能在该工作树写入构建输出。此模式只重启 cwd
 匹配该工作树 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 进程，不会重启 systemd 服务。
+远程工作树路径、端口转发方式和故障限制详见 [`REMOTE_SERVER_AND_CLIENT_SETUP.md`](../docs/REMOTE_SERVER_AND_CLIENT_SETUP.md#18-本机客户端调试-82-上当前工作树)。
 
 ---
 

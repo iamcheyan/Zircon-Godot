@@ -99,7 +99,9 @@ cd "$ROOT"
 
 echo "══════════════════════════════════════"
 echo "  Zircon 游戏一键登录"
-if [ "$KILL_ALL" = "1" ]; then
+if [ -n "$REMOTE_SERVER_IP" ]; then
+    echo "  模式: 远程开发服务器重启 + 本机客户端"
+elif [ "$KILL_ALL" = "1" ]; then
     echo "  模式: all（杀服务器+客户端，重启服务器）"
 else
     echo "  模式: 快速（只杀客户端，服务器在跑则直接连）"

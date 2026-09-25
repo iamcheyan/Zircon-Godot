@@ -516,3 +516,38 @@ BotRunner 读取 DatabasePath 主要是为了得到地图、怪物、物品和�
 
 服务端必须先启动。BotRunner 和本机客户端都可以随后启动；它们都是服务端
 的 TCP 客户端，但 BotRunner 没有图形界面。
+
+## 18. 本机客户端调试 82 上当前工作树
+
+如果代码直接在 82 的 `/home/tetsuya/development/zircon` 工作树开发，而希望用本机的
+Godot 窗口和本机 `/home/tetsuya/mir3ei` 素材登录这份服务端，可在本机 Zircon 仓库根目录运行：
+
+```bash
+cd /home/tetsuya/development/Zircon
+bash login_game.sh remote 192.168.3.82 legacy
+```
+
+此命令按以下顺序工作：
+
+1. 通过 SSH（默认别名 `debian`）读取 82 工作树构建目录中的 `Server.ini` 端口；
+   若 SSH 别名不同，可设置 `ZIRCON_REMOTE_SSH_TARGET=82` 等已配置的别名。
+2. 本机只构建 Godot 客户端；服务端使用 82 当前 checkout 的源码，在
+   `/home/tetsuya/development/zircon/Debug/ServerCore` 输出目录编译。
+3. 仅停止工作目录正好是上述 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 测试进程，
+   然后从同一目录启动新服务端。启动日志位于 82 的 `/tmp/servercore_login_remote.log`。
+4. 建立本机 loopback SSH 转发，让 Godot 客户端连接 `127.0.0.1:<本地转发端口>`，
+   流量通过 SSH 到达 82 的 `127.0.0.1:<Server.ini Port>`。因此无需把远程游戏端口
+   改绑到外部网卡或开放防火墙端口。
+5. Godot 客户端退出后自动关闭 SSH 转发；远程测试服务端继续运行，下一次运行此命令时会重建并重启。
+
+`remote` 模式不执行 Git pull、复制源码、清理或覆盖 82 的工作树；远程未提交源码也会参与构建。
+它不操作 `/home/tetsuya/development/Debug/ServerCore` 下由 `zircon-server.service` 管理的正式服务端。
+如果 82 的手动测试服务端是从其它工作目录启动的，脚本不会结束它；新进程可能因端口占用而无法启动，
+需先确认并停止目标测试实例。运行账号需要 SSH 免交互登录、远程 .NET SDK、`nc`，并对服务端
+构建输出目录有写权限；本机也需要 `ssh` 和 `nc`。
+
+不需要 legacy HUD 时去掉末尾的 `legacy`：
+
+```bash
+bash login_game.sh remote 192.168.3.82
+```

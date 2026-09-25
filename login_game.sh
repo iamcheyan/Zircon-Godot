@@ -137,8 +137,9 @@ if [ "$KILL_ALL" = "1" ]; then
         echo "  无服务器进程，跳过"
     fi
 else
-    if ss -H -ltn 2>/dev/null | awk '$4 ~ /:7000$/ { found=1 } END { exit(found ? 0 : 1) }'; then
-        echo "  服务器已在运行 (端口 7000)，保留不重启"
+    # macOS 没有 ss；用 nc -z 探测脚本实际使用的端口（macOS 上通常是 7001）。
+    if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
+        echo "  服务器已在运行 (端口 ${PORT})，保留不重启"
     else
         echo "  服务器未运行，稍后由脚本启动"
     fi
@@ -271,7 +272,12 @@ else
         echo "  服务器已在运行 (端口 $PORT 监听中)，跳过启动"
     else
         cd "$SERVER_DIR"
-        setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+        # macOS 没有 setsid；nohup + 后台即可，脚本退出时由 trap 负责清理。
+        if command -v setsid >/dev/null 2>&1; then
+            setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+        else
+            nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+        fi
         SERVER_PID=$!
         SERVER_STARTED_BY_SCRIPT=1
         echo "  服务器 PID: $SERVER_PID"

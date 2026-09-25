@@ -22,17 +22,27 @@ public sealed partial class NPCTextControl : DXControl
         IsControl = true;
     }
 
-    public void SetContent(string text, int width, int fontSize = 10)
+    /// <summary>
+    /// 行距 (px)。现代 NPC 默认 18；旧版 EI 正文按 primary-static 证据
+    /// (0x43F460 行距 = textheight+5，默认 0x594=21) 传 21。
+    /// </summary>
+    public int LinePitch { get; set; } = 18;
+
+    /// <summary>按当前行距折算的换行行数 (供行级滚动计算上下界)。</summary>
+    public int LineCount { get; private set; } = 1;
+
+    public void SetContent(string text, int width, int fontSize = 10, int linePitch = 18)
     {
+        LinePitch = linePitch;
         _glyphs.Clear();
         _buttons.Clear();
         _hoveredButton = -1;
-        Size = new Vector2I(width, Math.Max(18, (int)Size.Y));
+        Size = new Vector2I(width, Math.Max(linePitch, (int)Size.Y));
 
         var matches = Regex.Matches(text ?? string.Empty, @"\[(?<Text>.*?):(?<ID>.+?)\]|\{(?<Text>.*?):(?<Colour>.+?)\}");
         int cursor = 0;
         float x = 0, y = 0;
-        const float lineHeight = 18;
+        float lineHeight = linePitch;
         foreach (Match match in matches)
         {
             AddPlain(text?.Substring(cursor, match.Index - cursor) ?? string.Empty, ref x, ref y, width, fontSize, lineHeight);
@@ -45,6 +55,7 @@ public sealed partial class NPCTextControl : DXControl
         }
         AddPlain(text?.Substring(cursor) ?? string.Empty, ref x, ref y, width, fontSize, lineHeight);
         ContentHeight = Math.Max((int)lineHeight, (int)y + (x > 0 ? (int)lineHeight : 0));
+        LineCount = Math.Max(1, ContentHeight / linePitch);
         Size = new Vector2I(width, ContentHeight);
         QueueRedraw();
     }

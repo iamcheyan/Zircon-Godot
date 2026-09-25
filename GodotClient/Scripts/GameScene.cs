@@ -4815,6 +4815,7 @@ public partial class GameScene : Control
         LegacyUiSkin.ApplyLegacyTestWindow(_storageDialog, _storageDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_configDialog, _configDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_noticeDialog, new Vector2I(107, 110));
+        LegacyUiSkin.ApplyLegacyTestWindow(_npcDialog, _npcDialog.Location);
     }
 
     /// <summary>真实登录场景的旧版窗口直达入口，便于逐窗截图和人工验收。</summary>
@@ -10576,9 +10577,9 @@ public partial class GameScene : Control
         if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
             return;
 
-        // EI Enter/Space 打开主 HUD 的 ChatTextBox 输入条；R 单独开关
-        // F350 聊天记录窗。两者是原版中的不同控件，不能把 Enter 路由到 F350。
-        if (_chatTextBox?.HandleGlobalKey(key) == true)
+        if (AutoLoginArgs.LegacyUi
+            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
+            : _chatTextBox?.HandleGlobalKey(key) == true)
             return;
 
         // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，

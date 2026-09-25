@@ -4289,6 +4289,7 @@ public partial class GameScene : Control
                 _player.Health += change;
                 _currentHP = _player.Health;
                 _mainPanel?.SetHealth(_currentHP);
+                _characterDialog?.RefreshLegacyState();
             }
             if (ClientSettings.ShowDamageNumbers) SpawnDamagePopup(_player, change, miss, block, critical, resist);
             _player.ShowHealthBar = true;
@@ -5468,6 +5469,7 @@ public partial class GameScene : Control
     {
         _playerStats = p.Stats ?? new Stats();
         _mainPanel?.SetStats(_playerStats);
+        _characterDialog?.RefreshLegacyState();
         if (_player == null) return;
         _player.MaxHealth = _playerStats[Stat.Health];
         _player.MaxMana = _playerStats[Stat.Mana];
@@ -5536,18 +5538,21 @@ public partial class GameScene : Control
         _playerMaxExperience = p.MaxExperience;
         _mainPanel?.SetLevel(_playerLevel);
         _mainPanel?.SetExperience(_playerExperience, _playerMaxExperience);
+        _characterDialog?.RefreshLegacyState();
     }
 
     private void OnGainedExperience(decimal amount)
     {
         _playerExperience += amount;
         _mainPanel?.SetExperience(_playerExperience, _playerMaxExperience);
+        _characterDialog?.RefreshLegacyState();
     }
 
     private void OnInformMaxExperience(decimal maxExperience)
     {
         _playerMaxExperience = maxExperience;
         _mainPanel?.SetExperience(_playerExperience, _playerMaxExperience);
+        _characterDialog?.RefreshLegacyState();
     }
 
     // 蓝/专注: 照原版按 ObjectID 累加 Change (只有玩家的会到 HUD)
@@ -5556,6 +5561,7 @@ public partial class GameScene : Control
         if (objectID != _playerObjectID) return;
         _currentMP += change;
         RefreshPlayerBars();
+        _characterDialog?.RefreshLegacyState();
     }
 
     private void OnFocusChanged(uint objectID, int change)
@@ -5876,6 +5882,7 @@ public partial class GameScene : Control
         _companionDialog?.InventoryGrid?.RefreshGrid();
         foreach (var c in CompanionEquipmentCells) c?.RefreshItem();
         foreach (var c in GuildStorageItemCells) c?.RefreshItem();
+        _characterDialog?.RefreshLegacyState();
     }
 
     // 背包权重重算 (服务端未发 WeightUpdate 时的本地兜底)

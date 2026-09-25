@@ -24,6 +24,13 @@ public partial class DXItemCell : DXControl
     // BeforeChildrenDraw 中使用 Inventory 图库；普通背包/交易格仍使用
     // StoreItem。保留可选图源，避免把两种显示语义混成一个固定图库。
     public LibraryFile ItemLibraryFile = LibraryFile.StoreItem;
+    /// <summary>
+    /// Legacy status-window hit records 0/1/4 are drawn by PaperDoll/Equip.wil.
+    /// They still need a real DXItemCell for hit testing and drag/drop, but must
+    /// not draw a second icon at the record rectangle.
+    /// </summary>
+    public bool DrawItemIconEnabled = true;
+
 
     /// <summary>拿起状态: 记录源格子, 点另一格完成移动 (原版静态 SelectedCell)</summary>
     private static DXItemCell _selectedCell;
@@ -253,7 +260,7 @@ public partial class DXItemCell : DXControl
                 return;
             }
         }
-        if (item != null)
+        if (item != null && DrawItemIconEnabled)
             DrawItemIcon(item);
     }
 
@@ -470,9 +477,9 @@ public partial class DXItemCell : DXControl
 
         if (e is InputEventMouseButton mb)
         {
-            // 原版 DXItemCell.OnMouseClick 的前置顺序：货币已拿起时，
-            // 物品格不能抢走地图的“丢弃数量”点击；观察和检查格也完全不操作。
-            if (Locked || GameScene.Game?.CurrencyPickedUp == true || GameScene.Game?.IsObserver == true ||
+            // 货币已拿起、观察和检查格不参与物品操作；Locked 仍需接收
+            // 中键解锁事件，左/右键会在各自分支内拒绝移动或使用。
+            if (GameScene.Game?.CurrencyPickedUp == true || GameScene.Game?.IsObserver == true ||
                 GridType == GridType.Inspect)
             {
                 AcceptEvent();

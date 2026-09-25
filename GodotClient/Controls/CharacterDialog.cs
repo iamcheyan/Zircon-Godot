@@ -38,8 +38,10 @@ public partial class CharacterDialog : DXWindow
     private DXLabel _wearWeightValue, _handWeightValue;
     private int _statsPage;
     private readonly List<(DXLabel Label, Stat Stat)> _attributeValues = new();
-    private readonly List<DXLabel> _legacyAttributeLabels = new();
-    private readonly List<(DXLabel Label, Stat? Stat, Stat? MaxStat)> _legacyExpandedLabels = new();
+    private readonly List<(DXLabel Label, DXLabel Value)> _legacyAttributeLabels = new();
+    private readonly List<(DXLabel Label, DXLabel Value, string Name, Stat? Stat, Stat? MaxStat)> _legacyExpandedLabels = new();
+    private static readonly Color LegacyAttributeLabelColour = new(250f / 255f, 225f / 255f, 200f / 255f);
+    private static readonly Color LegacyAttributeValueColour = new(250f / 255f, 250f / 255f, 250f / 255f);
     private static readonly string[] LegacyFirstAttributeNames =
     {
         "LEVEL", "HP", "MP", "经验", "包袱负重", "装备负重", "腕力",
@@ -310,21 +312,13 @@ public partial class CharacterDialog : DXWindow
     }
 
     /// <summary>按最早 EI 客户端 GameInter F200 的装备页坐标重排。</summary>
-    public void ApplyLegacyEiLayout()
+    public void ApplyLegacyEiLayout(bool resetView = true)
     {
         _legacyEiLayout = true;
-        _legacyEquipmentView = false;
-        Size = new Vector2I(244, 328);
+        if (resetView) _legacyEquipmentView = false;
         Clip = true;
         _background.LibraryFile = LibraryFile.GameInter;
-        _background.Index = 200;
-        _background.Location = new Vector2I(-6, -92);
-        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 200);
         _background.StretchImage = false;
-        foreach (var label in _legacyAttributeLabels)
-            label.Visible = false;
-        foreach (var entry in _legacyExpandedLabels)
-            entry.Label.Visible = false;
 
         foreach (var tab in _mainTabs) tab.Button.Visible = false;
         _attributePanel.Visible = false;
@@ -344,15 +338,16 @@ public partial class CharacterDialog : DXWindow
         BuildLegacyAttributeLabels();
         BuildLegacyExpandedPanel();
 
-        // 只有逆向证据已经确认的格子才显示；位置/尺寸直接采用
-        // equipment-slots-evidence.json 的窗口相对 RECT，而不是艺术标签推测。
+        // These are the original window-relative SetRect records. The three
+        // large records are PaperDoll/Equip.wil visual regions, but remain
+        // actual cells so their hit-test and wire slot index are preserved.
         var confirmed = new Dictionary<EquipmentSlot, (Vector2I Position, Vector2I Size)>
         {
             [EquipmentSlot.Weapon] = (new(86, 114), new(60, 90)),
             [EquipmentSlot.Armour] = (new(38, 70), new(53, 84)),
+            [EquipmentSlot.Necklace] = (new(94, 71), new(49, 33)),
             [EquipmentSlot.Helmet] = (new(27, 264), new(38, 38)),
             [EquipmentSlot.Torch] = (new(177, 70), new(38, 38)),
-            [EquipmentSlot.Necklace] = (new(94, 71), new(49, 33)),
             [EquipmentSlot.BraceletL] = (new(27, 186), new(38, 38)),
             [EquipmentSlot.BraceletR] = (new(175, 186), new(38, 38)),
             [EquipmentSlot.RingL] = (new(27, 227), new(38, 38)),
@@ -369,6 +364,10 @@ public partial class CharacterDialog : DXWindow
             cell.Location = geometry.Position;
             cell.Size = geometry.Size;
             cell.Hidden = false;
+            bool characterArea = slot is EquipmentSlot.Weapon or EquipmentSlot.Armour or EquipmentSlot.Necklace;
+            cell.DrawItemIconEnabled = !characterArea;
+            cell.ItemLibraryFile = characterArea ? LibraryFile.Equip : LibraryFile.Inventory;
+            cell.RefreshItem();
         }
 
         _closeButton.LibraryFile = LibraryFile.GameInter;
@@ -380,7 +379,10 @@ public partial class CharacterDialog : DXWindow
         _legacyViewToggle.Location = new Vector2I(176, 264);
         _legacyViewToggle.Size = new Vector2I(36, 36);
         _legacyViewToggle.Visible = true;
-        UpdateClientAreaForLegacySkin();
+        SetLegacyView(_legacyEquipmentView);
+        GD.Print($"[LegacyCharacter] view={(_legacyEquipmentView ? "equipment" : "attribute")} " +
+            $"root={Size} background=GameInter[{_background.Index}] art={_background.Size} offset={_background.Location} " +
+            $"hitRecords={confirmed.Count} paperDoll={_doll.Position}");
     }
 
     private void BuildLegacyAttributeLabels()
@@ -388,18 +390,29 @@ public partial class CharacterDialog : DXWindow
         if (_legacyAttributeLabels.Count > 0) return;
         for (int i = 0; i < LegacyFirstAttributeNames.Length; i++)
         {
+            int y = 0x43 + i * 15;
             var label = new DXLabel
             {
                 FontSize = 8,
-                TextColour = new Color(0.98f, 0.88f, 0.78f),
-                AutoSize = false,
-                Size = new Vector2I(128, 15),
-                Location = new Vector2I(0xFF, 0x43 + i * 15),
+                TextColour = LegacyAttributeLabelColour,
+                AutoSize = true,
+                Location = new Vector2I(0xFF, y),
+                IsControl = false,
+                Visible = false,
+                Text = LegacyFirstAttributeNames[i],
+            };
+            var value = new DXLabel
+            {
+                FontSize = 8,
+                TextColour = LegacyAttributeValueColour,
+                AutoSize = true,
+                Location = new Vector2I(0xFF + 76, y),
                 IsControl = false,
                 Visible = false,
             };
             AddControl(label);
-            _legacyAttributeLabels.Add(label);
+            AddControl(value);
+            _legacyAttributeLabels.Add((label, value));
         }
     }
 
@@ -410,41 +423,49 @@ public partial class CharacterDialog : DXWindow
         var stats = game?.PlayerStats;
         int value(Stat stat) => stats == null ? 0 : stats[stat];
         string experience = game == null || game.PlayerMaxExperience <= 0
-            ? "0.00%"
+            ? string.Empty
             : $"{game.PlayerExperience / game.PlayerMaxExperience * 100m:0.00}%";
         string[] values =
         {
-            (game?.PlayerLevel ?? 0).ToString(),
-            $"{game?.CurrentHealth ?? 0}/{value(Stat.Health)}",
-            $"{game?.CurrentMana ?? 0}/{value(Stat.Mana)}",
+            game?.PlayerLevel.ToString() ?? string.Empty,
+            game == null ? string.Empty : $"{game.CurrentHealth}/{value(Stat.Health)}",
+            game == null ? string.Empty : $"{game.CurrentMana}/{value(Stat.Mana)}",
             experience,
-            $"{game?.BagWeight ?? 0}/{value(Stat.BagWeight)}",
-            $"{game?.WearWeight ?? 0}/{value(Stat.WearWeight)}",
-            value(Stat.HandWeight).ToString(),
+            game == null ? string.Empty : $"{game.BagWeight}/{value(Stat.BagWeight)}",
+            game == null ? string.Empty : $"{game.WearWeight}/{value(Stat.WearWeight)}",
+            string.Empty, // EI 腕力字段的原始 byte 尚未映射到 Zircon Stat。
             value(Stat.Accuracy).ToString(),
             value(Stat.Agility).ToString(),
-            "—", // 原版魔法躲避字段尚无当前 Stat 证据映射。
-            "—", // 原版毒物躲避字段不等同于当前 PoisonResistance。
-            "—", // 原版中毒恢复字段尚无当前 Stat 证据映射。
-            "—", // 原版生命恢复字段尚无当前 Stat 证据映射。
-            "—", // 原版魔法恢复字段尚无当前 Stat 证据映射。
+            string.Empty, // 魔法躲避：无独立 Zircon 语义证据。
+            string.Empty, // 毒物躲避：不把 PoisonResistance 冒充为原字段。
+            string.Empty, // 中毒恢复：无独立 Zircon 语义证据。
+            string.Empty, // 生命恢复：无独立 Zircon 语义证据。
+            string.Empty, // 魔法恢复：无独立 Zircon 语义证据。
         };
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
-            _legacyAttributeLabels[i].Text = $"{LegacyFirstAttributeNames[i]} {values[i]}";
+        {
+            _legacyAttributeLabels[i].Label.Text = LegacyFirstAttributeNames[i];
+            _legacyAttributeLabels[i].Value.Text = values[i];
+        }
 
         foreach (var entry in _legacyExpandedLabels)
         {
-            string rowName = entry.Label.Text.Split(' ')[0];
+            entry.Label.Text = entry.Name;
+            entry.Label.TextColour = entry.Name is "防御" or "攻击" or "魔法" or "魔法防御力"
+                ? Colors.Black : LegacyAttributeLabelColour;
             if (entry.Stat == null)
             {
                 // EI draws 魔法/魔法防御力 as label-only rows in this paint region.
-                entry.Label.Text = rowName;
+                entry.Value.Text = string.Empty;
+                entry.Value.Visible = false;
                 continue;
             }
 
             int min = stats?[entry.Stat.Value] ?? 0;
-            string displayValue = entry.MaxStat == null ? min.ToString() : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
-            entry.Label.Text = $"{rowName} {displayValue}";
+            entry.Value.Text = entry.MaxStat == null
+                ? min.ToString()
+                : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
+            entry.Value.Visible = true;
         }
     }
 
@@ -455,6 +476,7 @@ public partial class CharacterDialog : DXWindow
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
             ("防御", Stat.MinAC, Stat.MaxAC),
+            ("攻击", Stat.MinDC, Stat.MaxDC),
             ("魔法", null, null), // EI 本窗口仅绘制标签，不显示值。
             ("火(火焰)", Stat.FireAttack, null),
             ("冰(冰冻)", Stat.IceAttack, null),
@@ -468,21 +490,33 @@ public partial class CharacterDialog : DXWindow
         for (int i = 0; i < rows.Length; i++)
         {
             var row = rows[i];
+            int y = 0x1E + i * 15;
             var label = new DXLabel
             {
                 FontSize = 8,
-                TextColour = new Color(0.98f, 0.88f, 0.78f),
-                AutoSize = false,
-                Size = new Vector2I(137, 15),
-                Location = new Vector2I(0x17F, 0x1E + i * 15),
+                TextColour = row.Name is "防御" or "攻击" or "魔法" or "魔法防御力"
+                    ? Colors.Black : LegacyAttributeLabelColour,
+                AutoSize = true,
+                Location = new Vector2I(0x17F, y),
                 IsControl = false,
                 Visible = false,
                 Text = row.Name,
             };
+            var value = new DXLabel
+            {
+                FontSize = 8,
+                TextColour = LegacyAttributeValueColour,
+                AutoSize = true,
+                Location = new Vector2I(0x1C3, y),
+                IsControl = false,
+                Visible = false,
+            };
             AddControl(label);
-            _legacyExpandedLabels.Add((label, row.Stat, row.MaxStat));
+            AddControl(value);
+            _legacyExpandedLabels.Add((label, value, row.Name, row.Stat, row.MaxStat));
         }
     }
+
 
     public bool AuditLegacyEiLayout(out string details)
     {
@@ -496,7 +530,7 @@ public partial class CharacterDialog : DXWindow
             && Location == originalLocation
             && _background.Location == new Vector2I(-252, -92)
             && _legacyViewToggle.Index == 168
-            && _legacyAttributeLabels.All(label => label.Visible)
+            && _legacyAttributeLabels.All(entry => entry.Label.Visible)
             && _legacyExpandedLabels.All(entry => entry.Label.Visible);
         ToggleLegacyView();
         bool restored = _background.Index == 200
@@ -534,25 +568,37 @@ public partial class CharacterDialog : DXWindow
         return ok;
     }
 
-    private void ToggleLegacyView()
+    private void ToggleLegacyView() => SetLegacyView(!_legacyEquipmentView);
+
+    private void SetLegacyView(bool equipmentView)
     {
-        _legacyEquipmentView = !_legacyEquipmentView;
-        _legacyViewToggle.Index = _legacyEquipmentView ? 168 : 171;
-        _legacyViewToggle.HoverIndex = _legacyEquipmentView ? 169 : 172;
-        _legacyViewToggle.PressedIndex = _legacyEquipmentView ? 169 : 172;
-        foreach (var label in _legacyAttributeLabels)
-            label.Visible = _legacyEquipmentView;
+        _legacyEquipmentView = equipmentView;
+        _legacyViewToggle.Index = equipmentView ? 168 : 171;
+        _legacyViewToggle.HoverIndex = equipmentView ? 169 : 172;
+        _legacyViewToggle.PressedIndex = equipmentView ? 169 : 172;
+        foreach (var entry in _legacyAttributeLabels)
+        {
+            entry.Label.Visible = equipmentView;
+            entry.Value.Visible = equipmentView && !string.IsNullOrEmpty(entry.Value.Text);
+        }
         foreach (var entry in _legacyExpandedLabels)
-            entry.Label.Visible = _legacyEquipmentView;
-        Size = _legacyEquipmentView ? new Vector2I(520, 328) : new Vector2I(244, 328);
+        {
+            entry.Label.Visible = equipmentView;
+            entry.Value.Visible = equipmentView && entry.Stat != null;
+        }
+
+        Size = equipmentView ? new Vector2I(520, 328) : new Vector2I(244, 328);
         Clip = true;
-        _background.Index = _legacyEquipmentView ? 201 : 200;
-        // 对齐 F200/F201 的有效像素左上角：F201 帧画布自身带约 252×93
-        // 透明边距。整体绘制后由 520×328 根窗口裁剪，左侧面板保持原点不变。
-        _background.Location = _legacyEquipmentView ? new Vector2I(-252, -92) : new Vector2I(-6, -92);
+        _background.Index = equipmentView ? 201 : 200;
+        // F200/F201 each has a transparent top/left canvas; align the alpha
+        // bbox to the same root origin instead of compensating at the window.
+        _background.Location = equipmentView ? new Vector2I(-252, -92) : new Vector2I(-6, -92);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, _background.Index);
         UpdateClientAreaForLegacySkin();
         RefreshLegacyAttributeLabels();
+        GD.Print($"[LegacyCharacter] switch view={(equipmentView ? "equipment" : "attribute")} " +
+            $"root={Size} background=F{_background.Index} offset={_background.Location} " +
+            $"toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size}");
         QueueRedraw();
     }
 
@@ -673,7 +719,7 @@ public partial class CharacterDialog : DXWindow
         {
             // 真实登录/换装路径会调用 ShowOwn；旧版模式下必须重新应用
             // F200/F201 和已确认的 38×38 格子，不能恢复到现代 F110。
-            ApplyLegacyEiLayout();
+            ApplyLegacyEiLayout(resetView: false);
             RefreshLegacyAttributeLabels();
         }
         QueueRedraw();
@@ -1017,6 +1063,15 @@ public partial class CharacterDialog : DXWindow
         WeightLabel.Text = string.Format(Lang.CharacterWeightLabel3, wearWeight, handWeight);
         if (_wearWeightValue != null) _wearWeightValue.Text = $"{wearWeight} / {wearMax}";
         if (_handWeightValue != null) _handWeightValue.Text = $"{handWeight} / {handMax}";
+        RefreshLegacyState();
+    }
+
+    /// <summary>刷新 EI 状态页中来自协议事件的动态字段。</summary>
+    public void RefreshLegacyState()
+    {
+        if (!_legacyEiLayout || _inspectMode) return;
+        RefreshLegacyAttributeLabels();
+        QueueRedraw();
     }
 
     public void SetPartner(string name)

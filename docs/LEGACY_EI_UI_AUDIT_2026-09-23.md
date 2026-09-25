@@ -1250,3 +1250,20 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 本轮发现并修复 `LegacyChatDialog.CreateSpriteButton()` 将关闭、上下滚动和六个模板按钮统一设置为 `CanBePressed=false` 的可达性缺陷；改为可点击后，完整1024×768截图证明 F350 关闭、R 重开、普通文本提交、六按钮本地模板入口均可到达，且没有发送拒绝/喊话模板命令。另将锁链轨道改为显式 `InputEventMouseButton/InputEventMouseMotion` 拖动控件；在22条安全普通消息溢出后，截图证明底部锚定、上滚按钮、滚轮/轨道点击与轨道拖动可改变历史窗口范围，手动上滚后新增 `scroll-anchor-safe` 保持用户历史位置而不抢回底部。
 
 归档截图目录：`/home/tetsuya/development/zircon/.artifacts/ui-acceptance-2026-09-24/`，关键文件包括 `chat-f350-repaired-closed-full.png`、`chat-f350-repaired-r-open-full.png`、`chat-f350-scroll-overflow-bottom-full.png`、`chat-f350-scroll-up-full.png`、`chat-f350-scroll-anchor-safe-full.png`、`chat-f350-scroll-final-bottom-full.png`、`chat-f350-scroll-final-drag-top-full.png`、`chat-f350-scroll-final-drag-bottom-full.png`。截图是 Zircon runtime evidence，不是 EI 原版截图；无 EI 同版 WIL/WIX 时，F350资源身份、原版像素级一致性与静态/运行版本等价仍保持阻塞。
+
+**2026-09-25 STATUS-01 人物状态面板实现与真实登录验收：**本轮仅使用 `/home/tetsuya/development/zircon` 的 `ui/legacy-layout-lab` 工作树、`/home/tetsuya/mir2ei/login_game.sh legacy`、`MIR3_EI_ROOT=/home/tetsuya/mir2ei`、`ZIRCON_UI_DATA_PATH=/home/tetsuya/mir2ei/Data`、`ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/Data`。运行环境为 Xvfb `:100`、完整 1024×768 viewport，账号 `test@test.com` / `TestHero`；stdout 记录 `S.StartGame Result=Success`、`[LegacyCharacter] ... hitRecords=11 paperDoll=(122,164)`，没有 ERROR/Exception/FAIL。
+
+实现裁决：
+
+| 维度 | 当前实现 | 证据/验收 |
+|---|---|---|
+| 根框与资源 | F200=244×328、offset=(-6,-92)；F201=520×328、offset=(-252,-92)，位置不随展开改变 | `CharacterDialog.ApplyLegacyEiLayout/SetLegacyView`；stdout 同时记录两态 root/background/offset；F200/F201 alpha bbox 仍以本审计 2024-09-24 独立解码记录为准 |
+| 人物/装备区 | PaperDoll=(122,164)；原版 11 条记录全部建立 DXItemCell 命中区，Weapon `(86,114,60,90)`、Armour `(38,70,53,84)`、Necklace `(94,71,49,33)` 也可悬停/拖放 | 最新完整截图 `status-equipment-final.png`、`status-body-hit-hover.png`；后者在 Weapon 大命中区显示 `Moonlight, Light in the Darkness` 物品提示，证明隐藏纸娃娃层之上的命中代理有效 |
+| 装备槽状态 | 已装备物品走当前 `DXItemCell` 图标/提示/兼容检查/拖放链；锁定格保留中键解锁事件，不再被 `_GuiInput` 前置守卫吞掉 | `DXItemCell.cs`；静态代码检查 + 编译；未做会改变生产装备的左键取下/替换 |
+| 属性页 | F201 双列布局与原版证据基线：左列 `x=0xFF,y=0x43,15px`，右列 `x=0x17F,y=0x1E,15px`；HP/MP 当前值/上限、经验百分比、包袱/装备负重接入已有 GameScene 数据；无独立语义的腕力/恢复/魔法躲避/毒物躲避值保持空白，不伪造数值 | `status-attributes-final.png`；`RefreshLegacyAttributeLabels`；证据清单 `status-window-render-evidence.json` |
+| 动态同步 | HP、MP、等级、经验、上限、Stats、批量装备/物品刷新都会触发人物页重绘；关闭任意窗口先清理全局 hover item | `GameScene.cs` 事件处理、`RefreshItemGrids`、`WindowManager.Close`；实机 stdout 无异常 |
+| 交互/状态保持 | W（本机持久化键位映射）打开人物页，箭头切换 F200/F201，Esc 关闭；关闭后再开保持展开态 | `status-equipment-final.png`、`status-attributes-final.png`、`status-esc-final.png`、`status-reopen-final.png`；`status-esc-final.png` 无残留物品 tooltip |
+
+本轮没有执行真实装备左键取下、从背包拖入、交易、坐骑或写库操作；这些路径仍以静态兼容检查和 hover/命中证据为界。装备耐久/强化/绑定等 EI 专用角标没有独立贴图证据，当前不以现代 ZL 或自绘图标冒充原版。
+
+截图归档：`/home/tetsuya/development/zircon/.artifacts/ui-acceptance-2026-09-24/`。本段新增关键文件：`status-equipment-final.png`、`status-attributes-final.png`、`status-body-hit-hover.png`、`status-esc-final.png`、`status-reopen-final.png`。

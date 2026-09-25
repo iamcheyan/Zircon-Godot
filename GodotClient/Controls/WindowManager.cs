@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
@@ -23,11 +24,11 @@ public static class WindowManager
         w.ShowWindow(parent);
         RefreshZOrder();
     }
-
     public static void Close(DXWindow w)
     {
         if (w == null) return;
         OpenWindows.Remove(w);
+        GameScene.Game?.SetHoverItem(null);
         w.Close();
         RefreshZOrder();
     }

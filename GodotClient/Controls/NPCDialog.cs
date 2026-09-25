@@ -11,7 +11,7 @@ using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
-/// <summary>原版 NPCDialog：GameInter 380/381/382 框体、可滚动文本和 NPC 选项。</summary>
+/// <summary>NPC 对话：现代布局使用 GameInter 380/381/382；legacy EI 使用 F1100。</summary>
 public partial class NPCDialog : DXWindow
 {
     private readonly DXControl _textArea;
@@ -33,21 +33,23 @@ public partial class NPCDialog : DXWindow
 
     // 旧版 F1100 常量 (来源: Mir3-Research docs/research/ei-ui-layout/
     // npc-window-render-evidence.json, primary-static):
-    //   根窗 552×176, 背景 F1100 (512×256, alpha bbox 64,59,384,138)
-    //   正文绘制原点 window+(150,40), 白色, 行距 = textheight+5 = 21
-    //   关闭 F161/162: (x+0x15B, bottom-0x24) = (347,140), 28×26
-    //   上箭头 F52/53: (x+0x0B8, bottom-0x1E) = (184,146), 12×8
-    //   下箭头 F54/55: (x+0x0C8, bottom-0x1E) = (200,146), 12×8
-    // 正文区 (150,40) 起, 宽度到面板右缘 (64+384=448) 内, 取 290。
-    // 字号沿用 12px 点阵 (ScaledSize(10))：原版行距闭合为 21 (=textheight+5,
-    // 推断原版 textheight=16), 但本机像素字体无 16px 档, 16px 会栅格化发糊;
-    // 行距按闭合证据取 21, 字号取点阵原生档, 不宣称像素级一致。
+    //   构造尺寸 552×176, 背景 F1100。
+    //   文本绘制原点 window+(150,40), 白色; line pitch = textheight+5,
+    //   默认值 21。正文裁剪区宽 290、高 136 是本实现基于根框和原点
+    //   推导的适配值，不是证据文件直接给出的独立 RECT。
+    //   子控件证据位置：close candidate (7,141), up candidate (290,145),
+    //   down candidate (306,136); 资源帧只证明视觉状态，业务语义来自
+    //   0x440290 的静态命中/门控路径。
+    // 本实现按该静态路径接入关闭与行级上下滚动；mode=1 且 overflow=1
+    // 的 14px 分支需要原版 token/layout state，当前 NPCPage 不暴露该状态，
+    // 因此普通/长文本统一采用证据中的默认 21px 行距。
     private const int LegacyTextX = 150;
     private const int LegacyTextY = 40;
     private const int LegacyTextWidth = 290;
-    private const int LegacyTextHeight = 136; // 40..176, 根窗裁剪
+    private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
-    private const int LegacyLinePitch = 21;   // primary-static: 0x594 默认 21
+    private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
+
 
 
     public NPCDialog()
@@ -79,10 +81,10 @@ public partial class NPCDialog : DXWindow
 
     /// <summary>
     /// 旧版 EI NPC 根窗口 (F1100, 552×176)。几何来自
-    /// Mir3-Research/ei-ui-layout/npc-window-render-evidence.json (primary-static)：
-    /// 关闭 (347,140) 28×26、上箭头 (184,146) F52/53、下箭头 (200,146) F54/55、
-    /// 正文原点 (150,40)。现代右侧滚动条在 legacy 下隐藏，滚动改由底部箭头
-    /// 以"行"为单位步进 (原版 [0x3BC] 逻辑行索引 ±1)。
+    /// Mir3-Research/ei-ui-layout/npc-window-render-evidence.json (primary-static)。
+    /// 关闭/箭头位置采用证据中的 static hit-test 子控件位置；资源帧仅表示
+    /// normal/highlight 视觉状态。正文原点为 (150,40)，现代右侧滚动条
+    /// 在 legacy 下隐藏，滚动改由静态命中路径对应的底部箭头按行步进。
     /// 正文和交易子面板仍复用现有业务链，不改变网络/业务逻辑。
     /// </summary>
     public void ApplyLegacyEiLayout()
@@ -98,20 +100,20 @@ public partial class NPCDialog : DXWindow
         _textArea.Location = new Vector2I(LegacyTextX, LegacyTextY);
         _textArea.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
         _textArea.Clip = true;
-        // 关闭：paint 重定位 (window.x+0x15B, window.bottom-0x24)，固定根下即 (347,140)。
+        // 关闭：证据中的 static hit-test 子控件位置 (7,141)。
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(347, 140);
+        _closeButton.Location = new Vector2I(7, 141);
         _closeButton.Size = new Vector2I(28, 26);
-        // 底部滚动箭头：命中区 12×8；原版仅当溢出标志 [0x58C]==1 时响应，
-        // 这里用"正文行数 > 可视行数"作为等价的 overflow 门 (见 ShowPage)。
+        // 滚动箭头：证据中的 static hit-test 子控件位置；
+        // 资源帧仅表示 normal/highlight 视觉状态。
         _scroll.Visible = false;
         _scrollUp.Visible = true;
         _scrollDown.Visible = true;
-        _scrollUp.Location = new Vector2I(184, 146);
-        _scrollDown.Location = new Vector2I(200, 146);
+        _scrollUp.Location = new Vector2I(290, 145);
+        _scrollDown.Location = new Vector2I(306, 136);
         // 新页打开时回到顶部 (原版 0x440630: [0x3BC]=0)，并按当前正文高度刷新箭头。
         _scrollLine = 0;
         _text.Position = new Vector2(0, 0);
@@ -149,11 +151,11 @@ public partial class NPCDialog : DXWindow
             && _headerBackground.Index == 1100
             && _textArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
             && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
-            && _closeButton.Index == 161 && _closeButton.Location == new Vector2I(347, 140)
+            && _closeButton.Index == 161 && _closeButton.Location == new Vector2I(7, 141)
             && _closeButton.Size == new Vector2I(28, 26)
-            && _scrollUp.Index == 52 && _scrollUp.Location == new Vector2I(184, 146)
+            && _scrollUp.Index == 52 && _scrollUp.Location == new Vector2I(290, 145)
             && _scrollUp.Size == new Vector2I(12, 8)
-            && _scrollDown.Index == 54 && _scrollDown.Location == new Vector2I(200, 146)
+            && _scrollDown.Index == 54 && _scrollDown.Location == new Vector2I(306, 136)
             && _scrollDown.Size == new Vector2I(12, 8)
             && !_scroll.Visible && _scrollUp.Visible && _scrollDown.Visible;
         details = $"size={Size} bg=F{_headerBackground.Index} "

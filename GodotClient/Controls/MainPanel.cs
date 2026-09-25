@@ -32,6 +32,8 @@ public partial class MainPanel : DXImageControl
     private decimal _experience, _maxExperience;
     private Stats _stats = new Stats();
     private DXControl _playerOrb;
+    private DXControl _playerOrbHoverArea;
+    private bool _playerOrbHovered;
     private bool _legacyEiStats;
 
     public MainPanel()
@@ -78,6 +80,17 @@ public partial class MainPanel : DXImageControl
         };
         _playerOrb.BeforeDraw += DrawPlayerOrb;
         AddControl(_playerOrb);
+        // Keep the hover target tall enough for the values immediately below
+        // the orb, so moving from the orb to either number does not hide it.
+        _playerOrbHoverArea = new DXControl
+        {
+            Location = LegacyHudLayout.PlayerOrbLocation,
+            Size = new Vector2I(LegacyHudLayout.PlayerOrbSize.X, 126),
+            IsControl = true,
+        };
+        _playerOrbHoverArea.MouseEntered += OnPlayerOrbMouseEntered;
+        _playerOrbHoverArea.MouseExited += OnPlayerOrbMouseExited;
+        AddControl(_playerOrbHoverArea);
         HealthBar.Visible = false;
         ManaBar.Visible = false;
 
@@ -250,6 +263,9 @@ public partial class MainPanel : DXImageControl
         MACLabel.Text = string.Empty;
         MCLabel.Text = string.Empty;
         SCLabel.Text = string.Empty;
+
+        _playerOrbHovered = false;
+        UpdatePlayerOrbNumbers();
     }
 
     /// <summary>Apply the original EI's three-state caption rendering to all 16 HUD hit targets.</summary>
@@ -469,15 +485,53 @@ public partial class MainPanel : DXImageControl
     {
         _currentHP = currentHP;
         HealthLabel.Text = $"{currentHP}/{_stats[Stat.Health]}";
-        CenterBarLabel(HealthLabel, HealthBar);
+        if (_legacyEiStats) UpdatePlayerOrbNumbers();
+        else CenterBarLabel(HealthLabel, HealthBar);
     }
 
     public void SetMana(int currentMP)
     {
         _currentMP = currentMP;
         ManaLabel.Text = $"{currentMP}/{_stats[Stat.Mana]}";
-        CenterBarLabel(ManaLabel, ManaBar);
+        if (_legacyEiStats) UpdatePlayerOrbNumbers();
+        else CenterBarLabel(ManaLabel, ManaBar);
         _playerOrb?.QueueRedraw();
+    }
+
+    private void OnPlayerOrbMouseEntered() => SetPlayerOrbHovered(true);
+    private void OnPlayerOrbMouseExited() => SetPlayerOrbHovered(false);
+
+    private void SetPlayerOrbHovered(bool hovered)
+    {
+        _playerOrbHovered = hovered;
+        UpdatePlayerOrbNumbers();
+    }
+
+    private void UpdatePlayerOrbNumbers()
+    {
+        if (HealthLabel == null || ManaLabel == null) return;
+        if (!_legacyEiStats)
+        {
+            HealthLabel.Visible = true;
+            ManaLabel.Visible = true;
+            CenterBarLabel(HealthLabel, HealthBar);
+            CenterBarLabel(ManaLabel, ManaBar);
+            return;
+        }
+
+        // EI displays numeric HP/MP only while the pointer is over the blood
+        // orb. Put each value below its own half, outside the painted sphere.
+        foreach (var label in new[] { HealthLabel, ManaLabel })
+        {
+            label.AutoSize = false;
+            label.Size = new Vector2I(56, 16);
+            label.FontSize = 8;
+            label.Align = HorizontalAlignment.Center;
+            label.VAlign = VerticalAlignment.Center;
+            label.Visible = _playerOrbHovered;
+        }
+        HealthLabel.Location = new Vector2I(49, 123);
+        ManaLabel.Location = new Vector2I(105, 123);
     }
 
     public void SetFocus(int currentFP)
@@ -510,6 +564,7 @@ public partial class MainPanel : DXImageControl
     /// <summary>旧版 HUD 球体审计：红球与红蓝球必须共用左侧同一控件。</summary>
     public bool AuditLegacyOrb(out string details)
     {
+        SetPlayerOrbHovered(false);
         Vector2I location = _playerOrb?.Location ?? new Vector2I(-1, -1);
         SetStats(new Stats());
         SetMana(80);
@@ -524,14 +579,20 @@ public partial class MainPanel : DXImageControl
             && _playerOrb.Visible
             && location == LegacyHudLayout.PlayerOrbLocation
             && _playerOrb.Size == LegacyHudLayout.PlayerOrbSize
+            && _playerOrbHoverArea?.Location == LegacyHudLayout.PlayerOrbLocation
+            && _playerOrbHoverArea?.Size == new Vector2I(LegacyHudLayout.PlayerOrbSize.X, 126)
             && !HealthBar.Visible
             && !ManaBar.Visible
+            && !HealthLabel.Visible
+            && !ManaLabel.Visible
+            && HealthLabel.Location == new Vector2I(49, 123)
+            && ManaLabel.Location == new Vector2I(105, 123)
             && !MCImage.Visible
             && noManaRedState
             && emptyManaSplitState
             && splitState;
         bool duplicateIcon = MCImage?.Visible == true;
-        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} duplicateIcon={duplicateIcon} hiddenAttributeIcon={!MCImage.Visible} states={noManaRedState}/{emptyManaSplitState}/{splitState} single={oneOrb}";
+        details = $"orb={_playerOrb?.Location}/{_playerOrb?.Size} visible={_playerOrb?.Visible} hover={_playerOrbHoverArea?.Location}/{_playerOrbHoverArea?.Size} valuesHidden={!HealthLabel.Visible && !ManaLabel.Visible} valuePositions={HealthLabel.Location}/{ManaLabel.Location} duplicateIcon={duplicateIcon} hiddenAttributeIcon={!MCImage.Visible} states={noManaRedState}/{emptyManaSplitState}/{splitState} single={oneOrb}";
         return oneOrb;
     }
 

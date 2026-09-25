@@ -14,6 +14,9 @@ namespace ZirconClient.Controls;
 /// </summary>
 public static class MirSkin
 {
+    private static readonly bool LegacyUiRequested = Godot.OS.GetCmdlineUserArgs().Any(x =>
+        string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase));
+
     /// <summary>客户端数据目录。原硬编码为 /home/tetsuya/development/Zircon/...（大写），
     /// 实际检出目录是小写 zircon；Linux 大小写敏感导致 UI 图库加载静默失败、
     /// 背景贴图全部缺失。复用 LibraryCache 的动态解析（相对 res:// 探测），
@@ -65,9 +68,7 @@ public static class MirSkin
 
     private static string ResolveUiDataPath()
     {
-        bool legacyRequested = Godot.OS.GetCmdlineUserArgs().Any(x =>
-            string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase));
-        if (!legacyRequested) return DataPath;
+        if (!LegacyUiRequested) return DataPath;
 
         string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH")
             ?? System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
@@ -146,6 +147,23 @@ public static class MirSkin
         var key = (file, index);
         if (_textures.TryGetValue(key, out var tex) && tex != null) return tex;
 
+        // In EI mode the source WIL is the visual reference being audited. If
+        // both it and a converted ZL exist, prefer the source WIL so that a
+        // stale/partial conversion cannot silently omit chat controls.
+        if (LegacyUiRequested)
+        {
+            LegacyWilLibrary legacy = GetLegacyWilLibrary(file);
+            if (legacy != null && index < legacy.Count)
+            {
+                tex = legacy.GetImageTexture(index);
+                if (tex != null)
+                {
+                    _textures[key] = tex;
+                    return tex;
+                }
+            }
+        }
+
         var lib = GetLibrary(file);
         if (lib == null)
         {
@@ -180,6 +198,11 @@ public static class MirSkin
     public static Vector2I GetSize(LibraryFile file, int index)
     {
         if (index < 0) return Vector2I.Zero;
+        if (LegacyUiRequested)
+        {
+            Vector2I legacySize = GetLegacyWilLibrary(file)?.GetSize(index) ?? Vector2I.Zero;
+            if (legacySize != Vector2I.Zero) return legacySize;
+        }
         var lib = GetLibrary(file);
         if (lib == null)
             return GetLegacyWilLibrary(file)?.GetSize(index) ?? Vector2I.Zero;
@@ -190,6 +213,15 @@ public static class MirSkin
     public static Vector2I GetOffset(LibraryFile file, int index)
     {
         if (index < 0) return Vector2I.Zero;
+        if (LegacyUiRequested)
+        {
+            LegacyWilLibrary legacy = GetLegacyWilLibrary(file);
+            if (legacy != null)
+            {
+                Vector2I legacySize = legacy.GetSize(index);
+                if (legacySize != Vector2I.Zero) return legacy.GetOffset(index);
+            }
+        }
         var lib = GetLibrary(file);
         if (lib == null)
             return GetLegacyWilLibrary(file)?.GetOffset(index) ?? Vector2I.Zero;
@@ -198,9 +230,8 @@ public static class MirSkin
     }
 
     /// <summary>
-    /// Read an original EI WIL only when the selected legacy UI root has no
-    /// converted ZL for that UI library. Normal client and world-resource paths
-    /// continue to use the existing ZL loader.
+    /// Read the original EI WIL for legacy UI libraries when available. Normal
+    /// client and world-resource paths continue to use the existing ZL loader.
     /// </summary>
     private static LegacyWilLibrary GetLegacyWilLibrary(LibraryFile file)
     {
@@ -217,7 +248,7 @@ public static class MirSkin
         {
             var library = new LegacyWilLibrary(wilPath, wixPath);
             _legacyWilLibraries[file] = library;
-            GD.Print($"[MirSkin] legacy UI WIL fallback: {file} -> {wilPath} ({library.Count} frames)");
+            GD.Print($"[MirSkin] legacy UI WIL source: {file} -> {wilPath} ({library.Count} frames)");
             return library;
         }
         catch (Exception ex)

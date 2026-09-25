@@ -334,7 +334,11 @@ public partial class CharacterDialog : DXWindow
         _guildFlagBase.Visible = false;
         _guildFlagOverlay.Visible = false;
         _doll.Visible = true;
-        _doll.Position = new Vector2(122, 164);
+        // EI status paint sends the special character compositor to
+        // window origin + (0x61, 0xC8). PaperDoll uses sprite-local offsets
+        // around this anchor, so keep the compositor origin at that exact
+        // window-relative point instead of centering its Control rectangle.
+        _doll.Position = new Vector2(97, 200);
         BuildLegacyAttributeLabels();
         BuildLegacyExpandedPanel();
 
@@ -562,11 +566,12 @@ public partial class CharacterDialog : DXWindow
         bool ok = initial && expanded && restored
             && Size == new Vector2I(244, 328)
             && _background.Index == 200
+            && _doll.Position == new Vector2(97, 200)
             && _legacyViewToggle.Location == new Vector2I(176, 264)
             && _legacyViewToggle.Size == new Vector2I(36, 36)
             && visibleSlots == expectedSlots.Count
             && slotGeometry;
-        details = $"size={Size} background=F{_background.Index} expanded={expanded} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
+        details = $"size={Size} background=F{_background.Index} expanded={expanded} doll={_doll.Position} toggle={_legacyViewToggle.Location}/{_legacyViewToggle.Size} visibleSlots={visibleSlots} slots={slotGeometry} switch={expanded && restored}";
         return ok;
     }
 

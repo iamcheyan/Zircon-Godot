@@ -24,7 +24,7 @@ public partial class ChatLogPanel : Control
     private int _selectedTab;
     private double _idleSeconds;
     private bool _legacyHudLayout;
-    private const float LegacyHudChatOpacity = 0.5f;
+    private const float LegacyHudChatOpacity = 1f;
     private const int MaxLines = 250;
  
     public sealed class ChatTabSettings
@@ -451,7 +451,9 @@ public partial class ChatLogPanel : Control
                 Text = displayText,
                 FontSize = _legacyHudLayout ? 8 : 10,
                 TextColour = message.Colour,
-                BackColour = ResolveMessageBackColour(message.BackColour, _tabSettings[_selectedTab].Transparent),
+                // F50 自身提供底板和边框；EI 常驻槽不为每条消息绘制白色消息底。
+                BackColour = _legacyHudLayout ? Colors.Transparent
+                    : ResolveMessageBackColour(message.BackColour, _tabSettings[_selectedTab].Transparent),
                 // EI ChatTab 的消息标签明确关闭 Outline；当前 DXLabel 的
                 // 阴影也不是原版路径，会给 8px 文字增加一圈脏边。
                 DrawShadow = false,

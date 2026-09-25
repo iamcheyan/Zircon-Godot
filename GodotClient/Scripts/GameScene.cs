@@ -7096,9 +7096,10 @@ public partial class GameScene : Control
         GD.Print($"[LegacyNpcResponseSelfTest] dispatch NPCResponse page={page.Index}");
         OnNPCResponse(response);
         var state = _npcDialog?.LegacyEiSelfState();
+        int optionIds = _npcDialog?.LegacyText.ButtonAreas.Select(x => x.Id).Distinct().Count() ?? 0;
         GD.Print($"[LegacyNpcResponseSelfTest] state ok={state?.Ok} "
             + $"line={state?.Line}/{state?.MaxLine} offsetY={state?.TextOffsetY} "
-            + $"options={_npcDialog?.LegacyText.ButtonAreas.Count}");
+            + $"optionIds={optionIds} glyphHitAreas={_npcDialog?.LegacyText.ButtonAreas.Count}");
     }
     public void SendMagicKey(MagicType magic, Library.SpellKey s1, Library.SpellKey s2, Library.SpellKey s3, Library.SpellKey s4)
         => _net.Connection.SendMagicKey(magic, s1, s2, s3, s4);

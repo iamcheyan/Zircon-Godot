@@ -16,6 +16,8 @@ public partial class NPCDialog : DXWindow
 {
     private readonly DXControl _textArea;
     private readonly NPCTextControl _text;
+    private readonly DXControl _textColumn2Area;
+    private readonly NPCTextControl _textColumn2;
     private readonly DXVScrollBar _scroll;
     private readonly DXButton _scrollUp;
     private readonly DXButton _scrollDown;
@@ -49,6 +51,7 @@ public partial class NPCDialog : DXWindow
     // 行数 >=7 时切到第二列（x = 0x131 = 305）。此前用 290 是自推导值，在任一
     // 背景原点下都会越出 F1100 可见面板右缘（384）。
     private const int LegacyTextWidth = 149;
+    private const int LegacyTextColumn2X = 305;
     private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
     private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
@@ -66,6 +69,13 @@ public partial class NPCDialog : DXWindow
         _closeButton.MouseClick += (o, e) => CloseNpc(); AddControl(_closeButton);
         _textArea = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true }; AddControl(_textArea);
         _text = new NPCTextControl { Size = new Vector2I(340, 1000) }; _textArea.AddControl(_text);
+        // N5 第二列：证据 npc-dialog-family-evidence.json 说行数 >=7 时切到
+        // x = 0x131 = 305。与第一列同样 149 宽、136 高（136/21 = 6 行/列），
+        // 所以第二列渲染的是同一段文本向上偏移 6 行（6*21 = 126）后的窗口。
+        _textColumn2Area = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true, Visible = false };
+        AddControl(_textColumn2Area);
+        _textColumn2 = new NPCTextControl { Size = new Vector2I(340, 1000), Location = new Vector2I(0, -6 * 21) };
+        _textColumn2Area.AddControl(_textColumn2);
         _scroll = new DXVScrollBar { Location = new Vector2I(350, 45), Size = new Vector2I(14, 95), VisibleSize = 95, Change = 1, HideWhenNoScroll = false, BackColour = Colors.Transparent, Border = false };
         _scroll.UpButton.LibraryFile = LibraryFile.GameInter; _scroll.UpButton.Index = 387;
         _scroll.DownButton.LibraryFile = LibraryFile.GameInter; _scroll.DownButton.Index = 385;
@@ -103,6 +113,9 @@ public partial class NPCDialog : DXWindow
         _textArea.Location = new Vector2I(LegacyTextX, LegacyTextY);
         _textArea.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
         _textArea.Clip = true;
+        _textColumn2Area.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
+        _textColumn2Area.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
+        _textColumn2Area.Clip = true;
         // 关闭：证据中的 static hit-test 子控件位置 (7,141)。
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
@@ -202,6 +215,25 @@ public partial class NPCDialog : DXWindow
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,
             _legacyLayout ? LegacyLinePitch : 18);
+        // N5 两列：每列 136/21 = 6 行，行数超过 6 才启用第二列。
+        if (_legacyLayout)
+        {
+            bool twoColumn = _text.LineCount > LegacyTextHeight / LegacyLinePitch;
+            _textColumn2Area.Visible = twoColumn;
+            if (twoColumn)
+            {
+                _textColumn2.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+            }
+        }
+        else
+        {
+            _textColumn2Area.Visible = false;
+        }
+        if (_legacyLayout)
+        {
+            GD.Print($"[LegacyNPC] lines={_text.LineCount} twoColumn={_textColumn2Area.Visible} "
+                + $"col1={_textArea.Location}/{_textArea.Size} col2={_textColumn2Area.Location}/{_textColumn2Area.Size}");
+        }
         int pageTextHeight = _text.ContentHeight;
         foreach (var button in _buttons) { RemoveControl(button); button.QueueFree(); } _buttons.Clear();
         // 原版按钮不是单独一行的 DXButton，而是画在正文中的可点击文字区域。

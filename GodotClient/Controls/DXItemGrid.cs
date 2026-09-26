@@ -242,7 +242,24 @@ public partial class DXItemGrid : DXControl
 
     public DXItemCell this[int slot] => Cells[slot];
 
-    private float Step => UseLegacyFootprints ? DXItemCell.CellWidth : DXItemCell.CellWidth - 1 + (GridPadding * 2);
+    /// <summary>
+    /// legacy 显式步距（&lt;=0 表示不启用，走原有公式）。
+    ///
+    /// 为什么不复用 <see cref="UseLegacyFootprints"/>：那个开关除了步距还会切换
+    /// 格子图库与锚点映射（见 GetCellIndex / GetLegacyAnchor / GetVisibleRows），
+    /// 只想改步距时会连带把语义带偏（它绑的是 Inventory 的 36px 素材）。
+    ///
+    /// 证据：
+    ///  - 交易 F1050：cell 36x36、stride **36**（trade-window-render-evidence.json，
+    ///    左栏首格 (21,48)..(201,264) 共 5 列，跨度 180 = 5x36）
+    ///  - 仓库 state2：stride **0x26 = 38**（store-state-graph.json states[2].grid_rects，
+    ///    cols 22/60/98/136、rows 43/81/119，间距 38）
+    /// </summary>
+    public int LegacyCellStep { get; set; }
+
+    private float Step => LegacyCellStep > 0
+        ? LegacyCellStep
+        : UseLegacyFootprints ? DXItemCell.CellWidth : DXItemCell.CellWidth - 1 + (GridPadding * 2);
 
     private void UpdateSize()
     {
@@ -332,7 +349,8 @@ public partial class DXItemGrid : DXControl
         base._Draw();
         if (!ShowCellDividers || Cells == null || GridSize.X <= 1) return;
 
-        float step = DXItemCell.CellWidth - 1 + (GridPadding * 2);
+        // 与 Step 保持一致（含 legacy 显式步距），否则分隔线会与格子错位。
+        float step = Step;
         var colour = new Color(0.39f, 0.325f, 0.196f, 0.95f);
         for (int x = 1; x < GridSize.X; x++)
         {

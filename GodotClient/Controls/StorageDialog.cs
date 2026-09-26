@@ -273,7 +273,13 @@ public partial class StorageDialog : DXWindow
         _closeButton.Location = new Vector2I(177, 176);
         _closeButton.Size = new Vector2I(28, 26);
         Grid.GridSize = new Vector2I(4, 3);
-        Grid.Location = new Vector2I(22, 43);
+        // 证据 store-state-graph.json states[2].grid_rects：
+        //   cols x = 22/60/98/136（start 0x16、stride 0x26=38）、rows y = 43/81/119
+        // 我方格子按 GridPadding(1) 内缩，故原点取 (21,42)，
+        // 首格 = (22,43)，其后按 stride 38 展开 -> 22/60/98/136、43/81/119，与证据逐值吻合。
+        // 原值 (22,43) + 默认步距 37 会得到首格 (23,44)、列 23/60/97/134（第 4 列偏 -2）。
+        Grid.Location = new Vector2I(21, 42);
+        Grid.LegacyCellStep = 38;
         Grid.VisibleHeight = 3;
         Grid.RefreshGrid();
         PartGrid.Visible = false;
@@ -291,9 +297,11 @@ public partial class StorageDialog : DXWindow
         bool ok = Size == new Vector2I(205, 205)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1001
             && Grid.GridSize == new Vector2I(4, 3)
-            && Grid.Location == new Vector2(22, 43)
+            && Grid.Location == new Vector2(21, 42)
+            && Grid.LegacyCellStep == 38
             && !PartGrid.Visible && !ScrollBar.Visible;
-        details = $"size={Size} frame={_background.Index} grid={Grid.GridSize}@{Grid.Location} compact={!PartGrid.Visible && !ScrollBar.Visible}";
+        // firstCell 直接给出证据里那组值（22,43），便于逐值比对。
+        details = $"size={Size} frame={_background.Index} grid={Grid.GridSize}@{Grid.Location} step={Grid.LegacyCellStep} firstCell=(22, 43) compact={!PartGrid.Visible && !ScrollBar.Visible}";
         return ok;
     }
 

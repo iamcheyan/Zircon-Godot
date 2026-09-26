@@ -138,8 +138,11 @@ public partial class TradeDialog : DXWindow
         // 相对证据偏 (-6,+44)。
         _userGrid.GridSize = new Vector2I(5, 6);
         _userGrid.Location = new Vector2I(20, 47);
+        // 证据 stride = 36（不是 37）：见 DXItemGrid.LegacyCellStep 的说明。
+        _userGrid.LegacyCellStep = 36;
         _playerGrid.GridSize = new Vector2I(5, 6);
         _playerGrid.Location = new Vector2I(252, 47);
+        _playerGrid.LegacyCellStep = 36;
         _userGrid.RefreshGrid();
         _playerGrid.RefreshGrid();
         UpdateClientAreaForLegacySkin();
@@ -152,7 +155,9 @@ public partial class TradeDialog : DXWindow
             && _userGrid.GridSize == new Vector2I(5, 6)
             && _playerGrid.GridSize == new Vector2I(5, 6)
             && _userGrid.Location == new Vector2(20, 47)
-            && _playerGrid.Location == new Vector2(252, 47);
+            && _playerGrid.Location == new Vector2(252, 47)
+            // 证据 stride = 36；首格 = 原点 + padding(1,1) = (21,48)/(253,48)。
+            && _userGrid.LegacyCellStep == 36 && _playerGrid.LegacyCellStep == 36;
         // details 里同时给出首格（= 原点 + padding），便于与证据的 (21,48)/(253,48) 直接比对。
         details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location}";
         return ok;

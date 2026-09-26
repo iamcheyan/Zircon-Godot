@@ -5286,7 +5286,12 @@ public partial class GameScene : Control
 
         Place(_inventoryDialog, 518, 0);   // window.inventory  (GameInter 250, 284x324)
         Place(_characterDialog, 0, 0);     // window.status     (GameInter 200, 244x328)
-        Place(_magicDialog, 0, 0);         // window.skill-book (GameInter 400, 296x332)
+        Place(_magicDialog, 348, 0);       // window.skill-book (GameInter 400, 452x380)
+        // 位置依据 window-paint-and-hotkey-dispatch-evidence.json 的
+        // cell_analysis.window_identities_final.id14（frame 400, x=348, y=0,
+        // w=452, h=380, primary-bytes）。layout.json 的 window.skill-book 写
+        // (0,0) 296x332 是错的 —— 296x332 与马窗相同、且与 F400 的 451x378
+        // 美术和 wrapper 实参 0x15c/0x17c/0x1c4 都冲突。
         Place(_questDialog, 0, 0);         // window.quest      (GameInter 700, 340x440)
         Place(_groupDialog, 272, 123);     // window.group      (GameInter 900, 256x244)
         Place(_configDialog, 276, 113);    // window.option     (GameInter 750, 248x264)

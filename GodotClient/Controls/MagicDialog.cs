@@ -327,9 +327,14 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Lightning, 454, new(4, 91)),
             (MagicSchool.Wind, 456, new(2, 126)),
             (MagicSchool.Holy, 458, new(2, 161)),
-            (MagicSchool.Dark, 450, new(2, 196)),
-            (MagicSchool.Phantom, 452, new(1, 231)),
-            (MagicSchool.Physical, 454, new(2, 266)),
+            // 8 个页签是 8 组互不相同的美术（像素解码确认 450=火焰 452=雪花
+            // 454=闪电 456=漩涡 458=四叶 460=钩状 462="2" 464=冠/三叉）。
+            // 此前 黑暗/幻影/剑 复用了 火/冰/电 的帧 450/452/454，是错的；
+            // skill-window-context.json 里那份重复帧记录也是错的，以
+            // skill-window-render-loop-evidence.json::controls 为准。
+            (MagicSchool.Dark, 460, new(2, 196)),
+            (MagicSchool.Phantom, 462, new(1, 231)),
+            (MagicSchool.Physical, 464, new(2, 266)),
         };
         _tabOrder = schools.Select(x => x.school).ToList();
         foreach (var entry in schools)

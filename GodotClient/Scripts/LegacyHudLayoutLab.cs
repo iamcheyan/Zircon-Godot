@@ -298,6 +298,10 @@ public partial class LegacyHudLayoutLab : Control
                 // 这里取索引 10 = 0x00FF00 → RGB(0,255,0) 亮绿，便于肉眼与日志核对。
                 "FCOLOR 10",
                 "本行应使用 FCOLOR 指定的亮绿色。",
+                // NPCIMG 行 token：真实语法是 {NPCIMG/<n>}（斜杠分隔）。
+                // 证据：Mud3 服务端脚本集合 grep -rho "NPCIMG[^ ]*" 统计
+                // NPCIMG/110} 43 次、NPCIMG/50} 33 次、NPCIMG/0} 31 次 …
+                "{NPCIMG/110}",
             });
             NPCPage page = null;
             try

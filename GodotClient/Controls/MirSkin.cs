@@ -140,7 +140,10 @@ public static class MirSkin
     private static bool IsUiLibrary(LibraryFile file)
         => file is LibraryFile.Interface or LibraryFile.Interface1c or LibraryFile.Interface1cExtended
             or LibraryFile.GameInter or LibraryFile.GameInter2 or LibraryFile.ProgUse
-            or LibraryFile.MagicIcon or LibraryFile.Inventory;
+            or LibraryFile.MagicIcon or LibraryFile.Inventory
+            // NPCImage = Data\NPCface.Zl。EI 原版的 NPCface.wil 帧数远多于 ZL 转换产物
+            // （帧 110 等只在 WIL 里有），NPCIMG 头像必须走 WIL 才能取到帧。
+            or LibraryFile.NPCImage;
 
     private static string ResolvePath(string fullPath)
     {

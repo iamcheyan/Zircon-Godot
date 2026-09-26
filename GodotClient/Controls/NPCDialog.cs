@@ -20,6 +20,9 @@ public partial class NPCDialog : DXWindow
     private readonly NPCTextControl _textColumn2;
     // 菜单条层：挂在 _textArea 之外，避免被其 350 宽的裁剪切掉（菜单条宽 383）。
     private NPCTextControl _legacyStripLayer;
+    // NPCIMG 头像：帧号由脚本标记 {NPCIMG/<n>} 给出，位置是原版硬编码常量。
+    private DXImageControl _legacyNpcFace;
+    private int _legacyNpcFaceFrame = -1;
     private readonly DXVScrollBar _scroll;
     private readonly DXButton _scrollUp;
     private readonly DXButton _scrollDown;
@@ -293,7 +296,7 @@ public partial class NPCDialog : DXWindow
         // NPCIMG：反汇编 0x43FFE7 已查明它是**脚本标记**（正文行 "NPCIMG<n>"），
         // 解析出的 n 从 NPCFace.WIL 取帧、画到头像控件自身字段（恒 0）；
         // 不是客户端硬编码坐标。解析逻辑尚未实现，见审计文档。
-        if (_legacyLayout) raw = ApplyLegacyFColor(raw);
+        if (_legacyLayout) { _legacyNpcFaceFrame = -1; raw = ApplyLegacyFColor(raw); }
         // legacy 菜单条：原版对每个选项行铺 F1101（末项 F1102），见 NPCTextControl.LegacyMenuStrips。
         // 控件绘制宽度放宽到菜单条宽度（383），否则会被换行宽度 149 裁掉。
         _text.LegacyMenuStrips = false;   // 改由 _legacyStripLayer 在外层绘制（见下）
@@ -311,7 +314,8 @@ public partial class NPCDialog : DXWindow
             _legacyStripLayer.LegacyMenuStrips = true;
             _legacyStripLayer.StripsOnly = true;
             _legacyStripLayer.DrawWidth = 383;
-            _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+                _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+            ApplyLegacyNpcFace();
             // 与文本列同起点（_textArea 位置 15,45 + _text 相对 0,0），并跟随滚动。
             SyncStripLayerPosition();
             if (_legacyStripLayer.GetParent() == null) _textArea.AddControl(_legacyStripLayer);
@@ -495,7 +499,7 @@ public partial class NPCDialog : DXWindow
     /// 所以取色时要按 R=低字节、B=高字节还原。
     /// FCOLOR 之后的正文行用该色；NPCIMG 行按证据暂不绘制（位置未给）。
     /// </summary>
-    private static string ApplyLegacyFColor(string text)
+    private string ApplyLegacyFColor(string text)
     {
         if (string.IsNullOrEmpty(text) || !text.Contains("FCOLOR", StringComparison.Ordinal)) return text;
         var output = new List<string>();
@@ -512,12 +516,71 @@ public partial class NPCDialog : DXWindow
                 }
                 continue;
             }
-            if (trimmed.StartsWith("NPCIMG ", StringComparison.OrdinalIgnoreCase)) continue;
+            if (TryParseLegacyNpcImg(trimmed, out int faceFrame))
+            {
+                _legacyNpcFaceFrame = faceFrame;
+                continue;
+            }
             output.Add(current == null || trimmed.Length == 0
                 ? line
                 : $"{{{line}:{current.Value.ToHtml(false)}}}");
         }
         return string.Join("\n", output);
+    }
+
+    /// <summary>
+    /// 解析 EI 对话脚本的头像标记。**真实语法是 `{NPCIMG/110}`（斜杠分隔）**，
+    /// 证据：Mud3 服务端脚本集合里 `grep -rho "NPCIMG[^ ]*"` 统计出
+    /// `NPCIMG/110}` 43 次、`NPCIMG/50}` 33 次、`NPCIMG/0}` 31 次 …（共 12+ 种帧号）。
+    /// 早期实现查的是 `"NPCIMG "`（空格），分隔符不对，所以从未匹配上。
+    ///
+    /// 帧号语义 = NPCFace.wil 的裸帧号；绘制位置见 `LegacyNpcFacePosition`。
+    /// </summary>
+    private bool TryParseLegacyNpcImg(string line, out int frame)
+    {
+        frame = -1;
+        int at = line.IndexOf("NPCIMG", StringComparison.OrdinalIgnoreCase);
+        if (at < 0) return false;
+        int i = at + "NPCIMG".Length;
+        while (i < line.Length && (line[i] == '/' || line[i] == ' ' || line[i] == ':' || line[i] == '=')) i++;
+        int start = i;
+        while (i < line.Length && char.IsDigit(line[i])) i++;
+        if (i == start) return false;              // 必须有数字
+        if (!int.TryParse(line[start..i], out frame)) { frame = -1; return false; }
+        // 整行只剩该标记（含花括号）才算标记行，避免误吞正常正文。
+        string rest = line.Remove(at, i - at).Replace("{", string.Empty).Replace("}", string.Empty).Trim();
+        return rest.Length == 0;
+    }
+
+    /// <summary>
+    /// 头像绘制位置 = 窗口相对 (40, 30)。
+    /// 证据 0x440059/0x44005B：NPCIMG 分支把 **常量** push 0x1e(30) / push 0x28(40) 传给
+    /// 0x45fd50(this=0x8ab7a8)，即位置是硬编码常量、**不是**脚本给的坐标。
+    /// （`[ebp+0x2b0]/[ebp+0x2b4]` 只用于取帧宽高；全 .text 扫描证明这两个字段
+    ///  从未被写入，见本次提交说明。）
+    /// </summary>
+    private static readonly Vector2I LegacyNpcFacePosition = new(40, 30);
+
+    private void ApplyLegacyNpcFace()
+    {
+        if (!_legacyLayout || _legacyNpcFaceFrame < 0)
+        {
+            if (_legacyNpcFace != null) _legacyNpcFace.Visible = false;
+            return;
+        }
+        _legacyNpcFace ??= new DXImageControl
+        {
+            LibraryFile = LibraryFile.NPCImage,
+            FixedSize = true,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _legacyNpcFace.Index = _legacyNpcFaceFrame;
+        var size = MirSkin.GetSize(LibraryFile.NPCImage, _legacyNpcFaceFrame);
+        _legacyNpcFace.Size = size;
+        _legacyNpcFace.Location = LegacyNpcFacePosition;
+        if (_legacyNpcFace.GetParent() == null) AddControl(_legacyNpcFace);
+        _legacyNpcFace.Visible = true;
+        GD.Print($"[LegacyNpcImg] frame={_legacyNpcFaceFrame} size={size} pos={LegacyNpcFacePosition}");
     }
 
     /// <summary>0x47C4A8 的 16 项 BGR 调色板，已按 COLORREF 还原为 RGB。</summary>

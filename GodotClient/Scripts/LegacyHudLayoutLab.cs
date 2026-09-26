@@ -1,6 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Godot;
 using Library;
+using Library.SystemModels;
 using ZirconClient.Controls;
+using S = Library.Network.ServerPackets;
 
 namespace ZirconClient.Scripts;
 
@@ -169,6 +177,207 @@ public partial class LegacyHudLayoutLab : Control
             auditRequested |= arg == "--legacy-audit";
         if (auditRequested)
             RunLegacyAudit();
+        bool npcSelfTest = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            npcSelfTest |= arg == "--legacy-npc-selftest";
+        if (npcSelfTest)
+            _ = RunNpcSelfTest();
+    }
+
+    // ------------------------------------------------------------------
+    // F1100 NPC 对话窗 真实运行验收（独立测试场，不连服务器）。
+    // 用一个"13 行正文 + 颜色 + 内嵌选项"的样例页驱动真实控件输入链：
+    //   几何审计 -> 打开 -> 逐行下滚 -> 触底禁用 -> 上滚 -> 点关闭。
+    // 截图存 .artifacts/npc-f1100-acceptance-2026-09-25/，结果以
+    // [NpcF1100SelfTest] PASS/FAIL 打印并按 0/1 退出。
+    // 触发: --legacy-npc-selftest
+    // ------------------------------------------------------------------
+    private async Task AwaitFrames(int n)
+    {
+        for (int i = 0; i < n; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    /// <summary>用控件本地坐标构造左键事件，喂给控件真实的 _GuiInput 处理链。</summary>
+    private static InputEventMouseButton LeftClick(Control c, bool pressed)
+    {
+        Vector2 center = new(c.Size.X / 2f, c.Size.Y / 2f);
+        return new InputEventMouseButton
+        {
+            Position = center,
+            GlobalPosition = center,
+            ButtonIndex = MouseButton.Left,
+            ButtonMask = pressed ? MouseButtonMask.Left : 0,
+            Pressed = pressed,
+        };
+    }
+
+    /// <summary>在控件上完成一次"按下-抬起"点击，走 DXButton 真实 MouseClick 链。
+    /// 注意: press/release 必须在同一帧内发出 —— DXControl._Process 一旦检测到
+    /// OS 级左键未物理按住 (headless 测试场没有真实鼠标) 就会复位 IsPressed,
+    /// 中间 await 帧会导致 release 被判为无效事件、MouseClick 不触发。</summary>
+    private async Task ClickControl(Control c)
+    {
+        c._GuiInput(LeftClick(c, true));
+        c._GuiInput(LeftClick(c, false));
+        await AwaitFrames(1);
+    }
+
+    private async Task RunNpcSelfTest()
+    {
+        string shotDir = Path.Combine(ProjectSettings.GlobalizePath("res://"), "..",
+            ".artifacts", "npc-f1100-acceptance-2026-09-25");
+        Directory.CreateDirectory(shotDir);
+        string Shot(string name)
+        {
+            string p = Path.Combine(shotDir, name);
+            GetViewport().GetTexture().GetImage().SavePng(p);
+            return p;
+        }
+        var fail = new List<string>();
+        void Check(bool ok, string what)
+        {
+            GD.Print($"[NpcF1100SelfTest] {(ok ? "ok" : "FAIL")} {what}");
+            if (!ok) fail.Add(what);
+        }
+
+        try
+        {
+            // 数据源: 优先取客户端 System.db 里的真实 NPC 页 (Globals.NPCPageList,
+            // 与服务端 0x515 包同源的 DBBindingList), 对象已绑定 Collection,
+            // 属性 setter 的 OnChanged 安全; 正文不足 13 行时追加样张正文。
+            // 仅内存修改 —— 客户端 DB 会话只读加载, 不写回 System.db。
+            string sampleText = string.Join("\n", new[]
+            {
+                "尊敬的顾客，欢迎光临本店。",
+                "{本店经营：} 武器、防具、药水。",
+                "您可以选择以下服务：",
+                "[购买物品:1]",
+                "[出售物品:2]",
+                "[修理装备:3]",
+                "[升级武器:4]",
+                "今日特价：金创药半价。",
+                "库存充足，数量有限，售完即止。",
+                "{温馨提示：} 交易前请先确认。",
+                "请勿离开发售柜台太远。",
+                "营业时间：全天开放。",
+                "祝您游戏愉快，再见！",
+            });
+            NPCPage page = null;
+            try
+            {
+                var real = Globals.NPCPageList?.Binding
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Say))
+                    .OrderByDescending(p => p.Say.Length)
+                    .FirstOrDefault();
+                if (real != null)
+                {
+                    // 保留真实正文前 3 行 (DB 长正文会把 maxScroll 推到不可控),
+                    // 再补样张正文, 保证总行数 13~16, 必然触发行级滚动。
+                    var headLines = real.Say.Replace("\r\n", "\n").Split('\n').Take(3);
+                    string head = string.Join("\n", headLines).Trim();
+                    real.Say = string.IsNullOrEmpty(head) ? sampleText : head + "\n" + sampleText;
+                    real.DialogType = NPCDialogType.None;
+                    page = real;
+                }
+            }
+            catch (Exception ex)
+            {
+                GD.Print($"[NpcF1100SelfTest] 真实 NPC 页不可用, 回退合成页: {ex.Message}");
+            }
+            if (page == null)
+            {
+                // 回退: 直接写私有字段 _Say, 绕过 OnChanged (独立对象无 Collection 会 NRE)
+                page = new NPCPage();
+                typeof(NPCPage).GetField("_Say", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .SetValue(page, sampleText);
+            }
+
+            var resp = new S.NPCResponse { ObjectID = 1, Index = -1, Page = page };
+
+            WindowManager.Open(_npc, _canvas);
+            _npc.ShowPage(resp);
+            await AwaitFrames(3);
+            string s1 = Shot("npc-f1100-self-01-open-top.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s1}");
+
+            var st = _npc.LegacyEiSelfState();
+            Check(_npc.Visible, "dialog visible after open");
+            Check(st.Ok, $"geometry audit {st.Details}");
+            Check(st.MaxLine >= 5, $"maxScroll lines={st.MaxLine} (body >=13 lines, 6 visible)");
+            Check(st.Line == 0 && Math.Abs(st.TextOffsetY) < 0.5, $"start at line 0 offset {st.TextOffsetY}");
+            // 注意: ButtonAreas 是逐字命中区 (选项每个字一个命中区, 点哪个字都算点中),
+            // 所以按 distinct id 集合核对, 不按总条数。
+            var areas = _npc.LegacyText.ButtonAreas;
+            var ids = areas.Select(a => a.Id).Distinct().ToList();
+            Check(ids.Contains(1) && ids.Contains(2) && ids.Contains(3) && ids.Contains(4),
+                $"inline option ids={string.Join(",", ids)} (sample options 1..4 present)");
+
+            // 选项悬停: 把鼠标移到选项 1 的命中区上 → 高亮变红 (与真实点击同一命中判定);
+            // 再移开 → 高亮清除。
+            var opt1 = areas.First(a => a.Id == 1);
+            _npc.LegacyText._GuiInput(new InputEventMouseMotion { Position = opt1.Rect.Position + opt1.Rect.Size / 2f });
+            await AwaitFrames(1);
+            Check(_npc.LegacyText.HoveredButtonId == 1, "hover over option 1 -> hover state 1");
+            string s1b = Shot("npc-f1100-self-01b-option-hover.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s1b}");
+            _npc.LegacyText._GuiInput(new InputEventMouseMotion { Position = new Vector2(2, 2) });
+            await AwaitFrames(1);
+            Check(_npc.LegacyText.HoveredButtonId != 1, "leave option 1 area -> hover cleared");
+
+            // 下滚一行
+            await ClickControl(_npc.LegacyScrollDownButton);
+            st = _npc.LegacyEiSelfState();
+            Check(st.Line == 1 && Math.Abs(st.TextOffsetY - (-21)) < 0.5, $"after 1 down: line={st.Line} offsetY={st.TextOffsetY}");
+            string s2 = Shot("npc-f1100-self-02-scrolled-1.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s2}");
+
+            // 继续下滚到触底
+            int guard = 0;
+            while (_npc.LegacyEiSelfState().Line < _npc.LegacyEiSelfState().MaxLine && guard < 20)
+            {
+                await ClickControl(_npc.LegacyScrollDownButton);
+                guard++;
+            }
+            st = _npc.LegacyEiSelfState();
+            bool atBottom = st.Line == st.MaxLine;
+            Check(atBottom, $"reached bottom line={st.Line}/{st.MaxLine}");
+            Check(!_npc.LegacyScrollDownButton.Enabled, "down arrow disabled at bottom");
+            Check(_npc.LegacyScrollUpButton.Enabled, "up arrow enabled at bottom");
+            Check(Math.Abs(st.TextOffsetY - (-21.0 * st.MaxLine)) < 0.5, $"offsetY={st.TextOffsetY} == -21*{st.MaxLine}");
+            string s3 = Shot("npc-f1100-self-03-scrolled-max.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s3}");
+
+            // 触底后再点禁用下箭头：状态不得变化（溢出门）
+            await ClickControl(_npc.LegacyScrollDownButton);
+            st = _npc.LegacyEiSelfState();
+            Check(st.Line == _npc.LegacyEiSelfState().MaxLine, $"disabled down ignored, line still {st.Line}");
+
+            // 上滚两行
+            await ClickControl(_npc.LegacyScrollUpButton);
+            await ClickControl(_npc.LegacyScrollUpButton);
+            st = _npc.LegacyEiSelfState();
+            Check(st.Line == Math.Max(0, _npc.LegacyEiSelfState().MaxLine - 2),
+                $"after 2 up: line={st.Line}");
+            string s4 = Shot("npc-f1100-self-04-scrolled-up2.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s4}");
+
+            // 点关闭
+            await ClickControl(_npc.LegacyCloseButton);
+            await AwaitFrames(2);
+            Check(!_npc.Visible, "dialog closed after close-button click");
+            string s5 = Shot("npc-f1100-self-05-closed.png");
+            GD.Print($"[NpcF1100SelfTest] shot {s5}");
+
+            bool pass = fail.Count == 0;
+            GD.Print($"[NpcF1100SelfTest] {(pass ? "PASS" : "FAIL")} failures={fail.Count} {string.Join(" | ", fail)}");
+            GetTree().Quit(pass ? 0 : 1);
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[NpcF1100SelfTest] ERROR {ex}");
+            GetTree().Quit(2);
+        }
     }
 
     private void RunLegacyAudit()

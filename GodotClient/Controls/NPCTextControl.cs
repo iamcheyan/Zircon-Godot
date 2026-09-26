@@ -31,6 +31,12 @@ public sealed partial class NPCTextControl : DXControl
     /// <summary>按当前行距折算的换行行数 (供行级滚动计算上下界)。</summary>
     public int LineCount { get; private set; } = 1;
 
+    /// <summary>内嵌选项 [text:id] 的命中区 (供验收测试场核对选项与点击区域)。</summary>
+    public IReadOnlyList<(Rect2 Rect, int Id)> ButtonAreas => _buttons;
+
+    /// <summary>当前悬停的内嵌选项 id (-1 = 无)。选项点击与悬停共用同一命中区。</summary>
+    public int HoveredButtonId => _hoveredButton;
+
     public void SetContent(string text, int width, int fontSize = 10, int linePitch = 18)
     {
         LinePitch = linePitch;

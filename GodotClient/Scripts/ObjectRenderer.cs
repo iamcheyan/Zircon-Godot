@@ -573,9 +573,6 @@ public partial class ObjectRenderer : MapObjectNode
     private void DrawName()
     {
         bool groundItemVisible = Type == Kind.Item && ClientSettings.ShowGroundItemNames;
-        bool chatVisible = !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil;
-        if (chatVisible)
-            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, -60f), Colors.White, 9f);
         if (!NameHovered && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;
@@ -607,6 +604,8 @@ public partial class ObjectRenderer : MapObjectNode
             RenderPrimitives.DrawLabel(this, $"({PetOwner})", new Vector2(24f, y + 12f), new Color(0.7f, 0.9f, 0.7f), 8f);
         if (Poison != PoisonType.None)
             DrawCircle(new Vector2(24f, y - 7f), 3f, new Color(0.35f, 1f, 0.35f, 0.85f));
+        if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
+            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 18f), Colors.White, 9f);
     }
 
     /// <summary>判断鼠标是否落在地面物品的可见名称标签上。</summary>
@@ -624,13 +623,5 @@ public partial class ObjectRenderer : MapObjectNode
         ChatText = text;
         _chatUntil = Godot.Time.GetTicksMsec() + 5000;
         QueueRedraw();
-        if (IsInsideTree())
-        {
-            GetTree().CreateTimer(5.05).Timeout += () =>
-            {
-                if (IsInsideTree() && Godot.Time.GetTicksMsec() >= _chatUntil)
-                    QueueRedraw();
-            };
-        }
     }
 }

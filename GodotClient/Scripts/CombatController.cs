@@ -584,14 +584,20 @@ public partial class CombatController : Node2D
                         if (ob == null || ob.CellX != x || ob.CellY != y)
                             continue;
 
-                        // 非鼠标格必须实际覆盖鼠标；当前格则保留原版的
-                        // cellSelect 回退，允许点击脚下格而不要求精确到像素。
+                        // NPC 名称和高体型 NPC 的可视区域可能明显高于普通
+                        // 2.25 格身体。名称点击仍归属于同一 NPC，不改变
+                        // 原版同格/逆序优先级，只扩大 NPC 的垂直命中范围。
+                        float maxY = ob.Type switch
+                        {
+                            ObjectRenderer.Kind.Item => 0.9f,
+                            ObjectRenderer.Kind.NPC => 4.5f,
+                            _ => 2.25f,
+                        };
+                        float maxX = ob.Type == ObjectRenderer.Kind.NPC ? 1.5f : 1.0f;
                         Vector2 objectLocal = ob.Position;
                         float dx = Math.Abs(mouseLocal.X - objectLocal.X) / CellWidth;
                         float dy = Math.Abs(mouseLocal.Y - objectLocal.Y) / CellHeight;
-                        float maxY = ob.Type == ObjectRenderer.Kind.Item ? 0.9f : 2.25f;
-                        bool mouseOver = dx <= 1.0f && dy <= maxY;
-                        if ((x != mouseCell.X || y != mouseCell.Y) && !mouseOver) continue;
+                        bool mouseOver = dx <= maxX && dy <= maxY;
 
                         bool deadOrPet = ob.Dead || ob.Type == ObjectRenderer.Kind.Monster && !string.IsNullOrWhiteSpace(ob.PetOwner);
                         if (deadOrPet)

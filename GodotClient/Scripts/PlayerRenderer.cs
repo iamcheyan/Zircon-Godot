@@ -250,6 +250,12 @@ public partial class PlayerRenderer : Node2D
     // 切换动画帧表 (Start/Count/OffSet), 参考 FrameSet.Players
     public void SetAnimation(MirAnimation anim)
     {
+        bool movementAnimation = anim is MirAnimation.Walking or MirAnimation.Running
+            or MirAnimation.HorseWalking or MirAnimation.HorseRunning
+            or MirAnimation.CreepWalkSlow or MirAnimation.CreepWalkFast;
+        if (IsSpellAnimation && movementAnimation)
+            return; // 施法中拒绝迟到移动/自动寻路动作，避免覆盖抬手动画。
+
         // 原版 SetFrame: Standing/Dead 立即打断；其它动作在当前一次性
         // 动作播完后衔接，避免攻击/受击/施法互相覆盖第一帧。
         if (!_animationComplete && _oneShotAnim != MirAnimation.Standing
@@ -955,8 +961,8 @@ public partial class PlayerRenderer : Node2D
             RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, nameY), NameColour, 9f);
         if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
             RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
-        if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
-            RenderPrimitives.DrawChatBubble(this, ChatText, new Vector2(24f, -60f), Colors.White, 9f);
+        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
+            RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, nameY - 22f), Colors.White, 9f);
 
         // 玩家头顶血条 (受击显示 5 秒)
         if (ShowHealthBar && ClientSettings.ShowUserHealth && !Dead && MaxHealth > 0 && Godot.Time.GetTicksMsec() <= DrawHealthUntilMs)
@@ -983,14 +989,6 @@ public partial class PlayerRenderer : Node2D
         ChatText = text;
         _chatUntil = Godot.Time.GetTicksMsec() + 5000;
         QueueRedraw();
-        if (IsInsideTree())
-        {
-            GetTree().CreateTimer(5.05).Timeout += () =>
-            {
-                if (IsInsideTree() && Godot.Time.GetTicksMsec() >= _chatUntil)
-                    QueueRedraw();
-            };
-        }
     }
 
     // 供 GameScene 调用: 计算本节点屏幕位置

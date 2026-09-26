@@ -284,8 +284,10 @@ public partial class MapObjectNode : Node2D
         MoveStartMs = Godot.Time.GetTicksMsec();
         CellX = to.X;  // 权威格立即到终点, 视觉位置由 OffsetX/OffsetY 回拉
         CellY = to.Y;
-        // 原版会按 Distance 选择 Walking/Running；不能把多格移动都当作走路。
-        SetAnimation(distance >= 2 ? MirAnimation.Running : MirAnimation.Walking);
+        // 原版 MonsterObject.SetAnimation: MirAction.Moving 始终用 Walking，
+        // 不按 Distance 选 Running（Running 只用于玩家 PlayerObject）。
+        // 怪物帧表通常没有 Running 条目，误用会导致动画回退 Standing → Offset=0 → 瞬移。
+        SetAnimation(MirAnimation.Walking);
     }
 
     public void QueueMove(System.Drawing.Point to, MirDirection dir, int distance)

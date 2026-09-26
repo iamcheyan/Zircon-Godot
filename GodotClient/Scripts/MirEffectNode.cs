@@ -170,11 +170,11 @@ public partial class MirEffectNode : Node2D
 
     protected void UpdateRenderLayer()
     {
-        if (DrawType == EffectLayer.Object && _targetNode is PlayerRenderer)
+        if (DrawType == EffectLayer.Object && _targetNode is PlayerRenderer player)
         {
-            // 持续 Buff/护盾围绕角色，但角色身体必须绘制在其上方；
-            // 否则魔法盾等帧的非透明像素会遮住腿部。
-            ZIndex = RenderOrder.PlayerBuffEffect;
+            // Buff/护盾与角色处于同一地图行：先画同层 ObjectEffect，
+            // 再画角色 Object；这样树木/山体的后续前景行仍可遮住二者。
+            ZIndex = RenderOrder.ObjectEffect(player.RenderY);
             return;
         }
         // 目标已释放时按格子回退，不再读 _targetRenderYFn/_target（可能访问

@@ -4,7 +4,6 @@ using Client.Models.Particles;
 using Client.Scenes;
 using Client.Scenes.Views;
 using Library;
-using Library.Network.ClientPackets;
 using Library.SystemModels;
 using System;
 using System.Collections.Generic;
@@ -268,6 +267,7 @@ namespace Client.Models
 
         public int Light;
         public float Opacity = 1F;
+        protected static float ObjectShadowOpacity => GameScene.ShadowOpacity;
         public Color LightColour = Globals.NoneColour;
 
         public Dictionary<MagicEffect, List<MirEffect>> MagicEffects = new Dictionary<MagicEffect, List<MirEffect>>();
@@ -701,8 +701,6 @@ namespace Client.Models
                     }
                     break;
             }
-            x -= x % 2;
-            y -= y % 2;
 
             if (CurrentFrame.Reversed)
             {
@@ -3212,6 +3210,7 @@ namespace Client.Models
             CurrentLocation = action.Location;
 
             EndMagicEffect(MagicEffect.Assault);
+            EndMagicEffect(MagicEffect.DragonCharge);
             EndMagicEffect(MagicEffect.HundredFist);
 
             List<uint> targets;
@@ -3248,6 +3247,9 @@ namespace Client.Models
                         case MagicType.Assault:
                             DXSoundManager.Play(SoundIndex.AssaultStart);
                             CreateMagicEffect(MagicEffect.Assault);
+                            break;
+                        case MagicType.DragonCharge:
+                            CreateMagicEffect(MagicEffect.DragonCharge);
                             break;
                         case MagicType.HundredFist:
                             CreateMagicEffect(MagicEffect.HundredFist);
@@ -3698,6 +3700,19 @@ namespace Client.Models
                                 Direction = action.Direction,
                             });
                             DXSoundManager.Play(SoundIndex.SeismicSlam);
+                            break;
+
+                        #endregion
+
+                        #region Rising Strike
+
+                        case MagicType.RisingStrike:
+                            Effects.Add(new MirEffect(800, 6, TimeSpan.FromMilliseconds(100), LibraryFile.MagicEx9, 0, 0, Globals.NoneColour)
+                            {
+                                Blend = true,
+                                MapTarget = CurrentLocation,
+                            });
+                            DXSoundManager.Play(SoundIndex.RisingStrike);
                             break;
 
                         #endregion
@@ -5395,13 +5410,15 @@ namespace Client.Models
                 DrawFormat = TextFormatFlags.WordBreak | TextFormatFlags.WordEllipsis,
             };
             ChatLabel.Size = DXLabel.GetHeight(ChatLabel, chatWidth);
-            ChatLabel.Disposing += (o, e) => ChatLabels.Remove(ChatLabel);
+            ChatLabel.Disposing += (o, e) => ChatLabels.Remove((DXLabel)o);
             ChatLabels.Add(ChatLabel);
 
         }
 
         public virtual void NameChanged()
         {
+            // NameColour/Title changes can replace the shared label without changing Name.
+            highlightName = null;
             if (Race is ObjectType.Player && Caption is not null)
             {
                 CaptionLabel = new DXLabel
@@ -5439,7 +5456,7 @@ namespace Client.Models
                         IsVisible = true,
                     };
 
-                    NameLabel.Disposing += (o, e) => names.Remove(NameLabel);
+                    NameLabel.Disposing += (o, e) => names.Remove((DXLabel)o);
                     names.Add(NameLabel);
                 }
 
@@ -5481,7 +5498,7 @@ namespace Client.Models
                         IsVisible = true,
                     };
 
-                    TitleNameLabel.Disposing += (o, e) => titles.Remove(TitleNameLabel);
+                    TitleNameLabel.Disposing += (o, e) => titles.Remove((DXLabel)o);
                     titles.Add(TitleNameLabel);
                 }
 
@@ -5489,6 +5506,7 @@ namespace Client.Models
             }
         }
 
+        private string highlightSettings, highlightName;
         public virtual void DrawName()
         {
             if (NameLabel != null)
@@ -5505,17 +5523,11 @@ namespace Client.Models
                     y -= 13;
 
                 NameLabel.Location = new Point(x, y);
-                if (Config.HighlightedItems != string.Empty)
+                if (highlightSettings != Config.HighlightedItems || highlightName != Name)
                 {
-                    string[] items = Config.HighlightedItems.Split(',');
-                    for (int i = 0; i < items.Length; i++)
-                    {
-                        if (string.Equals(items[i].Replace(" ", ""), Name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase))
-                        {
-                            NameLabel.ForeColour = Color.OrangeRed;
-                            break;
-                        }
-                    }
+                    highlightSettings = Config.HighlightedItems;
+                    highlightName = Name;
+                    NameLabel.ForeColour = ItemHighlights.Contains(Name) ? Color.OrangeRed : NameColour;
                 }
                 NameLabel.Draw();
             }
@@ -5791,6 +5803,19 @@ namespace Client.Models
                             Loop = true,
                             Direction = Direction,
                         });
+                    }
+                    break;
+                case MagicEffect.DragonCharge:
+                    {
+                        effects.Add(new MirEffect(600, 12, TimeSpan.FromMilliseconds(100), LibraryFile.MagicEx9, 0, 0, Globals.NoneColour)
+                        {
+                            Blend = true,
+                            Target = this,
+                            Loop = true,
+                            Direction = Direction,
+                            Skip = 20,
+                        });
+                        DXSoundManager.Play(SoundIndex.DragonCharge);
                     }
                     break;
                 case MagicEffect.ElementalSwords:

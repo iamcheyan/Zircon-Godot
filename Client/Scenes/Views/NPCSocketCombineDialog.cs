@@ -1,6 +1,5 @@
 using Client.Controls;
 using Client.Envir;
-using Client.UserModels;
 using Library;
 using Library.SystemModels;
 using System;
@@ -14,6 +13,8 @@ namespace Client.Scenes.Views
 {
     public sealed class NPCSocketCombineDialog : DXImageControl
     {
+        private const int GemLoopFrameCount = 10;
+
         private readonly struct SocketCombineFrame
         {
             public Point Gem1 { get; }
@@ -64,7 +65,7 @@ namespace Client.Scenes.Views
         public DXItemCell GemCell1, GemCell2, GemCell3, ResultCell;
 
         public DXAnimatedControl CombineAnimation, CombineOverlayAnimation, ResultAnimation;
-        public DXAnimatedControl GemLoopAnimation1, GemLoopAnimation2, GemLoopAnimation3;
+        public DXAnimatedControl GemLoopAnimation1, GemLoopAnimation2, GemLoopAnimation3, GemLoopResultAnimation;
 
         private S.NPCSocketCombine _pendingResult;
         private bool _operating, _combineAnimationFinished, _resultAnimationStarted;
@@ -88,17 +89,11 @@ namespace Client.Scenes.Views
             CloseButton.Location = new Point(Size.Width - CloseButton.Size.Width - 3, 3);
             CloseButton.MouseClick += (o, e) => Visible = false;
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Parent = this,
                 Text = CEnvir.Language.SocketCombineDialogTitle,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((DisplayArea.Width - TitleLabel.Size.Width) / 2, 8);
 
             CombineAnimation = new DXAnimatedControl
             {
@@ -179,6 +174,7 @@ namespace Client.Scenes.Views
             ResultCell = ResultGrid.Grid[0];
             ResultCell.FixedBorder = true;
             ResultCell.ShowCountLabel = false;
+            ResultCell.LinkChanged += ResultCell_LinkChanged;
 
             GemLoopAnimation1 = new DXAnimatedControl
             {
@@ -186,8 +182,8 @@ namespace Client.Scenes.Views
                 Location = new Point(GemGrid1.Location.X - 6, GemGrid1.Location.Y + 3),
                 LibraryFile = LibraryFile.GameInter,
                 BaseIndex = 5800,
-                FrameCount = 50,
-                AnimationDelay = TimeSpan.FromSeconds(5),
+                FrameCount = GemLoopFrameCount,
+                AnimationDelay = TimeSpan.FromSeconds(1),
                 Opacity = 0.1F,
                 UseOffSet = true,
                 Blend = true,
@@ -204,8 +200,8 @@ namespace Client.Scenes.Views
                 Location = new Point(GemGrid2.Location.X - 6, GemGrid2.Location.Y + 3),
                 LibraryFile = LibraryFile.GameInter,
                 BaseIndex = 5800,
-                FrameCount = 50,
-                AnimationDelay = TimeSpan.FromSeconds(5),
+                FrameCount = GemLoopFrameCount,
+                AnimationDelay = TimeSpan.FromSeconds(1),
                 Opacity = 0.1F,
                 UseOffSet = true,
                 Blend = true,
@@ -222,8 +218,8 @@ namespace Client.Scenes.Views
                 Location = new Point(GemGrid3.Location.X - 6, GemGrid3.Location.Y + 3),
                 LibraryFile = LibraryFile.GameInter,
                 BaseIndex = 5800,
-                FrameCount = 50,
-                AnimationDelay = TimeSpan.FromSeconds(5),
+                FrameCount = GemLoopFrameCount,
+                AnimationDelay = TimeSpan.FromSeconds(1),
                 Opacity = 0.1F,
                 UseOffSet = true,
                 Blend = true,
@@ -269,6 +265,24 @@ namespace Client.Scenes.Views
                 CacheInParent = false,
             };
             ResultAnimation.AfterAnimation += ResultAnimation_AfterAnimation;
+
+            GemLoopResultAnimation = new DXAnimatedControl
+            {
+                Parent = this,
+                Location = new Point(ResultGrid.Location.X - 6, ResultGrid.Location.Y + 3),
+                LibraryFile = LibraryFile.GameInter,
+                BaseIndex = 5800,
+                FrameCount = GemLoopFrameCount,
+                AnimationDelay = TimeSpan.FromSeconds(1),
+                Opacity = 0.1F,
+                UseOffSet = true,
+                Blend = true,
+                Loop = true,
+                Animated = false,
+                Visible = false,
+                IsControl = false,
+                CacheInParent = false,
+            };
 
             StartButton = new DXButton
             {
@@ -548,6 +562,7 @@ namespace Client.Scenes.Views
             GemLoopAnimation1.Location = new Point(GemGrid1.Location.X - 6, GemGrid1.Location.Y + 3);
             GemLoopAnimation2.Location = new Point(GemGrid2.Location.X - 6, GemGrid2.Location.Y + 3);
             GemLoopAnimation3.Location = new Point(GemGrid3.Location.X - 6, GemGrid3.Location.Y + 3);
+            GemLoopResultAnimation.Location = new Point(ResultGrid.Location.X - 6, ResultGrid.Location.Y + 3);
         }
 
         private void ApplyInitialLocations()
@@ -557,14 +572,19 @@ namespace Client.Scenes.Views
 
         private void GemCell_LinkChanged(object sender, EventArgs e)
         {
-            SetLoopAnimation(GemLoopAnimation1, GemCell1.Item?.Info);
-            SetLoopAnimation(GemLoopAnimation2, GemCell2.Item?.Info);
-            SetLoopAnimation(GemLoopAnimation3, GemCell3.Item?.Info);
+            SetLoopAnimation(GemLoopAnimation1, GemCell1.Item);
+            SetLoopAnimation(GemLoopAnimation2, GemCell2.Item);
+            SetLoopAnimation(GemLoopAnimation3, GemCell3.Item);
         }
 
-        private static void SetLoopAnimation(DXAnimatedControl animation, ItemInfo info)
+        private void ResultCell_LinkChanged(object sender, EventArgs e)
         {
-            int index = info?.Shape switch
+            SetLoopAnimation(GemLoopResultAnimation, ResultCell.Item);
+        }
+
+        private static void SetLoopAnimation(DXAnimatedControl animation, ClientUserItem item)
+        {
+            int index = item?.Info.Shape switch
             {
                 1 => 5900,
                 2 => 6000,
@@ -579,8 +599,19 @@ namespace Client.Scenes.Views
                 return;
             }
 
+            decimal purity = item.CurrentDurability / 1000M;
+            decimal maximumPurity = Math.Max(0, Globals.MaxGemPurity);
+
+            int purityLevel = purity <= maximumPurity * 0.2M ? 0 :
+                              purity <= maximumPurity * 0.4M ? 1 :
+                              purity <= maximumPurity * 0.6M ? 2 :
+                              purity <= maximumPurity * 0.8M ? 3 : 4;
+
+            index += purityLevel * GemLoopFrameCount;
+
             bool restart = animation.BaseIndex != index || !animation.Visible;
             animation.BaseIndex = index;
+            animation.FrameCount = GemLoopFrameCount;
             animation.Visible = true;
             animation.Animated = true;
 
@@ -671,6 +702,8 @@ namespace Client.Scenes.Views
 
             if (ResultCell != null)
             {
+                ResultCell.LinkChanged -= ResultCell_LinkChanged;
+
                 if (!ResultCell.IsDisposed)
                     ResultCell.Dispose();
 

@@ -29,4 +29,8 @@ __pycache__/
 /Tools.pre-pull-*/
 
 # dim 工具输出（OCR 等本地产物，不进 git）
-/artifacts/
+# upstream 同款条目一并并入：/tmp /Exports /artifacts /docs/changes
+/tmp
+/Exports/*
+/artifacts
+/docs/changes

@@ -19,15 +19,16 @@ namespace Library
             DevouringGhost,
             Larva,
             ZumaGuardian, ZumaKing,
-            Monkey,
+            Monkey, MutantFlea, PurpleFlea, BlasterMutantFlea,
             NumaMage, CursedCactus, NetherWorldGate,
             WestDesertLizard,
+            NumaWarlord,
             BanyaGuard, EmperorSaWoo,
             JinchonDevil,
             ArchLichTaeda,
             ShinsuBig,
             PachonTheChaosBringer,
-            IcySpiritGeneral,
+            IcySpiritGeneral, IcySpiritSoldier,
             FieryDancer, EmeraldDancer, QueenOfDawn,
             JinamStoneGate, OYoungBeast, YumgonWitch, JinhwanSpirit, ChiwooGeneral, DragonQueen, DragonLord,
             FerociousIceTiger,
@@ -93,10 +94,11 @@ namespace Library
                 [MirAnimation.FishingCast] = new Frame(2000, 8, 10, TimeSpan.FromMilliseconds(100)),
                 [MirAnimation.FishingWait] = new Frame(2080, 6, 10, TimeSpan.FromMilliseconds(120)),
                 [MirAnimation.FishingReel] = new Frame(2160, 8, 10, TimeSpan.FromMilliseconds(100)),
-                [MirAnimation.HorseStanding] = new Frame(2240, 4, 10, TimeSpan.FromMilliseconds(500)), //Horse Standing
+                [MirAnimation.HorseStanding] = new Frame(2240, 4, 10, TimeSpan.FromMilliseconds(500)),
                 [MirAnimation.HorseWalking] = new Frame(2320, 6, 10, TimeSpan.FromMilliseconds(100)),
                 [MirAnimation.HorseRunning] = new Frame(2400, 6, 10, TimeSpan.FromMilliseconds(100)),
                 [MirAnimation.HorseStruck] = new Frame(2480, 3, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.HorseLeaping] = new Frame(2240, 4, 10, TimeSpan.FromMilliseconds(125)), //Uses Horse Standing as dedicated leaping only exists for white/black horses and no armours
                 [MirAnimation.ChannellingStart] = new Frame(560, 4, 10, TimeSpan.FromMilliseconds(100)), //Proj Spell (channelled)
                 [MirAnimation.ChannellingMiddle] = new Frame(563, 1, 10, TimeSpan.FromMilliseconds(1000)), //Proj Spell (channelled)
                 [MirAnimation.ChannellingEnd] = new Frame(0, 1, 10, TimeSpan.FromMilliseconds(60)), //Proj Spell (channelled)
@@ -337,6 +339,22 @@ namespace Library
                 [MirAnimation.Combat2] = new Frame(400, 6, 10, TimeSpan.FromMilliseconds(100)),
             };
 
+            MutantFlea = new Dictionary<MirAnimation, Frame>
+            {
+                [MirAnimation.Combat2] = new Frame(400, 6, 10, TimeSpan.FromMilliseconds(100)),
+            };
+
+            PurpleFlea = new Dictionary<MirAnimation, Frame>
+            {
+                //TODO - Purple Flea has no AI action using these secondary combat frames yet.
+                [MirAnimation.Combat2] = new Frame(400, 6, 10, TimeSpan.FromMilliseconds(100)),
+            };
+
+            BlasterMutantFlea = new Dictionary<MirAnimation, Frame>
+            {
+                [MirAnimation.Combat2] = new Frame(160, 6, 10, TimeSpan.FromMilliseconds(100)),
+            };
+
             NetherWorldGate = new Dictionary<MirAnimation, Frame>
             {
                 [MirAnimation.Standing] = new Frame(0, 10, 0, TimeSpan.FromMilliseconds(200)),
@@ -371,6 +389,18 @@ namespace Library
                 [MirAnimation.Combat3] = new Frame(480, 8, 10, TimeSpan.FromMilliseconds(70)),
             };
 
+            NumaWarlord = new Dictionary<MirAnimation, Frame>
+            {
+                [MirAnimation.Standing] = new Frame(0, 4, 10, TimeSpan.FromMilliseconds(500)),
+                [MirAnimation.Walking] = new Frame(80, 6, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Pushed] = new Frame(80, 6, 10, TimeSpan.FromMilliseconds(50)) { Reversed = true, StaticSpeed = true },
+                [MirAnimation.Struck] = new Frame(240, 2, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Combat2] = new Frame(400, 8, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Combat3] = new Frame(480, 6, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Combat1] = new Frame(160, 6, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Die] = new Frame(320, 10, 10, TimeSpan.FromMilliseconds(120)),
+                [MirAnimation.Dead] = new Frame(329, 1, 10, TimeSpan.FromMilliseconds(1000))
+            };
 
             EmperorSaWoo = new Dictionary<MirAnimation, Frame>
             {
@@ -398,6 +428,12 @@ namespace Library
             IcySpiritGeneral = new Dictionary<MirAnimation, Frame>
             {
                 [MirAnimation.Combat3] = new Frame(400, 6, 10, TimeSpan.FromMilliseconds(100)),
+            };
+
+            IcySpiritSoldier = new Dictionary<MirAnimation, Frame>
+            {
+                [MirAnimation.Combat2] = new Frame(400, 10, 10, TimeSpan.FromMilliseconds(100)),
+                [MirAnimation.Combat3] = new Frame(400, 10, 10, TimeSpan.FromMilliseconds(100)),
             };
 
             FieryDancer = new Dictionary<MirAnimation, Frame>

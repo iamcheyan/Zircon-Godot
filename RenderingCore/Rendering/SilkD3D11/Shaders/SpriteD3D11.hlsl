@@ -3,12 +3,21 @@ cbuffer MatrixBuffer : register(b0)
     matrix Matrix;
 };
 
+cbuffer EffectBuffer : register(b1)
+{
+    float4 Source;
+    float4 OutlineColour;
+    float4 Effect;
+};
+
 struct VS_INPUT
 {
     float2 Pos : POSITION;
     float2 Tex : TEXCOORD0;
     float4 Col : COLOR0;
     float TexIndex : TEXCOORD1;
+    float4 Source : TEXCOORD2;
+    float2 TextureSize : TEXCOORD3;
 };
 
 struct PS_INPUT
@@ -18,6 +27,8 @@ struct PS_INPUT
     float4 Col : COLOR0;
     float TexIndex : TEXCOORD1;
     float2 ScreenPos : TEXCOORD2;
+    nointerpolation float4 Source : TEXCOORD3;
+    nointerpolation float2 TextureSize : TEXCOORD4;
 };
 
 Texture2D shaderTextures[32] : register(t0);
@@ -31,6 +42,8 @@ PS_INPUT VS(VS_INPUT input)
     output.Col = input.Col;
     output.TexIndex = input.TexIndex;
     output.ScreenPos = input.Pos;
+    output.Source = input.Source;
+    output.TextureSize = input.TextureSize;
     return output;
 }
 
@@ -78,5 +91,8 @@ float4 PS(PS_INPUT input) : SV_Target
     uint textureIndex = (uint)round(input.TexIndex);
     float4 texel = SampleTexture(textureIndex, input.Tex);
     float alpha = texel.a * input.Col.a;
+    // Render-target pixels already contain alpha-weighted colour.
+    if (Effect.x == 6.0)
+        return float4(texel.rgb * input.Col.rgb * input.Col.a, alpha);
     return float4(texel.rgb * input.Col.rgb * alpha, alpha);
 }

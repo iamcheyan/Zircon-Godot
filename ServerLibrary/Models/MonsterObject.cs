@@ -9,12 +9,11 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Numerics;
 using S = Library.Network.ServerPackets;
 
 namespace Server.Models
 {
-    public class MonsterObject : MapObject
+    public partial class MonsterObject : MapObject
     {
         public override ObjectType Race => ObjectType.Monster;
 
@@ -30,6 +29,9 @@ namespace Server.Models
 
         public SpawnInfo SpawnInfo;
         public int DropSet;
+
+        public int VengeanceStacks;
+        private DateTime VengeanceDecayTime;
 
         public MapObject Target
         {
@@ -83,6 +85,7 @@ namespace Server.Models
         public decimal ExtraExperienceRate = 0;
 
         public bool Passive, NeedHarvest, AvoidFireWall;
+        public bool CanRetaliate = true;
         public int HarvestCount;
 
         public int DeathCloudDurationMin = 4000, DeathCloudDurationRandom = 0;
@@ -201,6 +204,8 @@ namespace Server.Models
                     return new NetherworldGate { MonsterInfo = monsterInfo };
                 case 31:
                     return new SonicLizard { MonsterInfo = monsterInfo };
+                case 32: //Unused AI
+                    return new MonsterObject { MonsterInfo = monsterInfo };
                 case 33:
                     return new GiantLizard { MonsterInfo = monsterInfo, AttackRange = 9, IgnoreShield = true };
                 case 34:
@@ -252,12 +257,16 @@ namespace Server.Models
                     return new GiantLizard { MonsterInfo = monsterInfo, AttackRange = 8, PoisonType = PoisonType.Paralysis, PoisonTicks = 1, PoisonFrequency = 5 };
                 case 50:
                     return new GiantLizard { MonsterInfo = monsterInfo, AttackRange = 8 };
+                case 51:
+                    return new MutantFlea { MonsterInfo = monsterInfo };
                 case 52:
                     return new WhiteBone() { MonsterInfo = monsterInfo };
                 case 53:
                     return new Shinsu { MonsterInfo = monsterInfo };
                 case 54:
                     return new GiantLizard { MonsterInfo = monsterInfo, RangeCooldown = TimeSpan.FromSeconds(5) };
+                case 55:
+                    return new BlasterMutantFlea { MonsterInfo = monsterInfo };
                 case 56:
                     return new CorrosivePoisonSpitter { MonsterInfo = monsterInfo, PoisonType = PoisonType.Green, PoisonTicks = 7, PoisonRate = 15, IgnoreShield = true };
                 case 57:
@@ -300,6 +309,8 @@ namespace Server.Models
                     return new BanyoWarrior { MonsterInfo = monsterInfo };
                 case 72:
                     return new BanyoCaptain { MonsterInfo = monsterInfo };
+                case 73: //Unused AI
+                    return new MonsterObject { MonsterInfo = monsterInfo };
                 case 74:
                     return new BanyoLordGuzak
                     {
@@ -634,6 +645,10 @@ namespace Server.Models
                     };
                 case 135: //Wild Horse
                     return new MonsterObject { MonsterInfo = monsterInfo, Passive = true };
+                case 136: //Passive, does not retaliate
+                    return new MonsterObject { MonsterInfo = monsterInfo, Passive = true, CanRetaliate = false };
+                case 137: //Numa Warlord
+                    return new NumaWarlord { MonsterInfo = monsterInfo };
 
                 case 1001:
                     return new CastleFlag { MonsterInfo = monsterInfo };
@@ -654,6 +669,10 @@ namespace Server.Models
         protected override void OnSpawned()
         {
             base.OnSpawned();
+
+            VengeanceStacks = 0;
+            VengeanceDecayTime = DateTime.MinValue;
+            CancelAutoPath();
 
             if (SpawnInfo != null && SpawnInfo.Info.EasterEventChance > 0 && SEnvir.Now < Config.EasterEventEnd)
                 EasterEventMob = SEnvir.Random.Next(SpawnInfo.Info.EasterEventChance) == 0;
@@ -823,6 +842,8 @@ namespace Server.Models
                 Stats[Stat.MaxDC] += (int)(Stats[Stat.MaxDC] * (long)MapDamageRate / 100);
             }
 
+            ApplyVengeanceStats();
+
             Stats[Stat.Health] = Math.Max(1, Stats[Stat.Health]);
             Stats[Stat.Mana] = Math.Max(1, Stats[Stat.Mana]);
 
@@ -861,9 +882,134 @@ namespace Server.Models
 
         }
 
+        private void ApplyVengeanceStats()
+        {
+            if (VengeanceStacks <= 0) return;
+
+            long percentage = (long)Stats[Stat.VengeancePercent] * VengeanceStacks;
+            if (percentage <= 0) return;
+
+            ApplyVengeanceStat(Stat.Health, percentage);
+            ApplyVengeanceStat(Stat.Mana, percentage);
+
+            ApplyVengeanceStat(Stat.MinAC, percentage);
+            ApplyVengeanceStat(Stat.MaxAC, percentage);
+            ApplyVengeanceStat(Stat.MinMR, percentage);
+            ApplyVengeanceStat(Stat.MaxMR, percentage);
+
+            ApplyVengeanceStat(Stat.MinDC, percentage);
+            ApplyVengeanceStat(Stat.MaxDC, percentage);
+            ApplyVengeanceStat(Stat.MinMC, percentage);
+            ApplyVengeanceStat(Stat.MaxMC, percentage);
+            ApplyVengeanceStat(Stat.MinSC, percentage);
+            ApplyVengeanceStat(Stat.MaxSC, percentage);
+
+            ApplyVengeanceStat(Stat.Accuracy, percentage);
+            ApplyVengeanceStat(Stat.Agility, percentage);
+
+            ApplyVengeanceStat(Stat.FireAttack, percentage);
+            ApplyVengeanceStat(Stat.IceAttack, percentage);
+            ApplyVengeanceStat(Stat.LightningAttack, percentage);
+            ApplyVengeanceStat(Stat.WindAttack, percentage);
+            ApplyVengeanceStat(Stat.HolyAttack, percentage);
+            ApplyVengeanceStat(Stat.DarkAttack, percentage);
+            ApplyVengeanceStat(Stat.PhantomAttack, percentage);
+
+            ApplyVengeanceStat(Stat.FireResistance, percentage);
+            ApplyVengeanceStat(Stat.IceResistance, percentage);
+            ApplyVengeanceStat(Stat.LightningResistance, percentage);
+            ApplyVengeanceStat(Stat.WindResistance, percentage);
+            ApplyVengeanceStat(Stat.HolyResistance, percentage);
+            ApplyVengeanceStat(Stat.DarkResistance, percentage);
+            ApplyVengeanceStat(Stat.PhantomResistance, percentage);
+            ApplyVengeanceStat(Stat.PhysicalResistance, percentage);
+            ApplyVengeanceStat(Stat.PoisonResistance, percentage);
+        }
+
+        private void ApplyVengeanceStat(Stat stat, long percentage)
+        {
+            long value = Stats[stat];
+            if (value <= 0) return;
+
+            long maximumPercentage = (int.MaxValue - value) * 100 / value;
+            Stats[stat] = percentage >= maximumPercentage
+                ? int.MaxValue
+                : (int)(value + value * percentage / 100);
+        }
+
+        private void TriggerVengeance()
+        {
+            if (PetOwner != null || MonsterInfo.Stats[Stat.VengeanceSource] <= 0) return;
+
+            foreach (Map map in GetVengeanceMaps())
+            {
+                foreach (MapObject mapObject in map.Objects)
+                {
+                    if (mapObject is not MonsterObject monster || monster == this || monster.Dead || monster.PetOwner != null) continue;
+                    if (monster.MonsterInfo.Stats[Stat.VengeancePercent] <= 0) continue;
+
+                    if (monster.VengeanceStacks == 0)
+                        monster.VengeanceDecayTime = SEnvir.Now.AddSeconds(Globals.VengeanceDecaySeconds);
+
+                    if (monster.VengeanceStacks < int.MaxValue)
+                        monster.VengeanceStacks++;
+
+                    monster.RefreshStats();
+                    monster.TryRespondToVengeance(this);
+                }
+            }
+        }
+
+        private void TryRespondToVengeance(MonsterObject source)
+        {
+            int chance = MonsterInfo.Stats[Stat.VengeanceResponseChance];
+
+            if (MoveDelay <= 0 || source.CurrentMap != CurrentMap || chance <= 0) return;
+            if (!Functions.InRange(CurrentLocation, source.CurrentLocation, Globals.VengeanceResponseSearchRadius)) return;
+            if (SEnvir.Random.Next(100) >= Math.Min(100, chance)) return;
+
+            if (StartAutoPath(source.CurrentLocation, 2, true, true))
+                Target = null;
+        }
+
+        private IEnumerable<Map> GetVengeanceMaps()
+        {
+            DungeonInfo dungeon = CurrentMap.Info.Dungeon;
+
+            if (dungeon == null)
+            {
+                yield return CurrentMap;
+                yield break;
+            }
+
+            foreach (DungeonMapInfo dungeonMap in dungeon.Maps)
+            {
+                Map map = SEnvir.GetMap(dungeonMap.Map, CurrentMap.Instance, CurrentMap.InstanceSequence);
+                if (map != null)
+                    yield return map;
+            }
+        }
+
+        private void ProcessVengeance()
+        {
+            if (Dead || VengeanceStacks <= 0 || SEnvir.Now < VengeanceDecayTime) return;
+
+            long periodTicks = TimeSpan.FromSeconds(Globals.VengeanceDecaySeconds).Ticks;
+            long elapsedPeriods = 1 + (SEnvir.Now.Ticks - VengeanceDecayTime.Ticks) / periodTicks;
+            int reduction = (int)Math.Min(VengeanceStacks, elapsedPeriods);
+
+            VengeanceStacks -= reduction;
+            VengeanceDecayTime = VengeanceStacks > 0
+                ? VengeanceDecayTime.AddTicks(periodTicks * reduction)
+                : DateTime.MinValue;
+            RefreshStats();
+        }
+
         public override void CleanUp()
         {
             base.CleanUp();
+
+            CancelAutoPath();
 
             _Target = null;
 
@@ -882,7 +1028,7 @@ namespace Server.Models
         {
             if (Activated) return;
 
-            if (NearByPlayers.Count == 0 && (MonsterInfo.ViewRange <= Config.MaxViewRange || CurrentMap.Players.Count == 0) && !MonsterInfo.IsBoss && PetOwner == null) return;
+            if (NearByPlayers.Count == 0 && (MonsterInfo.ViewRange <= Config.MaxViewRange || CurrentMap.Players.Count == 0) && !MonsterInfo.IsBoss && PetOwner == null && !AutoPathing) return;
 
             Activated = true;
             SEnvir.ActiveObjects.Add(this);
@@ -891,7 +1037,7 @@ namespace Server.Models
         {
             if (!Activated) return;
 
-            if (NearByPlayers.Count > 0 || Target != null || (MonsterInfo.ViewRange > Config.MaxViewRange && CurrentMap.Players.Count > 0) || MonsterInfo.IsBoss || PetOwner != null || ActionList.Count > 0 || CurrentHP < Stats[Stat.Health]) return;
+            if (NearByPlayers.Count > 0 || Target != null || AutoPathing || (MonsterInfo.ViewRange > Config.MaxViewRange && CurrentMap.Players.Count > 0) || MonsterInfo.IsBoss || PetOwner != null || ActionList.Count > 0 || CurrentHP < Stats[Stat.Health]) return;
 
             Activated = false;
             SEnvir.ActiveObjects.Remove(this);
@@ -928,6 +1074,8 @@ namespace Server.Models
         public override void Process()
         {
             base.Process();
+
+            ProcessVengeance();
 
             if (Dead)
             {
@@ -983,6 +1131,7 @@ namespace Server.Models
             }
 
             ProcessRegen();
+            if (ProcessAutoPath()) return;
             ProcessSearch();
             ProcessRoam();
             ProcessTarget();
@@ -2488,7 +2637,7 @@ namespace Server.Models
 
             if (Dead) return power;
 
-            if (CanAttackTarget(attacker) && PetOwner == null || Target == null)
+            if (CanRetaliate && (CanAttackTarget(attacker) && PetOwner == null || Target == null))
                 Target = attacker;
 
 
@@ -2498,7 +2647,7 @@ namespace Server.Models
         {
             bool res = base.ApplyPoison(p);
 
-            if (res && CanAttackTarget(p.Owner) && Target == null)
+            if (res && CanRetaliate && CanAttackTarget(p.Owner) && Target == null)
                 Target = p.Owner;
 
             if (p.Owner.Race == ObjectType.Player)
@@ -2510,6 +2659,8 @@ namespace Server.Models
         public override void Die()
         {
             base.Die();
+
+            TriggerVengeance();
 
             YieldReward();
 
@@ -2736,7 +2887,8 @@ namespace Server.Models
                 }
                 else
                 {
-                    chance = (long)(int.MaxValue / (drop.Chance * players) * rate);
+                    decimal boostedChance = int.MaxValue / ((decimal)drop.Chance * players) * rate;
+                    chance = (long)Math.Min(int.MaxValue, boostedChance);
                 }
 
                 UserDrop userDrop = owner.Character.Account.UserDrops.FirstOrDefault(x => x.Item == drop.Item);
@@ -2822,12 +2974,6 @@ namespace Server.Models
                     }
 
                     continue;
-                }
-
-                if (Config.EnableFortune)
-                {
-                    if (!SEnvir.IsCurrencyItem(drop.Item) && (Math.Floor(userDrop.Progress) > userDrop.DropCount + amount))
-                        amount = (long)(userDrop.Progress - userDrop.DropCount);
                 }
 
                 userDrop.DropCount += amount;

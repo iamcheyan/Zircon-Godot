@@ -172,17 +172,11 @@ namespace Client.Scenes.Views
             CloseButton.Location = new Point(DisplayArea.Width - CloseButton.Size.Width - 3, 3);
             CloseButton.MouseClick += (o, e) => Visible = false;
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Text = CEnvir.Language.CompanionDialogTitle,
                 Parent = this,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((DisplayArea.Width - TitleLabel.Size.Width) / 2, 8);
 
             #region Main
 
@@ -340,10 +334,8 @@ namespace Client.Scenes.Views
             {
                 Parent = CompanionTab,
                 Outline = true,
-                Font = new Font(Config.FontName, CEnvir.FontSize(9F), FontStyle.Bold),
+                LabelStyle = DXLabelStyle.BlueTitle,
                 DrawFormat = TextFormatFlags.VerticalCenter | TextFormatFlags.Left,
-                ForeColour = Constants.PrimaryColour,
-                OutlineColour = Color.Black,
                 IsControl = false,
                 Text = CEnvir.Language.CompanionDialogCompanionTabNameLabel,
                 AutoSize = false,
@@ -367,11 +359,8 @@ namespace Client.Scenes.Views
             LevelLabelTitle = new DXLabel
             {
                 Parent = CompanionTab,
-                Outline = true,
-                Font = new Font(Config.FontName, CEnvir.FontSize(9F), FontStyle.Bold),
+                LabelStyle = DXLabelStyle.BlueTitle,
                 DrawFormat = TextFormatFlags.VerticalCenter | TextFormatFlags.Left,
-                ForeColour = Constants.PrimaryColour,
-                OutlineColour = Color.Black,
                 IsControl = false,
                 Text = CEnvir.Language.CompanionDialogCompanionTabLevelLabel,
                 AutoSize = false,
@@ -416,11 +405,8 @@ namespace Client.Scenes.Views
             ExperienceLabelTitle = new DXLabel
             {
                 Parent = CompanionTab,
-                Outline = true,
-                Font = new Font(Config.FontName, CEnvir.FontSize(9F), FontStyle.Bold),
+                LabelStyle = DXLabelStyle.BlueTitle,
                 DrawFormat = TextFormatFlags.VerticalCenter | TextFormatFlags.Left,
-                ForeColour = Constants.PrimaryColour,
-                OutlineColour = Color.Black,
                 IsControl = false,
                 Text = CEnvir.Language.CompanionDialogCompanionTabExpLabel,
                 AutoSize = false,
@@ -466,10 +452,8 @@ namespace Client.Scenes.Views
             {
                 Parent = CompanionTab,
                 Outline = true,
-                Font = new Font(Config.FontName, CEnvir.FontSize(9F), FontStyle.Bold),
+                LabelStyle = DXLabelStyle.BlueTitle,
                 DrawFormat = TextFormatFlags.VerticalCenter | TextFormatFlags.Left,
-                ForeColour = Constants.PrimaryColour,
-                OutlineColour = Color.Black,
                 IsControl = false,
                 Text = CEnvir.Language.CompanionDialogCompanionTabHungerLabel,
                 AutoSize = false,

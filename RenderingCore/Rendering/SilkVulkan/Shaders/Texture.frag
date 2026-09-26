@@ -11,6 +11,7 @@ layout(push_constant) uniform PushConstants
 layout(location = 0) in vec2 vTexCoord;
 layout(location = 1) in vec4 vColour;
 layout(location = 2) in vec2 vScreenPos;
+layout(location = 3) flat in vec4 vSource;
 layout(location = 0) out vec4 outColour;
 
 bool InsideSource(vec2 uv)
@@ -27,6 +28,180 @@ vec4 SampleSprite(vec2 uv)
         return vec4(0.0);
 
     return texture(uTexture, uv);
+}
+
+bool IsDarkShadow(vec4 texel)
+{
+    return texel.a >= 0.75 && max(max(texel.r, texel.g), texel.b) <= 0.55;
+}
+
+bool IsSimilar(vec4 first, vec4 second)
+{
+    return length(first.rgb - second.rgb) <= 0.20;
+}
+
+bool IsTransparent(vec4 texel)
+{
+    return texel.a <= 0.25;
+}
+
+vec4 LoadSourcePixel(ivec2 pixel, ivec2 sourceMin, ivec2 sourceMax)
+{
+    if (pixel.x < sourceMin.x || pixel.y < sourceMin.y || pixel.x > sourceMax.x || pixel.y > sourceMax.y)
+        return vec4(0.0);
+
+    return texelFetch(uTexture, pixel, 0);
+}
+
+bool IsSimilarShadow(vec4 candidate, vec4 reference)
+{
+    return IsDarkShadow(candidate) && IsSimilar(candidate, reference);
+}
+
+int ShadowSupport(vec4 candidate, vec4 reference)
+{
+    return IsSimilarShadow(candidate, reference) ? 1 : 0;
+}
+
+vec4 MakeShadowPixel(vec4 shadow, float coverage, float shadowOpacity)
+{
+    float opacity = clamp(coverage, 0.0, 1.0) * shadowOpacity;
+    vec3 colour = pushConstants.uTint.x > 0.5 ? shadow.rgb : shadow.rgb * opacity;
+    return vec4(colour, shadow.a * opacity);
+}
+
+vec4 FillShadowHatch(vec2 uv)
+{
+    float shadowOpacity = clamp(pushConstants.uEffect.y, 0.0, 1.0);
+    vec4 center = texture(uTexture, uv);
+    bool centerTransparent = IsTransparent(center);
+    if (!centerTransparent && !IsDarkShadow(center))
+        return center;
+
+    ivec2 textureSize = max(ivec2(pushConstants.uEffect.zw), ivec2(1));
+    vec2 sourceUvMin = min(vSource.xy, vSource.zw);
+    vec2 sourceUvMax = max(vSource.xy, vSource.zw);
+    ivec2 sourceMin = clamp(ivec2(round(sourceUvMin * vec2(textureSize))), ivec2(0), textureSize - 1);
+    ivec2 sourceMax = clamp(ivec2(round(sourceUvMax * vec2(textureSize))) - 1, sourceMin, textureSize - 1);
+    ivec2 pixel = clamp(ivec2(floor(uv * vec2(textureSize))), sourceMin, sourceMax);
+
+    if (centerTransparent)
+    {
+        vec4 left = LoadSourcePixel(pixel + ivec2(-1, 0), sourceMin, sourceMax);
+        vec4 right = LoadSourcePixel(pixel + ivec2(1, 0), sourceMin, sourceMax);
+        vec4 up = LoadSourcePixel(pixel + ivec2(0, -1), sourceMin, sourceMax);
+        vec4 down = LoadSourcePixel(pixel + ivec2(0, 1), sourceMin, sourceMax);
+
+        vec4 reference = IsDarkShadow(left) ? left :
+                         IsDarkShadow(right) ? right :
+                         IsDarkShadow(up) ? up : down;
+        if (!IsDarkShadow(reference))
+            return center;
+
+        bool shadowLeft = IsSimilarShadow(left, reference);
+        bool shadowRight = IsSimilarShadow(right, reference);
+        bool shadowUp = IsSimilarShadow(up, reference);
+        bool shadowDown = IsSimilarShadow(down, reference);
+        int support = (shadowLeft ? 1 : 0) + (shadowRight ? 1 : 0) +
+                      (shadowUp ? 1 : 0) + (shadowDown ? 1 : 0);
+        bool touchesArtwork =
+            (!IsTransparent(left) && !shadowLeft) ||
+            (!IsTransparent(right) && !shadowRight) ||
+            (!IsTransparent(up) && !shadowUp) ||
+            (!IsTransparent(down) && !shadowDown);
+
+        if (support < 2)
+        {
+            if (support == 1 && touchesArtwork)
+                return MakeShadowPixel(reference, 1.0, shadowOpacity);
+
+            return center;
+        }
+
+        vec4 shadow = ((shadowLeft ? left : vec4(0.0)) + (shadowRight ? right : vec4(0.0)) +
+                       (shadowUp ? up : vec4(0.0)) + (shadowDown ? down : vec4(0.0))) / float(support);
+
+        if (touchesArtwork)
+            return MakeShadowPixel(shadow, 1.0, shadowOpacity);
+
+        int shapeSupport = support;
+        shapeSupport += pixel.x == sourceMin.x ? 1 : 0;
+        shapeSupport += pixel.x == sourceMax.x ? 1 : 0;
+        shapeSupport += pixel.y == sourceMin.y ? 1 : 0;
+        shapeSupport += pixel.y == sourceMax.y ? 1 : 0;
+        return MakeShadowPixel(shadow, float(min(shapeSupport, 4)) * 0.25, shadowOpacity);
+    }
+
+    vec4 left = LoadSourcePixel(pixel + ivec2(-1, 0), sourceMin, sourceMax);
+    vec4 right = LoadSourcePixel(pixel + ivec2(1, 0), sourceMin, sourceMax);
+    vec4 up = LoadSourcePixel(pixel + ivec2(0, -1), sourceMin, sourceMax);
+    vec4 down = LoadSourcePixel(pixel + ivec2(0, 1), sourceMin, sourceMax);
+
+    bool leftTransparent = IsTransparent(left);
+    bool rightTransparent = IsTransparent(right);
+    bool upTransparent = IsTransparent(up);
+    bool downTransparent = IsTransparent(down);
+    bool allTransparent = leftTransparent && rightTransparent && upTransparent && downTransparent;
+
+    bool touchesArtwork =
+        (!leftTransparent && !IsSimilarShadow(left, center)) ||
+        (!rightTransparent && !IsSimilarShadow(right, center)) ||
+        (!upTransparent && !IsSimilarShadow(up, center)) ||
+        (!downTransparent && !IsSimilarShadow(down, center));
+
+    if (!allTransparent && !touchesArtwork)
+        return center;
+
+    vec4 topLeft = LoadSourcePixel(pixel + ivec2(-1, -1), sourceMin, sourceMax);
+    vec4 topRight = LoadSourcePixel(pixel + ivec2(1, -1), sourceMin, sourceMax);
+    vec4 bottomLeft = LoadSourcePixel(pixel + ivec2(-1, 1), sourceMin, sourceMax);
+    vec4 bottomRight = LoadSourcePixel(pixel + ivec2(1, 1), sourceMin, sourceMax);
+
+    int diagonalSupport = 0;
+    diagonalSupport += ShadowSupport(topLeft, center);
+    diagonalSupport += ShadowSupport(topRight, center);
+    diagonalSupport += ShadowSupport(bottomLeft, center);
+    diagonalSupport += ShadowSupport(bottomRight, center);
+
+    if (!allTransparent)
+    {
+        int transparentSupport = (leftTransparent ? 1 : 0) + (rightTransparent ? 1 : 0) +
+                                 (upTransparent ? 1 : 0) + (downTransparent ? 1 : 0);
+
+        if (touchesArtwork && transparentSupport >= 2 && diagonalSupport > 0)
+            return MakeShadowPixel(center, 1.0, shadowOpacity);
+
+        return center;
+    }
+
+    if (diagonalSupport > 0)
+    {
+        diagonalSupport += pixel.x == sourceMin.x || pixel.y == sourceMin.y ? 1 : 0;
+        diagonalSupport += pixel.x == sourceMax.x || pixel.y == sourceMin.y ? 1 : 0;
+        diagonalSupport += pixel.x == sourceMin.x || pixel.y == sourceMax.y ? 1 : 0;
+        diagonalSupport += pixel.x == sourceMax.x || pixel.y == sourceMax.y ? 1 : 0;
+        diagonalSupport = min(diagonalSupport, 4);
+    }
+
+    if (diagonalSupport >= 2)
+    {
+        return MakeShadowPixel(center, (1.0 + float(diagonalSupport)) * 0.2, shadowOpacity);
+    }
+    else
+    {
+        int support = 0;
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(-2, 0), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(2, 0), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(0, -2), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(0, 2), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(-2, -2), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(2, -2), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(-2, 2), sourceMin, sourceMax), center);
+        support += ShadowSupport(LoadSourcePixel(pixel + ivec2(2, 2), sourceMin, sourceMax), center);
+
+        float coverage = max(0.25, (1.0 + float(support)) / 9.0);
+        return MakeShadowPixel(center, coverage, shadowOpacity);
+    }
 }
 
 void main()
@@ -83,19 +258,42 @@ void main()
         float distBottom = vScreenPos.y - boundsMax.y;
         float shadowDistance = max(max(distLeft, distTop), max(distRight, distBottom));
 
-        if (shadowDistance <= 0.0)
+        // Keep the boundary covered: at fractional scales it can lie on a pixel
+        // centre excluded by the image's bottom/right rasterization edges. Allow
+        // a tiny overlap (in screen pixels) for interpolation roundoff as well.
+        vec2 pixelSize = fwidth(vScreenPos);
+        float edgeTolerance = 0.001 * max(pixelSize.x, pixelSize.y);
+        if (shadowDistance < -edgeTolerance)
             discard;
 
         float shadowSize = max(pushConstants.uEffect.y, 0.0001);
         float maxAlpha = pushConstants.uEffect.z;
-        float alpha = clamp(1.0 - shadowDistance / shadowSize, 0.0, 1.0) * maxAlpha * pushConstants.uOutlineColour.a * vColour.a;
+        float alpha = clamp(1.0 - max(shadowDistance, 0.0) / shadowSize, 0.0, 1.0) * maxAlpha * pushConstants.uOutlineColour.a * vColour.a;
 
         outColour = vec4(pushConstants.uOutlineColour.rgb * alpha, alpha);
         return;
     }
 
-    vec4 texel = texture(uTexture, vTexCoord);
+    vec4 texel = effectMode == 4 ? FillShadowHatch(vTexCoord) : texture(uTexture, vTexCoord);
     float sourceAlpha = pushConstants.uTint.x > 0.5 ? texel.a : 1.0;
+
+    if (effectMode == 5)
+    {
+        float alpha = texel.a * vColour.a;
+        vec3 colour = texel.a > 0.0001 ? texel.rgb / texel.a : vec3(0.0);
+
+        colour *= exp2(pushConstants.uSource.x);
+        colour = (colour - 0.5) * pushConstants.uSource.y + 0.5;
+
+        float luminance = dot(colour, vec3(0.2126, 0.7152, 0.0722));
+        colour = mix(vec3(luminance), colour, pushConstants.uSource.z);
+
+        vec3 tint = mix(vec3(1.0), pushConstants.uOutlineColour.rgb, pushConstants.uSource.w);
+        colour = clamp(colour * tint, 0.0, 1.0);
+
+        outColour = vec4(colour * vColour.rgb * alpha, alpha);
+        return;
+    }
 
     if (effectMode == 1)
     {

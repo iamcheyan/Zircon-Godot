@@ -128,17 +128,11 @@ namespace Client.Scenes.Views
             Sort = true;
             DropShadow = true;
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Text = CEnvir.Language.HelpDialogTitle,
                 Parent = this,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width) / 2, 8);
 
             CloseButton = new DXButton
             {
@@ -627,6 +621,9 @@ namespace Client.Scenes.Views
                 Size = new Size(ContentWidth, 0),
                 AutoSize = false,
             };
+            // Coloured and plain runs are rendered as children so a second white copy is
+            // never visible underneath a highlighted range at fractional DPI scales.
+            PageText.DrawTexture = false;
 
             Spacer = new DXImageControl
             {
@@ -688,45 +685,56 @@ namespace Client.Scenes.Views
                 }
             }
 
+            int plainStart = 0;
+            foreach (CharacterRange range in buttonRanges.Select(x => x.Range)
+                .Append(new CharacterRange(PageText.Text.Length, 0)))
+            {
+                if (range.First > plainStart)
+                {
+                    foreach (ButtonInfo info in DrawTextExtensions.GetWordRegionsNew(PageText.Text, PageText.Font,
+                        PageText.DrawFormat, PageText.Size.Width, plainStart, range.First - plainStart))
+                    {
+                        Labels.Add(CreateTextRun(info, Color.White));
+                    }
+                }
+
+                plainStart = range.First + range.Length;
+            }
+
             for (int i = 0; i < buttonRanges.Count; i++)
             {
                 var buttonIndex = buttonRanges[i];
 
                 List<ButtonInfo> buttons = DrawTextExtensions.GetWordRegionsNew(PageText.Text, PageText.Font, PageText.DrawFormat, PageText.Size.Width, buttonIndex.Range.First, buttonIndex.Range.Length);
 
-                List<DXLabel> labels = new();
-
+                int index = i;
                 foreach (ButtonInfo info in buttons)
                 {
-                    labels.Add(new DXLabel
+                    Color colour = buttonIndex.Type switch
                     {
-                        AutoSize = false,
-                        Parent = PageText,
-                        Location = info.Region.Location,
-                        DrawFormat = PageText.DrawFormat,
-                        Text = PageText.Text.Substring(info.Index, info.Length),
-                        Font = PageText.Font,
-                        Size = info.Region.Size,
-                        Outline = false
-                    });
-                }
-
-                int index = i;
-                DateTime NextButtonTime = DateTime.MinValue;
-                foreach (DXLabel label in labels)
-                {
-                    switch (buttonIndex.Type)
-                    {
-                        case DXButtonType.Label:
-                            {
-                                label.ForeColour = Color.FromName(matchList[index].Groups["Colour"].Value);
-                            }
-                            break;
-                    }
-
-                    Labels.Add(label);
+                        DXButtonType.Label => Color.FromName(matchList[index].Groups["Colour"].Value),
+                        _ => Color.White
+                    };
+                    Labels.Add(CreateTextRun(info, colour));
                 }
             }
+        }
+
+        private DXLabel CreateTextRun(ButtonInfo info, Color colour)
+        {
+            return new DXLabel
+            {
+                AutoSize = false,
+                Parent = PageText,
+                Location = info.Region.Location,
+                DrawFormat = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix,
+                Text = PageText.Text.Substring(info.Index, info.Length),
+                Font = new Font(PageText.Font, PageText.Font.Style),
+                Size = info.Region.Size,
+                ForeColour = colour,
+                Outline = false,
+                IsControl = false
+            };
         }
 
         private void SetSize()

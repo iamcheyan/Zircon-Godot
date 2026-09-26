@@ -355,6 +355,9 @@ namespace Client.Envir
             [SoundIndex.FourWheels] = new DXSound(SoundPath + @"40360.wav", SoundType.Magic),
             [SoundIndex.CrescentMoon] = new DXSound(SoundPath + @"40370.wav", SoundType.Magic),
 
+            [SoundIndex.DragonCharge] = new DXSound(SoundPath + @"42402.wav", SoundType.Magic),
+            [SoundIndex.RisingStrike] = new DXSound(SoundPath + @"43592.wav", SoundType.Magic),
+
             #endregion
 
             #region Monsters
@@ -498,13 +501,16 @@ namespace Client.Envir
             [SoundIndex.MutantFleaStruck] = new DXSound(SoundPath + @"325-4.wav", SoundType.Monster),
             [SoundIndex.MutantFleaDie] = new DXSound(SoundPath + @"325-5.wav", SoundType.Monster),
 
-            [SoundIndex.PoisonousMutantFleaAttack] = new DXSound(SoundPath + @"326-2.wav", SoundType.Monster),
-            [SoundIndex.PoisonousMutantFleaStruck] = new DXSound(SoundPath + @"326-4.wav", SoundType.Monster),
-            [SoundIndex.PoisonousMutantFleaDie] = new DXSound(SoundPath + @"326-5.wav", SoundType.Monster),
+            [SoundIndex.PurpleFleaAttack] = new DXSound(SoundPath + @"324-2.wav", SoundType.Monster),
+            [SoundIndex.PurpleFleaDie] = new DXSound(SoundPath + @"324-5.wav", SoundType.Monster),
 
-            [SoundIndex.BlasterMutantFleaAttack] = new DXSound(SoundPath + @"327-2.wav", SoundType.Monster),
-            [SoundIndex.BlasterMutantFleaStruck] = new DXSound(SoundPath + @"327-4.wav", SoundType.Monster),
-            [SoundIndex.BlasterMutantFleaDie] = new DXSound(SoundPath + @"327-5.wav", SoundType.Monster),
+            [SoundIndex.PoisonousMutantFleaAttack] = new DXSound(SoundPath + @"327-2.wav", SoundType.Monster),
+            [SoundIndex.PoisonousMutantFleaStruck] = new DXSound(SoundPath + @"327-4.wav", SoundType.Monster),
+            [SoundIndex.PoisonousMutantFleaDie] = new DXSound(SoundPath + @"327-5.wav", SoundType.Monster),
+
+            [SoundIndex.BlasterMutantFleaAttack] = new DXSound(SoundPath + @"326-2.wav", SoundType.Monster),
+            [SoundIndex.BlasterMutantFleaStruck] = new DXSound(SoundPath + @"326-4.wav", SoundType.Monster),
+            [SoundIndex.BlasterMutantFleaDie] = new DXSound(SoundPath + @"326-5.wav", SoundType.Monster),
 
 
             [SoundIndex.WasHatchlingAttack] = new DXSound(SoundPath + @"271-2.wav", SoundType.Monster),
@@ -659,6 +665,12 @@ namespace Client.Envir
             [SoundIndex.NumaEliteAttack] = new DXSound(SoundPath + @"217-2.wav", SoundType.Monster),
             [SoundIndex.NumaEliteStruck] = new DXSound(SoundPath + @"217-4.wav", SoundType.Monster),
             [SoundIndex.NumaEliteDie] = new DXSound(SoundPath + @"217-5.wav", SoundType.Monster),
+
+            [SoundIndex.NumaElderStruck] = new DXSound(SoundPath + @"350-4.wav", SoundType.Monster),
+            [SoundIndex.NumaElderDie] = new DXSound(SoundPath + @"350-5.wav", SoundType.Monster),
+
+            [SoundIndex.NumaCrippleStruck] = new DXSound(SoundPath + @"350-4.wav", SoundType.Monster),
+            [SoundIndex.NumaCrippleDie] = new DXSound(SoundPath + @"350-5.wav", SoundType.Monster),
 
             [SoundIndex.SandSharkAttack] = new DXSound(SoundPath + @"342-2.wav", SoundType.Monster),
             [SoundIndex.SandSharkStruck] = new DXSound(SoundPath + @"342-4.wav", SoundType.Monster),
@@ -868,6 +880,12 @@ namespace Client.Envir
             [SoundIndex.NumaRoyalGuardStruck] = new DXSound(SoundPath + @"357-4.wav", SoundType.Monster),
             [SoundIndex.NumaRoyalGuardDie] = new DXSound(SoundPath + @"357-5.wav", SoundType.Monster),
 
+            [SoundIndex.NumaWarlordAttack] = new DXSound(SoundPath + @"360-2.wav", SoundType.Monster),
+            [SoundIndex.NumaWarlordAttack2] = new DXSound(SoundPath + @"360-7.wav", SoundType.Monster),
+            [SoundIndex.NumaWarlordAttack3] = new DXSound(SoundPath + @"360-8.wav", SoundType.Monster),
+            [SoundIndex.NumaWarlordStruck] = new DXSound(SoundPath + @"360-4.wav", SoundType.Monster),
+            [SoundIndex.NumaWarlordDie] = new DXSound(SoundPath + @"360-5.wav", SoundType.Monster),
+
             [SoundIndex.NumaArmoredSoldierAttack] = new DXSound(SoundPath + @"356-2.wav", SoundType.Monster),
             [SoundIndex.NumaArmoredSoldierStruck] = new DXSound(SoundPath + @"356-4.wav", SoundType.Monster),
             [SoundIndex.NumaArmoredSoldierDie] = new DXSound(SoundPath + @"356-5.wav", SoundType.Monster),
@@ -903,9 +921,9 @@ namespace Client.Envir
             [SoundIndex.WhitefangStruck] = new DXSound(SoundPath + @"371-4.wav", SoundType.Monster),
             [SoundIndex.WhitefangDie] = new DXSound(SoundPath + @"371-5.wav", SoundType.Monster),
 
-            [SoundIndex.IcySpiritSoliderAttack] = new DXSound(SoundPath + @"377-2.wav", SoundType.Monster),
-            [SoundIndex.IcySpiritSoliderStruck] = new DXSound(SoundPath + @"377-4.wav", SoundType.Monster),
-            [SoundIndex.IcySpiritSoliderDie] = new DXSound(SoundPath + @"377-5.wav", SoundType.Monster),
+            [SoundIndex.IcySpiritSoldierAttack] = new DXSound(SoundPath + @"377-2.wav", SoundType.Monster),
+            [SoundIndex.IcySpiritSoldierStruck] = new DXSound(SoundPath + @"377-4.wav", SoundType.Monster),
+            [SoundIndex.IcySpiritSoldierDie] = new DXSound(SoundPath + @"377-5.wav", SoundType.Monster),
 
             [SoundIndex.WildBoarAttack] = new DXSound(SoundPath + @"328-2.wav", SoundType.Monster),
             [SoundIndex.WildBoarStruck] = new DXSound(SoundPath + @"328-4.wav", SoundType.Monster),

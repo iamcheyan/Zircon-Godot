@@ -5,9 +5,9 @@ using Library.SystemModels;
 using Server.DBModels;
 using Server.Envir;
 using Server.Envir.Events.Triggers;
+using Server.Models.AutoPath;
 using Server.Models.Magics;
 using Server.Models.Monsters;
-using Server.Models.Players;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -128,9 +128,9 @@ namespace Server.Models
         public bool CompanionLevelLock3, CompanionLevelLock5, CompanionLevelLock7, CompanionLevelLock10, CompanionLevelLock11, CompanionLevelLock13, CompanionLevelLock15;
         public bool ExtractorLock;
 
-        public override bool CanMove => base.CanMove && !Fishing;
-        public override bool CanAttack => base.CanAttack && Horse == HorseType.None;
-        public override bool CanCast => base.CanCast && Horse == HorseType.None && !Fishing;
+        public override bool CanMove => base.CanMove && !Fishing && !Crafting;
+        public override bool CanAttack => base.CanAttack && Horse == HorseType.None && !Crafting;
+        public override bool CanCast => base.CanCast && !Fishing && !Crafting;
 
         private bool HideHead
         {
@@ -192,6 +192,9 @@ namespace Server.Models
             DisplayHP = CurrentHP;
 
             Character.LastStats = Stats = new Stats();
+
+            if (Character.CraftingLevel < 1)
+                Character.CraftingLevel = 1;
 
             foreach (UserItem item in Character.Account.Items)
             {
@@ -322,6 +325,8 @@ namespace Server.Models
             {
                 ResetFishing();
             }
+
+            ProcessCrafting();
 
             ProcessRegen();
 
@@ -902,6 +907,10 @@ namespace Server.Models
                 FiltersRarity = Character.FiltersRarity,
                 FiltersItemType = Character.FiltersItemType,
 
+                CraftingLevel = Math.Max(1, Character.CraftingLevel),
+                CraftingExperience = Character.CraftingExperience,
+                FavouriteCraftingRecipeIndex = Character.FavouriteCraftingRecipe?.Index ?? 0,
+
                 StruckEnabled = Config.EnableStruck,
                 HermitEnabled = Config.EnableHermit,
 
@@ -984,6 +993,7 @@ namespace Server.Models
 
         public void StopGame()
         {
+            CancelCrafting(false);
             Character.LastLogin = SEnvir.Now;
 
             if (Character.Account.GuildMember != null)
@@ -1176,7 +1186,14 @@ namespace Server.Models
             {
                 GuildInfo ownerGuild = SEnvir.GuildInfoList.Binding.FirstOrDefault(x => x.Castle == castle);
 
-                Enqueue(new S.GuildCastleInfo { Index = castle.Index, Owner = ownerGuild?.GuildName ?? String.Empty, ObserverPacket = false });
+                Enqueue(new S.GuildCastleInfo
+                {
+                    Index = castle.Index,
+                    Owner = ownerGuild?.GuildName ?? String.Empty,
+                    Flag = ownerGuild?.Flag ?? 0,
+                    Colour = ownerGuild?.Colour ?? Color.White,
+                    ObserverPacket = false
+                });
             }
 
             foreach (ConquestWar conquest in SEnvir.ConquestWars)
@@ -1292,7 +1309,13 @@ namespace Server.Models
             {
                 GuildInfo ownerGuild = SEnvir.GuildInfoList.Binding.FirstOrDefault(x => x.Castle == castle);
 
-                con.Enqueue(new S.GuildCastleInfo { Index = castle.Index, Owner = ownerGuild?.GuildName ?? String.Empty });
+                con.Enqueue(new S.GuildCastleInfo
+                {
+                    Index = castle.Index,
+                    Owner = ownerGuild?.GuildName ?? String.Empty,
+                    Flag = ownerGuild?.Flag ?? 0,
+                    Colour = ownerGuild?.Colour ?? Color.White
+                });
             }
 
             foreach (ConquestWar conquest in SEnvir.ConquestWars)
@@ -2873,6 +2896,7 @@ namespace Server.Models
 
         public override bool Teleport(Map map, Point location, bool leaveEffect = true, bool enterEffect = true)
         {
+            CancelCrafting();
             bool res = base.Teleport(map, location, leaveEffect, enterEffect);
 
             if (Fishing) return false;
@@ -3563,22 +3587,18 @@ namespace Server.Models
                         break;
                     case QuestRequirementType.NotAccepted:
                         if (Quests.Any(x => x.QuestInfo == requirement.QuestParameter)) return false;
-
                         break;
                     case QuestRequirementType.HaveCompleted:
                         if (Quests.Any(x => x.QuestInfo == requirement.QuestParameter && x.Completed)) break;
-
                         return false;
                     case QuestRequirementType.HaveNotCompleted:
                         if (Quests.Any(x => x.QuestInfo == requirement.QuestParameter && x.Completed)) return false;
-
                         break;
                     case QuestRequirementType.Class:
                         switch (Class)
                         {
                             case MirClass.Warrior:
                                 if ((requirement.Class & RequiredClass.Warrior) != RequiredClass.Warrior) return false;
-
                                 break;
                             case MirClass.Wizard:
                                 if ((requirement.Class & RequiredClass.Wizard) != RequiredClass.Wizard) return false;
@@ -5187,8 +5207,17 @@ namespace Server.Models
 
             if (Character.Account.GuildMember.Guild.Castle != null)
             {
-                var map = SEnvir.GetMap(Character.Account.GuildMember.Guild.Castle.Map);
+                var castle = Character.Account.GuildMember.Guild.Castle;
+                var map = SEnvir.GetMap(castle.Map);
                 map.RefreshFlags();
+
+                SEnvir.Broadcast(new S.GuildCastleInfo
+                {
+                    Index = castle.Index,
+                    Owner = Character.Account.GuildMember.Guild.GuildName,
+                    Flag = Character.Account.GuildMember.Guild.Flag,
+                    Colour = Character.Account.GuildMember.Guild.Colour
+                });
             }
 
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
@@ -5213,8 +5242,17 @@ namespace Server.Models
 
             if (Character.Account.GuildMember.Guild.Castle != null)
             {
-                var map = SEnvir.GetMap(Character.Account.GuildMember.Guild.Castle.Map);
+                var castle = Character.Account.GuildMember.Guild.Castle;
+                var map = SEnvir.GetMap(castle.Map);
                 map.RefreshFlags();
+
+                SEnvir.Broadcast(new S.GuildCastleInfo
+                {
+                    Index = castle.Index,
+                    Owner = Character.Account.GuildMember.Guild.GuildName,
+                    Flag = Character.Account.GuildMember.Guild.Flag,
+                    Colour = Character.Account.GuildMember.Guild.Colour
+                });
             }
 
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
@@ -6289,6 +6327,7 @@ namespace Server.Models
                 if (currency != null)
                 {
                     currency.Amount += item.Count;
+                    CurrencyChanged(currency);
                     item.SetTemporary(true);
                     item.Delete();
 
@@ -6447,7 +6486,7 @@ namespace Server.Models
                                     LevelMagic(potionMastery.Magic);
                             }
 
-                            if (GetMagic(MagicType.AdvancedPotionMastery, out AdvancedPotionMastery advancedPotionMastery))
+                            if (GetMagic(MagicType.AugmentPotionMastery, out AugmentPotionMastery advancedPotionMastery))
                             {
                                 health += health * advancedPotionMastery.Magic.GetPower() / 100;
                                 mana += mana * advancedPotionMastery.Magic.GetPower() / 100;
@@ -8622,7 +8661,7 @@ namespace Server.Models
             AutoPotions.Add(aLink);
             AutoPotions.Sort((x1, x2) => x1.Slot.CompareTo(x2.Slot));
         }
-        public void PickUp()
+        public void PickUp(uint objectID = 0)
         {
             if (Dead) return;
 
@@ -8648,6 +8687,7 @@ namespace Server.Models
                             if (cellObject.Race != ObjectType.Item) continue;
 
                             ItemObject item = (ItemObject)cellObject;
+                            if (objectID != 0 && item.ObjectID != objectID) continue;
 
                             if (item.PickUpItem(this)) return;
                         }
@@ -14875,7 +14915,9 @@ namespace Server.Models
                 return;
             }
 
-            if (!CanCast)
+            bool horseMagic = magicObject.Magic.Info.School == MagicSchool.Horse;
+
+            if (!CanCast || horseMagic != (Horse != HorseType.None))
             {
                 Enqueue(new S.UserLocation { Direction = Direction, Location = CurrentLocation });
                 return;
@@ -15768,6 +15810,8 @@ namespace Server.Models
                     LevelMagic(physicalImmunity.Magic);
                 }
             }
+
+            CancelCrafting(interrupted: true);
 
             CombatTime = SEnvir.Now;
 
@@ -17441,7 +17485,7 @@ namespace Server.Models
             uFocus.Level = nextLevel.Level;
 
             var mInfos = SEnvir.MagicInfoList.Binding
-                .Where(x => x.School == MagicSchool.Discipline && x.Class == Class)
+                .Where(x => x.School == MagicSchool.Discipline && x.MatchesClass(Class))
                 .OrderBy(x => x.NeedLevel1)
                 .Take(4);
 

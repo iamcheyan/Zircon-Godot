@@ -99,17 +99,11 @@ namespace Client.Scenes.Views
             CloseButton.Location = new Point(Size.Width - CloseButton.Size.Width - 3, 3);
             CloseButton.MouseClick += (o, e) => Visible = false;
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Parent = this,
                 Text = CEnvir.Language.GameStoreDialogTitle,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width) / 2, 8);
 
             FolderTree = new DXTreeControl
             {
@@ -196,7 +190,7 @@ namespace Client.Scenes.Views
                 Font = new Font(Config.FontName, CEnvir.FontSize(8F), FontStyle.Bold),
                 DrawFormat = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter,
                 Text = CEnvir.Language.GameStoreDialogCurrencyLabel,
-                LabelStyle = DXLabelStyle.Title,
+                LabelStyle = DXLabelStyle.GoldTitle,
                 IsControl = false,
             };
 
@@ -243,7 +237,7 @@ namespace Client.Scenes.Views
                 Font = new Font(Config.FontName, CEnvir.FontSize(8F), FontStyle.Bold),
                 DrawFormat = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter,
                 Text = CEnvir.Language.GameStoreDialogTopFiveLabel,
-                LabelStyle = DXLabelStyle.Title,
+                LabelStyle = DXLabelStyle.GoldTitle,
                 IsControl = false,
             };
             TopItems.ItemSelected += info =>
@@ -1157,7 +1151,7 @@ namespace Client.Scenes.Views
                 Size = new Size(174, 20),
                 AutoSize = false,
                 DrawFormat = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter,
-                LabelStyle = DXLabelStyle.GameStoreTopRank,
+                LabelStyle = DXLabelStyle.BlueTitle,
                 IsControl = false,
             };
 

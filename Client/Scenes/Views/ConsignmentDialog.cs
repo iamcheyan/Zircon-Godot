@@ -103,17 +103,11 @@ namespace Client.Scenes.Views
             CloseButton.Location = new Point(Size.Width - CloseButton.Size.Width - 3, 3);
             CloseButton.MouseClick += (o, e) => Visible = false;
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Parent = this,
                 Text = CEnvir.Language.ConsignmentDialogTitle,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width) / 2, 8);
 
             TabControl = new DXTabControl
             {
@@ -860,7 +854,7 @@ namespace Client.Scenes.Views
             Parent = GameScene.Game;
             TitleLabel.Text = CEnvir.Language.ConsignmentDialogSalesTitle;
             SetClientSize(new Size(270, 110));
-            Location = new Point((GameScene.Game.Size.Width - Size.Width) / 2, (GameScene.Game.Size.Height - Size.Height) / 2);
+            Location = new Point((GameScene.Game.UISize.Width - Size.Width) / 2, (GameScene.Game.UISize.Height - Size.Height) / 2);
 
             ItemLabel = CreateLabel(0);
             SaleCountLabel = CreateLabel(28);
@@ -1056,7 +1050,7 @@ namespace Client.Scenes.Views
             _Owner = owner;
             Parent = GameScene.Game;
             Size = new Size(296, 228);
-            Location = new Point((GameScene.Game.Size.Width - Size.Width) / 2, (GameScene.Game.Size.Height - Size.Height) / 2);
+            Location = new Point((GameScene.Game.UISize.Width - Size.Width) / 2, (GameScene.Game.UISize.Height - Size.Height) / 2);
             Movable = true;
             Sort = true;
 
@@ -1064,17 +1058,11 @@ namespace Client.Scenes.Views
             Body = CreatePart(304, new Point(0, 60));
             Footer = CreatePart(305, new Point(0, 144));
 
-            TitleLabel = new DXLabel
+            TitleLabel = new DXWindowTitleLabel
             {
                 Parent = this,
                 Text = CEnvir.Language.ConsignmentDialogConsignItemTitle,
-                Font = new Font(Config.FontName, CEnvir.FontSize(10F), FontStyle.Bold),
-                ForeColour = Constants.PrimaryColour,
-                Outline = true,
-                OutlineColour = Color.Black,
-                IsControl = false,
             };
-            TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width) / 2, 8);
 
             CloseButton = new DXButton
             {

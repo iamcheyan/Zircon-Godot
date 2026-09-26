@@ -162,6 +162,7 @@ namespace Library.Network.ServerPackets
         public Point Location { get; set; }
         public int Distance { get; set; }
         public MagicType Magic { get; set; }
+        public bool Continuous { get; set; }
     }
     public sealed class ObjectPushed : Packet
     {
@@ -1141,6 +1142,8 @@ namespace Library.Network.ServerPackets
     {
         public int Index { get; set; }
         public string Owner { get; set; }
+        public int Flag { get; set; }
+        public Color Colour { get; set; }
     }
 
     public sealed class GuildConquestStarted : Packet
@@ -1489,6 +1492,28 @@ namespace Library.Network.ServerPackets
     public sealed class MilestoneEarned : Packet
     {
         public int Index { get; set; }
+    }
+
+    public sealed class CraftingState : Packet
+    {
+        public int Level { get; set; }
+        public long Experience { get; set; }
+        public int FavouriteRecipeIndex { get; set; }
+    }
+
+    public sealed class CraftingStarted : Packet
+    {
+        public int RecipeIndex { get; set; }
+        public int Design { get; set; }
+        public TimeSpan Duration { get; set; }
+    }
+
+    public sealed class CraftingEnded : Packet
+    {
+        public CraftingResult Result { get; set; }
+        public bool Interrupted { get; set; }
+        public int Level { get; set; }
+        public long Experience { get; set; }
     }
 }
 

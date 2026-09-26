@@ -51,6 +51,7 @@ namespace Shared.Rendering.SilkVulkan
 
         private RenderingPipelineContext _context;
         private Graphics _graphics;
+        private Bitmap _measurementBitmap;
         private Vk _vk;
         private KhrSurface _surfaceApi;
         private KhrWin32Surface _win32SurfaceApi;
@@ -108,6 +109,9 @@ namespace Shared.Rendering.SilkVulkan
         private SilkVulkanRenderTarget _spriteBatchTarget;
         private ClientBlendMode _spriteBatchBlendMode;
         private float _spriteBatchBlendRate;
+        private SpriteEffectMode _spriteBatchEffectMode;
+        private float _spriteBatchEffectAmount;
+        private bool _spriteBatchForcePointSampling;
         private ulong _spriteBatchOffset;
         private uint _spriteBatchInstanceCount;
         private readonly DisplayModeManager _displayMode = new DisplayModeManager();
@@ -124,9 +128,12 @@ namespace Shared.Rendering.SilkVulkan
         public void Initialize(RenderingPipelineContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _graphics = Graphics.FromHwnd(IntPtr.Zero);
+            _measurementBitmap = new Bitmap(1, 1);
+            _measurementBitmap.SetResolution(96F, 96F);
+            _graphics = Graphics.FromImage(_measurementBitmap);
             ConfigureGraphics(_graphics);
 
+            EnsureValidGameSize();
             ApplyWindowStyle();
             ApplyWindowBounds(true);
 
@@ -241,7 +248,9 @@ namespace Shared.Rendering.SilkVulkan
 
                 BeginRenderPass(_currentTarget);
                 Clear(RenderClearFlags.Target, Color.Black, 0, 0);
-                drawScene();
+                RenderDiagnostics.BeginScene();
+                try { drawScene(); }
+                finally { RenderDiagnostics.EndScene(); }
                 EndRenderPass();
 
                 TransitionTarget(_currentBackBufferTarget, VkImageLayout.PresentSrcKhr, AccessFlags.ColorAttachmentWriteBit, 0, PipelineStageFlags.ColorAttachmentOutputBit, PipelineStageFlags.BottomOfPipeBit);
@@ -322,13 +331,14 @@ namespace Shared.Rendering.SilkVulkan
 
         public void SetResolution(Size size)
         {
-            bool needsResize = _context.RenderTarget.ClientSize != size;
+            Size physicalSize = RenderingPipelineManager.HostSettings.ScaleToPhysical(size, RenderingPipelineManager.GetSelectedScreen());
+            bool needsResize = _context.RenderTarget.ClientSize != physicalSize;
             if (!needsResize && size == RenderingPipelineManager.HostSettings.GameSize)
                 return;
 
             RenderingPipelineManager.HostSettings.GameSize = size;
             if (needsResize && !RenderingPipelineManager.HostSettings.FullScreen)
-                _context.RenderTarget.ClientSize = size;
+                _context.RenderTarget.ClientSize = physicalSize;
 
             ApplyWindowStyle();
             ApplyWindowBounds();
@@ -357,8 +367,9 @@ namespace Shared.Rendering.SilkVulkan
             if (!force && !RenderingPipelineManager.HostSettings.FullScreen && !RenderingPipelineManager.HostSettings.Borderless && IsWindowOnScreen(selectedScreen))
                 return;
 
-            if (!RenderingPipelineManager.HostSettings.FullScreen && renderForm.ClientSize != RenderingPipelineManager.HostSettings.GameSize)
-                renderForm.ClientSize = RenderingPipelineManager.HostSettings.GameSize;
+            Size physicalSize = RenderingPipelineManager.HostSettings.ScaleToPhysical(RenderingPipelineManager.HostSettings.GameSize, selectedScreen);
+            if (!RenderingPipelineManager.HostSettings.FullScreen && renderForm.ClientSize != physicalSize)
+                renderForm.ClientSize = physicalSize;
 
             Rectangle bounds = selectedScreen.Bounds;
 
@@ -389,7 +400,28 @@ namespace Shared.Rendering.SilkVulkan
 
         public IReadOnlyList<Size> GetSupportedResolutions()
         {
-            return DisplayModeManager.GetSupportedSizes(GetSelectedScreen(), MinimumResolution, RenderingPipelineManager.HostSettings.GameSize);
+            Screen screen = GetSelectedScreen();
+            Size physicalMinimum = MinimumResolution;
+            Size physicalDesktop = RenderingPipelineManager.GetMonitorDisplayBounds(screen).Size;
+
+            return DisplayModeManager.GetSupportedSizes(screen, physicalMinimum, physicalDesktop)
+                .Distinct()
+                .OrderBy(x => (long)x.Width * x.Height)
+                .ToArray();
+        }
+
+        private void EnsureValidGameSize()
+        {
+            IReadOnlyList<Size> supported = GetSupportedResolutions();
+            Size configured = RenderingPipelineManager.HostSettings.GameSize;
+            if (supported.Count == 0 || supported.Contains(configured))
+                return;
+
+            long configuredArea = (long)configured.Width * configured.Height;
+            RenderingPipelineManager.HostSettings.GameSize = supported
+                .OrderBy(x => Math.Abs((long)x.Width * x.Height - configuredArea))
+                .ThenBy(x => Math.Abs(x.Width - configured.Width) + Math.Abs(x.Height - configured.Height))
+                .First();
         }
 
         public Size MeasureText(string text, Font font)
@@ -477,6 +509,7 @@ namespace Shared.Rendering.SilkVulkan
                 return;
 
             _vk.CmdClearAttachments(_activeCommandBuffer, 1, in attachment, 1, in clearRect);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.TargetClears);
         }
 
         public void SetBlend(bool enabled, float rate, ClientBlendMode mode)
@@ -520,13 +553,18 @@ namespace Shared.Rendering.SilkVulkan
             FlushSpriteBatch();
             BeginRenderPass(_currentTarget);
 
+            Size drawingSize = GetDrawingSize(_currentTarget);
+            float scaleX = _currentTarget.Size.Width / (float)drawingSize.Width;
+            float scaleY = _currentTarget.Size.Height / (float)drawingSize.Height;
+
+            // Vulkan line widths are framebuffer pixels; snap their centres in that same space.
             TextureVertex* vertices = AllocateVertices(points.Count, out ulong offset);
             for (int i = 0; i < points.Count; i++)
             {
                 vertices[i] = new TextureVertex
                 {
-                    X = SnapLineCoordinate(points[i].X),
-                    Y = SnapLineCoordinate(points[i].Y)
+                    X = SnapLineCoordinate(points[i].X, scaleX),
+                    Y = SnapLineCoordinate(points[i].Y, scaleY)
                 };
             }
 
@@ -535,18 +573,28 @@ namespace Shared.Rendering.SilkVulkan
 
             PushConstants push = new PushConstants
             {
-                Viewport = new Vector2(_currentTarget.Size.Width, _currentTarget.Size.Height),
+                Viewport = new Vector2(drawingSize.Width, drawingSize.Height),
                 Colour = ToColourVector(colour, colour.A / 255F * _opacity)
             };
             _vk.CmdPushConstants(_activeCommandBuffer, _linePipelineLayout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)sizeof(PushConstants), &push);
 
             Buffer buffer = _activeFrame.VertexBuffer.Buffer;
             _vk.CmdBindVertexBuffers(_activeCommandBuffer, 0, 1, in buffer, in offset);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.LineBatches);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.LineVertices, points.Count);
             _vk.CmdDraw(_activeCommandBuffer, (uint)points.Count, 1, 0, 0);
         }
 
+        public bool IsPresentationSurface => _currentTarget?.IsBackBuffer == true;
+
         public void DrawTexture(RenderTexture texture, Rectangle sourceRectangle, RectangleF destinationRectangle, Color colour)
         {
+            if (_currentTarget?.IsBackBuffer == true)
+            {
+                destinationRectangle = RenderingPipelineManager.AlignTextDestination(destinationRectangle, _currentTarget.Size, sourceRectangle.Size);
+                destinationRectangle = RenderingPipelineManager.AlignBorderBackground(destinationRectangle, _currentTarget.Size);
+            }
+            destinationRectangle = RenderingPipelineManager.MapUICacheDestination(destinationRectangle, sourceRectangle.Size);
             DrawTextureCore(texture, sourceRectangle, destinationRectangle, Matrix3x2.Identity, colour);
         }
 
@@ -563,6 +611,7 @@ namespace Shared.Rendering.SilkVulkan
 
             finalTransform.M31 += translation.X;
             finalTransform.M32 += translation.Y;
+            finalTransform = RenderingPipelineManager.MapUICacheTransform(finalTransform);
             DrawTextureCore(texture, source, destination, finalTransform, colour);
         }
 
@@ -603,6 +652,7 @@ namespace Shared.Rendering.SilkVulkan
 
             FlushSpriteBatch();
             EndRenderPass();
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.TargetSwitches);
             _currentTarget = target;
         }
 
@@ -647,6 +697,8 @@ namespace Shared.Rendering.SilkVulkan
         {
             if ((flags & RenderClearFlags.Target) == 0 || _currentTarget == null)
                 return;
+
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.TargetClears);
 
             FlushSpriteBatch();
             BeginRenderPass(_currentTarget);
@@ -979,6 +1031,8 @@ namespace Shared.Rendering.SilkVulkan
                 _vk.DestroyInstance(_instance, null);
 
             _graphics?.Dispose();
+            _measurementBitmap?.Dispose();
+            _measurementBitmap = null;
             _vk?.Dispose();
         }
 
@@ -1030,6 +1084,7 @@ namespace Shared.Rendering.SilkVulkan
             }
 
             ClientBlendMode blendMode = GetAppliedBlendMode();
+            bool forcePointSampling = RenderingPipelineManager.ForcePointSampling;
             float opacity = _opacity * (colour.A / 255F);
             if (_blending && _blendMode != ClientBlendMode.NONE && AppliesBlendRateToVertexColour(_blendMode))
                 opacity *= _blendRate;
@@ -1045,7 +1100,11 @@ namespace Shared.Rendering.SilkVulkan
                 {
                     case SpriteShaderEffectKind.Grayscale:
                         DrawSpriteImmediate(resource, blendMode, GetBlendConstantRate(blendMode), p0, p1, p2, p3, u0, u1, v0, v1, vertexColour,
-                            CreateTexturePushConstants(SpriteEffectMode.Grayscale, sourceUv, Vector4.Zero, 0F, resource.Size));
+                            CreateTexturePushConstants(SpriteEffectMode.Grayscale, sourceUv, Vector4.Zero, 0F, resource.Size), forcePointSampling);
+                        return;
+                    case SpriteShaderEffectKind.SolidShadowFill:
+                        QueueSprite(resource, blendMode, GetBlendConstantRate(blendMode), p0, p1, p2, p3, u0, u1, v0, v1, vertexColour,
+                            SpriteEffectMode.SolidShadowFill, effect.Value.Amount, forcePointSampling);
                         return;
                     case SpriteShaderEffectKind.Outline:
                         OutlineEffectSettings outline = effect.Value.Outline;
@@ -1077,8 +1136,10 @@ namespace Shared.Rendering.SilkVulkan
 
                         Color outlineColour = outline.Colour;
                         Vector4 outlineVector = ToColourVector(outlineColour);
-                        DrawSpriteImmediate(resource, blendMode, GetBlendConstantRate(blendMode), op0, op1, op2, op3, ou0, ou1, ov0, ov1, vertexColour,
-                            CreateTexturePushConstants(SpriteEffectMode.Outline, sourceUv, outlineVector, thickness, resource.Size));
+                        // Keep the outline independent from the base sprite's highlight blend.
+                        // The Direct3D pipelines render this pass at full strength as well.
+                        DrawSpriteImmediate(resource, ClientBlendMode.NONE, 1F, op0, op1, op2, op3, ou0, ou1, ov0, ov1, Vector4.One,
+                            CreateTexturePushConstants(SpriteEffectMode.Outline, sourceUv, outlineVector, thickness, resource.Size), forcePointSampling);
                         break;
                     case SpriteShaderEffectKind.DropShadow:
                         DropShadowEffectSettings dropShadow = effect.Value.DropShadow;
@@ -1097,12 +1158,20 @@ namespace Shared.Rendering.SilkVulkan
                         Vector4 shadowBoundsVector = new Vector4(shadowBounds.Left, shadowBounds.Top, shadowBounds.Right, shadowBounds.Bottom);
 
                         DrawSpriteImmediate(resource, ClientBlendMode.NONE, 0F, sp0, sp1, sp2, sp3, u0, u1, v0, v1, vertexColour,
-                            CreateTexturePushConstants(SpriteEffectMode.DropShadow, shadowBoundsVector, shadowVector, shadowWidth, dropShadow.StartOpacity));
+                            CreateTexturePushConstants(SpriteEffectMode.DropShadow, shadowBoundsVector, shadowVector, shadowWidth, dropShadow.StartOpacity), forcePointSampling);
                         break;
+                    case SpriteShaderEffectKind.ColourGrade:
+                        ColourGradeEffectSettings grade = effect.Value.ColourGrade;
+                        Vector4 gradeSettings = new Vector4(grade.Exposure, grade.Contrast, grade.Saturation, grade.TintStrength);
+                        Vector4 gradeTint = ToColourVector(grade.Tint);
+                        DrawSpriteImmediate(resource, blendMode, GetBlendConstantRate(blendMode), p0, p1, p2, p3, u0, u1, v0, v1, vertexColour,
+                            CreateTexturePushConstants(SpriteEffectMode.ColourGrade, gradeSettings, gradeTint, 0F, 0F), forcePointSampling);
+                        return;
                 }
             }
 
-            QueueSprite(resource, blendMode, GetBlendConstantRate(blendMode), p0, p1, p2, p3, u0, u1, v0, v1, vertexColour);
+            QueueSprite(resource, blendMode, GetBlendConstantRate(blendMode), p0, p1, p2, p3, u0, u1, v0, v1, vertexColour,
+                forcePointSampling: forcePointSampling);
         }
 
         private bool TryGetTexture(RenderTexture texture, out SilkVulkanTextureResource resource)
@@ -1650,22 +1719,22 @@ namespace Shared.Rendering.SilkVulkan
             bool forceFifo = _forceNextSwapchainFifoPresentMode;
             _forceNextSwapchainFifoPresentMode = false;
 
-            if (forceFifo || (RenderingPipelineManager.HostSettings.VSync && RenderingPipelineManager.HostSettings.FullScreen))
+            // FIFO is Vulkan's synchronized present mode. Mailbox is tear-free, but it
+            // does not throttle the render loop to the display refresh rate.
+            if (forceFifo || RenderingPipelineManager.HostSettings.VSync)
                 return PresentModeKHR.FifoKhr;
 
-            // Windowed mailbox is still tear-free, but avoids FIFO blocking during renderer handoff.
-            foreach (PresentModeKHR mode in modes)
-            {
-                if (mode == PresentModeKHR.MailboxKhr)
-                    return mode;
-            }
-
-            if (RenderingPipelineManager.HostSettings.VSync)
-                return PresentModeKHR.FifoKhr;
-
+            // Immediate is the genuinely uncapped mode. Mailbox is tear-free, but some
+            // drivers apply queue back-pressure even though VSync is disabled.
             foreach (PresentModeKHR mode in modes)
             {
                 if (mode == PresentModeKHR.ImmediateKhr)
+                    return mode;
+            }
+
+            foreach (PresentModeKHR mode in modes)
+            {
+                if (mode == PresentModeKHR.MailboxKhr)
                     return mode;
             }
 
@@ -1858,7 +1927,7 @@ namespace Shared.Rendering.SilkVulkan
                 };
 
                 VertexInputBindingDescription binding = CreateVertexInputBinding(vertexInputKind);
-                VertexInputAttributeDescription* attributes = stackalloc VertexInputAttributeDescription[5];
+                VertexInputAttributeDescription* attributes = stackalloc VertexInputAttributeDescription[6];
                 uint attributeCount = CreateVertexInputAttributes(vertexInputKind, attributes);
 
                 PipelineVertexInputStateCreateInfo vertexInput = new PipelineVertexInputStateCreateInfo
@@ -1997,8 +2066,15 @@ namespace Shared.Rendering.SilkVulkan
                 Format = Format.R32G32B32A32Sfloat,
                 Offset = 64
             };
+            attributes[5] = new VertexInputAttributeDescription
+            {
+                Binding = 0,
+                Location = 5,
+                Format = Format.R32G32B32A32Sfloat,
+                Offset = 80
+            };
 
-            return 5;
+            return 6;
         }
 
         private PipelineColorBlendAttachmentState CreateBlendAttachment(ClientBlendMode blendMode)
@@ -2251,11 +2327,12 @@ namespace Shared.Rendering.SilkVulkan
                    result == Result.ErrorFragmentedPool;
         }
 
-        private void UpdateTextureDescriptor(SilkVulkanTextureResource resource)
+        private void UpdateTextureDescriptor(SilkVulkanTextureResource resource, bool forcePointSampling = false)
         {
+            TextureFilterMode appliedFilter = GetAppliedTextureFilter(forcePointSampling);
             DescriptorImageInfo imageInfo = new DescriptorImageInfo
             {
-                Sampler = _textureFilter == TextureFilterMode.Linear ? _linearSampler : _pointSampler,
+                Sampler = appliedFilter == TextureFilterMode.Linear ? _linearSampler : _pointSampler,
                 ImageView = resource.ImageView,
                 ImageLayout = VkImageLayout.ShaderReadOnlyOptimal
             };
@@ -2270,7 +2347,7 @@ namespace Shared.Rendering.SilkVulkan
                 PImageInfo = &imageInfo
             };
             _vk.UpdateDescriptorSets(_device, 1, in write, 0, (CopyDescriptorSet*)null);
-            resource.AppliedFilter = _textureFilter;
+            resource.AppliedFilter = appliedFilter;
         }
 
         private void UploadTexture(SilkVulkanTextureResource resource)
@@ -2517,13 +2594,16 @@ namespace Shared.Rendering.SilkVulkan
             TransitionTexture(_activeCommandBuffer, resource, VkImageLayout.ShaderReadOnlyOptimal, AccessFlags.ColorAttachmentWriteBit, AccessFlags.ShaderReadBit, PipelineStageFlags.ColorAttachmentOutputBit, PipelineStageFlags.FragmentShaderBit);
         }
 
-        private void QueueSprite(SilkVulkanTextureResource resource, ClientBlendMode blendMode, float blendRate, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float u0, float u1, float v0, float v1, Vector4 colour)
+        private void QueueSprite(SilkVulkanTextureResource resource, ClientBlendMode blendMode, float blendRate, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float u0, float u1, float v0, float v1, Vector4 colour, SpriteEffectMode effectMode = SpriteEffectMode.None, float effectAmount = 0F, bool forcePointSampling = false)
         {
             if (_spriteBatchInstanceCount > 0 &&
                 (_spriteBatchTexture != resource ||
                  _spriteBatchTarget != _currentTarget ||
                  _spriteBatchBlendMode != blendMode ||
                  _spriteBatchBlendRate != blendRate ||
+                 _spriteBatchEffectMode != effectMode ||
+                 Math.Abs(_spriteBatchEffectAmount - effectAmount) > float.Epsilon ||
+                 _spriteBatchForcePointSampling != forcePointSampling ||
                  _spriteBatchInstanceCount >= MaxSpriteBatchInstances))
             {
                 FlushSpriteBatch();
@@ -2539,6 +2619,9 @@ namespace Shared.Rendering.SilkVulkan
                 _spriteBatchTarget = _currentTarget;
                 _spriteBatchBlendMode = blendMode;
                 _spriteBatchBlendRate = blendRate;
+                _spriteBatchEffectMode = effectMode;
+                _spriteBatchEffectAmount = effectAmount;
+                _spriteBatchForcePointSampling = forcePointSampling;
                 _spriteBatchOffset = offset;
             }
 
@@ -2547,12 +2630,14 @@ namespace Shared.Rendering.SilkVulkan
                 new Vector4(p0.Y, p1.Y, p2.Y, p3.Y),
                 new Vector4(u0, u1, u1, u0),
                 new Vector4(v0, v0, v1, v1),
-                colour);
+                colour,
+                new Vector4(Math.Min(u0, u1), Math.Min(v0, v1), Math.Max(u0, u1), Math.Max(v0, v1)));
 
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.SpritesQueued);
             _spriteBatchInstanceCount++;
         }
 
-        private void DrawSpriteImmediate(SilkVulkanTextureResource resource, ClientBlendMode blendMode, float blendRate, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float u0, float u1, float v0, float v1, Vector4 colour, PushConstants push)
+        private void DrawSpriteImmediate(SilkVulkanTextureResource resource, ClientBlendMode blendMode, float blendRate, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float u0, float u1, float v0, float v1, Vector4 colour, PushConstants push, bool forcePointSampling)
         {
             FlushSpriteBatch();
 
@@ -2569,15 +2654,18 @@ namespace Shared.Rendering.SilkVulkan
                 new Vector4(p0.Y, p1.Y, p2.Y, p3.Y),
                 new Vector4(u0, u1, u1, u0),
                 new Vector4(v0, v0, v1, v1),
-                colour);
+                colour,
+                push.SourceUv);
 
             BindTexturePipeline(blendMode, blendRate);
-            BindTexture(resource);
+            BindTexture(resource, forcePointSampling);
 
             _vk.CmdPushConstants(_activeCommandBuffer, _texturePipelineLayout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)sizeof(PushConstants), &push);
 
             Buffer buffer = _activeFrame.VertexBuffer.Buffer;
             _vk.CmdBindVertexBuffers(_activeCommandBuffer, 0, 1, in buffer, in offset);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.SpriteSubmissions);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.SpritesSubmitted);
             _vk.CmdDraw(_activeCommandBuffer, 6, 1, 0, 0);
         }
 
@@ -2593,20 +2681,23 @@ namespace Shared.Rendering.SilkVulkan
             }
 
             BindTexturePipeline(_spriteBatchBlendMode, _spriteBatchBlendRate);
-            BindTexture(_spriteBatchTexture);
+            BindTexture(_spriteBatchTexture, _spriteBatchForcePointSampling);
 
+            Size drawingSize = GetDrawingSize(_spriteBatchTarget);
             PushConstants push = new PushConstants
             {
-                Viewport = new Vector2(_spriteBatchTarget.Size.Width, _spriteBatchTarget.Size.Height),
+                Viewport = new Vector2(drawingSize.Width, drawingSize.Height),
                 Colour = new Vector4(IsNativeCompressedTexture(_spriteBatchTexture.Format) ? 1F : 0F, 0F, 0F, 0F),
                 SourceUv = new Vector4(0F, 0F, 1F, 1F),
                 OutlineColour = Vector4.Zero,
-                Effect = Vector4.Zero
+                Effect = new Vector4((float)_spriteBatchEffectMode, _spriteBatchEffectAmount, _spriteBatchTexture.Size.Width, _spriteBatchTexture.Size.Height)
             };
             _vk.CmdPushConstants(_activeCommandBuffer, _texturePipelineLayout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)sizeof(PushConstants), &push);
 
             Buffer buffer = _activeFrame.VertexBuffer.Buffer;
             _vk.CmdBindVertexBuffers(_activeCommandBuffer, 0, 1, in buffer, in _spriteBatchOffset);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.SpriteSubmissions);
+            RenderDiagnostics.Count(RenderDiagnostics.Counter.SpritesSubmitted, _spriteBatchInstanceCount);
             _vk.CmdDraw(_activeCommandBuffer, 6, _spriteBatchInstanceCount, 0, 0);
             ResetSpriteBatch();
         }
@@ -2617,15 +2708,19 @@ namespace Shared.Rendering.SilkVulkan
             _spriteBatchTarget = null;
             _spriteBatchBlendMode = ClientBlendMode.NONE;
             _spriteBatchBlendRate = 0F;
+            _spriteBatchEffectMode = SpriteEffectMode.None;
+            _spriteBatchEffectAmount = 0F;
+            _spriteBatchForcePointSampling = false;
             _spriteBatchOffset = 0;
             _spriteBatchInstanceCount = 0;
         }
 
         private PushConstants CreateTexturePushConstants(SpriteEffectMode effectMode, Vector4 sourceUv, Vector4 outlineColour, float outlineThickness, Size textureSize)
         {
+            Size drawingSize = GetDrawingSize(_currentTarget);
             return new PushConstants
             {
-                Viewport = new Vector2(_currentTarget.Size.Width, _currentTarget.Size.Height),
+                Viewport = new Vector2(drawingSize.Width, drawingSize.Height),
                 Colour = Vector4.One,
                 SourceUv = sourceUv,
                 OutlineColour = outlineColour,
@@ -2635,9 +2730,10 @@ namespace Shared.Rendering.SilkVulkan
 
         private PushConstants CreateTexturePushConstants(SpriteEffectMode effectMode, Vector4 effectData, Vector4 effectColour, float effectWidth, float effectOpacity)
         {
+            Size drawingSize = GetDrawingSize(_currentTarget);
             return new PushConstants
             {
-                Viewport = new Vector2(_currentTarget.Size.Width, _currentTarget.Size.Height),
+                Viewport = new Vector2(drawingSize.Width, drawingSize.Height),
                 Colour = Vector4.One,
                 SourceUv = effectData,
                 OutlineColour = effectColour,
@@ -2672,10 +2768,10 @@ namespace Shared.Rendering.SilkVulkan
             _boundPipeline = pipeline;
         }
 
-        private void BindTexture(SilkVulkanTextureResource resource)
+        private void BindTexture(SilkVulkanTextureResource resource, bool forcePointSampling = false)
         {
-            if (resource.AppliedFilter != _textureFilter)
-                UpdateTextureDescriptor(resource);
+            if (resource.AppliedFilter != GetAppliedTextureFilter(forcePointSampling))
+                UpdateTextureDescriptor(resource, forcePointSampling);
 
             if (_boundDescriptorSet.Handle == resource.DescriptorSet.Handle)
                 return;
@@ -2866,6 +2962,7 @@ namespace Shared.Rendering.SilkVulkan
 
         private void RecreateSwapchain()
         {
+            RenderingPipelineManager.InvalidateUICacheGeneration();
             if (_device.Handle == IntPtr.Zero)
                 return;
 
@@ -2898,6 +2995,36 @@ namespace Shared.Rendering.SilkVulkan
         {
             Size size = _context.RenderTarget.ClientSize;
             return new Size(Math.Max(size.Width, 1), Math.Max(size.Height, 1));
+        }
+
+        private TextureFilterMode GetAppliedTextureFilter(bool forcePointSampling = false)
+        {
+            return !forcePointSampling && (_textureFilter == TextureFilterMode.Linear || UsesFractionalBackBufferScale(_currentTarget) || RenderingPipelineManager.CacheUsesFractionalScale || RenderingPipelineManager.UsesFractionalUIScale)
+                ? TextureFilterMode.Linear
+                : TextureFilterMode.Point;
+        }
+
+        private Size GetDrawingSize(SilkVulkanRenderTarget target)
+        {
+            if (target != null && target.IsBackBuffer)
+            {
+                Size logicalSize = RenderingPipelineManager.HostSettings.ActiveSceneSize;
+                return new Size(Math.Max(1, logicalSize.Width), Math.Max(1, logicalSize.Height));
+            }
+
+            return target?.Size ?? new Size(1, 1);
+        }
+
+        private bool UsesFractionalBackBufferScale(SilkVulkanRenderTarget target)
+        {
+            if (target?.IsBackBuffer != true)
+                return false;
+
+            Size logicalSize = GetDrawingSize(target);
+            float scaleX = target.Size.Width / (float)logicalSize.Width;
+            float scaleY = target.Size.Height / (float)logicalSize.Height;
+            return Math.Abs(scaleX - MathF.Round(scaleX)) > 0.001F ||
+                   Math.Abs(scaleY - MathF.Round(scaleY)) > 0.001F;
         }
 
         private static ClearValue CreateClearValue(float r, float g, float b, float a)
@@ -2940,9 +3067,9 @@ namespace Shared.Rendering.SilkVulkan
             return (value + alignment - 1) & ~(alignment - 1);
         }
 
-        private static float SnapLineCoordinate(float value)
+        private static float SnapLineCoordinate(float value, float scale)
         {
-            return (float)Math.Floor(value) + 0.5F;
+            return ((float)Math.Floor(value * scale) + 0.5F) / scale;
         }
 
         private static float HueToRgb(float p, float q, float t)
@@ -2976,8 +3103,9 @@ namespace Shared.Rendering.SilkVulkan
 
                 Screen screen = GetSelectedScreen();
                 string deviceName = screen.DeviceName;
+                Size physicalSize = RenderingPipelineManager.HostSettings.ScaleToPhysical(RenderingPipelineManager.HostSettings.GameSize, screen);
 
-                if (!_displayMode.Apply(screen, RenderingPipelineManager.HostSettings.GameSize))
+                if (!_displayMode.Apply(screen, physicalSize))
                     return false;
 
                 screen = DisplayModeManager.GetScreenByDeviceName(deviceName, GetSelectedScreen());
@@ -2988,10 +3116,12 @@ namespace Shared.Rendering.SilkVulkan
 
             _displayMode.Restore();
 
-            if (_context.RenderTarget.ClientSize != RenderingPipelineManager.HostSettings.GameSize)
-                _context.RenderTarget.ClientSize = RenderingPipelineManager.HostSettings.GameSize;
+            Screen selectedScreen = GetSelectedScreen();
+            Size physicalWindowSize = RenderingPipelineManager.HostSettings.ScaleToPhysical(RenderingPipelineManager.HostSettings.GameSize, selectedScreen);
+            if (_context.RenderTarget.ClientSize != physicalWindowSize)
+                _context.RenderTarget.ClientSize = physicalWindowSize;
 
-            if (forceCenter || !IsWindowOnScreen(GetSelectedScreen()))
+            if (forceCenter || !IsWindowOnScreen(selectedScreen))
                 CenterOnSelectedMonitor(forceCenter);
 
             return true;
@@ -3339,14 +3469,16 @@ namespace Shared.Rendering.SilkVulkan
             public Vector4 TexCoordU;
             public Vector4 TexCoordV;
             public Vector4 Colour;
+            public Vector4 SourceUv;
 
-            public SpriteInstance(Vector4 positionX, Vector4 positionY, Vector4 texCoordU, Vector4 texCoordV, Vector4 colour)
+            public SpriteInstance(Vector4 positionX, Vector4 positionY, Vector4 texCoordU, Vector4 texCoordV, Vector4 colour, Vector4 sourceUv)
             {
                 PositionX = positionX;
                 PositionY = positionY;
                 TexCoordU = texCoordU;
                 TexCoordV = texCoordV;
                 Colour = colour;
+                SourceUv = sourceUv;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using Client.Controls;
+using Client.Controls;
 using Client.Envir;
 using Client.Models;
 using Client.Models.Particles;
@@ -15,7 +15,7 @@ using C = Library.Network.ClientPackets;
 //Cleaned
 namespace Client.Scenes.Views
 {
-    public sealed class MapControl : DXControl
+    public sealed partial class MapControl : DXControl
     {
         #region Properties
 
@@ -167,6 +167,8 @@ namespace Client.Scenes.Views
         public Floor FLayer;
         public Light LLayer;
 
+        public bool ShadowPixelShaderEnabled { get; set; } = true;
+
         public Cell[,] Cells;
         public int Width, Height;
 
@@ -202,6 +204,7 @@ namespace Client.Scenes.Views
 
         protected override void OnClearTexture()
         {
+            worldNamesValid = false;
             base.OnClearTexture();
 
             if (!Visible) return;
@@ -258,56 +261,129 @@ namespace Client.Scenes.Views
             }
 
             RenderingPipelineManager.SetBlend(previousBlendEnabled, previousBlendRate, previousBlendMode);
+        }
 
-            foreach (MapObject ob in Objects)
+        private void DrawWorldOverlays()
+        {
+            RenderingPipelineManager.PushUIScale(GameScene.Game.UIScale);
+            try
             {
-                if (ob.Dead) continue;
+                DrawWorldNames();
 
-                switch (ob.Race)
+                if (MapObject.MouseObject != null && MapObject.MouseObject.Race != ObjectType.Item)
                 {
-                    case ObjectType.Player:
-                        if (!Config.ShowPlayerNames) continue;
-                        break;
-                    case ObjectType.Item:
-                        if (!Config.ShowItemNames || ob.CurrentLocation == MapLocation) continue;
-                        break;
-                    case ObjectType.NPC:
-                        break;
-                    case ObjectType.Spell:
-                        break;
-                    case ObjectType.Monster:
-                        if (!Config.ShowMonsterNames) continue;
-                        break;
+                    SetWorldOverlayScaleOrigin(MapObject.MouseObject);
+                    MapObject.MouseObject.DrawName();
                 }
 
-                ob.DrawName();
+                foreach (MapObject ob in HasGroundItems ? statusOverlayObjects : Objects)
+                {
+                    SetWorldOverlayScaleOrigin(ob);
+                    ob.DrawChat();
+                    ob.DrawPoison();
+                    ob.DrawHealth();
+                }
+
+                if (Config.ShowDamageNumbers)
+                    foreach (MapObject ob in HasGroundItems ? statusOverlayObjects : Objects)
+                    {
+                        SetWorldOverlayScaleOrigin(ob);
+                        ob.DrawDamage();
+                    }
             }
-
-            if (MapObject.MouseObject != null && MapObject.MouseObject.Race != ObjectType.Item)
-                MapObject.MouseObject.DrawName();
-
-            foreach (MapObject ob in Objects)
+            finally
             {
-                ob.DrawChat();
-                ob.DrawPoison();
-                ob.DrawHealth();
+                RenderingPipelineManager.PopUIScale();
             }
 
-            if (Config.ShowDamageNumbers)
-                foreach (MapObject ob in Objects)
-                    ob.DrawDamage();
-
-            if (MapLocation.X >= 0 && MapLocation.X < Width && MapLocation.Y >= 0 && MapLocation.Y < Height)
+            if (HasGroundItems && MapLocation.X >= 0 && MapLocation.X < Width && MapLocation.Y >= 0 && MapLocation.Y < Height)
             {
                 Cell cell = Cells[MapLocation.X, MapLocation.Y];
-                int layer = 0;
-                if (cell.Objects != null)
-                    for (int i = cell.Objects.Count - 1; i >= 0; i--)
-                    {
-                        ItemObject ob = cell.Objects[i] as ItemObject;
+                DrawLootFocus(cell);
+            }
+        }
 
-                        ob?.DrawFocus(layer++);
-                    }
+        private static void SetWorldOverlayScaleOrigin(MapObject ob)
+        {
+            RenderingPipelineManager.SetUIScaleOrigin(new PointF(ob.DrawX + CellWidth / 2F, ob.DrawY + CellHeight / 2F));
+        }
+
+        protected override void DrawControl()
+        {
+            if (!TextureValid)
+                CreateTexture();
+
+            if (!TextureValid || !Config.ColourGrading || MapInfo == null)
+            {
+                DrawMapTexture();
+                return;
+            }
+
+            ColourGradePreset grade = GetColourGradePreset();
+            RenderingPipelineManager.EnableColourGradeEffect(grade.Exposure, grade.Contrast, grade.Saturation, grade.Tint, grade.TintStrength);
+
+            try
+            {
+                DrawMapTexture();
+            }
+            finally
+            {
+                RenderingPipelineManager.DisableSpriteShaderEffect();
+            }
+        }
+
+        private void DrawMapTexture()
+        {
+            if (!ControlTexture.IsValid || TextureSize.Width <= 0 || TextureSize.Height <= 0)
+                return;
+
+            RenderingPipelineManager.DrawTexture(
+                ControlTexture,
+                new Rectangle(Point.Empty, TextureSize),
+                new RectangleF(DisplayArea.X, DisplayArea.Y, DisplayArea.Width, DisplayArea.Height),
+                IsEnabled ? Color.White : Color.FromArgb(75, 75, 75));
+        }
+
+        private ColourGradePreset GetColourGradePreset()
+        {
+            switch (MapInfo.Light)
+            {
+                case LightSetting.Night:
+                    return new ColourGradePreset(0.04F, 1.025F, 0.94F, Color.FromArgb(226, 238, 255), 0.11F);
+                case LightSetting.Twilight:
+                    return new ColourGradePreset(0.02F, 1.035F, 0.98F, Color.FromArgb(255, 242, 228), 0.06F);
+                case LightSetting.Light:
+                    return new ColourGradePreset(0.015F, 1.035F, 1.02F, Color.White, 0F);
+            }
+
+            switch (GameScene.Game.TimeOfDay)
+            {
+                case TimeOfDay.Dawn:
+                    return new ColourGradePreset(0.025F, 1.03F, 1F, Color.FromArgb(255, 241, 224), 0.07F);
+                case TimeOfDay.Dusk:
+                    return new ColourGradePreset(0.015F, 1.04F, 0.98F, Color.FromArgb(255, 235, 218), 0.08F);
+                case TimeOfDay.Night:
+                    return new ColourGradePreset(0.04F, 1.025F, 0.94F, Color.FromArgb(226, 238, 255), 0.11F);
+                default:
+                    return new ColourGradePreset(0.015F, 1.035F, 1.02F, Color.White, 0F);
+            }
+        }
+
+        private readonly struct ColourGradePreset
+        {
+            public float Exposure { get; }
+            public float Contrast { get; }
+            public float Saturation { get; }
+            public Color Tint { get; }
+            public float TintStrength { get; }
+
+            public ColourGradePreset(float exposure, float contrast, float saturation, Color tint, float tintStrength)
+            {
+                Exposure = exposure;
+                Contrast = contrast;
+                Saturation = saturation;
+                Tint = tint;
+                TintStrength = tintStrength;
             }
         }
 
@@ -318,13 +394,13 @@ namespace Client.Scenes.Views
             FLayer.CheckTexture();
             LLayer.CheckTexture();
 
-            //CreateTexture();
             OnBeforeDraw();
 
             DrawControl();
 
-            DrawBorder();
+            DrawWorldOverlays();
 
+            DrawBorder();
             OnAfterDraw();
         }
 
@@ -339,10 +415,57 @@ namespace Client.Scenes.Views
             PresentTexture(texture, sourceRectangle, Parent, DisplayArea, Color.White, this, 0, 0, 1F);
         }
 
+        private void DrawMapImage(MirLibrary library, int index, float x, float y, float opacity = 1F)
+        {
+            if (!ShadowPixelShaderEnabled)
+            {
+                library.Draw(index, x, y, Color.White, false, opacity, ImageType.Image);
+                return;
+            }
+
+            RenderingPipelineManager.EnableSolidShadowFillEffect(GameScene.ShadowOpacity);
+            library.Draw(index, x, y, Color.White, false, opacity, ImageType.Image);
+        }
+
+        private void DrawMapImageBlend(MirLibrary library, int index, float x, float y, float rate)
+        {
+            if (!ShadowPixelShaderEnabled)
+            {
+                library.DrawBlend(index, x, y, Color.White, false, rate, ImageType.Image);
+                return;
+            }
+
+            RenderingPipelineManager.EnableSolidShadowFillEffect(GameScene.ShadowOpacity);
+            library.DrawBlend(index, x, y, Color.White, false, rate, ImageType.Image);
+        }
+
         private void DrawObjects()
         {
             int minX = Math.Max(0, User.CurrentLocation.X - OffSetX - 4), maxX = Math.Min(Width - 1, User.CurrentLocation.X + OffSetX + 4);
             int minY = Math.Max(0, User.CurrentLocation.Y - OffSetY - 4), maxY = Math.Min(Height - 1, User.CurrentLocation.Y + OffSetY + 25);
+
+            bool useLootRows = HasGroundItems;
+            if (useLootRows)
+            {
+                objectRows.Reset(minY, maxY);
+                effectRows.Reset(minY, maxY);
+                foreach (MapObject ob in Objects)
+                {
+                    if (ob is ItemObject item && !item.IsPileRepresentative) continue;
+                    objectRows.Add(ob.RenderY, ob);
+                }
+                if (Config.DrawEffects)
+                    foreach (MirEffect effect in Effects)
+                    {
+                        if (effect.DrawType != DrawType.Object) continue;
+                        if (effect is LootEffect loot && !loot.Representative) continue;
+                        if (effect.MapTarget.IsEmpty && effect.Target != null)
+                        {
+                            if (effect.Target != User) effectRows.Add(effect.Target.RenderY, effect);
+                        }
+                        else effectRows.Add(effect.MapTarget.Y, effect);
+                    }
+            }
 
             for (int y = minY; y <= maxY; y++)
             {
@@ -370,24 +493,29 @@ namespace Client.Scenes.Views
                         int index = cell.MiddleImage - 1;
 
                         bool blend = false;
-                        if (cell.MiddleAnimationFrame > 1 && cell.MiddleAnimationFrame < 255)
+                        bool animated = cell.MiddleAnimationFrame > 1 && cell.MiddleAnimationFrame < 255;
+                        if (animated)
                         {
                             blend = cell.MiddleAnimationBlend;
                             index += Animation % cell.MiddleAnimationCount;
                         }
 
                         Size s = cell.MiddleLibrary.GetSize(index);
+                        bool cellSized = IsCellSized(s);
 
-                        if ((s.Width != CellWidth || s.Height != CellHeight) && (s.Width != CellWidth * 2 || s.Height != CellHeight * 2))
+                        if (!cellSized)
                         {
                             if (!blend)
-                                cell.MiddleLibrary.Draw(index, drawX, drawY - s.Height, Color.White, false, 1F, ImageType.Image);
+                                DrawMapImage(cell.MiddleLibrary, index, drawX, drawY - s.Height);
                             else
-                                cell.MiddleLibrary.DrawBlend(index, drawX, drawY - s.Height, Color.White, false, 0.5F, ImageType.Image);
+                                DrawMapImageBlend(cell.MiddleLibrary, index, drawX, drawY - s.Height, 0.5F);
                         }
-                        else
+                        else if (animated)
                         {
-                            cell.MiddleLibrary.Draw(index, drawX, drawY - s.Height, Color.White, false, 1F, ImageType.Image);
+                            if (!blend)
+                                DrawMapImage(cell.MiddleLibrary, index, drawX, drawY - CellHeight);
+                            else
+                                DrawMapImageBlend(cell.MiddleLibrary, index, drawX, drawY - CellHeight, 0.5F);
                         }
                     }
 
@@ -396,7 +524,8 @@ namespace Client.Scenes.Views
                         int index = cell.FrontImage - 1;
 
                         bool blend = false;
-                        if (cell.FrontAnimationFrame > 1 && cell.FrontAnimationFrame < 255)
+                        bool animated = cell.FrontAnimationFrame > 1 && cell.FrontAnimationFrame < 255;
+                        if (animated)
                         {
                             blend = cell.FrontAnimationBlend;
                             int frameCount = cell.FrontAnimationCount;
@@ -407,47 +536,53 @@ namespace Client.Scenes.Views
                         }
 
                         Size s = cell.FrontLibrary.GetSize(index);
-
-                        bool cellSized = (s.Width == CellWidth && s.Height == CellHeight) ||
-                                         (s.Width == CellWidth * 2 && s.Height == CellHeight * 2);
+                        bool cellSized = IsCellSized(s);
 
                         if (!cellSized)
                         {
                             if (!blend)
-                                cell.FrontLibrary.Draw(index, drawX, drawY - s.Height, Color.White, false, 1F, ImageType.Image);
+                                DrawMapImage(cell.FrontLibrary, index, drawX, drawY - s.Height);
                             else
-                                cell.FrontLibrary.DrawBlend(index, drawX, drawY - s.Height, Color.White, false, 0.5F, ImageType.Image);
+                                DrawMapImageBlend(cell.FrontLibrary, index, drawX, drawY - s.Height, 0.5F);
                         }
-                        else
+                        else if (animated)
                         {
                             if (!blend)
-                                cell.FrontLibrary.Draw(index, drawX, drawY - CellHeight, Color.White, false, 1F, ImageType.Image);
+                                DrawMapImage(cell.FrontLibrary, index, drawX, drawY - CellHeight);
                             else
-                                cell.FrontLibrary.DrawBlend(index, drawX, drawY - CellHeight, Color.White, false, 0.5F, ImageType.Image);
+                                DrawMapImageBlend(cell.FrontLibrary, index, drawX, drawY - CellHeight, 0.5F);
                         }
                     }
                 }
 
-                foreach (MapObject ob in Objects)
+                RenderingPipelineManager.DisableSpriteShaderEffect();
+
+                if (useLootRows)
                 {
-                    if (ob.RenderY == y)
+                    foreach (MapObject ob in objectRows[y])
                         ob.Draw();
+                    if (Config.DrawEffects)
+                        foreach (MirEffect ob in effectRows[y])
+                            ob.Draw();
                 }
-
-                if (Config.DrawEffects)
+                else
                 {
-                    foreach (MirEffect ob in Effects)
-                    {
-                        if (ob.DrawType != DrawType.Object) continue;
-
-                        if (ob.MapTarget.IsEmpty && ob.Target != null)
+                    // Keep the original small-scene path free of loot preparation.
+                    foreach (MapObject ob in Objects)
+                        if (ob.RenderY == y)
+                            ob.Draw();
+                    if (Config.DrawEffects)
+                        foreach (MirEffect ob in Effects)
                         {
-                            if (ob.Target.RenderY == y && ob.Target != User)
+                            if (ob.DrawType != DrawType.Object) continue;
+                            if (ob.MapTarget.IsEmpty && ob.Target != null)
+                            {
+                                if (ob.Target.RenderY == y && ob.Target != User)
+                                    ob.Draw();
+                            }
+                            else if (ob.MapTarget.Y == y)
                                 ob.Draw();
                         }
-                        else if (ob.MapTarget.Y == y)
-                            ob.Draw();
-                    }
                 }
 
             }
@@ -479,6 +614,12 @@ namespace Client.Scenes.Views
                     ob.Draw();
                 }
             }
+        }
+
+        private static bool IsCellSized(Size size)
+        {
+            return (size.Width == CellWidth && size.Height == CellHeight) ||
+                   (size.Width == CellWidth * 2 && size.Height == CellHeight * 2);
         }
 
         private void LoadMap()
@@ -582,12 +723,13 @@ namespace Client.Scenes.Views
 
         public override void OnMouseMove(MouseEventArgs e)
         {
+            e = GameScene.Game.ToWorldMouseEventArgs(e);
             base.OnMouseMove(e);
-
             MouseLocation = e.Location;
         }
         public override void OnMouseDown(MouseEventArgs e)
         {
+            e = GameScene.Game.ToWorldMouseEventArgs(e);
             base.OnMouseDown(e);
 
             if (GameScene.Game.Observer) return;
@@ -678,6 +820,8 @@ namespace Client.Scenes.Views
                 return;
             }
 
+            if (TryPickUpSelectedLoot()) return;
+
             if (CanAttack(MapObject.MouseObject))
             {
                 MapObject.TargetObject = MapObject.MouseObject;
@@ -749,6 +893,7 @@ namespace Client.Scenes.Views
         }
         public override void OnMouseClick(MouseEventArgs e)
         {
+            e = GameScene.Game.ToWorldMouseEventArgs(e);
             base.OnMouseClick(e);
             switch (e.Button)
             {
@@ -844,6 +989,9 @@ namespace Client.Scenes.Views
                     }
                 }
             }
+
+            if (itemObject is ItemObject item)
+                itemObject = GetSelectedLoot(item);
 
             MapObject mouseOb = deadObject ?? itemObject;
 
@@ -1291,7 +1439,9 @@ namespace Client.Scenes.Views
 
         public void AddObject(MapObject ob)
         {
+            TextureValid = false;
             Objects.Add(ob);
+            if (ob is ItemObject) groundItemCount++;
 
             if (ob.CurrentLocation.X < Width && ob.CurrentLocation.Y < Height)
                 Cells[ob.CurrentLocation.X, ob.CurrentLocation.Y].AddObject(ob);
@@ -1299,7 +1449,19 @@ namespace Client.Scenes.Views
 
         public void RemoveObject(MapObject ob)
         {
-            Objects.Remove(ob);
+            if (!Objects.Remove(ob)) return;
+
+            TextureValid = false;
+            if (ob is ItemObject item)
+            {
+                groundItemCount--;
+                focusedLoot.Remove(item);
+                if (!HasGroundItems)
+                    ClearLootCaches();
+            }
+
+            nameOverlayObjects.Remove(ob);
+            statusOverlayObjects.Remove(ob);
 
             if (ob.CurrentLocation.X < Width && ob.CurrentLocation.Y < Height)
                 Cells[ob.CurrentLocation.X, ob.CurrentLocation.Y].RemoveObject(ob);
@@ -1382,10 +1544,14 @@ namespace Client.Scenes.Views
 
         protected override void Dispose(bool disposing)
         {
+            ReleaseWorldNames();
             base.Dispose(disposing);
 
             if (disposing)
             {
+                DisposeLoot();
+                foreach (MapObject ob in Objects)
+                    if (ob is ItemObject item) item.ReleaseLabels();
                 _MapInfo = null;
                 MapInfoChanged = null;
 
@@ -1512,36 +1678,29 @@ namespace Client.Scenes.Views
                     for (int x = minX; x <= maxX; x++)
                     {
                         int drawX = (x - User.CurrentLocation.X + OffSetX) * CellWidth + PixelOffsetX - User.MovingOffSet.X - User.ShakeScreenOffset.X;
-
                         Cell cell = GameScene.Game.MapControl.Cells[x, y];
 
-                        MirLibrary library;
-                        LibraryFile file;
-
-                        if (Libraries.KROrder.TryGetValue(cell.MiddleFile, out file) && file != LibraryFile.Tilesc && CEnvir.LibraryList.TryGetValue(file, out library))
+                        if (!(cell.MiddleAnimationFrame > 1 && cell.MiddleAnimationFrame < 255) &&
+                            Libraries.KROrder.TryGetValue(cell.MiddleFile, out LibraryFile file) &&
+                            file != LibraryFile.Tilesc &&
+                            CEnvir.LibraryList.TryGetValue(file, out MirLibrary library))
                         {
                             int index = cell.MiddleImage - 1;
+                            Size size = library.GetSize(index);
 
-                            if (cell.MiddleAnimationFrame > 1 && cell.MiddleAnimationFrame < 255)
-                                continue;//   index += GameScene.Game.MapControl.Animation % cell.MiddleAnimationFrame;
-
-                            Size s = library.GetSize(index);
-
-                            if ((s.Width == CellWidth && s.Height == CellHeight) || (s.Width == CellWidth * 2 && s.Height == CellHeight * 2))
+                            if (IsCellSized(size))
                                 library.Draw(index, drawX, drawY - CellHeight, Color.White, false, 1F, ImageType.Image);
                         }
 
-
-                        if (Libraries.KROrder.TryGetValue(cell.FrontFile, out file) && file != LibraryFile.Tilesc && CEnvir.LibraryList.TryGetValue(file, out library))
+                        if (!(cell.FrontAnimationFrame > 1 && cell.FrontAnimationFrame < 255) &&
+                            Libraries.KROrder.TryGetValue(cell.FrontFile, out file) &&
+                            file != LibraryFile.Tilesc &&
+                            CEnvir.LibraryList.TryGetValue(file, out library))
                         {
                             int index = cell.FrontImage - 1;
+                            Size size = library.GetSize(index);
 
-                            if (cell.FrontAnimationFrame > 1 && cell.FrontAnimationFrame < 255)
-                                continue;//  index += GameScene.Game.MapControl.Animation % cell.FrontAnimationFrame;
-
-                            Size s = library.GetSize(index);
-
-                            if ((s.Width == CellWidth && s.Height == CellHeight) || (s.Width == CellWidth * 2 && s.Height == CellHeight * 2))
+                            if (IsCellSized(size))
                                 library.Draw(index, drawX, drawY - CellHeight, Color.White, false, 1F, ImageType.Image);
                         }
                     }
@@ -1683,6 +1842,7 @@ namespace Client.Scenes.Views
                 foreach (MirEffect ob in map.Effects)
                 {
                     float frameLight = ob.FrameLight;
+                    if (ob is LootEffect && !LootLightVisible(ob, frameLight, lightSize)) continue;
 
                     if (frameLight > 0)
                     {
@@ -1745,6 +1905,16 @@ namespace Client.Scenes.Views
             private static bool ShouldDrawObjectLight(MapObject ob, UserObject user)
             {
                 return ob.Light > 0 && (!ob.Dead || ob == user || ob.Race == ObjectType.Spell);
+            }
+
+            private static bool LootLightVisible(MirEffect effect, float frameLight, Size lightSize)
+            {
+                if (frameLight <= 0) return false;
+                float scale = BaseLightSize + frameLight * 2 * LightScale / EffectLightScaleDivisor;
+                float width = lightSize.Width * scale, height = lightSize.Height * scale;
+                return new RectangleF(effect.DrawX + CellWidth / 2F - width / 2,
+                    effect.DrawY + CellHeight / 2F - height / 2, width, height)
+                    .IntersectsWith(new RectangleF(PointF.Empty, GameScene.Game.MapControl.Size));
             }
 
             public void UpdateLights()
@@ -1841,6 +2011,7 @@ namespace Client.Scenes.Views
                         float frameLight = effect.FrameLight;
                         if (frameLight <= 0)
                             continue;
+                        if (effect is LootEffect && !LootLightVisible(effect, frameLight, RenderingPipelineManager.GetLightTextureSize())) continue;
 
                         hash = hash * 31 + effect.DrawX;
                         hash = hash * 31 + effect.DrawY;
@@ -1900,6 +2071,7 @@ namespace Client.Scenes.Views
         public bool LibrariesLoaded;
 
         public List<MapObject> Objects;
+        public int ObjectVersion { get; private set; }
 
         public bool Blocking()
         {
@@ -1916,6 +2088,7 @@ namespace Client.Scenes.Views
         {
             if (Objects == null)
                 Objects = new List<MapObject>();
+            ObjectVersion++;
 
             if (ob.Race == ObjectType.Spell)
                 Objects.Insert(0, ob);
@@ -1928,6 +2101,7 @@ namespace Client.Scenes.Views
         public void RemoveObject(MapObject ob)
         {
             Objects.Remove(ob);
+            ObjectVersion++;
 
             if (Objects.Count == 0)
                 Objects = null;

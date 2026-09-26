@@ -611,7 +611,9 @@ namespace Client.Models
                     if (Horse != HorseType.None)
                         animation = MirAnimation.HorseWalking;
 
-                    if ((MagicType)action.Extra[1] == MagicType.ShoulderDash || (MagicType)action.Extra[1] == MagicType.Assault)
+                    if ((MagicType)action.Extra[1] == MagicType.DragonCharge)
+                        animation = Horse != HorseType.None ? MirAnimation.HorseRunning : MirAnimation.Running;
+                    else if ((MagicType)action.Extra[1] == MagicType.ShoulderDash || (MagicType)action.Extra[1] == MagicType.Assault)
                         animation = MirAnimation.Combat8;
                     else if (VisibleBuffs.ContainsKey(BuffType.Cloak))
                         animation = VisibleBuffs.ContainsKey(BuffType.GhostWalk) ? MirAnimation.CreepWalkFast : MirAnimation.CreepWalkSlow;
@@ -785,6 +787,7 @@ namespace Client.Models
                         case MirAnimation.HorseWalking:
                         case MirAnimation.HorseRunning:
                         case MirAnimation.HorseStruck:
+                        case MirAnimation.HorseLeaping:
                             ArmourShift = 80;
                             break;
                         case MirAnimation.FishingCast:
@@ -1028,6 +1031,7 @@ namespace Client.Models
                 case MirAnimation.HorseWalking:
                 case MirAnimation.HorseRunning:
                 case MirAnimation.HorseStruck:
+                case MirAnimation.HorseLeaping:
 
                     switch (HorseShape)
                     {
@@ -1235,6 +1239,7 @@ namespace Client.Models
                     case MirAnimation.HorseWalking:
                     case MirAnimation.HorseRunning:
                     case MirAnimation.HorseStruck:
+                    case MirAnimation.HorseLeaping:
                         switch (HorseShape)
                         {
                             default:
@@ -1263,6 +1268,7 @@ namespace Client.Models
                 case MirAnimation.HorseWalking:
                 case MirAnimation.HorseRunning:
                 case MirAnimation.HorseStruck:
+                case MirAnimation.HorseLeaping:
 
                     switch (HorseShape)
                     {
@@ -1326,16 +1332,17 @@ namespace Client.Models
             RenderingPipelineManager.SetTextureFilter(TextureFilterMode.None);
 
             float oldOpacity = RenderingPipelineManager.GetOpacity();
-            if (oldOpacity != 0.5F)
+            float shadowOpacity = ObjectShadowOpacity;
+            if (oldOpacity != shadowOpacity)
             {
-                RenderingPipelineManager.SetOpacity(0.5F);
+                RenderingPipelineManager.SetOpacity(shadowOpacity);
             }
 
             RenderingPipelineManager.DrawTexture(scratchTexture, scratchSource, transform, System.Numerics.Vector3.Zero, System.Numerics.Vector3.Zero, Color.Black);
 
             RenderingPipelineManager.SetTextureFilter(TextureFilterMode.Point);
 
-            if (0.5F != oldOpacity)
+            if (shadowOpacity != oldOpacity)
             {
                 RenderingPipelineManager.SetOpacity(oldOpacity);
             }
@@ -1354,7 +1361,7 @@ namespace Client.Models
         {
             if (library == null) return;
 
-            library.DrawShadow(frame, DrawX, DrawY, Color.Black, true, 0.5F, Scale,
+            library.DrawShadow(frame, DrawX, DrawY, Color.Black, true, ObjectShadowOpacity, Scale,
                 DrawX + CellWidth / 2F, DrawY + CellHeight / 2F);
         }
 
@@ -1535,6 +1542,7 @@ namespace Client.Models
                 case MirAnimation.HorseWalking:
                 case MirAnimation.HorseRunning:
                 case MirAnimation.HorseStruck:
+                case MirAnimation.HorseLeaping:
                     return true;
                 default:
                     return false;

@@ -520,6 +520,7 @@ namespace Library
         HorseWalking,
         HorseRunning,
         HorseStruck,
+        HorseLeaping,
 
         StoneStanding,
 
@@ -653,7 +654,7 @@ namespace Library
         AugmentDestructiveSurge = 119,
         AugmentDefiance = 120,
         AugmentReflectDamage = 121,
-        AdvancedPotionMastery = 122,
+        AugmentPotionMastery = 122,
         MassBeckon = 123,
         SeismicSlam = 124,
         Invincibility = 125,
@@ -859,8 +860,8 @@ namespace Library
         PinkFireBall = 530,
         GreenSludgeBall = 540,
 
-        RushingMount = 700,
-        AscendingMount = 701,
+        DragonCharge = 700,
+        RisingStrike = 701,
     }
 
     public enum MagicProperty
@@ -1070,20 +1071,20 @@ namespace Library
         WildBoar = 181,
         //NF_AngelGuardian = 182,
         //NF_Blank183 = 183,
-        //NF_NumaElder = 184,
+        NumaElder = 184,
         //NF_Blank185 = 185,
         //NF_Blank186 = 186,
-        //NF_NumaPriest = 187,
+        NumaCripple = 187,
         //NF_Blank188 = 188,
         //NF_BonePile189 = 189,
 
         NumaCavalry = 190,
         NumaArmoredSoldier = 191,
-        //NF_NumaAxeSoldier = 192,
+        //NF_NumaRoyalGuard = 192, //Duplicate 195
         NumaStoneThrower = 193,
         NumaHighMage = 194,
         NumaRoyalGuard = 195,
-        //NF_NumaWarlord = 196,
+        NumaWarlord = 196,
         BloodStone = 197,
         //NF_Chest = 198,
         //NF_BonePile199 = 199,
@@ -1108,7 +1109,7 @@ namespace Library
         IcySpiritSpearman = 216,
         Werewolf = 217,
         Whitefang = 218,
-        IcySpiritSolider = 219,
+        IcySpiritSoldier = 219,
 
         EscortCommander = 220,
         QueenOfDawn = 221,
@@ -1639,6 +1640,8 @@ namespace Library
 
         Ranking,
         Developer,
+
+        DragonCharge,
     }
 
     public enum MarketPlaceSort
@@ -1977,7 +1980,7 @@ namespace Library
         NotAccepted = 2,
         HaveCompleted = 3,
         HaveNotCompleted = 4,
-        Class = 5,
+        Class = 5
     }
 
     public enum QuestTaskType
@@ -2384,6 +2387,22 @@ namespace Library
         Success
     }
 
+    public enum CraftingCategory : byte
+    {
+        Weapons = 0,
+        Armour = 1,
+        Accessories = 2,
+        Consumables = 3,
+        Ingredients = 4,
+    }
+
+    public enum CraftingResult : byte
+    {
+        Success,
+        Failed,
+        Cancelled,
+    }
+
     #endregion
 
     #region Sound
@@ -2761,6 +2780,9 @@ namespace Library
         FourWheels,
         CrescentMoon,
 
+        DragonCharge,
+        RisingStrike,
+
         #endregion
 
         #region Monsters
@@ -2901,6 +2923,9 @@ namespace Library
         MutantFleaAttack,
         MutantFleaStruck,
         MutantFleaDie,
+
+        PurpleFleaAttack,
+        PurpleFleaDie,
 
         PoisonousMutantFleaAttack,
         PoisonousMutantFleaStruck,
@@ -3062,6 +3087,12 @@ namespace Library
         NumaEliteAttack,
         NumaEliteStruck,
         NumaEliteDie,
+
+        NumaElderStruck,
+        NumaElderDie,
+
+        NumaCrippleStruck,
+        NumaCrippleDie,
 
         SandSharkAttack,
         SandSharkStruck,
@@ -3265,6 +3296,12 @@ namespace Library
         NumaRoyalGuardStruck,
         NumaRoyalGuardDie,
 
+        NumaWarlordAttack,
+        NumaWarlordAttack2,
+        NumaWarlordAttack3,
+        NumaWarlordStruck,
+        NumaWarlordDie,
+
         NumaArmoredSoldierAttack,
         NumaArmoredSoldierStruck,
         NumaArmoredSoldierDie,
@@ -3301,9 +3338,9 @@ namespace Library
         WhitefangStruck,
         WhitefangDie,
 
-        IcySpiritSoliderAttack,
-        IcySpiritSoliderStruck,
-        IcySpiritSoliderDie,
+        IcySpiritSoldierAttack,
+        IcySpiritSoldierStruck,
+        IcySpiritSoldierDie,
 
         WildBoarAttack,
         WildBoarStruck,

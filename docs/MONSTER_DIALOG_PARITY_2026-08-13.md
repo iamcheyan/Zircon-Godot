@@ -92,3 +92,7 @@ alpha 表达半透明，并给等级、名称、血量文字增加黑色描边�
 
 对照旧版：`Client/Scenes/Views/MonsterDialog.cs`（PopulateLabel/RefreshStats/
 各图标 Hint）、`Client/Models/MonsterObject.cs`（GrowthLevel）。
+
+## 6. 当前状态（2026-09-26）
+
+鼠标悬停怪物时显示的 `MonsterDialog` 暂时隐藏，后续再按目标截图和原版交互继续调整。此次隐藏只影响信息框的可见性，不影响怪物名称、目标选择、攻击和其它战斗逻辑。

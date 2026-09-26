@@ -747,8 +747,6 @@ public partial class GameScene : Control
     private DXLabel _mouseItemLabel;    // 拿起物品跟随鼠标的文字
     private DXLabel _hoverLabel;        // 物品悬浮提示
     private ClientUserItem _hoverItem;
-    // 每个地面物品都有经典白色闪烁；稀有物品还会叠加其蓝/绿/紫光效。
-    private readonly System.Collections.Generic.Dictionary<uint, List<MirEffectNode>> _itemGlows = new();
     private readonly System.Collections.Generic.Dictionary<int, MirEffectNode> _buffEffects = new();
     private readonly System.Collections.Generic.Dictionary<uint, MirEffectNode> _spellEffects = new();
     private readonly System.Collections.Generic.Dictionary<(uint, BuffType), MirEffectNode> _objectBuffEffects = new();
@@ -2699,7 +2697,6 @@ public partial class GameScene : Control
         // 新掉落物不能等到下一次窗口/地图重建才获得标签布局；同格物品
         // 的 slot 也必须立即重排，否则旧节点会显示、新节点却不重绘。
         RefreshGroundItemLabels(forceRedraw: true);
-        SpawnItemGlow(ob, p.Item);
     }
 
     private void OnChat(S.Chat p)
@@ -2997,70 +2994,6 @@ public partial class GameScene : Control
     private void OnDisciplineExperienceChanged(long experience) { if (StartInfo?.Discipline != null) StartInfo.Discipline.Experience = experience; _characterDialog?.RefreshDiscipline(); }
     private void OnMarriageInvite(S.MarriageInvite packet) => _guildDialog?.ShowMarriageInvite(packet?.Name);
 
-    // 地面物品光效：所有掉落使用经典白色十字闪烁；稀有度光效沿用
-    // 原版 ItemObject 的 Common+AddedStats / Superior / Elite 规则并叠加。
-    private void SpawnItemGlow(ObjectRenderer ob, ClientUserItem item)
-    {
-        if (ob == null) return;
-        var effects = new List<MirEffectNode>();
-        _itemGlows[ob.ObjectID] = effects;
-
-    // ProgUse 20..29：资源内的经典白色星芒/十字闪烁，10 帧循环。
-    // 旧版实际显示的是小型星芒，而不是把 128 像素画布原尺寸铺开。
-    // 0.5 倍约为旧版截图中的 25~35 像素可见尺寸；普通掉落使用更慢、更
-    // 柔和的呼吸节奏，避免 100ms 快速循环造成“乱闪”；同时叠加平滑
-    // 淡入淡出，让星芒不是单纯切帧闪烁。
-        var sparkle = new MirEffectNode();
-        AddChild(sparkle);
-    sparkle.Setup(LibraryFile.ProgUse, 20, 10, 280, ob, ob.CellX, ob.CellY, null);
-    sparkle.Loop = true;
-    sparkle.Blend = true;
-    sparkle.BlendRate = 0.25f;
-    sparkle.SpriteScale = 0.5f;
-    // Ground 图库物品本体以节点左上角 + (24,16) 居中绘制；ProgUse
-    // 的资源偏移属于另一套特效锚点，不能直接套到地面物品上。
-    sparkle.UseOffSet = false;
-    sparkle.AdditionalOffX = 24;
-    sparkle.AdditionalOffY = 16;
-    sparkle.PulseFade = true;
-    sparkle.PulseMinOpacity = 0.12f;
-    sparkle.PulseMaxOpacity = 0.48f;
-        effects.Add(sparkle);
-
-        if (item?.Info == null) return;
-        var info = item.Info;
-
-        int fxIndex;
-        Color lightColour;
-        switch (info.Rarity)
-        {
-            case Rarity.Superior:
-                fxIndex = 100; lightColour = Colors.PaleGreen; break;
-            case Rarity.Elite:
-                fxIndex = 120; lightColour = Colors.MediumPurple; break;
-            default:
-                // Common: 带附加属性且非零件才有光效
-                if (item.AddedStats?.Count > 0 && info.ItemEffect != ItemEffect.ItemPart)
-                {
-                    fxIndex = 110; lightColour = Colors.DeepSkyBlue; break;
-                }
-                return;
-        }
-
-        var fx = new MirEffectNode();
-        AddChild(fx);
-        fx.Setup(LibraryFile.ProgUse, fxIndex, 10, 100, ob, ob.CellX, ob.CellY, null);
-        fx.Loop = true;
-        fx.Blend = true;
-        fx.BlendRate = 0.5f;
-        // 原版 ItemObject 的 MirEffect 构造参数为 (60, 60, colour)：
-        // colour 是随帧光源颜色，不是序列帧贴图的染色。贴图本身始终白色
-        // Blend 绘制，并在物品脚底所在行的物体特效层显示。
-        fx.FrameLight = 60;
-        fx.FrameLightColour = lightColour;
-        effects.Add(fx);
-    }
-
     private void OnObjectRemove(uint objectID)
     {
         // 与原版 CConnection.Process(S.ObjectRemove) 一致：先断开所有
@@ -3079,8 +3012,6 @@ public partial class GameScene : Control
             if (_objectBuffEffects.Remove(key, out var buffFx)) buffFx.QueueFree();
         }
         if (_objectPoisonEffects.Remove(objectID, out var poisonFx)) poisonFx.QueueFree();
-        if (_itemGlows.Remove(objectID, out var glows))
-            foreach (var glow in glows) glow.QueueFree();
         if (_otherPlayers.Remove(objectID, out var player)) player.QueueFree();
         bool removedGroundItem = _objects.Remove(objectID, out var ob) && ob.Type == ObjectRenderer.Kind.Item;
         ob?.QueueFree();
@@ -4452,6 +4383,10 @@ public partial class GameScene : Control
         }
         else if (_objects.TryGetValue(objectID, out var ob))
         {
+            // 有些攻击路径先到受击包、后到血量包；血条的临时显示不能依赖
+            // HealthChanged 的到达顺序。受击事件本身就应触发原版的 5 秒血条。
+            ob.ShowHealthBar = true;
+            ob.DrawHealthUntilMs = Godot.Time.GetTicksMsec() + 5000;
             ob.CellX = loc.X;
             ob.CellY = loc.Y;
             ob.Direction = dir;
@@ -4654,6 +4589,8 @@ public partial class GameScene : Control
         _horseDialog = new HorseDialog();
         _uiLayer.AddChild(_horseDialog);
         _monsterDialog = new MonsterDialog();
+        // 暂时隐藏鼠标悬停怪物信息框；怪物目标、攻击和名称逻辑不受影响。
+        _monsterDialog.Visible = false;
         _uiLayer.AddChild(_monsterDialog);
         _tradeDialog = new TradeDialog();
         _uiLayer.AddChild(_tradeDialog);
@@ -8739,9 +8676,6 @@ public partial class GameScene : Control
         if (clearObjects)
         {
             _combatController?.RemoveObjectReference(_combatController.TargetObject?.ObjectID ?? 0);
-            foreach (var glows in _itemGlows.Values)
-                foreach (var glow in glows) glow.QueueFree();
-            _itemGlows.Clear();
             foreach (var ob in _objects.Values)
                 ob.QueueFree();
             _objects.Clear();

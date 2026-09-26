@@ -36,6 +36,7 @@ public partial class MainPanel : DXImageControl
     private Stats _stats = new Stats();
     private DXControl _playerOrb;
     private DXControl _playerOrbHoverArea;
+    private LegacyHudCaptionHint _playerOrbValueHint;
     private bool _playerOrbHovered;
     private bool _legacyEiStats;
 
@@ -116,6 +117,13 @@ public partial class MainPanel : DXImageControl
         _playerOrbHoverArea.MouseEntered += OnPlayerOrbMouseEntered;
         _playerOrbHoverArea.MouseExited += OnPlayerOrbMouseExited;
         AddControl(_playerOrbHoverArea);
+        _playerOrbValueHint = new LegacyHudCaptionHint
+        {
+            Name = "PlayerOrbValueHint",
+            Visible = false,
+            ZIndex = 1000,
+        };
+        AddControl(_playerOrbValueHint);
         HealthBar.Visible = false;
         ManaBar.Visible = false;
 
@@ -293,6 +301,7 @@ public partial class MainPanel : DXImageControl
 
         _playerOrbHovered = false;
         UpdatePlayerOrbNumbers();
+        UpdatePlayerOrbValueHint();
     }
 
     /// <summary>Apply the original EI's three-state caption rendering to all 16 HUD hit targets.</summary>
@@ -538,6 +547,8 @@ public partial class MainPanel : DXImageControl
     {
         _playerOrbHovered = hovered;
         UpdatePlayerOrbNumbers();
+        if (!hovered && _playerOrbValueHint != null)
+            _playerOrbValueHint.Visible = false;
     }
 
     private void UpdatePlayerOrbNumbers()
@@ -552,8 +563,8 @@ public partial class MainPanel : DXImageControl
             return;
         }
 
-        // EI displays numeric HP/MP only while the pointer is over the blood
-        // orb. Put each value below its own half, outside the painted sphere.
+        // EI displays the value in a cursor-following yellow caption. The
+        // labels below the orb belong to the newer HUD and must stay hidden.
         foreach (var label in new[] { HealthLabel, ManaLabel })
         {
             label.AutoSize = false;
@@ -561,10 +572,59 @@ public partial class MainPanel : DXImageControl
             label.FontSize = 8;
             label.Align = HorizontalAlignment.Center;
             label.VAlign = VerticalAlignment.Center;
-            label.Visible = _playerOrbHovered;
+            label.Visible = false;
         }
         HealthLabel.Location = new Vector2I(49, 123);
         ManaLabel.Location = new Vector2I(105, 123);
+    }
+
+    public override void Process()
+    {
+        base.Process();
+        UpdatePlayerOrbValueHint();
+    }
+
+    public override void _Process(double delta) => Process();
+
+    private void UpdatePlayerOrbValueHint()
+    {
+        if (_playerOrbValueHint == null) return;
+        if (!_legacyEiStats || !_playerOrbHovered || _playerOrb == null)
+        {
+            _playerOrbValueHint.Visible = false;
+            return;
+        }
+
+        float canvasScale = GetGlobalTransformWithCanvas().X.Length();
+        if (canvasScale < 0.01f) canvasScale = 1f;
+
+        Vector2 cursor = GetGlobalTransformWithCanvas().AffineInverse()
+            * GetViewport().GetMousePosition();
+        float orbX = cursor.X - _playerOrb.Location.X;
+        bool overHealth = orbX < _playerOrb.Size.X / 2f;
+        string value = overHealth
+            ? $"{_currentHP}/{_stats[Stat.Health]}"
+            : $"{_currentMP}/{_stats[Stat.Mana]}";
+
+        _playerOrbValueHint.TextLabel.Text = value;
+        _playerOrbValueHint.TextLabel.TextColour = overHealth
+            ? new Color(1f, 0.22f, 0.22f)
+            : new Color(0.35f, 0.55f, 1f);
+
+        Vector2 measured = MirSkin.MeasureTextPhysical(value, 12);
+        float widthPhysical = Mathf.Ceil(measured.X) + 12;
+        float heightPhysical = Mathf.Ceil(measured.Y) + 4;
+        float width = widthPhysical / canvasScale;
+        float height = heightPhysical / canvasScale;
+        _playerOrbValueHint.Size = new Vector2I(
+            Mathf.CeilToInt(width), Mathf.CeilToInt(height));
+        _playerOrbValueHint.Location = new Vector2I(
+            Mathf.RoundToInt(cursor.X), Mathf.RoundToInt(cursor.Y - height));
+        _playerOrbValueHint.TextLabel.Location = Vector2I.Zero;
+        _playerOrbValueHint.TextLabel.Size = _playerOrbValueHint.Size;
+        _playerOrbValueHint.Visible = true;
+        _playerOrbValueHint.QueueRedraw();
+        _playerOrbValueHint.TextLabel.QueueRedraw();
     }
 
     public void SetFocus(int currentFP)

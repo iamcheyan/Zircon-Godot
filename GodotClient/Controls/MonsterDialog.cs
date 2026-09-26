@@ -7,6 +7,9 @@ namespace ZirconClient.Controls;
 /// <summary>原版 MonsterDialog：鼠标悬停怪物时显示等级、名称、血量和展开的基础属性。</summary>
 public sealed partial class MonsterDialog : DXWindow
 {
+    // 暂时隐藏鼠标悬停怪物信息框；保留数据刷新代码，后续恢复时只需改这里。
+    private static bool ShowHoverDialog => false;
+
     private readonly DXLabel _level;
     private readonly DXLabel _name;
     private readonly DXLabel _health;
@@ -86,6 +89,11 @@ public sealed partial class MonsterDialog : DXWindow
     public void SetMonster(ObjectRenderer monster)
     {
         _monster = monster;
+        if (!ShowHoverDialog)
+        {
+            Visible = false;
+            return;
+        }
         Visible = monster != null && monster.Type == ObjectRenderer.Kind.Monster;
         if (!Visible) return;
         _level.Text = monster.Level.ToString();

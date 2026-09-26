@@ -79,7 +79,9 @@ public static class LegacyUiSkin
             "MagicDialog" => (400, new Vector2I(452, 380), new Vector2I(30, 67), false),
             "GroupDialog" => (900, new Vector2I(256, 244), new Vector2I(0, 6), false),
             "QuestDialog" => (700, new Vector2I(340, 440), new Vector2I(86, 36), false),
-            "CommunicationDialog" => (350, new Vector2I(572, 388), new Vector2I(226, 62), false),
+            // G6：window.chat-pop 是 F350 聊天窗（572x388），归属 LegacyChatDialog；
+            // CommunicationDialog 实为好友/邮件窗（Interface 200 / 296x424），
+            // 套 F350 皮肤是错配，故这里不再给它旧版皮肤。
             "HorseDialog" => (850, new Vector2I(296, 332), Vector2I.Zero, false),
             "NPCDialog" => (1100, new Vector2I(552, 176), Vector2I.Zero, false),
             "TradeDialog" => (1050, new Vector2I(484, 330), Vector2I.Zero, false),
@@ -122,9 +124,6 @@ public static class LegacyUiSkin
                 return true;
             case QuestDialog quest:
                 quest.ApplyLegacyEiLayout();
-                return true;
-            case CommunicationDialog communication:
-                communication.ApplyLegacyEiLayout();
                 return true;
             case BeltDialog belt:
                 belt.ApplyLegacyEiLayout();

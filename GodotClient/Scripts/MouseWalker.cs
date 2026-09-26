@@ -22,7 +22,7 @@ public partial class MouseWalker : Node2D
     // 与 MapView 完全一致的常量 (渲染不变量, 复制而非引用, 避免修改 MapView)
     private const float CellWidth = 48f;
     private const float CellHeight = 32f;
-    private const float WorldScale = 1f;
+    private static float WorldScale => GameScene.WorldScale;
     private const int ManualHeightOffset = 34;
 
     private readonly MapView _mapView;

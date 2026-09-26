@@ -30,9 +30,11 @@ public partial class GameScene : Control
     /// UI 缩放系数：跟随窗口高度保持逻辑视口高恒定（原版 1024x768 基准）。
     /// 窗口 1536 高 → 2x（旧行为）；更高窗口等比放大，UI/字体占屏比例不变。
     /// </summary>
-    internal static float UiScale { get; private set; } = 2f;
+    internal static float UiScale { get; private set; } = 1f;
     private const float UiScaleBaseHeight = 768f;
-    private const float WorldScale = 1f;
+    // The rendered world and the HUD share one scale so actors, terrain,
+    // effects and interface retain the same physical size at every window size.
+    internal static float WorldScale => UiScale;
     private const string UiAuditArgument = "--ui-layout-audit";
     private Vector2 _lastHudViewport;
     private float _lastHudScale;
@@ -1026,8 +1028,7 @@ public partial class GameScene : Control
         DrawWeather = ClientSettings.DrawWeather;
         QuestTrackerVisible = ClientSettings.QuestTrackerVisible;
         _legacyNpcResponseSelfTestStarted = false;
-        // 世界坐标使用原版 48x32 逻辑格，最终整体按 2 倍输出。
-        // UI CanvasLayer 有独立缩放，不会被这里重复缩放。
+        // 世界坐标使用原版 48x32 逻辑格，世界与 UI 共用同一显示倍率。
         Scale = Vector2.One * WorldScale;
 
         _net = GetNodeOrNull<Network.NetworkManager>("/root/NetworkManager");
@@ -1037,7 +1038,7 @@ public partial class GameScene : Control
         // 原版 LLayer 在 DrawObjects()(地形+对象+天气粒子)之后最后绘制全屏
         // 光纹理: 夜晚环境光盖住包括动物/怪物/树在内的所有世界内容, 光源
         // 光斑再恢复亮度。光照层挂在独立 CanvasLayer(Layer=1, UI=10 之下),
-        // 其 Transform 用 2x 与世界根节点 Scale 一致, 层内保持逻辑坐标。
+        // 其 Transform 与世界根节点 Scale 一致, 层内保持逻辑坐标。
         // CanvasLayer 按层索引排序、每层独立渲染: 整个世界(默认画布)先完整
         // 绘制, 该层再触发一次全新的 hint_screen_texture 整屏拷贝, 采样必然
         // 包含全部对象/特效。不能放在世界层末尾: Godot 只在第一个使用
@@ -4936,6 +4937,13 @@ public partial class GameScene : Control
         }
         if (_uiLayer != null && IsInstanceValid(_uiLayer))
             _uiLayer.Transform = Transform2D.Identity.Scaled(Vector2.One * UiScale);
+        Scale = Vector2.One * WorldScale;
+        if (_lightLayer != null && IsInstanceValid(_lightLayer))
+        {
+            CanvasLayer lightCanvas = _lightLayer.GetParent() as CanvasLayer;
+            if (lightCanvas != null)
+                lightCanvas.Transform = new Transform2D(0f, Vector2.One * WorldScale, 0f, Vector2.Zero);
+        }
         MirSkin.SetUiScale(UiScale);
     }
 

@@ -279,7 +279,9 @@ public partial class NPCDialog : DXWindow
         // 不是客户端硬编码坐标。解析逻辑尚未实现，见审计文档。
         if (_legacyLayout) raw = ApplyLegacyFColor(raw);
         // legacy 菜单条：原版对每个选项行铺 F1101（末项 F1102），见 NPCTextControl.LegacyMenuStrips。
+        // 控件绘制宽度放宽到菜单条宽度（383），否则会被换行宽度 149 裁掉。
         _text.LegacyMenuStrips = _legacyLayout;
+        _text.DrawWidth = _legacyLayout ? 383 : 0;
         _text.SetContent(raw,
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,

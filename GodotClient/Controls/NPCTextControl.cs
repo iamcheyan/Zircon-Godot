@@ -38,13 +38,23 @@ public sealed partial class NPCTextControl : DXControl
     /// <summary>当前悬停的内嵌选项 id (-1 = 无)。选项点击与悬停共用同一命中区。</summary>
     public int HoveredButtonId => _hoveredButton;
 
+    /// <summary>
+    /// 控件自身的绘制宽度（&lt;=0 表示与换行宽度相同）。
+    ///
+    /// 为什么需要它：legacy 的菜单条 F1101 是 **383 宽、跨两列**（反汇编：取帧宽/高后
+    /// SetRect(rect,0,0,w,h)），而正文换行宽度只有 149。若控件宽度 = 换行宽度，
+    /// 菜单条会被控件自身裁到 149 —— 实测截图里只剩约 70px 宽的短条。
+    /// 故把「换行宽度」与「控件宽度」分开：换行仍按 149，控件放宽到菜单条宽度。
+    /// </summary>
+    public int DrawWidth { get; set; }
+
     public void SetContent(string text, int width, int fontSize = 10, int linePitch = 18)
     {
         LinePitch = linePitch;
         _glyphs.Clear();
         _buttons.Clear();
         _hoveredButton = -1;
-        Size = new Vector2I(width, Math.Max(linePitch, (int)Size.Y));
+        Size = new Vector2I(DrawWidth > 0 ? DrawWidth : width, Math.Max(linePitch, (int)Size.Y));
 
         var matches = Regex.Matches(text ?? string.Empty, @"\[(?<Text>.*?):(?<ID>.+?)\]|\{(?<Text>.*?):(?<Colour>.+?)\}");
         int cursor = 0;
@@ -135,8 +145,9 @@ public sealed partial class NPCTextControl : DXControl
             var size = MirSkin.GetSize(LibraryFile.GameInter, frame);
             var offset = MirSkin.GetOffset(LibraryFile.GameInter, frame);
             var rect = _buttons[i].Rect;
-            // 可见区左上角 = (该行 X - 选项命中区相对文字起点的偏移, 该行 Y)；这里直接用命中区
-            // 的 Y 作行顶，X 取命中区 X 减去文字内缩，保持与原版「整行铺满」一致。
+            // 水平：用选项命中区的 X 反推（命中区只覆盖文字，减去 offset 后可见区左缘落在
+            //       文字起点附近）。**不要**用控件左缘：F1101 的 offset 是 (64,7)，
+            //       直接用 -offset.X 会把条子左移 64px 而被裁掉（实测横条变少变淡）。
             var pos = new Vector2(rect.Position.X - offset.X, rect.Position.Y - offset.Y);
             DrawTexture(tex, pos, Colors.White);
         }

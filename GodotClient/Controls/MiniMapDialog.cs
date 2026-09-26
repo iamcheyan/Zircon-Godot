@@ -26,6 +26,7 @@ public partial class MiniMapDialog : DXWindow
     private static readonly Vector2I LargeMiniMapSize = new(300, 300);
     private const float TransparentOpacity = 0.5F;
     private bool IsLarge, IsTransparent;
+    private bool _legacyEiLayout;
 
     public static float ScaleX, ScaleY;
 
@@ -55,6 +56,51 @@ public partial class MiniMapDialog : DXWindow
         Panel.Location = (Vector2I)Area.Position;
         Panel.Size = Area.Size;
         Resized += OnResized;
+    }
+
+    /// <summary>
+    /// 旧版 EI 小地图。依据 map-ui-resource-evidence.json：
+    /// - viewport.fixed_minimap_widget：固定屏幕矩形 (672,0)-(800,128) = 128x128，
+    ///   evidence_level 为 primary-static-exact-rect（即贴着 800x600 屏幕右上角）。
+    ///   原版**没有独立窗口**：无标题栏、无关闭按钮、不可缩放、不可自由拖动。
+    /// - mode_switch：T 键在 256x256 与 128x128 两个 surface 之间切换。
+    /// - border_evidence：边框是程序画的 1px 灰 0x646464，不是 GameInter 帧。
+    /// 调用方负责把它放到 (vp.X-128, 0)。
+    /// </summary>
+    public void ApplyLegacyEiLayout()
+    {
+        _legacyEiLayout = true;
+        IsLarge = false;
+        IsTransparent = false;
+        Size = new Vector2I(128, 128);
+        AllowResize = false;
+        Movable = false;
+        HasTitle = false;
+        HasFooter = false;
+        ShowCloseButton = false;
+        DrawChrome = false;
+        DropShadow = false;
+        // 1px 灰描边 0x646464 = RGB(100,100,100)
+        Border = true;
+        BorderColour = new Color(100f / 255f, 100f / 255f, 100f / 255f);
+        // 原版只有 2 个切换按钮（owner+0x298 透明度、owner+0x2A8 尺寸）；
+        // 第 3 个「大地图」按钮在 EI 里不存在，而且它用的 F137 在本机素材里
+        // 是空白帧（WIL offset=0），本来就无图。
+        if (BigMapButton != null) BigMapButton.Visible = false;
+        // DXWindow 的标题标签在 _Ready 里就随 HasTitle 建好了，之后再改
+        // HasTitle 不会回收它，必须显式隐藏；SetMap 里也要跳过写 Text。
+        if (TitleLabel != null) TitleLabel.Visible = false;
+        Text = string.Empty;
+        // _Ready 里为现代边框把客户区四周扩了 6px（Area.Size += 12）。证据的
+        // fixed_minimap_widget 是精确 128x128，所以 legacy 下必须收回这 12px，
+        // 否则地图实际渲染成 140x140。
+        Area = new Rect2(0, 0, 128, 128);
+        Panel.Location = Vector2I.Zero;
+        Panel.Size = new Vector2I(128, 128);
+        UpdateButtonLocations();
+        GD.Print($"[LegacyMiniMap] size={Size} loc={Location} legacy={_legacyEiLayout} "
+            + $"chrome={DrawChrome} title={HasTitle} resize={AllowResize} movable={Movable} "
+            + $"bigMapVisible={BigMapButton?.Visible}");
     }
 
     public MiniMapDialog()
@@ -170,7 +216,10 @@ public partial class MiniMapDialog : DXWindow
         _playerObjectID = playerObjectID;
         _hasPlayer = false;
 
-        Text = map.Local();
+        // EI 旧版小地图没有标题栏（map-ui-resource-evidence.json
+        // viewport.fixed_minimap_widget 的 rect 就是纯 128x128 地图），
+        // 所以 legacy 下不写标题文字。
+        if (!_legacyEiLayout) Text = map.Local();
         Image.Index = map.MiniMap;
         Image.Location = Vector2I.Zero;
 

@@ -5132,8 +5132,21 @@ public partial class GameScene : Control
                     Math.Max(0, (int)(_mainPanel.Position.Y - _chatTextBox.Size.Y - 2)));
         }
         if (_miniMap != null)
-            _miniMap.Location = new Vector2I(
-                Math.Max(0, (int)(vp.X - _miniMap.Size.X)), 0);
+        {
+            if (AutoLoginArgs.LegacyUi)
+            {
+                // EI 小地图是固定 128x128 widget，贴 800x600 屏幕右上角
+                // (672,0)-(800,128)（map-ui-resource-evidence.json
+                // viewport.fixed_minimap_widget，primary-static-exact-rect）。
+                _miniMap.ApplyLegacyEiLayout();
+                _miniMap.Location = new Vector2I(Math.Max(0, (int)(vp.X - 128)), 0);
+            }
+            else
+            {
+                _miniMap.Location = new Vector2I(
+                    Math.Max(0, (int)(vp.X - _miniMap.Size.X)), 0);
+            }
+        }
 
         if (_questTracker != null)
             _questTracker.Location = new Vector2I(

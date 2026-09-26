@@ -77,10 +77,10 @@ public partial class GuildDialog : DXWindow
         RefreshRows();
     }
 
-    /// <summary>旧版 EI 行会窗口：GameInter F600，根 446×596。</summary>
+    /// <summary>旧版 EI 行会窗口：GameInter F600，根 596×446（证据 id4，横向）。</summary>
     public void ApplyLegacyEiLayout()
     {
-        Size = new Vector2I(446, 596);
+        Size = new Vector2I(596, 446);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 600;
         _background.FixedSize = true;
@@ -102,7 +102,7 @@ public partial class GuildDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
-        bool ok = Size == new Vector2I(446, 596)
+        bool ok = Size == new Vector2I(596, 446)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600
             && _content.Location == new Vector2(18, 80)
             && _content.Size == new Vector2(410, 415);

@@ -85,7 +85,10 @@ public static class LegacyUiSkin
             "HorseDialog" => (850, new Vector2I(296, 332), Vector2I.Zero, false),
             "NPCDialog" => (1100, new Vector2I(552, 176), Vector2I.Zero, false),
             "TradeDialog" => (1050, new Vector2I(484, 330), Vector2I.Zero, false),
-            "GuildDialog" => (600, new Vector2I(446, 596), Vector2I.Zero, false),
+            // id4 行会：window_identities_final.id4 = frame 600、(102,22)、596x446
+            // （primary-bytes）。素材实测 F600 可见区 (214,33)-(807,477) = 594x445，
+            // 是**横向**的 —— 此前写 (446,596) 把宽高对调了。
+            "GuildDialog" => (600, new Vector2I(596, 446), Vector2I.Zero, false),
             "StorageDialog" => (1001, new Vector2I(205, 205), Vector2I.Zero, false),
             "ConfigDialog" => (750, new Vector2I(248, 264), Vector2I.Zero, false),
             "NoticeDialog" => (602, new Vector2I(584, 252), Vector2I.Zero, false),

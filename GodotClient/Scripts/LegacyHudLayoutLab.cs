@@ -420,7 +420,7 @@ public partial class LegacyHudLayoutLab : Control
             // （Interface 200 / 296x424）。
             && _chat.Size == new Vector2I(296, 424)
             && _config.Size == new Vector2I(248, 264);
-        bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
+        bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(596, 446);
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);
         bool orb = _hud.AuditLegacyOrb(out string orbDetails);
         bool hud = _hud.AuditLegacyHud(out string hudDetails);

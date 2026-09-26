@@ -182,6 +182,19 @@ public partial class LegacyHudLayoutLab : Control
             npcSelfTest |= arg == "--legacy-npc-selftest";
         if (npcSelfTest)
             _ = RunNpcSelfTest();
+
+        // 技能书右页（Magic.exp 段落）实机验收：打开窗口 -> 选中首行技能 ->
+        // 右页应取到该技能 id 的段落。段落内容由 [LegacyMagicDetail] 日志输出。
+        bool magicSelfTest = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            magicSelfTest |= arg == "--legacy-magic-selftest";
+        if (magicSelfTest)
+        {
+            WindowManager.Open(_magic, _canvas);
+            int id = _magic.SelectFirstLegacySkillForTest();
+            GD.Print($"[LegacyMagicSelfTest] selectedSkillId={id} "
+                + $"paragraph={(LegacySkillRowView.LegacyMagicExpParagraph(id) == null ? "null" : "ok")}");
+        }
     }
 
     // ------------------------------------------------------------------

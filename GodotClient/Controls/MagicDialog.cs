@@ -382,9 +382,20 @@ public partial class MagicDialog : DXWindow
         return valid;
     }
 
-    public bool AuditLegacyEiLayout(out string details)
+    /// <summary>
+    /// 验收测试场专用：选中第一行技能，走与真实点击同一条 Selected 链
+    /// （row.Selected -> _legacySelectedSkill -> _legacyDetail.SetSkill）。
+    /// 返回被选中技能的 id，未选中返回 -1。
+    /// </summary>
+    public int SelectFirstLegacySkillForTest()
     {
-        (MagicSchool school, Vector2I location, int frame)[] expectedTabs =
+        if (_legacySkillRows.Count == 0) return -1;
+        _legacySkillRows[0].RaiseSelectedForTest();
+        return _legacySelectedSkill?.Info?.Index ?? -1;
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {        (MagicSchool school, Vector2I location, int frame)[] expectedTabs =
         {
             (MagicSchool.Fire, new(5, 21), 450),
             (MagicSchool.Ice, new(3, 56), 452),
@@ -728,6 +739,9 @@ public partial class LegacySkillRowView : DXControl
     private ClientUserMagic _magic;
     private bool _selected;
     public event Action Selected;
+
+    /// <summary>验收测试场专用：走与真实点击同一条 Selected 链，避免另写一套选中逻辑。</summary>
+    public void RaiseSelectedForTest() => Selected?.Invoke();
 
     public LegacySkillRowView()
     {

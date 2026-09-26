@@ -158,7 +158,45 @@ public partial class TradeDialog : DXWindow
         _playerGrid.LegacyCellStep = 36;
         _userGrid.RefreshGrid();
         _playerGrid.RefreshGrid();
+        // 原版 accept/cancel 是**不可见热区**，图形烘焙在 F1050 贴图里
+        // （trade-window-render-evidence.json::buttons，click_handler_0x416EF0_flow）：
+        //   accept 帧 1061/1062 @ (x+0xB9, y+0x14C) = (185,332) 48x20
+        //          命中 -> 发 msg 0x406（= TradeConfirm）+ 置 [+0x13644]=1 finalize
+        //   cancel 帧 1064/1065 @ (x+0xE1, y+0x14C) = (225,332)
+        //          1064/1065 在 GameInter.wil 里 **MISSING** -> 原版就是不可见热区 + 仅音效
+        //   state_gate: [+0x13644]!=0 之后不再接受点击
+        // 我方原先只有一个可见文字按钮 _confirm @(126,203)，位置无证据支撑且与贴图里的
+        // 烘焙按钮不重合，故改为与原版一致：隐藏 _confirm，放两个不可见热区。
+        _confirm.Visible = false;
+        EnsureLegacyTradeButtons();
         UpdateClientAreaForLegacySkin();
+    }
+
+    private DXButton _legacyAccept, _legacyCancel;
+
+    /// <summary>原版 accept/cancel 热区（图形在 F1050 里，此处不绘制）。</summary>
+    private void EnsureLegacyTradeButtons()
+    {
+        if (_legacyAccept == null)
+        {
+            _legacyAccept = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 1061, HoverIndex = 1062, PressedIndex = 1062, Size = new Vector2I(48, 20) };
+            // 命中即确认（对应原版 msg 0x406）；_confirm.Enabled 由服务端 Unlock 控制。
+            _legacyAccept.MouseClick += (_, _) => { if (_confirm.Enabled) { _confirm.Enabled = false; GameScene.Game?.SendTradeConfirm(); } };
+            AddControl(_legacyAccept);
+        }
+        if (_legacyCancel == null)
+        {
+            // 原版 cancel 帧 1064/1065 在 WIL 里不存在、行为是「仅音效并消费点击」，
+            // 即**有意无功能**；此处忠实保留为不做事的热区，不臆造取消逻辑。
+            _legacyCancel = new DXButton { LibraryFile = LibraryFile.GameInter, Index = -1, Size = new Vector2I(48, 20) };
+            AddControl(_legacyCancel);
+        }
+        _legacyAccept.Location = new Vector2I(185, 332);
+        _legacyCancel.Location = new Vector2I(225, 332);
+        _legacyAccept.Modulate = new Color(1, 1, 1, 0);
+        _legacyCancel.Modulate = new Color(1, 1, 1, 0);
+        _legacyAccept.Visible = true;
+        _legacyCancel.Visible = true;
     }
 
     public bool AuditLegacyEiLayout(out string details)
@@ -173,9 +211,16 @@ public partial class TradeDialog : DXWindow
             && _userGrid.LegacyCellStep == 36 && _playerGrid.LegacyCellStep == 36
             // 关闭键为原版不可见热区，位置 (532,350)（超出 484x330 UI 矩形属原版设计，
             // 按钮图形烘焙在 F1050 里）。
-            && _closeButton.Location == new Vector2(532, 350);
+            && _closeButton.Location == new Vector2(532, 350)
+            // 原版 accept/cancel 不可见热区（图形烘焙在 F1050 里）：
+            // accept F1061/1062 @(185,332) 48x20、cancel F1064/1065 @(225,332)。
+            && !_confirm.Visible
+            && _legacyAccept != null && _legacyAccept.Location == new Vector2I(185, 332)
+            && _legacyAccept.Index == 1061 && _legacyAccept.Size == new Vector2I(48, 20)
+            && _legacyCancel != null && _legacyCancel.Location == new Vector2I(225, 332)
+            && _legacyCancel.Size == new Vector2I(48, 20);
         // details 里同时给出首格（= 原点 + padding），便于与证据的 (21,48)/(253,48) 直接比对。
-        details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location} close={_closeButton.Location}";
+        details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location} close={_closeButton.Location} accept={_legacyAccept?.Location}#{_legacyAccept?.Index} cancel={_legacyCancel?.Location}";
         return ok;
     }
     public void Unlock() => _confirm.Enabled = true;

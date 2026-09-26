@@ -10639,8 +10639,12 @@ public partial class GameScene : Control
     public override void _Input(InputEvent @event)
     {
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+        // EI 的字母热键是**裸字母**语义：原版每个字母分支只调 GetKeyState 判
+        // 「键是否按下」，不检查 Ctrl（hotkey-label-handler-consistency.json
+        // kbd_letter_cases），标题里的 (Ctrl+X, X) 只是提示文案。所以裸 R 与
+        // Ctrl+R 都应生效 —— 此前这里要求 !CtrlPressed，导致 Ctrl+R 完全失效。
         if (AutoLoginArgs.LegacyUi && key.Keycode == Key.R
-            && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
+            && !key.AltPressed && !key.ShiftPressed)
         {
             // 文本输入获得焦点时，R 是聊天内容，不是 EI 的显隐快捷键。
             if (_legacyChatDialog?.InputHasFocus == true || _chatTextBox?.InputHasFocus == true)
@@ -10721,6 +10725,16 @@ public partial class GameScene : Control
         {
             if (_questDialog != null)
                 WindowManager.Toggle(_questDialog, _uiLayer);
+            return;
+        }
+
+        // EI 的 C 与 Ctrl+C 都是「选中实体 + 交易请求」（hotkey.table-0x42CC76
+        // 的 0x41EC10 选实体 + 0x451A70 交易请求）；此前 Ctrl+C 落到现代键位表
+        // 的货币窗口、裸 C 无绑定，两个都不对。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.C
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            _net?.Connection?.Enqueue(new C.TradeRequest());
             return;
         }
 

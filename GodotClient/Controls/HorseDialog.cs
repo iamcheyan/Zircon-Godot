@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Library;
 using ZirconClient.Scripts;
@@ -40,8 +41,8 @@ public partial class HorseDialog : DXWindow
         };
         AddControl(_background);
 
-        _mount = Action(860, 861, new Vector2I(28, 244), new Vector2I(44, 20), "@上马");
-        _lead = Action(862, 863, new Vector2I(74, 244), new Vector2I(60, 20), "@遛马");
+        _mount = Action(860, 861, new Vector2I(28, 244), new Vector2I(44, 20), "@上马", () => _state == 0);
+        _lead = Action(862, 863, new Vector2I(74, 244), new Vector2I(60, 20), "@遛马", () => _state != 0);
         _hide = Action(864, 865, new Vector2I(133, 244), new Vector2I(60, 20), "@收马");
         _show = Action(866, 867, new Vector2I(192, 244), new Vector2I(56, 20), "@遛马");
 
@@ -59,7 +60,8 @@ public partial class HorseDialog : DXWindow
         SetMountState(0);
     }
 
-    private DXButton Action(int normal, int hover, Vector2I location, Vector2I size, string command)
+    private DXButton Action(int normal, int hover, Vector2I location, Vector2I size, string command,
+        Func<bool> allowed = null)
     {
         var button = new DXButton
         {
@@ -71,7 +73,12 @@ public partial class HorseDialog : DXWindow
             Size = size,
             TooltipText = command,
         };
-        button.MouseClick += (_, _) => GameScene.Game?.SendChat(command);
+        // 原版是点击时判状态、条件不满足则无动作（美术不变、无灰态）。
+        button.MouseClick += (_, _) =>
+        {
+            if (allowed != null && !allowed()) return;
+            GameScene.Game?.SendChat(command);
+        };
         AddControl(button);
         return button;
     }
@@ -79,8 +86,13 @@ public partial class HorseDialog : DXWindow
     public void SetMountState(int state)
     {
         _state = Mathf.Clamp(state, 0, 3);
-        _mount.Enabled = _state == 0;
-        _lead.Enabled = _state != 0;
+        // horse-window-render-evidence.json：原版是**每次点击时判状态** ——
+        // 按钮美术始终正常，条件不满足则无动作，**不画任何状态叠加**
+        // （state_field_xref.overlay_search 明确「无状态叠加」）。
+        // 此前用 DXButton.Enabled 门控，而 DXButton 对禁用态会把整体调暗到
+        // 0.32 灰，产生原版没有的灰态。改为按钮恒 Enabled，在点击回调里判。
+        _mount.Enabled = true;
+        _lead.Enabled = true;
         _hide.Enabled = true;
         _show.Enabled = true;
     }

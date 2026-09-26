@@ -182,3 +182,55 @@ frame 18 的还原对画面无影响：客户端 DB 中没有任何地图引用 
 `FileName=4 -> 8`、`FileName=5 -> 9`，而客户端为 `4 -> 7`、`5 -> 8`；服务器 DB
 还有 `D10032 -> 18`（洞穴指向城镇帧位）。服务端不发送 MiniMap，所以这些不影响
 客户端画面，但双库同步问题独立存在，需要单独核对。
+
+---
+
+## 变更文件清单与跨机同步（2026-09-26 记录）
+
+### 一、进入 git 的文件（commit `877b88b9`，`git pull` 即得）
+
+| 文件 | 大小 | 说明 |
+|---|---|---|
+| `Tools/apply_zircon_minimap_overrides.py` | 4,809 B | 在 EI 基准库之后追加 Zircon 专属小地图，打印帧号 |
+| `Tools/minimap_overrides/3.png` | 720,278 B | 沙巴克 Zircon 原版小地图（800×600） |
+| `docs/MINIMAP_EI_MIGRATION.md` | 本文档 | 迁移报告与复现步骤 |
+
+**注意：这三个文件只包含工具与源图，不含任何运行期产物。** 仅 `git pull`
+**不会**修好小地图 —— 还必须同步下面两项产物。
+
+### 二、运行期产物（**不在 git**，必须单独同步）
+
+| 产物 | 部署路径 | 大小 | md5（修正后） |
+|---|---|---|---|
+| `MiniMap.Zl` | `<客户端 Data>/MiniMap.Zl` | 29,641,533 B | `ea09c837d6209176f0372ccc23e566de` |
+| 客户端 `System.db` | `<客户端 Data>/System.db` | 11,776,094 B | `c07a3c24ebcf62e837000b4f95595c12` |
+| 服务器 `System.db` | `Debug/ServerCore/Database/System.db` | 11,662,800 B | `4c101304cab9cb05ffe08f583dafff1b` |
+
+修正前的 `MiniMap.Zl` md5 为 `f83f6ec4965df983631a15a871ba836f`（287 帧）；
+若某台机器仍是这个值，说明尚未同步。
+
+### 三、同步步骤
+
+1. **`MiniMap.Zl` 可直接拷贝**（纯资源，无副作用）。拷完用 `md5sum` 核对
+   是否等于 `ea09c837d6209176f0372ccc23e566de`。
+2. **两份 `System.db` 不要整份覆盖。** 双库存在既有多处不一致（见上一节
+   「遗留」），整份拷会把差异一并带过去。只改需要的那一个绑定：
+
+   ```bash
+   DbMigrationTool --root <目标 Data 或 Database 目录> set-minimap 3 287
+   ```
+
+   写库纪律：**服务端运行中绝不写 System.db** —— 先停服、写前备份、
+   两份库同步写、写完 round-trip 读回验证，再重启。
+3. 若目标机器的 `MiniMap.Zl` 也是旧的，也可按上一节配方现场重建
+   （顺序不可反：必须在 `convert_ei_minimap.py` 之后叠加 Zircon 追加帧）。
+
+### 四、各机器同步状态
+
+| 机器 | 客户端 Data 路径 | `MiniMap.Zl` md5 | 状态 |
+|---|---|---|---|
+| Mac（本机） | `/Users/tetsuya/mir2ei/Data/`（`Zircon/Debug/Client` 软链到此） | `ea09c837…` | ✅ 已修正 |
+| 82 debian | `/home/tetsuya/development/zircon/Debug/Client/Data/` | `f83f6ec4…` | ⬜ 待同步 |
+
+82 的服务器 DB 位于 `/home/tetsuya/development/Debug/ServerCore/Database/System.db`
+（与 Mac 同构，服务端从 `Debug/ServerCore/` 启动）。

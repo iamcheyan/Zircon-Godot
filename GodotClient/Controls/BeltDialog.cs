@@ -110,7 +110,11 @@ public partial class BeltDialog : DXWindow
         if (_background.GetParent() == null) AddControl(_background);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 850;
-        _background.Location = new Vector2I(-7, 44);
+        // 与其余 10 个 legacy 窗相同的约定：把该帧 alpha 可见区原点对齐到窗口 (0,0)。
+        // 素材实测 F850 的 alpha bbox 原点 (118,94)，故取 -(118,94)。
+        // 原值 (-7,44) 用的是 WIL **header offset**（-headerOffset），不是 bbox 原点 ——
+        // 系统性核查（逐个比对代码锚点与素材 alpha bbox）发现全仓只有本处与 NPCDialog 例外。
+        _background.Location = new Vector2I(-118, -94);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 850);
         _background.StretchImage = false;
         _dragHandle.Size = new Vector2(Size.X, 6);

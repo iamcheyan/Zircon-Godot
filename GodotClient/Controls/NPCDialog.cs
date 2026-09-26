@@ -106,7 +106,11 @@ public partial class NPCDialog : DXWindow
         Size = new Vector2I(552, 176);
         _headerBackground.LibraryFile = LibraryFile.GameInter;
         _headerBackground.Index = 1100;
-        _headerBackground.Location = Vector2I.Zero;
+        // 与其余 10 个 legacy 窗相同的约定：把该帧 alpha 可见区原点对齐到窗口 (0,0)。
+        // 素材实测 F1100 的 alpha bbox 原点 (64,59)，故取 -(64,59)。
+        // 原先未设 Location（默认 (0,0)），系统性核查（逐个比对代码锚点与素材 alpha bbox）
+        // 发现全仓只有本处与 BeltDialog 例外。
+        _headerBackground.Location = new Vector2I(-64, -59);
         _headerBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 1100);
         _headerBackground.StretchImage = false;
         _footerBackground.Visible = false;
@@ -216,6 +220,8 @@ public partial class NPCDialog : DXWindow
         bool ok =
             Size == new Vector2I(552, 176)
             && _headerBackground.Index == 1100
+            // 背景锚点 = alpha 可见区原点 -(64,59)（素材实测 F1100 bbox 原点 (64,59)）。
+            && _headerBackground.Location == new Vector2I(-64, -59)
             && _textArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
             && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
             && _closeButton.Index == 161 && _closeButton.Location == new Vector2I(7, 141)

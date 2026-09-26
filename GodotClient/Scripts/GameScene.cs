@@ -7026,6 +7026,8 @@ public partial class GameScene : Control
         => _net?.Connection?.Enqueue(new C.GuildEditMember { Index = index, Rank = rank ?? string.Empty, Permission = permission });
     public void SendGuildKickMember(int index)
         => _net?.Connection?.Enqueue(new C.GuildKickMember { Index = index });
+    /// <summary>退出行会（原版行会窗「退出行会」按钮 F620/621）。</summary>
+    public void SendGuildLeave() => _net?.Connection?.Enqueue(new C.GuildLeave());
     public void SendGuildInviteMember(string name) => _net?.Connection?.SendGuildInviteMember(name);
     public void SendGuildEditNotice(string notice) => _net?.Connection?.SendGuildEditNotice(notice);
     public void SendGuildIncreaseMember() => _net?.Connection?.SendGuildIncreaseMember();

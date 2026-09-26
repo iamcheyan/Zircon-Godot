@@ -577,6 +577,15 @@ namespace Library.Network.ClientPackets
     {
         public int Index { get; set; }
     }
+    /// <summary>
+    /// 退出行会（原版商店/行会窗「退出行会」按钮 F620/621 @(484,376)）。
+    /// 服务端已有完整逻辑 PlayerObject.GuildLeave()（原先只被 @leaveguild 命令调用），
+    /// 这里补一条正式包，供 UI 直接调用，不必让玩家输命令。
+    /// </summary>
+    public sealed class GuildLeave : Packet
+    {
+
+    }
     public sealed class GuildTax : Packet
     {
         public long Tax { get; set; }

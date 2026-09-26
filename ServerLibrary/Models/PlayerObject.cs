@@ -4841,6 +4841,16 @@ namespace Server.Models
                     member.Account.Connection?.Player?.Enqueue(update);
             }
         }
+        /// <summary>
+        /// 退出行会（对应原版行会窗「退出行会」按钮）。
+        /// 逻辑直接复用既有的 GuildLeave()（此前仅由 @leaveguild 命令调用），
+        /// 不新增任何权限/校验逻辑。
+        /// </summary>
+        public void GuildLeave(C.GuildLeave p)
+        {
+            GuildLeave();
+        }
+
         public void GuildKickMember(C.GuildKickMember p)
         {
             if (Character.Account.GuildMember == null) return;

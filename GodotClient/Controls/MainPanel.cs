@@ -315,7 +315,10 @@ public partial class MainPanel : DXImageControl
     public void ApplyLegacyEiHudCaptions()
     {
         SetLegacyCaption(ExchangeButton, "交易栏(Ctrl+C, C)");
-        SetLegacyCaption(MiniMapButton, "小地图(Ctrl+V, V)");
+        // 帧 82/83 在原版标题表里是「任务栏(Ctrl+V, V)」（hud-label-evidence.json
+        // caption_ctor_table[1]），不是「小地图」——小地图是固定 HUD 控件、没有标题。
+        // 此前按按钮的现代语义写成「小地图(Ctrl+V, V)」，与所用贴图的文字不符。
+        SetLegacyCaption(MiniMapButton, "任务栏(Ctrl+V, V)");
         SetLegacyCaption(SkillEntryButton, "技能图鉴(Ctrl+B, B)");
         SetLegacyCaption(ExitButton, "退出游戏(Alt+Q)");
         SetLegacyCaption(LogoutButton, "注销人物(Alt+X)");

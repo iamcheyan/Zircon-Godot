@@ -78,38 +78,22 @@ public partial class CommunicationDialog : DXWindow
         ShowPage(0);
     }
 
-    public void ApplyLegacyEiLayout()
-    {
-        _legacyEiLayout = true;
-        Size = new Vector2I(572, 388);
-        _background.LibraryFile = LibraryFile.GameInter;
-        _background.Index = 350;
-        _background.Location = new Vector2I(-226, -62);
-        _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 350);
-        _background.StretchImage = false;
-        _titleLabel.Visible = false;
-        _pageBackground.Visible = false;
-        // 保留旧版 F350 框，但不能把好友/邮件正文设为透明；这些是
-        // 正式网络数据，旧版背景只负责承载它们。
-        _body.Modulate = Colors.White;
-        _scroll.Modulate = Colors.White;
-        for (int i = 0; i < _tabs.Count; i++)
-        {
-            var tab = _tabs[i];
-            tab.Modulate = new Color(1, 1, 1, 0);
-            // 绝对坐标，避免重复应用旧版皮肤时偏移不断累加。
-            tab.Location = new Vector2I(236 + i * 61, 37);
-        }
-        foreach (var button in new[] { _friendAdd, _friendRemove, _receivedCollectAll, _receivedDeleteAll, _receivedNew, _blockAdd, _blockRemove })
-            if (button != null) button.Modulate = new Color(1, 1, 1, 0);
-        _closeButton.LibraryFile = LibraryFile.GameInter;
-        _closeButton.Index = 161;
-        _closeButton.HoverIndex = 162;
-        _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(532, 350);
-        _closeButton.Size = new Vector2I(28, 26);
-        UpdateClientAreaForLegacySkin();
-    }
+    // 这里**刻意没有** ApplyLegacyEiLayout()。
+    //
+    // 依据（2026-09 审计，含 EI 证据负结果）：
+    //  - layout.json::social_window_evidence.friend_entry_audit 枚举了 15 个 common-window
+    //    ctor、HUD 控件清单与两个 Interface1c cluster，**找不到独立好友列表窗，也找不到
+    //    好友 HUD 按钮**；结论原文要求 "Do not add a standalone friend panel until an
+    //    entry point, resource frame or state field is found."
+    //  - 因此本窗是 Zircon 自有功能，不是 EI 窗口；296x424 来自 Zircon 自带
+    //    Data/Interface.Zl F200（实测 296x424），EI 侧无对应规格
+    //    （EI 的 Interface1c.wil F200 实测仅 36x104，是按钮）。
+    //  - 旧实现曾在此套 GameInter F350（572x388）——那是 **id8 聊天窗**的规格，
+    //    属错配；见 GodotClient/UI/legacy_ui.json 的 note 与 LegacyUiSkin.cs 的说明。
+    //  - 且旧实现的断言（Size==296x424 && Index==200）与方法体（572x388 && F350）
+    //    互相矛盾，一旦被调用必 FAIL。该方法与旧断言均已删除。
+    // 保留：AuditLegacyEiLayout() 仍校验**现代规格**（296x424 / Interface 200），
+    // 作为回归保护。
 
     public bool AuditLayout(out string details)
     {

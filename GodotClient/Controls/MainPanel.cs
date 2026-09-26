@@ -145,7 +145,14 @@ public partial class MainPanel : DXImageControl
         SpellButton = CreateButton(100, 101, 703, 16, 40, 38);
         QuestButton = CreateButton(104, 105, 718, 70, 40, 38);
         MailButton = CreateButton(102, 103, 718, 32, 40, 38);
-        BeltButton = CreateButton(159, 159, 393, 2, 24, 16);
+        // 腰带按钮：layout.json 的 records.hud.belt 写 (393,2) 24x16（其 size.source
+        // 还错写成 "frame 0x6A"=106），但三处独立来源（hud-label-evidence.json 的
+        // records[0] 与 caption_ctor_table[7]、chat-window-control-map.json、
+        // RESEARCH_LOG.md:4936）与 ctor 实参解码都给出 (393,13) 16x14。
+        // 独立裁决：F50 底图在面板相对 y=0..10 完全空白（lum<25），内容从 y=11
+        // 才开始；候选 (393,2) 落在空白处，(393,13) 才压在烘焙内容上。
+        // 且 F159 实测就是 16x14 —— 用 24x16 会横向拉伸。
+        BeltButton = CreateButton(159, 159, 393, 13, 16, 14);
         GroupButton = CreateButton(108, 109, 664, 86, 40, 38);
         MenuButton = CreateButton(106, 107, 703, 85, 40, 38);
         CashShopButton = CreateButton(114, 115, 665, 16, 40, 38);
@@ -602,9 +609,14 @@ public partial class MainPanel : DXImageControl
             * GetViewport().GetMousePosition();
         float orbX = cursor.X - _playerOrb.Location.X;
         bool overHealth = orbX < _playerOrb.Size.X / 2f;
+        // 原版 hover formatter 字面量（layout.json hud_bars_render_evidence
+        // .ratios[*].semantic_string_evidence，均 primary-static）：
+        //   (血量)%d/%d   @0x0047BD70
+        //   (魔法量)%d/%d @0x0047BD60
+        // 此前只显示 "120/200"，缺少前缀。
         string value = overHealth
-            ? $"{_currentHP}/{_stats[Stat.Health]}"
-            : $"{_currentMP}/{_stats[Stat.Mana]}";
+            ? $"(血量){_currentHP}/{_stats[Stat.Health]}"
+            : $"(魔法量){_currentMP}/{_stats[Stat.Mana]}";
 
         _playerOrbValueHint.TextLabel.Text = value;
         _playerOrbValueHint.TextLabel.TextColour = overHealth
@@ -625,6 +637,16 @@ public partial class MainPanel : DXImageControl
         _playerOrbValueHint.Visible = true;
         _playerOrbValueHint.QueueRedraw();
         _playerOrbValueHint.TextLabel.QueueRedraw();
+
+        // 原版 hover formatter 字面量（layout.json hud_bars_render_evidence
+        // .ratios[*].semantic_string_evidence，均 primary-static）：
+        //   (负重)%d/%d    @0x0047BD40
+        //   (经验条)%.2f%s @0x0047BD4C / 0x0047BD5C
+        // 证据未给触发区域，挂在各自条控件上是最自然的落点。
+        if (WeightBar != null)
+            WeightBar.TooltipText = $"(负重){_bagWeight}/{_maxBagWeight}";
+        if (ExperienceBar != null && _maxExperience > 0)
+            ExperienceBar.TooltipText = $"(经验条){_experience / _maxExperience * 100m:F2}%";
     }
 
     public void SetFocus(int currentFP)

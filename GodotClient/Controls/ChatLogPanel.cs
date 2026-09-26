@@ -24,6 +24,7 @@ public partial class ChatLogPanel : Control
     private int _selectedTab;
     private double _idleSeconds;
     private bool _legacyHudLayout;
+    private LegacyUiFrame _legacyBackdrop;
     private const float LegacyHudChatOpacity = 1f;
     private const int MaxLines = 250;
  
@@ -53,14 +54,15 @@ public partial class ChatLogPanel : Control
         // ChatTextBox.Width × 150，而 ChatTextBox 的默认宽度是 400。
         Size = new Vector2(400, 150);
         ClipContents = true;
-        AddChild(new LegacyUiFrame
+        _legacyBackdrop = new LegacyUiFrame
         {
             LibraryFile = LibraryFile.GameInter,
             Index = 350,
             Size = Size,
             Opacity = 0.55f,
             MouseFilter = MouseFilterEnum.Ignore,
-        });
+        };
+        AddChild(_legacyBackdrop);
         _tabBar = new DXControl { Location = Vector2I.Zero, Size = new Vector2I(400, 22), MouseFilter = MouseFilterEnum.Ignore };
         AddChild(_tabBar);
         _textArea = new DXControl { Location = new Vector2I(0, 22), Size = new Vector2I(380, 124), Clip = true, MouseFilter = MouseFilterEnum.Ignore };
@@ -87,6 +89,10 @@ public partial class ChatLogPanel : Control
     public void ApplyLegacyHudLayout()
     {
         _legacyHudLayout = true;
+        // 4.7a F350 是 572x388 的聊天**弹窗外壳**（可见区 (226,62)-(795,448)），
+        // 把它整帧拉伸到常驻槽当底板会得到完全不同的图案。而 F50 的常驻聊天槽
+        // 本身就是纯暗底（实测 mean 7.9 / std 8.1），原版不需要也不应该叠 F350。
+        if (_legacyBackdrop != null) _legacyBackdrop.Visible = false;
         Size = new Vector2I(LegacyHudLayout.ChatLogSize.X + 18, LegacyHudLayout.ChatLogSize.Y);
         ClipContents = true;
         _tabBar.Visible = false;

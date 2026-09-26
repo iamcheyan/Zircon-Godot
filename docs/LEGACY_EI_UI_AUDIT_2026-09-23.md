@@ -1432,3 +1432,42 @@ figure window; **both have figures (id1 character figure, id7 preview)**」。
 坐骑窗 4 个按钮发的 `@上马/@遛马/@收马` 在 Zircon 服务端**未注册**
 （`SEnvir.CommandHandler`），会回 "Command ... does not exist" —— 按钮永久不可用。
 客户端发法与 EI 一致（都是经聊天命令），缺的是服务端实现。
+
+## 独立测试场的正确用法（2026-09-27 补记，重要）
+
+`GodotClient/Scenes/LegacyHudLayoutLab.tscn` 是**不连服务器**的旧版 UI 验收测试场，
+可以直接驱动各窗口的真实控件链。两个易踩的坑：
+
+1. **必须传 `--legacy-hud`，不是 `--legacy-ui`**。
+   `MirSkin.LegacyUiRequested`（`Controls/MirSkin.cs:17`）只检查
+   `--legacy-hud`；只传 `--legacy-ui` 时旧版 WIL 不会加载，
+   日志会出现 `art=(0, 0)`（例如 `[LegacyCharacter] ... GameInter[200] art=(0, 0)`），
+   看起来像几何错误、实际是取图源没切到 EI WIL。
+2. **`ApplyLegacyTestWindow` 会调用各窗口的 `ApplyLegacyEiLayout()`** ——
+   所以测试场里的窗口几何本来就是旧版布局（日志 `root=(244, 328)` 即证据），
+   不需要额外加 legacy 分支。
+
+### 可用的验收开关
+
+```bash
+export ZIRCON_UI_DATA_PATH=<仓库>/Debug/Client/Data
+export ZIRCON_LEGACY_UI_DATA_PATH=/Users/tetsuya/mir2ei/LegacyEI/Data
+godot-mono --path <仓库>/GodotClient res://Scenes/LegacyHudLayoutLab.tscn \
+  -- --legacy-hud [--legacy-audit] [--legacy-npc-selftest] [--legacy-open=<窗口名>]
+```
+
+- `--legacy-audit`：跑各窗口的 `AuditLegacyEiLayout` 几何断言
+- `--legacy-npc-selftest`：用「13 行正文 + 颜色 + 内嵌选项」的样例页驱动
+  F1100 真实输入链（几何审计 → 打开 → 逐行下滚 → 触底禁用 → 上滚 → 点关闭）
+- `--legacy-open=<名>`：直接打开指定窗口
+
+### 实测输出（2026-09-27）
+
+```
+[LegacyNPC] lines=22 twoColumn=True col1=(150, 40)/(149, 136) col2=(305, 40)/(149, 136)
+[NpcF1100SelfTest] PASS failures=0
+```
+
+这一条把 N5 的两列布局（>=7 行切 x=305）从「代码路径验证」升级为**实机渲染验证**：
+22 行正文确实启用第二列，两列几何 (150,40)/(149,136) 与 (305,40)/(149,136)
+与证据逐值吻合。

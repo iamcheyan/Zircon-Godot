@@ -3200,17 +3200,17 @@
    "category": "Monster",
    "loop": false
   },
-  "IcySpiritSoliderAttack": {
+  "IcySpiritSoldierAttack": {
    "file": "377-2.wav",
    "category": "Monster",
    "loop": false
   },
-  "IcySpiritSoliderStruck": {
+  "IcySpiritSoldierStruck": {
    "file": "377-4.wav",
    "category": "Monster",
    "loop": false
   },
-  "IcySpiritSoliderDie": {
+  "IcySpiritSoldierDie": {
    "file": "377-5.wav",
    "category": "Monster",
    "loop": false

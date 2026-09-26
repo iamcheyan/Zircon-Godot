@@ -52,7 +52,7 @@ public partial class MagicDialog : DXWindow
     private (MagicInfo Info, ClientUserMagic UserMagic)? _legacySelectedSkill;
     private int _legacyPage;
     private LegacySkillDetailView _legacyDetail;
-    private DXImageControl _legacyAuxControl;
+    private DXButton _legacyAuxControl;
     public MagicDialog()
     {
         // 原版 MagicDialog 自己在背景图上创建 TitleLabel，位置为 y=8；
@@ -168,16 +168,21 @@ public partial class MagicDialog : DXWindow
         }
         if (_legacyAuxControl == null)
         {
-            _legacyAuxControl = new DXImageControl
+            // F440/441 (399,340) 20x12 是证据 11 个控件里三个**可点击**帧控件之一
+            // （0x43AC80 先处理 +0xD8/+0x18C/+0x240 = 440/441、410/411、412/413），
+            // 美术为小叉＝关闭形态。此前做成 DXImageControl + MouseFilter=Ignore，
+            // 即真正的关闭控件成了纯装饰，功能被错位的 161/162 顶替。
+            _legacyAuxControl = new DXButton
             {
                 LibraryFile = LibraryFile.GameInter,
                 Index = 440,
                 HoverIndex = 441,
+                PressedIndex = 441,
                 FixedSize = true,
                 Size = MirSkin.GetSize(LibraryFile.GameInter, 440),
                 Location = new Vector2I(399, 340),
-                MouseFilter = MouseFilterEnum.Ignore,
             };
+            _legacyAuxControl.MouseClick += (_, _) => Close();
             AddControl(_legacyAuxControl);
         }
         _background.Visible = false;
@@ -190,6 +195,10 @@ public partial class MagicDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(418, 348);
         _closeButton.Size = new Vector2I(28, 26);
+        // SKL-04 证据的 11 个控件里**没有 161/162**；可点击的三个帧控件是
+        // F440/441、F410/411、F412/413。这个 161/162 是我方多加的，关闭功能
+        // 已由 F440/441 承担，故隐藏。
+        _closeButton.Visible = false;
 
         ConfigureLegacyPageControls();
         BuildLegacySchoolButtons();

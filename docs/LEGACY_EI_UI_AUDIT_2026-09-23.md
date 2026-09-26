@@ -1471,3 +1471,61 @@ godot-mono --path <仓库>/GodotClient res://Scenes/LegacyHudLayoutLab.tscn \
 这一条把 N5 的两列布局（>=7 行切 x=305）从「代码路径验证」升级为**实机渲染验证**：
 22 行正文确实启用第二列，两列几何 (150,40)/(149,136) 与 (305,40)/(149,136)
 与证据逐值吻合。
+
+---
+
+## 证据文件的坐标系判据与控件位置全量核查（2026-09-27）
+
+### 教训：本项目已三次遇到同一类「坐标系陷阱」
+
+| # | 场景 | 表现 |
+|---|---|---|
+| 1 | 行会窗背景锚点 | 同一值有多个写入点：构造函数改了，被 `ApplyLegacyEiLayout` 末尾覆盖 |
+| 2 | `ResizeForBackground` | 方法名带 Legacy 语义，实际被现代路径（`ApplyGuild`/`SelectTab`）调用 |
+| 3 | 控件坐标 | `absolute_candidate` 是 `window.x + origin.x`，而各窗 `origin_used` 不同 |
+
+第 3 次差点据此报出假差异：`window-control-position-analysis.json` 里
+库存窗关闭键的 `absolute_candidate` 是 (767,288)，而真正的**窗口相对值**是
+`expression` 里的 (249,288) —— 与我方完全一致。若照 `absolute_candidate` 改，
+会把关闭键挪到窗外。
+
+### 判据：优先信每个窗的专用证据文件
+
+`window-control-position-analysis.json` 的 expression/origin 部分记录**不可靠**，
+已实测两处自相矛盾：
+
+- `window.chat-pop` 的 F360/361：`expression` 是 `(window.y+28)`、
+  `origin_used` 是 (114,76)，但 `absolute_candidate` 是 450（76+28=104≠450）。
+  而 `chat-window-render-evidence.json` 对同一控件明确写
+  `position {x:25, y:332, coordinate_space:"window-relative"}` —— **332 才对**，
+  与我方 `new Vector2I(25 + 40 * i, 332)` 逐值吻合。
+- `window.guild-candidate` 的 F161/162：该文件给 ctor 值 (260,298)（会落在窗口中腰），
+  而 `social-window-render-evidence.json` 的 paint-time 真值是 (556,409)。
+  运行截图里关闭 X 在窗内相对 ≈(574,421)，支持后者。
+
+**结论**：涉及坐标时，优先采信有显式 `coordinate_space` 字段的
+「单窗渲染证据文件」（`chat-window-render-evidence.json`、
+`social-window-render-evidence.json`、`trade-window-render-evidence.json`、
+`store-window-render-evidence.json`、`npc-window-render-evidence.json` 等）；
+`window-control-position-analysis.json` 仅作**线索**，必须用专用文件或截图复核。
+
+### 已全量核过、确认一致的窗口（窗口相对坐标）
+
+| 窗 | 证据出处 | 我方 | 判定 |
+|---|---|---|---|
+| 聊天 F350 | `chat-window-render-evidence.json` | 关闭 (532,350)；频道 (25+40i,332)；滚动 (539,25)/(539,311)；历史区 (40,29)-(531,308)；输入区 (25,311)-(524,326) | **逐值一致 ✓** |
+| 组队 F900 | `social-window-render-evidence.json` | F920/921 @ (9,52)；F910-915 @ (17,197)/(80,197)/(159,197)；关闭 (226,214) | **逐值一致 ✓** |
+| 库存 F250 | `inventory-window-render-evidence.json` | 关闭 (249,288)；action (176,262)；F264/265 (176,262)、F267/268 (176,286) | **一致 ✓** |
+| NPC F1100 | `npc-window-render-evidence.json` | 关闭 F161/162 @ (7,141)；F52/53 @ (290,145)；F54/55 @ (306,136) | **逐值一致 ✓** |
+| 设置 F750 | 同上 | 关闭 (218,238) | **一致 ✓** |
+| 状态 F200 | 同上 | F171/172 @ (176,264) | **一致 ✓** |
+| 技能书 F400 | `skill-window-render-loop-evidence.json` | F450/451 @ (5,21) 等 8 个学派页签 | **一致 ✓** |
+| 坐骑 | 同上 | F860-867 @ (28,244)/(74,244)/(133,244)/(192,244) | **一致 ✓** |
+| 商店 F1000 | `store-window-render-evidence.json` | F1010/1011 @ (266,270)；F1012/1013 @ (127,267) | **一致 ✓** |
+| 小地图 | `map-ui-resource-evidence.json` | 固定矩形 (672,0)-(800,128) | **一致 ✓** |
+
+### 本轮据专用证据修正的
+
+- **行会窗关闭键**：`(418,570)` → `(556,409)`（`social-window-render-evidence.json`
+  paint-time 真值；原值 y=570 超出 F600 可见美术区高度 444）。
+- **行会窗滚动条**：`(428,80)` → `(548,208)`（`guild-window-paint-evidence.json`）。

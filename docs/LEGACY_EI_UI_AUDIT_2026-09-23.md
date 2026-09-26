@@ -1294,3 +1294,53 @@ Godot `MainPanel` 与独立布局场都以 GameInter F50 构造旧版 HUD，并 
 **2026-09-25 CHAT-05 用户截图复核：EI 聊天控件改用原始 WIL 帧：**用户最新截图显示 F350 内容区为空、输入栏不可见/不可输入、滚动锁链和频道按钮缺失。回查 `chat-window-unified-model.json`、`chat-window-render-evidence.json`：原版 id8/F350 为572×388，历史区 `(40,29,491,279)`、19行×14px，输入区 `(25,311,499,15)`；F360–371 是六个36×34频道控件，F380 是16×502纵向锁链轨道，F381/F382/F383 在目标本地 WIL 为空帧，故上下按钮仅保留已核定的命中区。
 
 定位到 EI UI 帧取图的资源优先级问题：`LegacyEI/Data/GameInter.wil/.wix` 与转换后的 `GameInter.Zl` 同时存在，但 `MirSkin` 原先优先读取 `.Zl`，会让当前聊天按钮/滚动条的显示受转换产物内容影响。`--legacy-hud` 下现优先从原始 WIL/WIX 解码帧，同时统一 `GetSize`/`GetOffset` 的来源；非 legacy/world 资源仍走 ZL。独立读取目标 WIL 确认 F350 1024×512、F360–371 各36×34、F380 16×502。消息接收链已在 `GameScene.AddChatMessage` 分发到 `_chatLog` 与 `_legacyChatDialog`；当前空白历史本身无法在没有消息包时填充，本次没有伪造历史消息。构建通过；现有 `DISPLAY=:0` 登录进程仍在使用旧程序集，本轮未关闭它或重复登录抢占账号，因此 WIL 优先修正后的完整屏幕/键盘实机截图待下一次安全重启验收。
+
+**2026-09-27 id7 第二状态窗（证据里的「GroupPopup」）解码定案：**
+
+`legacy_ui.json` 把 `window.group-pop-candidate` 命名为 `GroupPopup` 是**错的**。
+`window-paint-and-hotkey-dispatch-evidence.json` 的
+`cell_analysis.window_identities_final.id7` 给出真身：
+
+```
+obj hero+0x47C28, ctor 0x4503B0, frame 200, (560,0), 244x328
+identity: 状态窗-角色形象预览
+  paint 0x450530: frame selector 0x566DD4 with byte[+0x551]
+  character figure at (window.x+0x61, window.y+0xC8)
+  13 SetRect attribute slots +0x578..+0x5E8
+  mouse 0x450AC0
+evidence: derived-primary
+```
+
+`status-window-family-evidence.json` 的 `audit_vs_exe` 佐证：
+「Round 28 status-window anchor figure slot (window.x+0x61, window.y+0xC8)
+confirmed in id1 paint 0x44B560 (NOT id7) — Round 32 'id7 figure' was the OTHER
+figure window; **both have figures (id1 character figure, id7 preview)**」。
+
+**11 个槽位矩形已从 `setrect_calls.json` 全部解出**（id7 ctor `0x4503B0` 之后
+的 SetRect 调用，参数序 `[bottom, right, top, left]`）：
+
+| 调用 VA | left,top - right,bottom | 尺寸 | 对应 id1 槽 |
+|---|---|---|---|
+| 0x004504EC | (86,114)-(146,204) | 60x90 | 武器 |
+| 0x00450500 | (38,70)-(91,154) | 53x84 | 衣服 |
+| 0x004504D5 | (94,71)-(143,104) | 49x33 | 项链（即证据所称 49x33 special slot） |
+| 0x0045042B | (177,70)-(215,108) | 38x38 | 火把 |
+| 0x00450470 | (27,186)-(65,224) | 38x38 | 左镯 |
+| 0x0045048D | (175,186)-(213,224) | 38x38 | 右镯 |
+| 0x004504A4 | (27,227)-(65,265) | 38x38 | 左戒 |
+| 0x004504C1 | (175,227)-(213,265) | 38x38 | 右戒 |
+| 0x00450442 | (27,264)-(65,302) | 38x38 | 头盔 |
+| 0x00450459 | (64,264)-(102,302) | 38x38 | 鞋 |
+| 0x0045051A | (103,264)-(141,302) | 38x38 | 毒 |
+
+**结论：id7 的槽位矩形与 id1 完全一致**（逐一比对 `CharacterDialog.cs` 的 11
+条装备槽矩形，全部吻合），是同一套装备槽 + 角色形象在 `(560,0)` 的**第二实例**，
+不是组队弹窗。
+
+我方**尚未实现 id7**。实现建议：复用 `CharacterDialog` 的 legacy 布局新建第二
+实例置于 `(560,0)`，由 HUD cap15（状态栏）在 toggle id1 之外一并打开
+（证据 `hud-caption-action-tail-evidence.json`：cap15 = toggle id1 +
+`0x423E80(+0x29CE4, 0xC8, [0x29CFC], [0x29D00], 0xF4, 0x148)` 开 244x328 面板）。
+
+另注：`legacy_ui.json` 的 `window.skill-book`（296x332 @(0,0)）同样有误，真值
+452x380 @(348,0)，已于 commit `0ddb3669` 修正并留档。

@@ -4842,6 +4842,54 @@ namespace Server.Models
             }
         }
         /// <summary>
+        /// 盟主转让（对应原版行会窗「盟主转让」按钮 F614/615 @(121,402)）。
+        /// 服务端此前没有该操作。按 GuildEditMember 的权限模式实现：
+        /// 仅现任盟主可发起，目标必须是本会成员；转让后原盟主降为公会默认职衔/权限、
+        /// 目标升为盟主（职衔 "Guild Leader"，与 GuildCreate 建会时一致），
+        /// 并向全会广播同一份 GuildUpdate（与既有实现同样的广播方式）。
+        /// </summary>
+        public void GuildTransferLeader(C.GuildTransferLeader p)
+        {
+            if (Character.Account.GuildMember == null) return;
+
+            GuildMemberInfo self = Character.Account.GuildMember;
+
+            if ((self.Permission & GuildPermission.Leader) != GuildPermission.Leader)
+            {
+                Connection.ReceiveChatWithObservers(con => con.Language.GuildEditMemberPermission, MessageType.System);
+                return;
+            }
+
+            GuildMemberInfo target = self.Guild.Members.FirstOrDefault(x => x.Index == p.Index);
+
+            if (target == null)
+            {
+                Connection.ReceiveChatWithObservers(con => con.Language.GuildMemberNotFound, MessageType.System);
+                return;
+            }
+
+            if (target == self) return; // 转给自己无意义
+
+            GuildInfo guild = self.Guild;
+
+            self.Permission = guild.DefaultPermission;
+            self.Rank = guild.DefaultRank;
+            target.Permission = GuildPermission.Leader;
+            target.Rank = "Guild Leader"; // 与 GuildCreate 建会时的盟主职衔一致
+
+            S.GuildUpdate update = guild.GetUpdatePacket();
+
+            update.Members.Add(self.ToClientInfo());
+            update.Members.Add(target.ToClientInfo());
+
+            foreach (GuildMemberInfo member in guild.Members)
+                member.Account.Connection?.Player?.Enqueue(update);
+
+            self.Account.Connection?.Player?.Broadcast(new S.GuildChanged { ObjectID = self.Account.Connection.Player.ObjectID, GuildName = guild.GuildName, GuildRank = self.Rank });
+            target.Account.Connection?.Player?.Broadcast(new S.GuildChanged { ObjectID = target.Account.Connection.Player.ObjectID, GuildName = guild.GuildName, GuildRank = target.Rank });
+        }
+
+        /// <summary>
         /// 退出行会（对应原版行会窗「退出行会」按钮）。
         /// 逻辑直接复用既有的 GuildLeave()（此前仅由 @leaveguild 命令调用），
         /// 不新增任何权限/校验逻辑。

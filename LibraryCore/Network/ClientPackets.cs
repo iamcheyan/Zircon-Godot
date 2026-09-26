@@ -586,6 +586,14 @@ namespace Library.Network.ClientPackets
     {
 
     }
+    /// <summary>
+    /// 盟主转让（原版行会窗「盟主转让」按钮 F614/615 @(121,402)）。
+    /// 服务端此前没有该操作，与 GuildLeave 同批新增。
+    /// </summary>
+    public sealed class GuildTransferLeader : Packet
+    {
+        public int Index { get; set; }
+    }
     public sealed class GuildTax : Packet
     {
         public long Tax { get; set; }

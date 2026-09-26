@@ -7028,6 +7028,8 @@ public partial class GameScene : Control
         => _net?.Connection?.Enqueue(new C.GuildKickMember { Index = index });
     /// <summary>退出行会（原版行会窗「退出行会」按钮 F620/621）。</summary>
     public void SendGuildLeave() => _net?.Connection?.Enqueue(new C.GuildLeave());
+    /// <summary>盟主转让（原版行会窗「盟主转让」按钮 F614/615）。</summary>
+    public void SendGuildTransferLeader(int index) => _net?.Connection?.Enqueue(new C.GuildTransferLeader { Index = index });
     public void SendGuildInviteMember(string name) => _net?.Connection?.SendGuildInviteMember(name);
     public void SendGuildEditNotice(string notice) => _net?.Connection?.SendGuildEditNotice(notice);
     public void SendGuildIncreaseMember() => _net?.Connection?.SendGuildIncreaseMember();

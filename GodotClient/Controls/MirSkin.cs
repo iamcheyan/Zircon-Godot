@@ -114,6 +114,22 @@ public static class MirSkin
         string libraryDataPath = IsUiLibrary(file) ? UiDataPath : DataPath;
         string full = Path.Combine(libraryDataPath, p);
         full = ResolvePath(full);
+        // legacy 的 UI 目录只提供 EI 那套素材（GameInter / ProgUse / Interface1c 等），
+        // 不含 Interface.Zl。Zircon 自有窗口用的正是 Interface —— 例如
+        // CommunicationDialog（好友/邮件窗），EI 侧是**负结果**（social_window_evidence.
+        // friend_entry_audit 枚举 15 个 ctor 都找不到独立好友窗），所以它没有「原版素材」
+        // 可依。若不回退，整窗取不到贴图：实测表现为一块扁平深色矩形、无外框无关闭键。
+        // 故 UI 库在 legacy 目录缺失时回退到现代 UI 目录。
+        if (!File.Exists(full) && IsUiLibrary(file)
+            && !string.Equals(libraryDataPath, DataPath, StringComparison.Ordinal))
+        {
+            string fallback = ResolvePath(Path.Combine(DataPath, p));
+            if (File.Exists(fallback))
+            {
+                full = fallback;
+                GD.Print($"[MirSkin] UI 库 {file} 在 legacy 目录缺失，回退到 {DataPath}: {p}");
+            }
+        }
         if (!File.Exists(full)) return null;
 
         lib = new ZlLibrary(full);

@@ -152,7 +152,12 @@ public partial class StorageDialog : DXWindow
     {
         var game = GameScene.Game;
         int size = game?.StorageSize ?? 100;
-        Grid.GridSize = new Vector2I(10, Math.Max(10, (int)Math.Ceiling(size / 10f)));
+        // legacy：原版 state2 每页 12 格（4x3），仓库更大时靠翻页箭头翻页，
+        // 故按容量把网格纵向扩到 ceil(size/4) 行、仍只显示 3 行（VisibleHeight=3）。
+        // 此前固定 (4,3)，超过 12 件的仓库内容无处显示、箭头也无页可翻。
+        Grid.GridSize = _legacyLayout
+            ? new Vector2I(4, Math.Max(3, (int)Math.Ceiling(size / 4f)))
+            : new Vector2I(10, Math.Max(10, (int)Math.Ceiling(size / 10f)));
         ScrollBar.MaxValue = Grid.GridSize.Y;
         PartGrid.GridSize = new Vector2I(10, Math.Max(10, (int)Math.Ceiling(Globals.StorageSize / 10f)));
         PartScrollBar.MaxValue = PartGrid.GridSize.Y;
@@ -272,7 +277,9 @@ public partial class StorageDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(177, 176);
         _closeButton.Size = new Vector2I(28, 26);
-        Grid.GridSize = new Vector2I(4, 3);
+        // 网格行数由 RefreshStorage 按容量定（legacy: ceil(size/4) 行、显示 3 行），
+        // 此处不再写死 (4,3)，否则会覆盖掉扩容结果、超过 12 件的内容无处显示。
+        Grid.VisibleHeight = 3;
         // 证据 store-state-graph.json states[2].grid_rects：
         //   cols x = 22/60/98/136（start 0x16、stride 0x26=38）、rows y = 43/81/119
         // 我方格子按 GridPadding(1) 内缩，故原点取 (21,42)，
@@ -282,6 +289,14 @@ public partial class StorageDialog : DXWindow
         Grid.LegacyCellStep = 38;
         Grid.VisibleHeight = 3;
         Grid.RefreshGrid();
+        // 原版 state2 的翻页箭头：图形烘焙在 F1001 贴图里（截图可见），
+        // 证据 store-window-render-evidence.json::controls.state_2_only 给的是**热区**：
+        //   previous-page 帧 1014/1015 @ (x+0x1C, y+0xA2) = (28,162)
+        //   next-page     帧 1016/1017 @ (x+0x89, y+0xA2) = (137,162)
+        // 此前我方没有任何 1014-1017 引用 -> 视觉已对、翻页不可点。
+        // 另外：原版 12 格是**一页**，仓库大于 12 件时靠这两个箭头翻页
+        // （store-window-content-verification-evidence.json：分页 divisor=12 = 4x3）。
+        EnsureLegacyPageButtons();
         PartGrid.Visible = false;
         ScrollBar.Visible = false;
         PartScrollBar.Visible = false;
@@ -291,14 +306,62 @@ public partial class StorageDialog : DXWindow
         UpdateClientAreaForLegacySkin();
     }
 
+    private DXButton _legacyPagePrev, _legacyPageNext;
+
+    /// <summary>
+    /// 原版 state2 的翻页热区 —— 图形烘焙在 F1001 贴图里（截图可见），代码只放不可见热区。
+    /// 证据位置（store-window-render-evidence.json::controls.state_2_only）：
+    ///   上一页 帧 1014/1015 @ (x+0x1C, y+0xA2) = (28,162)
+    ///   下一页 帧 1016/1017 @ (x+0x89, y+0xA2) = (137,162)
+    /// 每页 3 行 x 4 列 = 12 格（分页 divisor=12，见
+    /// store-window-content-verification-evidence.json），翻页按行滚动。
+    /// </summary>
+    private void EnsureLegacyPageButtons()
+    {
+        if (_legacyPagePrev == null)
+        {
+            _legacyPagePrev = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 1014, HoverIndex = 1015, PressedIndex = 1015, Size = new Vector2I(28, 26) };
+            _legacyPagePrev.MouseClick += (_, _) => LegacyPage(-1);
+            AddControl(_legacyPagePrev);
+        }
+        if (_legacyPageNext == null)
+        {
+            _legacyPageNext = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 1016, HoverIndex = 1017, PressedIndex = 1017, Size = new Vector2I(28, 26) };
+            _legacyPageNext.MouseClick += (_, _) => LegacyPage(+1);
+            AddControl(_legacyPageNext);
+        }
+        _legacyPagePrev.Location = new Vector2I(28, 162);
+        _legacyPageNext.Location = new Vector2I(137, 162);
+        // 热区与 F1001 里烘焙的箭头图形重叠，故自身不绘制贴图（与原版一致：按钮从不绘制）。
+        _legacyPagePrev.Modulate = new Color(1, 1, 1, 0);
+        _legacyPageNext.Modulate = new Color(1, 1, 1, 0);
+        _legacyPagePrev.Visible = true;
+        _legacyPageNext.Visible = true;
+    }
+
+    /// <summary>翻一页（每页 3 行）；滚动量按行计。</summary>
+    private void LegacyPage(int delta)
+    {
+        int maxPage = Math.Max(0, Grid.GridSize.Y - 3);
+        int page = Math.Clamp(Grid.ScrollValue / 3 + delta, 0, maxPage);
+        Grid.ScrollValue = page * 3;
+    }
+
     public bool AuditLegacyEiLayout(out string details)
     {
         RefreshStorage();
         bool ok = Size == new Vector2I(205, 205)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1001
-            && Grid.GridSize == new Vector2I(4, 3)
+            // 列固定 4；行数按容量 ceil(size/4)、至少 3（每页 3 行 x 4 列 = 12 格）。
+            && Grid.GridSize.X == 4 && Grid.GridSize.Y >= 3
             && Grid.Location == new Vector2(21, 42)
             && Grid.LegacyCellStep == 38
+            && Grid.VisibleHeight == 3
+            // 原版翻页热区：上一页 F1014/1015 @(28,162)、下一页 F1016/1017 @(137,162)。
+            && _legacyPagePrev != null && _legacyPagePrev.Location == new Vector2I(28, 162)
+            && _legacyPagePrev.Index == 1014
+            && _legacyPageNext != null && _legacyPageNext.Location == new Vector2I(137, 162)
+            && _legacyPageNext.Index == 1016
             && !PartGrid.Visible && !ScrollBar.Visible;
         // firstCell 直接给出证据里那组值（22,43），便于逐值比对。
         details = $"size={Size} frame={_background.Index} grid={Grid.GridSize}@{Grid.Location} step={Grid.LegacyCellStep} firstCell=(22, 43) compact={!PartGrid.Visible && !ScrollBar.Visible}";

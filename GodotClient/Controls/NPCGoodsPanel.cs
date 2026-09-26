@@ -26,11 +26,41 @@ public partial class NPCGoodsPanel : DXControl
     private CurrencyInfo _currency;
     private int _selected = -1;
 
+    // ── 旧版 EI 商店窗（窗口 id2）几何 ───────────────────────────────────────
+    // 证据：store-window-render-evidence.json / store-window-content-verification-evidence.json
+    //   · 根 = GameInter F1000、(0,0)、300x304（state0 BUY / state3 CRAFT 共用 F1000）
+    //   · 素材 F1000 画布 512x512、alpha 可见区 (106,102)-(405,408) -> 背景锚点 -(106,102)
+    //   · 购买列表 5 行，rowsY 40/86/132/178/224 -> 行距 46、首行 y=40
+    //   · 控件（window-control-position-analysis.json，geometric_status=inside-window）：
+    //       close   帧 1010/1011 @ (window.x+266, window.y+270) 28x26
+    //       confirm 帧 1012/1013 @ (window.x+127, window.y+267) 48x20
+    //   · 我方现代布局是 245x402 / 行距 43 / 首行 y=38 / 用 LegacyWindowFrame(Interface 素材)
+    // 未在证据中的项（不臆测，仅取能塞进 300 宽且不与 close 重叠的值）：
+    //   · 列表的 x 与宽度（证据只给 rowsY）；此处用 x=4、宽 250
+    //   · 26 个槽位 +0x660 stride 0x24=36 的列分布（证据只给 stride，未给列 x）
+    private bool _legacyEiLayout;
+    private int _rowHeight = 43;   // 原版 NPCGoodsDialog 行距
+    private int _rowInsetY = 1;    // 首行在列表内的 y 偏移
+    private DXImageControl _legacyBackground;
+
     public NPCGoodsPanel()
     {
         Size = new Vector2I(245, 402);
         _frame = new LegacyWindowFrame { Size = Size, HasTitle = true, HasFooter = true };
         AddControl(_frame);
+        // legacy 背景（默认隐藏；ApplyLegacyEiLayout 时替换掉 _frame 的 Interface 外框）。
+        _legacyBackground = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 1000,
+            FixedSize = true,
+            StretchImage = false,
+            Size = new Vector2I(300, 307),
+            Location = new Vector2I(-106, -102),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddControl(_legacyBackground);
         AddControl(new DXLabel { Text = "商品", FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(245, 18), IsControl = false });
         _list = new DXControl { Location = new Vector2I(9, 37), Size = new Vector2I(227, 302), Clip = true }; AddControl(_list);
         _scroll = new DXVScrollBar { Location = new Vector2I(217, 38), Size = new Vector2I(19, 301), VisibleSize = 302, Change = 43, HideWhenNoScroll = true };
@@ -73,6 +103,15 @@ public partial class NPCGoodsPanel : DXControl
         _guildFunds.Visible = _currency?.Type == CurrencyType.Gold;
         _guildFunds.Enabled = _guildFunds.Visible && GameScene.Game?.HasGuild == true;
         _scroll.Value = 0;
+        // legacy（旧版 EI 商店窗）的根尺寸/列表/按钮几何由 ApplyLegacyEiLayout 固定，
+        // 这里不能按现代公式重算，否则会覆盖掉 300x304 与行距 46。
+        if (_legacyEiLayout)
+        {
+            _scroll.MaxValue = Math.Max(0, _goods.Count * _rowHeight - 2);
+            RefreshRows();
+            Visible = _goods.Count > 0 || _hasSellableTypes;
+            return;
+        }
         int clientHeight = Math.Clamp(_goods.Count * 43 - 1, 42, 299);
         Size = new Vector2I(245, clientHeight + 100);
         _frame.Size = Size;
@@ -88,6 +127,53 @@ public partial class NPCGoodsPanel : DXControl
         // 原版 BuySell 页即使没有可购买商品，只要 Page.Types 非空，
         // 仍会打开背包出售模式；商品面板保留可见的出售提交入口。
         Visible = _goods.Count > 0 || _hasSellableTypes;
+    }
+
+    /// <summary>
+    /// 旧版 EI 商店窗（窗口 id2）的购买态（state0 BUY）几何。
+    /// 详见类顶部 _legacyEiLayout 附近的证据注释。
+    /// </summary>
+    public void ApplyLegacyEiLayout()
+    {
+        _legacyEiLayout = true;
+        _rowHeight = 46;
+        _rowInsetY = 0;
+        Size = new Vector2I(300, 304);
+        _frame.Visible = false;
+        _legacyBackground.Visible = true;
+        // 列表：5 行、行距 46、首行 y=40（证据 rowsY 40/86/132/178/224）。
+        // x 与宽度证据未给，取 4/250 以塞进 300 宽且不与 close(266) 重叠。
+        _list.Location = new Vector2I(4, 40);
+        _list.Size = new Vector2I(250, 230);
+        _scroll.Location = new Vector2I(254, 40);
+        _scroll.Size = new Vector2I(19, 228);
+        _scroll.VisibleSize = 230;
+        _scroll.Change = _rowHeight;
+        // close 帧 1010/1011 @ (266,270) 28x26；confirm 帧 1012/1013 @ (127,267) 48x20。
+        _buy.Location = new Vector2I(127, 267);
+        _buy.Size = new Vector2I(48, 20);
+        _buy.LibraryFile = LibraryFile.GameInter;
+        _buy.Index = 1012;
+        _buy.HoverIndex = 1013;
+        _buy.PressedIndex = 1013;
+        _guildFunds.Visible = false;
+    }
+
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = _legacyEiLayout
+            && Size == new Vector2I(300, 304)
+            && _legacyBackground.Visible && !_frame.Visible
+            && _legacyBackground.LibraryFile == LibraryFile.GameInter
+            && _legacyBackground.Index == 1000
+            && _legacyBackground.Location == new Vector2I(-106, -102)
+            && _rowHeight == 46
+            && _list.Location == new Vector2I(4, 40)
+            && _buy.Location == new Vector2I(127, 267)
+            && _buy.Size == new Vector2I(48, 20)
+            && _buy.Index == 1012;
+        details = $"size={Size} frame={_legacyBackground.Index}@{_legacyBackground.Location} rowHeight={_rowHeight} list={_list.Location}/{_list.Size} buy={_buy.Location}/{_buy.Size}#{_buy.Index}";
+        return ok;
     }
 
     public bool TrySelectForSale(DXItemCell source)
@@ -219,7 +305,7 @@ public partial class NPCGoodsPanel : DXControl
     private void RefreshRows()
     {
         foreach (var row in _rows) { _list.RemoveControl(row); row.QueueFree(); } _rows.Clear();
-        int first = _scroll.Value / 43;
+        int first = _scroll.Value / _rowHeight;
         for (int i = first; i < _goods.Count && i < first + 7; i++)
         {
             var good = _goods[i];
@@ -231,7 +317,7 @@ public partial class NPCGoodsPanel : DXControl
                 BackColour = selectedRow ? new Color(.22f, .16f, .07f, .75f) : Colors.Transparent,
                 Border = selectedRow, BorderColour = new Color(1f, .85f, .3f),
                 LibraryFile = LibraryFile.Interface, Index = -1,
-                Location = new Vector2I(1, (i - first) * 43 + 1), Size = new Vector2I(204, 40),
+                Location = new Vector2I(1, (i - first) * _rowHeight + _rowInsetY), Size = new Vector2I(204, 40),
             };
             row.AddControl(new DXImageControl
             {

@@ -135,6 +135,9 @@ public partial class NPCDialog : DXWindow
         _text.Position = new Vector2(0, 0);
         UpdateLegacyScrollEnabled();
         UpdateClientAreaForLegacySkin();
+        // 商品面板（商店窗 id2 的购买态）一并切到旧版几何：GameInter F1000 / 300x304 /
+        // 行距 46 / close 1010-1011 / confirm 1012-1013。
+        _goods.ApplyLegacyEiLayout();
     }
 
     /// <summary>legacy 行级滚动：_scrollLine ∈ [0, 行数-可视行数]，步进 1。</summary>
@@ -158,6 +161,20 @@ public partial class NPCDialog : DXWindow
         int maxScroll = GetLegacyMaxScroll();
         _scrollUp.Enabled = maxScroll > 0 && _scrollLine > 0;
         _scrollDown.Enabled = maxScroll > 0 && _scrollLine < maxScroll;
+    }
+
+    /// <summary>验收测试场用：商品面板（商店窗 id2 购买态）的 legacy 布局审计。</summary>
+    public bool AuditLegacyGoods(out string details) => _goods.AuditLegacyEiLayout(out details);
+
+    /// <summary>
+    /// 验收测试场用：强制显示商品面板。测试场不连服务器、没有 NPC 商品数据，
+    /// SetGoods 不会把 Visible 置真；这里只为了让截图能看到 F1000 外框、
+    /// 购买按钮与列表区域，不伪造任何商品行。
+    /// </summary>
+    public void ShowGoodsForTest()
+    {
+        _goods.ApplyLegacyEiLayout();
+        _goods.Visible = true;
     }
 
     public bool AuditLegacyEiLayout(out string details)

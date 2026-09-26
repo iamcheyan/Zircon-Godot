@@ -133,6 +133,16 @@ public partial class LegacyHudLayoutLab : Control
         _hud.ExchangeButton.MouseClick += (o, e) => Toggle(_trade);
     }
 
+    /// <summary>
+    /// 测试场用：打开 NPC 窗并强制显示商品面板（商店窗 id2 购买态），
+    /// 便于对 F1000 外框/购买按钮做截图验证。
+    /// </summary>
+    private DXWindow OpenGoodsForTest()
+    {
+        _npc.ShowGoodsForTest();
+        return _npc;
+    }
+
     private void OpenRequestedWindow()
     {
         foreach (string arg in OS.GetCmdlineUserArgs())
@@ -151,6 +161,7 @@ public partial class LegacyHudLayoutLab : Control
                 "belt" => _belt,
                 "horse" => _horse,
                 "npc" => _npc,
+                "goods" or "shop" => OpenGoodsForTest(),
                 "trade" => _trade,
                 "guild" => _guild,
                 "storage" => _storage,
@@ -163,6 +174,7 @@ public partial class LegacyHudLayoutLab : Control
             if (window != null) WindowManager.Open(window, _canvas);
             break;
         }
+
         bool expandedRequested = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
             expandedRequested |= arg == "--legacy-character-expanded";
@@ -424,8 +436,11 @@ public partial class LegacyHudLayoutLab : Control
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);
         bool orb = _hud.AuditLegacyOrb(out string orbDetails);
         bool hud = _hud.AuditLegacyHud(out string hudDetails);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3}");
+        // 商店窗 id2 的购买态面板（NPCGoodsPanel）legacy 布局。
+        bool goods = _npc.AuditLegacyGoods(out string goodsDetails);
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods}");
+        GD.Print($"[LegacyAudit] goods {goodsDetails}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
         GD.Print($"[LegacyAudit] magic {magicDetails}");

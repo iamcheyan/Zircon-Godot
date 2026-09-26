@@ -230,7 +230,33 @@ frame 18 的还原对画面无影响：客户端 DB 中没有任何地图引用 
 | 机器 | 客户端 Data 路径 | `MiniMap.Zl` md5 | 状态 |
 |---|---|---|---|
 | Mac（本机） | `/Users/tetsuya/mir2ei/Data/`（`Zircon/Debug/Client` 软链到此） | `ea09c837…` | ✅ 已修正 |
-| 82 debian | `/home/tetsuya/development/zircon/Debug/Client/Data/` | `f83f6ec4…` | ⬜ 待同步 |
+| 82 debian | `/home/tetsuya/development/zircon/Debug/Client/Data/` | `ea09c837…` | ✅ 已同步（2026-09-26） |
 
-82 的服务器 DB 位于 `/home/tetsuya/development/Debug/ServerCore/Database/System.db`
-（与 Mac 同构，服务端从 `Debug/ServerCore/` 启动）。
+82 的服务器 DB 位于
+`/home/tetsuya/development/zircon/Debug/ServerCore/Database/System.db`
+（服务端 cwd 即 `.../zircon/Debug/ServerCore`，直接 `dotnet ServerCore.dll` 启动，
+无 systemd 单元；另有一份未使用的
+`/home/tetsuya/development/Debug/ServerCore/Database/System.db`）。
+
+### 五、82 debian 同步记录（2026-09-26）
+
+同步前状态：`MiniMap.Zl` = `f83f6ec4…`（287 帧，修正前）；
+`FileName=3`（Sabuk Keep）与 `FileName=4`（Numa Village）**都指向 MiniMap 7** ——
+与本机修正前完全相同的错绑，所以 82 上 `4.map` 小地图也显示成沙巴克。
+
+执行内容：
+
+| 步骤 | 结果 |
+|---|---|
+| 备份 | `MiniMap.Zl.before-20260926`、两份 `System.db.before-20260926` |
+| 换库 | `MiniMap.Zl` → `ea09c837d6209176f0372ccc23e566de`（md5 已核对） |
+| 改绑 | `set-minimap 3 287`；`4` 保持 7（新库里 frame 7 = EI `FMMap` f6 = Numa） |
+| 两份 DB | 同步后 md5 均为 `d9b99f02ef6b00ed51ef2ba13fd25a52` |
+| 服务端 | 停服 → 写库 → 读回 → 重启；日志 `Network Started. Listen: 127.0.0.1:7000` |
+
+注意事项：
+
+- 82 的 `MiniMap.Zl` 与两份 `System.db` 已同步，但 82 的 DB 有 **627 条 MapInfo**
+  （本机为 244 条），是不同世代的数据，**不可整份互相覆盖**。
+- 82 的服务端 `Config.IPAddress = 127.0.0.1`（配置存在 `System.db` 内），
+  只接受本机连接，远程客户端连不上 —— 这是既有配置，与本次同步无关。

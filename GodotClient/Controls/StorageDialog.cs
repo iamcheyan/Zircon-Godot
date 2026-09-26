@@ -263,7 +263,9 @@ public partial class StorageDialog : DXWindow
         _background.FixedSize = true;
         _background.StretchImage = false;
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 1001);
-        _background.Location = Vector2I.Zero;
+        // 同 6 窗约定：alpha 可见区原点对齐窗口 (0,0)。
+        // 素材实测 F1001 画布 256x256、alpha bbox (28,26)-(225,229)，故取 -(28,26)。
+        _background.Location = new Vector2I(-28, -26);
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;

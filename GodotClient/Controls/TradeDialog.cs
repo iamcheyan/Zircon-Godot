@@ -120,7 +120,10 @@ public partial class TradeDialog : DXWindow
         _background.FixedSize = true;
         _background.StretchImage = false;
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 1050);
-        _background.Location = Vector2I.Zero;
+        // 与 InventoryDialog/CharacterDialog/GroupDialog/QuestDialog/MagicDialog/ConfigDialog
+        // 相同的约定：把该帧 alpha 可见区原点对齐到窗口 (0,0)。
+        // 素材实测 F1050 画布 512x512、alpha bbox (14,91)-(497,421)，故取 -(14,91)。
+        _background.Location = new Vector2I(-14, -91);
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;

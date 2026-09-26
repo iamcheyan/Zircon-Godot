@@ -86,7 +86,9 @@ public partial class GuildDialog : DXWindow
         _background.FixedSize = true;
         _background.StretchImage = false;
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 600);
-        _background.Location = Vector2I.Zero;
+        // 同 6 窗约定：alpha 可见区原点对齐窗口 (0,0)。
+        // 素材实测 F600 画布 1024x512、alpha bbox (214,33)-(807,477)，故取 -(214,33)。
+        _background.Location = new Vector2I(-214, -33);
         _closeButton.LibraryFile = LibraryFile.GameInter;
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
@@ -475,7 +477,11 @@ public partial class GuildDialog : DXWindow
         _increaseMemberButton.Location = new Vector2I(18, 500);
         _increaseStorageButton.Location = new Vector2I(146, 500);
         _manageButton.Location = new Vector2I(362, 500);
-        _background.Location = _guild == null && _tab == 0 ? Vector2I.Zero : new Vector2I(0, 62);
+        // 背景锚点 = 该帧 alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）。
+        // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
+        _background.Location = _guild == null && _tab == 0
+            ? new Vector2I(-214, -33)
+            : new Vector2I(-214, -33 + 62);
     }
 
     private void UpdateTabVisibility()

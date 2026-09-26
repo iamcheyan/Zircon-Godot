@@ -27,14 +27,13 @@ public partial class GameScene : Control
     public static bool IsCompanionEnabled => CompanionEnabled;
     public static bool IsConsignmentEnabled => ConsignmentEnabled;
     /// <summary>
-    /// UI 缩放系数：跟随窗口高度保持逻辑视口高恒定（原版 1024x768 基准）。
-    /// 窗口 1536 高 → 2x（旧行为）；更高窗口等比放大，UI/字体占屏比例不变。
+    /// HUD 缩放系数：跟随世界/viewport 的屏幕缩放。
+    /// Retina/高 DPI 的窗口尺寸已经由 Godot viewport 体现，不能再把显示器的 2x
+    /// 直接乘进来；这里的额外倍率只针对 HUD 的视觉尺寸。
     /// </summary>
     internal static float UiScale { get; private set; } = 1f;
+    internal static float WorldScale { get; private set; } = 1f;
     private const float UiScaleBaseHeight = 768f;
-    // The rendered world and the HUD share one scale so actors, terrain,
-    // effects and interface retain the same physical size at every window size.
-    internal static float WorldScale => UiScale;
     private const string UiAuditArgument = "--ui-layout-audit";
     private Vector2 _lastHudViewport;
     private float _lastHudScale;
@@ -4918,7 +4917,8 @@ public partial class GameScene : Control
     }
 
     /// <summary>
-    /// HUD 逻辑画布基于原版 1024x768 设计尺寸缩放。取高/宽两个方向中较小的缩放
+    /// 世界和 HUD 都基于原版 1024x768 设计尺寸缩放，并使用同一个屏幕倍率。取高/宽
+    /// 两个方向中较小的缩放
     /// 倍率 (限制因素), 保证逻辑画布「至少」1024x768 —— 固定 HUD (主面板宽 1024)
     /// 在任何窗口比例下都装得下, 不会越过右/下屏幕边缘。常规 16:9/16:10 屏幕高度是
     /// 限制因素, 倍率与原来按高度计算完全一致; 只有竖向/接近 4:3 的窄窗口才
@@ -4927,14 +4927,24 @@ public partial class GameScene : Control
     private void RefreshUiScale()
     {
         Vector2 viewport = GetHudViewportSize();
-        if (viewport.X <= 0 || viewport.Y <= 0)
-            UiScale = 2f;
+        float baseScale;
+        string scaleOverride = System.Environment.GetEnvironmentVariable("ZIRCON_UI_SCALE");
+        if (float.TryParse(scaleOverride, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out float forcedScale)
+            && forcedScale >= 1f)
+        {
+            baseScale = forcedScale;
+        }
+        else if (viewport.X <= 0 || viewport.Y <= 0)
+            baseScale = 2f;
         else
         {
             float byHeight = viewport.Y / UiScaleBaseHeight;
             float byWidth = viewport.X / 1024f;
-            UiScale = Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
+            baseScale = Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
         }
+        WorldScale = baseScale;
+        UiScale = baseScale;
         if (_uiLayer != null && IsInstanceValid(_uiLayer))
             _uiLayer.Transform = Transform2D.Identity.Scaled(Vector2.One * UiScale);
         Scale = Vector2.One * WorldScale;

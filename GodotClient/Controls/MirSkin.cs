@@ -100,7 +100,7 @@ public static class MirSkin
     private static bool _fontFailed;
     private static float _uiScale = 1f;
 
-    /// <summary>界面缩放倍率；像素字体用反向倍率保持屏幕上的物理字号不变。</summary>
+    /// <summary>界面缩放倍率；像素字体随 HUD 一起放大，避免窗口贴图变大而文字仍偏小。</summary>
     public static void SetUiScale(float scale) => _uiScale = Mathf.Max(1f, scale);
 
     public static ZlLibrary GetLibrary(LibraryFile file)
@@ -349,21 +349,23 @@ public static class MirSkin
 
     /// <summary>
     /// 像素字体只使用稳定的字号档位。原版字号很多是 8/9/10/11/13，
-    /// 若继续乘 4/3 会得到 11/12/13/15/17，Fusion Pixel 的 12px 字形
-    /// 就会被重新栅格化，出现灰边和模糊。当前把常规 UI 统一落到 12px，
-    /// 大标题使用 16px；文字测量和实际绘制共用此映射。
+    /// 当前把常规 UI 统一落到 12px，大标题使用 16px；再由 HUD 的缩放倍率
+    /// 放大到屏幕尺寸。文字测量和实际绘制共用此映射。
     /// </summary>
     public static int ScaledSize(int size)
     {
         int physicalSize = size <= 13 ? 12 : size <= 18 ? 16 : 24;
-        return Mathf.Max(1, Mathf.RoundToInt(physicalSize / _uiScale));
+        return Mathf.Max(1, physicalSize);
     }
 
     public static int ScaledSize(float size) => ScaledSize(Mathf.RoundToInt(size));
 
-    /// <summary>像素字体在屏幕上的固定字号，不随 UI CanvasLayer 缩放。</summary>
+    /// <summary>像素字体的屏幕字号，跟随 HUD CanvasLayer 一起放大。</summary>
     public static int PhysicalSize(int size)
-        => size <= 13 ? 12 : size <= 18 ? 16 : 24;
+    {
+        int baseSize = size <= 13 ? 12 : size <= 18 ? 16 : 24;
+        return Mathf.Max(1, Mathf.RoundToInt(baseSize * _uiScale));
+    }
 
     public static Vector2 MeasureTextPhysical(string text, int fontSize)
     {

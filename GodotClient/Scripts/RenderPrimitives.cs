@@ -128,9 +128,9 @@ internal static class RenderPrimitives
         if (string.IsNullOrWhiteSpace(text)) return;
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
         if (font == null) return;
-        // 世界对象不挂在 UI 缩放层；这里不能使用 UI 的反向缩放字号，
-        // 否则窗口变大后角色名会被错误缩小。世界名称直接使用固定屏幕字号。
-        int drawSize = MirSkin.PhysicalSize((int)size);
+        // 世界节点自身已经按 WorldScale 缩放；使用与 HUD 相同的逻辑字号，
+        // 让世界文字和世界贴图一起缩放一次。
+        int drawSize = MirSkin.ScaledSize((int)size);
         Vector2 extent = font.GetStringSize(text, HorizontalAlignment.Left, -1, drawSize);
         Vector2 p = baseline - new Vector2(extent.X * 0.5f, 0f);
         canvas.DrawString(font, p + new Vector2(1f, 1f), text,
@@ -143,7 +143,7 @@ internal static class RenderPrimitives
         if (string.IsNullOrWhiteSpace(text)) return 0f;
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
         if (font == null) return 0f;
-        return font.GetStringSize(text, HorizontalAlignment.Left, -1, MirSkin.PhysicalSize((int)size)).X;
+        return font.GetStringSize(text, HorizontalAlignment.Left, -1, MirSkin.ScaledSize((int)size)).X;
     }
 
     public static void DrawLabelWithBackground(CanvasItem canvas, string text, Vector2 baseline,
@@ -153,7 +153,7 @@ internal static class RenderPrimitives
         if (canvas == null || string.IsNullOrWhiteSpace(text)) return;
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
         if (font == null) return;
-        int drawSize = MirSkin.PhysicalSize((int)size);
+        int drawSize = MirSkin.ScaledSize((int)size);
         Vector2 extent = font.GetStringSize(text, HorizontalAlignment.Left, -1, drawSize);
         const float padX = 4f, padY = 2f;
         Vector2 topLeft = baseline - new Vector2(extent.X * 0.5f + padX, font.GetAscent(drawSize) + padY);
@@ -176,7 +176,7 @@ internal static class RenderPrimitives
     public static float OriginalNameBaseline(float size = 9f)
     {
         Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
-        float drawSize = MirSkin.PhysicalSize((int)size);
+        float drawSize = MirSkin.ScaledSize((int)size);
         float height = font?.GetHeight((int)drawSize) ?? drawSize;
         return -(32f - height) / 2f - 6f + height;
     }

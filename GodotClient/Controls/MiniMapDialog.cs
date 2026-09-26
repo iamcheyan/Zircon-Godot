@@ -487,10 +487,28 @@ public partial class MiniMapDialog : DXWindow
         Image.Location = new Vector2I((int)x, (int)y);
     }
 
+    /// <summary>EI 的 T 键入口：小地图 surface 128&lt;-&gt;256 切换。</summary>
+    public void ToggleLegacySize() => ToggleSize();
+
     private void ToggleSize()
     {
         int right = Location.X + (int)Size.X;
         IsLarge = !IsLarge;
+        if (_legacyEiLayout)
+        {
+            // map-ui-resource-evidence.json mode_switch：原版 T 键在
+            // 256x256 与 128x128 两个 surface 之间切换（true_branch 256 /
+            // false_branch 128，均为 primary-static-exact-call），
+            // 且**不改变 AllowResize**（原版根本没有缩放）。
+            Size = IsLarge ? new Vector2I(256, 256) : new Vector2I(128, 128);
+            Location = new Vector2I(right - (int)Size.X, Location.Y);
+            Area = new Rect2(0, 0, Size.X, Size.Y);
+            Panel.Location = Vector2I.Zero;
+            Panel.Size = Size;
+            UpdateButtonLocations();
+            LayoutChanged?.Invoke();
+            return;
+        }
         // 原版 MiniMapDialog: 大图模式 AllowResize=true (可拖边缩放), 小图固定尺寸。
         AllowResize = IsLarge;
         Size = IsLarge ? LargeMiniMapSize : DefaultMiniMapSize;

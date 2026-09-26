@@ -10851,6 +10851,16 @@ public partial class GameScene : Control
             _mouseWalker.AutoRun = _autoRun;
             GD.Print($"[Game] 自动跑步: {(_autoRun ? "开" : "关")}");
         }
+        // EI 的 T 是「小地图 surface 128<->256 切换」（hotkey.table-0x42CC76
+        // 的 0x54 分支，门 main+0x6518 == 1 即小地图开启时）。现代模式保留
+        // T 请求交易的语义。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.T
+            && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (_miniMap?.Visible == true) _miniMap.ToggleLegacySize();
+            return;
+        }
+
         // T 请求交易：服务端按玩家朝向检查相邻角色。
         if (key.Keycode == Key.T && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
         {

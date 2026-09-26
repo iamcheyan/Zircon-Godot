@@ -274,8 +274,12 @@ public partial class NPCDialog : DXWindow
         //   FCOLOR <n> -> atoi 后取调色板 [eax*4 + 0x47C4A8] 作为菜单文字色
         // 调色板 16 项 BGR 已从证据逐项解出（npc-body-strip-evidence.json）。
         // FCOLOR 之后的正文行改用该色（用本控件已支持的 {text:colour} 语法）。
-        // NPCIMG 的头像位置证据未给（只有 0x466130 的 blit 调用），暂不绘制。
+        // NPCIMG：反汇编 0x43FFE7 已查明它是**脚本标记**（正文行 "NPCIMG<n>"），
+        // 解析出的 n 从 NPCFace.WIL 取帧、画到头像控件自身字段（恒 0）；
+        // 不是客户端硬编码坐标。解析逻辑尚未实现，见审计文档。
         if (_legacyLayout) raw = ApplyLegacyFColor(raw);
+        // legacy 菜单条：原版对每个选项行铺 F1101（末项 F1102），见 NPCTextControl.LegacyMenuStrips。
+        _text.LegacyMenuStrips = _legacyLayout;
         _text.SetContent(raw,
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,
@@ -287,6 +291,7 @@ public partial class NPCDialog : DXWindow
             _textColumn2Area.Visible = twoColumn;
             if (twoColumn)
             {
+                _textColumn2.LegacyMenuStrips = true;
                 _textColumn2.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
             }
         }

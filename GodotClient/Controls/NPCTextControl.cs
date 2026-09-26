@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Godot;
+using Library;
 using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
@@ -85,8 +86,22 @@ public sealed partial class NPCTextControl : DXControl
         }
     }
 
+    /// <summary>
+    /// legacy EI：为每个内嵌选项行绘制原版菜单条。
+    ///
+    /// 依据（反汇编 0x43F040 + npc-window-render-evidence.json::paint_order）：
+    ///   order 2 = 循环绘制 **F1101**（重复的菜单行），计数 [this+0x51C]，每项目标 Y 递增 18
+    ///   order 3 = **末项用 F1102**，位于 [this+0x544] + 末项索引*18
+    ///   order 1 = F1100 背景（由 NPCDialog 画）
+    ///
+    /// 我方此前**完全没有** F1101/F1102 的引用：legacy 下只把现代 F381 行移除、不画菜单条，
+    /// 所以菜单行是"有可点区域但没有原版底图"。此开关补上这层底图。
+    /// </summary>
+    public bool LegacyMenuStrips { get; set; }
+
     protected override void DrawControl()
     {
+        if (LegacyMenuStrips) DrawLegacyMenuStrips();
         var font = MirSkin.GetFont();
         if (font == null) return;
         foreach (var glyph in _glyphs)
@@ -95,6 +110,35 @@ public sealed partial class NPCTextControl : DXControl
                 ? Colors.Red
                 : glyph.Colour;
             DrawString(font, glyph.Position, glyph.Text, HorizontalAlignment.Left, -1, glyph.FontSize, colour);
+        }
+    }
+
+    /// <summary>
+    /// 按原版规则给每个选项行铺菜单条：末项 F1102、其余 F1101。
+    ///
+    /// 宽度取**帧的可见尺寸**（F1101 = 383x18、F1102 = 384x44），不是选项命中区的宽度
+    /// —— 原版是整行铺满（反汇编：取帧宽/高后 SetRect(rect,0,0,w,h) 再按 384 居中），
+    /// 而选项命中区只覆盖文字本身。第一版按命中区宽度画，截图里菜单条只有约 70px 宽。
+    ///
+    /// 水平：以**文本列**为基准左对齐（原版居中常量 384 即菜单条自身宽，
+    /// 我方文本列起点即 X，故直接用列起点）。
+    /// 垂直：对齐该选项行的顶部（我方行距 21，原版菜单条高 18，逐行贴合）。
+    /// </summary>
+    private void DrawLegacyMenuStrips()
+    {
+        if (_buttons.Count == 0) return;
+        for (int i = 0; i < _buttons.Count; i++)
+        {
+            int frame = i == _buttons.Count - 1 ? 1102 : 1101;
+            var tex = MirSkin.GetTexture(LibraryFile.GameInter, frame);
+            if (tex == null) continue;
+            var size = MirSkin.GetSize(LibraryFile.GameInter, frame);
+            var offset = MirSkin.GetOffset(LibraryFile.GameInter, frame);
+            var rect = _buttons[i].Rect;
+            // 可见区左上角 = (该行 X - 选项命中区相对文字起点的偏移, 该行 Y)；这里直接用命中区
+            // 的 Y 作行顶，X 取命中区 X 减去文字内缩，保持与原版「整行铺满」一致。
+            var pos = new Vector2(rect.Position.X - offset.X, rect.Position.Y - offset.Y);
+            DrawTexture(tex, pos, Colors.White);
         }
     }
 

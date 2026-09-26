@@ -5249,6 +5249,49 @@ public partial class GameScene : Control
         // 这里负责“绝不能在哪里”：旧配置、窗口尺寸瞬变、窗口拖动都不能让
         // 任何常驻 UI 控件越过当前逻辑画布。
         ClampHudControlsToViewport(vp);
+
+        // 旧版窗口坐标必须放在居中与钳制之后：原版窗口位置来自 exe 的构造
+        // 参数（layout.json 的 window.* 记录），不是居中布局；个别窗口
+        // （如背包 518+284=802）本来就允许略微越出 800 宽的画布。
+        if (AutoLoginArgs.LegacyUi) ApplyLegacyWindowLocations();
+    }
+
+    /// <summary>
+    /// 旧版 EI 窗口位置，坐标是原版 800x600 逻辑坐标，直接取自
+    /// Mir3-Research `docs/research/ei-ui-layout/layout.json` 的 window.* 记录
+    /// （每个值都带 primary-static 证据与 exe 构造地址）。不要改成居中或
+    /// 按比例换算 —— 客户端旧版布局本身就是 800x600 坐标系
+    /// （见 LegacyHudLayout.LogicalWidth/LogicalHeight）。
+    /// </summary>
+    private void ApplyLegacyWindowLocations()
+    {
+        static void Place(DXWindow window, int x, int y)
+        {
+            if (window == null || !IsInstanceValid(window)) return;
+            window.Location = new Vector2I(x, y);
+        }
+
+        Place(_inventoryDialog, 518, 0);   // window.inventory  (GameInter 250, 284x324)
+        Place(_characterDialog, 0, 0);     // window.status     (GameInter 200, 244x328)
+        Place(_magicDialog, 0, 0);         // window.skill-book (GameInter 400, 296x332)
+        Place(_questDialog, 0, 0);         // window.quest      (GameInter 700, 340x440)
+        Place(_groupDialog, 272, 123);     // window.group      (GameInter 900, 256x244)
+        Place(_configDialog, 276, 113);    // window.option     (GameInter 750, 248x264)
+        Place(_horseDialog, 0, 0);         // window.horse      (GameInter 850, 296x332)
+        Place(_npcDialog, 0, 0);           // window.npc-candidate (GameInter 1100, 552x176)
+        Place(_noticeDialog, 107, 110);    // window.notice-prompt-candidate (602, 584x252)
+        Place(_guildDialog, 102, 22);      // window.guild-candidate (GameInter 600, 596x446)
+        Place(_tradeDialog, 0, 0);         // window.exchange-candidate (1050, 484x330)
+        Place(_storageDialog, 0, 0);       // window.store-candidate (GameInter 1000, 300x304)
+
+        // 逐窗打印便于对照 layout.json 验收（与 [LegacyChatPanel]/[LegacyCharacter]
+        // 等既有审计日志同一风格）。
+        static string Fmt(DXWindow w) =>
+            w == null || !IsInstanceValid(w) ? "-" : $"{w.GetType().Name}@{w.Location}";
+        GD.Print($"[LegacyWindowLoc] inv={Fmt(_inventoryDialog)} cha={Fmt(_characterDialog)} "
+            + $"mag={Fmt(_magicDialog)} qst={Fmt(_questDialog)} grp={Fmt(_groupDialog)} "
+            + $"cfg={Fmt(_configDialog)} hor={Fmt(_horseDialog)} npc={Fmt(_npcDialog)} "
+            + $"gld={Fmt(_guildDialog)} trd={Fmt(_tradeDialog)} sto={Fmt(_storageDialog)}");
     }
 
     private void AuditLegacyHudIfRequested()

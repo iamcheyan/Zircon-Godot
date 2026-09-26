@@ -850,10 +850,11 @@ public partial class LegacySkillRowView : DXControl
             DrawString(font, namePos, _info.Local() ?? _info.Name ?? string.Empty,
                 HorizontalAlignment.Left, 100 * canvasScale, drawSize,
                 new Color(0.24f, 0.24f, 0.24f, opacity));
-            string state = _magic == null ? $"需 {_info.NeedLevel1} 级" : $"等级 {_magic.Level}";
-            DrawString(font, new Vector2(43 * canvasScale, 29 * canvasScale), state,
-                HorizontalAlignment.Left, 100 * canvasScale, drawSize,
-                new Color(0.22f, 0.33f, 0.22f, opacity));
+            // skill-tab-header-draw-evidence.json（F848）：原版左页每行只有
+            // 技能图标（MIcon.wil，帧取自记录 [skill+6]）+ 技能名（0x45DE50，
+            // 色 0x3C3C3C）+ 四边高亮，**没有**状态文本。此前我方在 y=29 多画
+            // 了一行「需 N 级」/「等级 N」，已移除。
+            // 未做：四边高亮的细节证据未给，暂不绘制。
         }
         finally
         {

@@ -389,7 +389,17 @@ public partial class MagicDialog : DXWindow
     /// </summary>
     public int SelectFirstLegacySkillForTest()
     {
+        if (_legacySkillRows.Count == 0)
+        {
+            // 独立测试场没有玩家已学技能（不连服务器）、GameScene.Game 也为 null，
+            // 所以直接取 DB 的 Globals.MagicInfoList 注入一条「未学习」行 ——
+            // 走的仍是与真实路径完全相同的 RefreshLegacySkillRows -> 行 Selected 链。
+            var infos = Globals.MagicInfoList?.Binding;
+            if (infos == null || infos.Count == 0) return -1;
+            RefreshLegacySkillRows(new[] { (infos[0], (ClientUserMagic)null) });
+        }
         if (_legacySkillRows.Count == 0) return -1;
+        _legacyPage = 0;
         _legacySkillRows[0].RaiseSelectedForTest();
         return _legacySelectedSkill?.Info?.Index ?? -1;
     }

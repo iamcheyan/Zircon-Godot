@@ -32,6 +32,7 @@ public partial class InventoryDialog : DXWindow
     private DXImageControl _background;
     private DXButton _legacyActionButton;
     private DXLabel _legacyModeLabel;
+    private DXImageControl _legacyModeArt;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private DXImageControl _legacyScrollTrack;
     private DXVScrollBar _legacyScrollBar;
@@ -285,8 +286,36 @@ public partial class InventoryDialog : DXWindow
             InventoryMode.Storage => "[储存]",
             _ => "[包袱]",
         };
-        _legacyModeLabel.Location = new Vector2I(38, 282);
-        _legacyModeLabel.Size = new Vector2I(100, 18);
+        // 模式文字位置证据缺失（只有 VA 0x42EF5B/0x42F03E/0x42F078/0x42F0FB，
+        // 没有绘制矩形），所以这里只把重叠消掉：金币框在 (65,282)-(142,299)，
+        // 原位置 (38,282) 会大幅压上去。
+        _legacyModeLabel.Location = new Vector2I(6, 282);
+        _legacyModeLabel.Size = new Vector2I(56, 18);
+
+        // 证据里的第三个子控件：位置 (176,286)、尺寸 64x20、**随模式换帧** ——
+        // 服务器模式分支给它换的是 263/264/265（수리 修理）、270/271/272
+        // （판매 变卖）、273/274/275（보관 储存），都是 GameInter 的 64x20
+        // 韩文模式字美术。我方此前**完全没有这个控件**。
+        if (_legacyModeArt == null)
+        {
+            _legacyModeArt = new DXImageControl
+            {
+                LibraryFile = LibraryFile.GameInter,
+                FixedSize = true,
+                Location = new Vector2I(176, 286),
+                Size = new Vector2I(64, 20),
+                IsControl = false,
+            };
+            AddControl(_legacyModeArt);
+        }
+        _legacyModeArt.Index = InvMode switch
+        {
+            InventoryMode.Repair => 263,
+            InventoryMode.Sell => 270,
+            InventoryMode.Storage => 273,
+            _ => -1,
+        };
+        _legacyModeArt.Visible = _legacyModeArt.Index >= 0;
 
         _legacyActionButton ??= new DXButton
         {

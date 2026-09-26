@@ -398,7 +398,9 @@ public partial class LegacyHudLayoutLab : Control
         bool lifecycle = AuditWindowLifecycle(out string lifecycleDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
-            && _chat.Size == new Vector2I(572, 388)
+            // G6：CommunicationDialog 不再套 F350 聊天窗外壳，回归自身几何
+            // （Interface 200 / 296x424）。
+            && _chat.Size == new Vector2I(296, 424)
             && _config.Size == new Vector2I(248, 264);
         bool roots2 = _trade.Size == new Vector2I(484, 330) && _guild.Size == new Vector2I(446, 596);
         bool roots3 = _storage.Size == new Vector2I(205, 205) && _config.Size == new Vector2I(248, 264) && _notice.Size == new Vector2I(584, 252);

@@ -136,11 +136,13 @@ public partial class CommunicationDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
-        bool ok = Size == new Vector2I(572, 388)
-            && _background.Index == 350
+        // G6：window.chat-pop（F350, 572x388）归属 LegacyChatDialog；
+        // CommunicationDialog 实为好友/邮件窗（Interface 200 / 296x424），
+        // 不再套 F350 皮肤。断言随之更新为它自身的现代几何。
+        bool ok = Size == new Vector2I(296, 424)
+            && _background.Index == 200
             && _body.Modulate.A > 0.99f
-            && _scroll.Modulate.A > 0.99f
-            && _closeButton.Location == new Vector2I(532, 350);
+            && _scroll.Modulate.A > 0.99f;
         details = $"size={Size} background=F{_background.Index} bodyAlpha={_body.Modulate.A:0.##} close={_closeButton.Location}";
         return ok;
     }

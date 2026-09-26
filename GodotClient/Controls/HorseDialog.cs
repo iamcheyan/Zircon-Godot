@@ -100,7 +100,9 @@ public partial class HorseDialog : DXWindow
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = Size == new Vector2I(296, 332)
-            && Clip
+            // G2：原版窗口不按窗口矩形裁子控件、只被 800x600 屏幕裁，
+            // ApplyLegacyTestWindow 已统一改为 Clip=false，断言同步更新。
+            && !Clip
             && _background.Index == 850
             && _background.Location == new Vector2I(-118, -94)
             && _background.Size == new Vector2I(512, 512)

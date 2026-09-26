@@ -45,7 +45,10 @@ public partial class NPCDialog : DXWindow
     // 因此普通/长文本统一采用证据中的默认 21px 行距。
     private const int LegacyTextX = 150;
     private const int LegacyTextY = 40;
-    private const int LegacyTextWidth = 290;
+    // N5 证据 npc-dialog-family-evidence.json：type-1 文本的换行门是 0x95 = 149px，
+    // 行数 >=7 时切到第二列（x = 0x131 = 305）。此前用 290 是自推导值，在任一
+    // 背景原点下都会越出 F1100 可见面板右缘（384）。
+    private const int LegacyTextWidth = 149;
     private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
     private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px

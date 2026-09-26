@@ -99,7 +99,14 @@ public partial class GuildDialog : DXWindow
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(418, 570);
+        // 原版关闭键：social-window-render-evidence.json 的 paint-time SetPosition 真值
+        // (x+556, y+409)（该文件明确 ctor 值只有前 4 个可用、其余是寄存器垃圾）。
+        // 三处佐证：(1) 该 paint-time 记录为 primary；
+        //           (2) 运行截图里关闭 X 在逻辑 ≈(574,421)（窗内相对），与 (556,409) 吻合；
+        //           (3) 原值 (418,570) 的 y=570 **超出 F600 可见美术区高度 444**，落在美术之外。
+        // 另注：window-control-position-analysis.json 给的是 ctor 值 (260,298)，
+        // 会落在窗口中腰，与截图矛盾，故不采用。
+        _closeButton.Location = new Vector2I(556, 409);
         _closeButton.Size = new Vector2I(28, 26);
         _content.Location = new Vector2I(18, 80);
         _content.Size = new Vector2I(410, 415);
@@ -121,6 +128,8 @@ public partial class GuildDialog : DXWindow
             && _content.Size == new Vector2(410, 415)
             // 原版滚动条位置 (548,208)（guild-window-paint-evidence.json）。
             && _scroll.Location == new Vector2(548, 208)
+            // 原版关闭键 (556,409)（social-window-render-evidence.json 的 paint-time 真值）。
+            && _closeButton.Location == new Vector2(556, 409)
             // 背景锚点 = alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）；
             // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
             && _background.Location == (_guild == null && _tab == 0

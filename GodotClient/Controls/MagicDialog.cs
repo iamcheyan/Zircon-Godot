@@ -911,6 +911,10 @@ public partial class LegacySkillDetailView : DXControl
             // 且 count==1 时是「一行流文本＝一行渲染、无自动换行」。
             // 现代模式仍用下面这套按当前状态拼的行。
             string paragraph = LegacyEiLayout ? LegacySkillRowView.LegacyMagicExpParagraph(info?.Index ?? -1) : null;
+            if (LegacyEiLayout)
+            {
+                GD.Print($"[LegacyMagicDetail] id={info?.Index ?? -1} paragraph={(string.IsNullOrEmpty(paragraph) ? "null" : paragraph.Replace("\n", " / ").Substring(0, Math.Min(60, paragraph.Replace("\n", " / ").Length)))}");
+            }
             if (!string.IsNullOrEmpty(paragraph))
             {
                 lines.AddRange(paragraph.Replace("\r", string.Empty).Split('\n'));

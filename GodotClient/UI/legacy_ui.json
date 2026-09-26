@@ -63,7 +63,7 @@
     {
       "id": "window.store-candidate",
       "legacyId": 2,
-      "name": "GameStoreDialog",
+      "name": "",
       "location": [
         0,
         0
@@ -77,26 +77,28 @@
         "library": "GameInter",
         "frame": 1000
       },
-      "status": "candidate"
+      "status": "candidate",
+      "note": "EI 商店窗（id2，ctor 0x44D310）**尚未实现**。此前这里写 name=GameStoreDialog 是错的：GameStoreDialog 是 Zircon 的现金商城（Interface.Zl F310、800x515），不是 EI 商店窗。EI 商店窗是 NPC 商店（买/卖/仓库/制作，mode byte +0x5F8 共 5 态），我方目前拆在 NPCGoodsPanel / InventoryDialog.SellMode / StorageDialog / NPCRepairPanel 等；其中只有 state2(仓库) 已按 F1001 落地。详见 store-window-render-evidence.json。"
     },
     {
-      "id": "window.storage-candidate",
-      "legacyId": 5,
+      "id": "window.store-state2-warehouse",
+      "legacyId": null,
       "name": "StorageDialog",
       "location": [
         0,
         0
       ],
       "size": [
-        596,
-        446
+        205,
+        205
       ],
       "movable": true,
       "background": {
         "library": "GameInter",
-        "frame": 600
+        "frame": 1001
       },
-      "status": "candidate"
+      "status": "candidate",
+      "note": "这不是独立窗口，而是**商店窗 id2 的 state2（仓库）面板**：store-state-graph.json states[2] 的 factory args (1001, -4, 182, 205, 205)。此前这条写成 legacyId=5 / 596x446 / F600 是把 id4 行会窗整条复制到了不存在的窗口 id 上（window-visibility-dispatch-evidence.json 明写 id5 = unused/guard）。网格原点与步距见 store-state-graph.json states[2].grid_rects（cols 22/60/98/136、rows 43/81/119、stride 38）。"
     },
     {
       "id": "window.exchange-candidate",

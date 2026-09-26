@@ -5352,7 +5352,7 @@ public partial class GameScene : Control
         Place(_noticeDialog, 107, 110);    // window.notice-prompt-candidate (602, 584x252)
         Place(_guildDialog, 102, 22);      // window.guild-candidate (GameInter 600, 596x446)
         Place(_tradeDialog, 0, 0);         // window.exchange-candidate (1050, 484x330)
-        Place(_storageDialog, 0, 0);       // window.store-candidate (GameInter 1000, 300x304)
+        Place(_storageDialog, 0, 0);       // 商店窗 id2 的 state2(仓库) 面板 (GameInter 1001, 205x205)
 
         // 逐窗打印便于对照 layout.json 验收（与 [LegacyChatPanel]/[LegacyCharacter]
         // 等既有审计日志同一风格）。

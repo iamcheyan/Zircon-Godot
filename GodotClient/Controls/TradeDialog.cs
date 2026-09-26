@@ -130,10 +130,16 @@ public partial class TradeDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(456, 304);
         _closeButton.Size = new Vector2I(28, 26);
+        // 证据给的是**首格**左上角（trade-window-render-evidence.json：
+        // 左 (x+0x15,y+0x30)..(x+0xC9,y+0x108) = (21,48)-(201,264)，右 (253,48)-(397,264)，
+        // cell 36x36、stride 36、5 列 x 6 行）。
+        // 我方 DXItemGrid 的格子按 GridPadding 内缩，故首格 = 网格原点 + padding(1,1)，
+        // 网格原点应为 (20,47) / (252,47)。原值 (14,91)/(246,91) 使首格落在 (15,92)/(247,92)，
+        // 相对证据偏 (-6,+44)。
         _userGrid.GridSize = new Vector2I(5, 6);
-        _userGrid.Location = new Vector2I(14, 91);
+        _userGrid.Location = new Vector2I(20, 47);
         _playerGrid.GridSize = new Vector2I(5, 6);
-        _playerGrid.Location = new Vector2I(246, 91);
+        _playerGrid.Location = new Vector2I(252, 47);
         _userGrid.RefreshGrid();
         _playerGrid.RefreshGrid();
         UpdateClientAreaForLegacySkin();
@@ -145,9 +151,10 @@ public partial class TradeDialog : DXWindow
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 1050
             && _userGrid.GridSize == new Vector2I(5, 6)
             && _playerGrid.GridSize == new Vector2I(5, 6)
-            && _userGrid.Location == new Vector2(14, 91)
-            && _playerGrid.Location == new Vector2(246, 91);
-        details = $"size={Size} frame={_background.Index} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location}";
+            && _userGrid.Location == new Vector2(20, 47)
+            && _playerGrid.Location == new Vector2(252, 47);
+        // details 里同时给出首格（= 原点 + padding），便于与证据的 (21,48)/(253,48) 直接比对。
+        details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location}";
         return ok;
     }
     public void Unlock() => _confirm.Enabled = true;

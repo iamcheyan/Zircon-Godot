@@ -22,39 +22,19 @@ public sealed partial class LegacyChatDialog : DXWindow
     private readonly List<int> _linkedItems = new();
     private int _scrollOffset;
 
+    /// <summary>
+    /// C12 聊天窗右侧的锁链轨道（GameInter 380，16x502）在证据里是
+    /// "evidence-only non-interactive"：原版滚动由消息环偏移 + 两个滚动按钮
+    /// （±19 行 = ±266px）驱动，轨道本身不接收输入。此前给它加了点击/拖拽
+    /// 定位，属于多余交互，已移除；滚轮与上下按钮仍然可用。
+    /// </summary>
     private sealed partial class ChatScrollRail : DXImageControl
     {
-        public Action<float> ScrollRequested;
-        private bool _dragging;
-
-        public override void _GuiInput(InputEvent e)
+        public override void _Ready()
         {
-            if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left } button)
-            {
-                _dragging = button.Pressed;
-                if (_dragging) UpdateScroll();
-                AcceptEvent();
-                return;
-            }
-
-            if (_dragging && e is InputEventMouseMotion)
-            {
-                UpdateScroll();
-                AcceptEvent();
-                return;
-            }
-
-            base._GuiInput(e);
+            base._Ready();
+            MouseFilter = MouseFilterEnum.Ignore;
         }
-
-        public override void _Process(double delta)
-        {
-            base._Process(delta);
-            if (_dragging && !Input.IsMouseButtonPressed(MouseButton.Left))
-                _dragging = false;
-        }
-
-        private void UpdateScroll() => ScrollRequested?.Invoke(GetLocalMousePosition().Y);
     }
     public LegacyChatDialog()
     {
@@ -85,9 +65,8 @@ public sealed partial class LegacyChatDialog : DXWindow
             Location = new Vector2I(533, -208),
             FixedSize = true,
             Size = MirSkin.GetSize(LibraryFile.GameInter, 380),
-            MouseFilter = MouseFilterEnum.Stop,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
-        _scrollRail.ScrollRequested = UpdateRailScroll;
         AddControl(_scrollRail);
 
         _historyClip = new DXControl
@@ -109,7 +88,15 @@ public sealed partial class LegacyChatDialog : DXWindow
 
         var channelFrames = new[] { (360, 361), (362, 363), (364, 365), (366, 367), (368, 369), (370, 371) };
         var channelText = new[] { "@拒绝 ", "!", "!!", "!~", "@拒绝私聊", "@拒绝行会聊天" };
-        var tips = new[] { "拒绝和某人私聊", "世界喊话", "组队喊话", "行会喊话", "切换拒绝私聊", "切换拒绝行会聊天" };
+        var tips = new[]
+        {
+            "拒绝和 某人 私聊(@拒绝 某人名)",
+            "大喊话(!喊话)",
+            "编组 喊话(!!喊话)",
+            "行会 喊话(!~喊话)",
+            "拒绝 私聊(@拒绝私聊)",
+            "拒绝 行会 聊天(@拒绝行会聊天)",
+        };
         for (int i = 0; i < channelFrames.Length; i++)
         {
             int index = i;
@@ -269,14 +256,6 @@ public sealed partial class LegacyChatDialog : DXWindow
     }
 
     private void ScrollBy(int rows) => SetScrollOffset(_scrollOffset + rows);
-
-    private void UpdateRailScroll(float localY)
-    {
-        int maxOffset = Math.Max(0, _messages.Count - VisibleRows);
-        float railRange = Math.Max(1, _scrollRail.Size.Y - 1);
-        int value = Mathf.RoundToInt(Mathf.Clamp(localY / railRange, 0f, 1f) * maxOffset);
-        SetScrollOffset(value);
-    }
 
     private void SetScrollOffset(int value)
     {

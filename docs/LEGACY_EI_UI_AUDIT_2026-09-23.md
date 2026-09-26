@@ -1565,3 +1565,51 @@ godot-mono --path <仓库>/GodotClient res://Scenes/LegacyHudLayoutLab.tscn \
 **仍未解开**：交易窗的 close(532,350)/accept(185,332)/cancel(225,332) 落在
 484x330 基础矩形之外，且 F1050 可见美术区仅 483x330，**没有**类似的多 state 矩形可解释
 （trade 只有一个 rect）。这一条继续挂起。
+
+### 全窗截图复核与「布局只改一半」模式筛查（2026-09-27）
+
+#### 已修的三处同源 bug（成因相同）
+
+legacy 布局里**只改了控件的一部分属性、另一部分沿用现代值**，导致窗外留下可见残留：
+
+| 窗 | 残留 | 成因 | 修正 |
+|---|---|---|---|
+| GuildDialog | 窗口中腰一条黑竖条 | `_scroll` 只改 `Modulate`，位置沿用现代 | → (548,208) |
+| NoticeDialog | 外框右偏 220px、文本区在框外 | 背景 `Location` 未设（默认 0,0） | → (-220,-2) |
+| QuestDialog | 窗外右侧一条黑竖条 | `_scroll` 只改 `Modulate`，位置沿用现代 (704,58) | → (290,59) 28x58 |
+
+#### 系统性筛查结果：该模式已无新残留
+
+做法：脚本扫全部 `ApplyLegacyEiLayout`，找出「设过 `Modulate`/`Visible`/`Index`
+但没设 `Location`/`Position`/`Size`」的控件字段。
+
+命中 9 个文件，**逐一核对后全部为良性**（都是 `Visible = false`，不需要位置）：
+ConfigDialog(_page,_titleLabel) / GroupDialog(_allowCheck,_allowLabel,_lfgPanel,_lfgScroll,_optionsButton)
+/ InventoryDialog(_ggTitle,_goldTitle,_titleLabel) / MagicDialog(_background,_list,_scrollBar)
+/ MenuDialog(_titleLabel) / NPCDialog(_footerBackground,_scroll) / NPCGoodsPanel(_frame,_guildFunds)
+/ QuestDialog(_titleLabel) / StorageDialog(_partsTab,_storageTab)
+
+**结论**：该模式除已修三处外无新残留。
+
+#### 逐张截图复核结论（after 目录）
+
+- **character**（状态 F200）：外框/纸娃娃/装备格/绿色视图切换键/关闭键齐备，
+  面板 242x330 ↔ 窗口 244x328，无残留。
+- **storage**（F1001）：4x3 网格形态与我改的原点(21,42)/步距38 一致；关闭键在位。
+- **quest**（F700）：修后黑竖条消失，两箭头落在美术右上角（≈(297,67)/(297,106)
+  ↔ 证据 (290,59)/(290,89)）。
+- **config**（F750）：韩文标题、ON/OFF 按钮、两条滑条、关闭键均在框内。
+- **magic / inventory / trade / guild / chat / minimap / npc / notice**：前几轮已核。
+
+#### 新发现（未修，记录待办）：仓库窗缺翻页热区
+
+`StorageDialog` 代码里**没有** F1014/1015（上一页）与 F1016/1017（下一页）的引用，
+但截图里这两个箭头**清晰可见** —— 它们和交易窗同理，是**烘焙在 F1001 贴图里的图形**，
+证据 `store-window-render-evidence.json::controls.state_2_only` 给出的
+`(x+0x1C, y+0xA2)=(28,162)`（prev）与 `(x+0x89, y+0xA2)=(137,162)`（next）
+是它们的**热区**。
+
+即：视觉已对，**交互缺失**（翻页不可点）。补热区需要先确认我方 12 格仓库是否分页
+（原版 state2 的 12 格网格配合翻页箭头使用），属功能项，故本轮不动。
+
+同类待办（已记录）：交易窗 accept/cancel 热区、行会窗 8 个热区。

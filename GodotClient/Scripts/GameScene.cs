@@ -746,6 +746,7 @@ public partial class GameScene : Control
     private DXImageControl _mouseItemIcon;  // 拿起物品跟随鼠标的图标
     private DXLabel _mouseItemLabel;    // 拿起物品跟随鼠标的文字
     private DXLabel _hoverLabel;        // 物品悬浮提示
+    private DXImageControl _hoverItemIcon; // 悬浮框内置物品图标 (证据 el82)
     private ClientUserItem _hoverItem;
     private readonly System.Collections.Generic.Dictionary<int, MirEffectNode> _buffEffects = new();
     private readonly System.Collections.Generic.Dictionary<uint, MirEffectNode> _spellEffects = new();
@@ -1560,6 +1561,20 @@ public partial class GameScene : Control
             TextPadding = new Vector2I(6, 4),
         };
         _uiLayer.AddChild(_hoverLabel);
+        // item-tooltip-and-store-family-evidence.json：原版 0x4341F0 的浮动框
+        // 内含**内置物品图标**（el82 Inventory.wil、frame word[+0x28]）。
+        // 我方此前只有文字标签、没有图标。这里补一个与悬浮框同 ZIndex 的图标，
+        // 位于框内左上、文字压在其下方。现代模式沿用 StoreItem 图库，legacy 走
+        // Inventory（MirSkin.IsUiLibrary 会让它解析到 EI inventory.wil）。
+        _hoverItemIcon = new DXImageControl
+        {
+            LibraryFile = DXItemCell.ItemIconLibraryFile,
+            ZIndex = 500,
+            Visible = false,
+            IsControl = false,
+            FixedSize = true,
+        };
+        _uiLayer.AddChild(_hoverItemIcon);
 
         // StartGame 突发包在 _Ready 前已被 Process 处理(订阅未生效), 一次性排空积压队列
         DrainPendingObjects();
@@ -6016,10 +6031,27 @@ public partial class GameScene : Control
             _hoverLabel.Visible = true;
             _hoverLabel.Text = BuildItemHoverText(_hoverItem);
             FitHoverLabelSize();
+            // 悬浮框内置图标：原版 0x4341F0 用 el82 Inventory.wil 的
+            // frame word[+0x28]，即物品自身的图标帧。
+            if (_hoverItemIcon != null)
+            {
+                int icon = _hoverItem.Info?.Image ?? -1;
+                _hoverItemIcon.LibraryFile = AutoLoginArgs.LegacyUi
+                    ? LibraryFile.Inventory
+                    : DXItemCell.ItemIconLibraryFile;
+                _hoverItemIcon.Index = icon;
+                _hoverItemIcon.Visible = icon >= 0;
+                if (icon >= 0)
+                {
+                    var size = MirSkin.GetSize(_hoverItemIcon.LibraryFile, icon);
+                    _hoverItemIcon.Size = size == Vector2I.Zero ? new Vector2I(32, 32) : size;
+                }
+            }
         }
         else
         {
             _hoverLabel.Visible = false;
+            if (_hoverItemIcon != null) _hoverItemIcon.Visible = false;
         }
 
         if (_mouseItemIcon?.Visible == true || _mouseItemLabel.Visible || _hoverLabel.Visible)
@@ -6034,6 +6066,12 @@ public partial class GameScene : Control
             _hoverLabel.Position = AutoLoginArgs.LegacyUi
                 ? new Vector2(p.X + 10, p.Y + 10)
                 : new Vector2(p.X + 14, p.Y + 10);
+            // 内置图标在框内左上，文字压到图标下方（原版浮动框是图标 + 逐行文本）。
+            if (_hoverItemIcon?.Visible == true)
+            {
+                _hoverItemIcon.Position = _hoverLabel.Position + new Vector2(6, 4);
+                _hoverLabel.Position += new Vector2(0, _hoverItemIcon.Size.Y + 6);
+            }
         }
     }
 

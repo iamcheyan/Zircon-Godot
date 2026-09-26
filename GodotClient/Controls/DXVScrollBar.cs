@@ -99,6 +99,19 @@ public partial class DXVScrollBar : DXControl
     /// <summary>每步滚动量 (滚轮/箭头)</summary>
     public int Change = 10;
 
+    /// <summary>
+    /// 旧版 EI 聊天框滚动条：轨道用 GameInter F68 那条锁链按**原生尺寸**绘制，
+    /// 不拉伸。F68 是一整条 12x154 的锁链，滑块圆点（橙红，实测均值 RGB
+    /// (172,78,21)）已经烤在原生 y 62..77 处，所以只要把整条锁链按滑块位置做
+    /// 纵向偏移，圆点就正好落在滑块上并随拖动一起移动 —— 与原版表现一致。
+    /// </summary>
+    public bool LegacyChainTrack;
+
+    public LibraryFile LegacyChainLibrary = LibraryFile.GameInter;
+    public int LegacyChainIndex = 68;
+    /// <summary>圆点在锁链贴图里的原生 y（F68 实测 62）。</summary>
+    public int LegacyChainDotY = 62;
+
     public DXButton UpButton, DownButton, PositionBar;
 
     private int ScrollHeight => Math.Max(0, (int)Size.Y - 50);
@@ -197,5 +210,32 @@ public partial class DXVScrollBar : DXControl
     public void DoMouseWheel(object sender, MouseWheelEventArgs e)
     {
         Value -= e.Delta * Change;
+    }
+
+    /// <summary>
+    /// 旧版锁链轨道：按原生尺寸绘制 F68，并整体纵向偏移，使烤在图里的圆点
+    /// 正好落在滑块 PositionBar 的当前位置上（圆点即滑块，可拖拽）。
+    /// 只画落在控件矩形内的那一段，避免溢出到聊天面板其它区域。
+    /// </summary>
+    protected override void DrawControl()
+    {
+        if (!LegacyChainTrack) return;
+
+        var tex = MirSkin.GetTexture(LegacyChainLibrary, LegacyChainIndex);
+        if (tex == null) return;
+
+        var art = MirSkin.GetSize(LegacyChainLibrary, LegacyChainIndex);
+        if (art.X <= 0 || art.Y <= 0) return;
+
+        int destX = (int)Size.X - art.X;
+        int destY = PositionBar.Location.Y - LegacyChainDotY;
+
+        int top = Math.Max(0, -destY);
+        int bottom = Math.Min(art.Y, (int)Size.Y - destY);
+        if (bottom <= top) return;
+
+        var src = new Rect2(0, top, art.X, bottom - top);
+        var dst = new Rect2(destX, destY + top, art.X, bottom - top);
+        DrawTextureRectRegion(tex, dst, src);
     }
 }

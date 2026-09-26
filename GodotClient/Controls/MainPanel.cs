@@ -46,16 +46,21 @@ public partial class MainPanel : DXImageControl
         FixedSize = true;
         Size = new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.MainPanelHeight);
 
-        // EI 原版主 HUD 使用 63 号经验条；51 是新版/转换资源里的外框，不能
-        // 直接拿来当旧版经验填充。旧版屏幕矩形为 (61,586)-(400,597)，
-        // 相对 GameInter[50] 的位置就是 (61,121)，宽 339，高 11。
+        // 位置不能照搬反编译的 SetRect (61,586,400,597)：那是 339 宽的整块区域。
+        // F50 底图上真正给经验条留的凹槽由下边框亮线量出：y=131 处亮线
+        // x 236..400（宽 165），内部暗段 x 233..399（宽 167），即凹槽
+        // x 233..400、y 122..131（面板相对坐标）。
+        // 凹槽宽 167 与 F63 的 164x6 几乎相等 —— 原版是**按原生尺寸**画，
+        // 不能拉伸到 339，否则黄条会从球体下方一直伸到聊天框，位置与宽度全错。
+        // 这里按 F63 原生 164 宽居中放进凹槽，左缘留约 2px 暗边（凹槽左边界本身
+        // 是暗的，黄条不应贴到它）。
         ExperienceBar = new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
             Index = 63,
             FixedSize = true,
-            Size = new Vector2I(339, 11),
-            Location = new Vector2I(61, 121),
+            Size = new Vector2I(164, 10),
+            Location = new Vector2I(235, 122),
             Clip = true,
         };
         // F63 同时承担经验填充纹理；DXImageControl 默认 DrawImage 会在

@@ -79,30 +79,42 @@ public partial class ChatLogPanel : Control
     public void ApplyLegacyHudLayout()
     {
         _legacyHudLayout = true;
-        Size = LegacyHudLayout.ChatLogSize;
+        Size = new Vector2I(LegacyHudLayout.ChatLogSize.X + 18, LegacyHudLayout.ChatLogSize.Y);
         ClipContents = true;
         _tabBar.Visible = false;
         _tabBar.Size = Size;
         _textArea.Position = Vector2I.Zero;
-        _textArea.Size = Size;
+        // 文本区仍是原版聊天区域宽度 (354)；面板多出来的那一列只为让
+        // ClipContents 放行压在右侧木桩上的锁链滚动条，不参与文本排版。
+        _textArea.Size = LegacyHudLayout.ChatLogSize;
         // 原版聊天面板的滚动条贴在面板右缘，并且**常驻显示** —— 用户确认
         // 「它是一直都在的」，不能像现代 ChatTab 那样 HideWhenNoScroll。
         const int legacyScrollWidth = 14;
-        _scroll.Position = new Vector2I((int)Size.X - legacyScrollWidth, 0);
+        // 位置：用户确认「锁链现在结束的位置，再往右一点点，才是它该开始的位置，
+        // 它应该压在右边那根木桩上」—— 即整体右移一个滚动条宽度。
+        _scroll.Position = new Vector2I(LegacyHudLayout.ChatLogSize.X + 2, 0);
         _scroll.Size = new Vector2I(legacyScrollWidth, (int)Size.Y);
         _scroll.VisibleSize = (int)Size.Y;
         _scroll.Change = 14;
         _scroll.HideWhenNoScroll = false;
         _scroll.Visible = true;
-        // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图），
-        // 改用原版聊天框右侧那条锁链滚动条的帧 GameInter F68 (12x154)。
+        // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图）。
+        // 轨道改用原版聊天框右侧那条锁链：GameInter F68 (12x154) 按原生尺寸绘制，
+        // 其内部烤好的橙红圆点（原生 y 62..77）就是滑块，随滚动一起移动。
+        _scroll.LegacyChainTrack = true;
+        _scroll.LegacyChainLibrary = LibraryFile.GameInter;
+        _scroll.LegacyChainIndex = 68;
         if (MirSkin.GetSize(LibraryFile.GameInter, 68) != Vector2I.Zero)
         {
+            // 滑块不再画整条锁链（那会把锁链当滑块拉伸），只保留圆点大小的拖拽热区。
             _scroll.PositionBar.LibraryFile = LibraryFile.GameInter;
-            _scroll.PositionBar.Index = 68;
+            _scroll.PositionBar.Index = -1;
+            _scroll.PositionBar.Size = new Vector2I(12, 16);
         }
         GD.Print($"[LegacyChatPanel] scrollbar pos={_scroll.Position} size={_scroll.Size} "
             + $"art=GameInter[68] size={MirSkin.GetSize(LibraryFile.GameInter, 68)} "
+            + $"chainTrack={_scroll.LegacyChainTrack} dotY={_scroll.LegacyChainDotY} "
+            + $"thumbArt={_scroll.PositionBar.Index} "
             + $"visible={_scroll.Visible}");
         // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
         // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。
@@ -148,7 +160,10 @@ public partial class ChatLogPanel : Control
         // 透明聊天模式下背景由「每条消息的半透明黑底」承担（旧版 GetBackColour
         // 的 FromArgb(100,0,0,0)），面板本身不再画整块底色，避免主面板上方悬浮灰色块。
         if (_lines.Count == 0 || faded || transparent) return;
-        DrawRect(new Rect2(Vector2.Zero, Size), new Color(0f, 0f, 0f, 0.26f));
+        // 旧版面板 Size 比聊天区宽出一列滚动条，遮罩仍只覆盖原版聊天区域，
+        // 避免把右侧木桩一起压暗。
+        var backdrop = _legacyHudLayout ? LegacyHudLayout.ChatLogSize : Size;
+        DrawRect(new Rect2(Vector2.Zero, backdrop), new Color(0f, 0f, 0f, 0.26f));
     }
 
     public void AddMessage(string text, Color colour)
@@ -422,10 +437,20 @@ public partial class ChatLogPanel : Control
     /// <summary>
     /// 透明主聊天默认不显示滚动条；有溢出内容且非透明时才显示。
     /// DXVScrollBar.HideWhenNoScroll 会在 MaxValue 变化后强制 Visible，必须在其后覆盖。
+    ///
+    /// legacy 旧版主 HUD 例外：原版聊天框右侧那条锁链滚动条**默认就显示、一直显示**
+    /// （用户多次确认），不受透明/淡出/是否有溢出影响。
     /// </summary>
     private void UpdateChromeVisibility(float textOpacity = 1f)
     {
         if (_scroll == null) return;
+
+        if (_legacyHudLayout)
+        {
+            _scroll.Visible = true;
+            return;
+        }
+
         if (_tabSettings.Count == 0)
         {
             _scroll.Visible = false;

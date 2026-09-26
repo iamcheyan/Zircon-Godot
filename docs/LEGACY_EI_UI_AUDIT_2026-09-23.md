@@ -2018,3 +2018,53 @@ ConfigDialog(_page,_titleLabel) / GroupDialog(_allowCheck,_allowLabel,_lfgPanel,
 
 **未改代码**：这属于**新增解析逻辑**（NPC 脚本文本 → 头像渲染），不是坐标修正。
 机制已完全查清，留作实施依据。
+
+### 用反汇编解开第 4 项：F750 的「额外 9px 根裁切」（SET-05）—— **不是 bug**
+
+**背景**：SET-05 记录「primary-static 根 248x264；F750 alpha bbox (4,119,248,273)；
+背景设于 (-4,-119) 后有效像素覆盖根相对 [0,248)x[0,273)，**向下超出 9px**」，
+并明确写「研究 layout.json::window_base_paint_evidence 只记录 EI 通用背景经 0x460240、
+source viewport 800x600，**未证明目标 EI 根窗裁剪细节**」，因此列为未决。
+
+本轮直接反汇编 EI 的窗口基类绘制（`vtable+0x0C`，证据标注为 `0x423D00`）判定。
+
+#### 0x423D00（窗口基类绘制）
+
+```
+0x423D00  sub  esp, 0x6c
+0x423D06  mov  eax, dword ptr [esi + 0x30]   ; visible?
+0x423D09  test eax, eax / je 0x423e6c        ; 不可见 -> 返回
+0x423D11  mov  eax, dword ptr [0x8b1874]     ; 全局模式标志
+0x423D16  test eax, eax / je 0x423d6c        ; 为 0 -> 另一条路径
+; --- 主路径 ---
+0x423D1A  mov  eax, dword ptr [esi + 0x28]   ; 帧号
+0x423D1D  mov  ecx, dword ptr [esi + 0x2c]   ; 帧库
+0x423D21  call 0x466130                      ; 取帧
+0x423D31  push 0xffff / push 0xffff          ; 裁剪起点
+0x423D3B  push 0x258                         ; 600
+0x423D46  push 0x320                         ; 800
+0x423D53  mov  edx, dword ptr [esi + 0xc]    ; 目标 Y
+0x423D57  mov  eax, dword ptr [esi + 8]      ; 目标 X
+0x423D62  call 0x460240                      ; 绘制
+```
+
+#### 结论：裁剪矩形是**屏幕**，不是窗口根
+
+`0x460240` 的裁剪参数是 `(-1,-1)` + `800` + `600` —— 即**屏幕 (0,0)-(800,600)**。
+代码里**没有任何**把裁剪收窄到窗口根矩形（`[esi+8]`/`[esi+0xc]`/`[esi+0x10]`/`[esi+0x14]`）
+的操作：`[esi+8]`/`[esi+0xc]` 只作为**绘制目标起点**传给 blit，不作为裁剪边界。
+
+所以：
+- 原版**不按根窗裁背景**，只受屏幕边界约束
+- F750 那 9px 超出根矩形的像素，**原版会照画**（只要落在屏幕内）
+- 我方 `ConfigDialog.ApplyLegacyEiLayout()` 显式设 `Clip=false` —— **与原版一致** ✅
+
+**SET-05 可以按「非缺陷」收口**：这不是「Godot 多了 9px 需要裁」，而是
+「Godot 放出的这 9px 本来就该放」。此前判为未决，是因为研究证据没覆盖基类绘制的
+裁剪细节；现在补上了。
+
+#### 与我方对照
+
+无需改代码。`Clip=false` 保留。
+（附：`[0x8b1874]` 是选择主/备两条绘制路径的全局模式标志，与 NPC 窗证据里
+检查的是同一个；主路径用帧 + 屏幕裁剪，备用路径走浮点几何计算，见 0x423D6C 起。）

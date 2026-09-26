@@ -1344,3 +1344,91 @@ figure window; **both have figures (id1 character figure, id7 preview)**」。
 
 另注：`legacy_ui.json` 的 `window.skill-book`（296x332 @(0,0)）同样有误，真值
 452x380 @(348,0)，已于 commit `0ddb3669` 修正并留档。
+
+---
+
+# 2026-09-26/27 EI 旧版 UI 逐窗对照与修正（一轮完整审计）
+
+对照基线：`Mir3-Research/docs/research/ei-ui-layout/`（`layout.json` 58 条几何记录、
+`ui-coverage-matrix.json` 32 个窗口、各窗口逐帧证据 JSON）+ 用 `wilsdk.py` 直接解码
+`/Users/tetsuya/mir2ei/LegacyEI/Data/GameInter.wil` 做像素级交叉验证。
+验收路径统一为 `/Users/tetsuya/mir2ei/LegacyEI/login_game.sh legacy`。
+
+## 已修正并推送（27 个 commit）
+
+| commit | 内容 |
+|---|---|
+| `22cf7a1b` | 经验条对位 F50 凹槽 (235,122) 164x10；锁链滚动条右移上木桩并恢复圆点滑块 |
+| `7dc578be` | 旧版窗口位置改用 `layout.json` 证据坐标，不再由 `LayoutHud` 居中 |
+| `f311ffe7` | 组队窗补回标题 (45,22)/权限状态文字 y=58，关闭按钮 (226,214) |
+| `9f5d678c` | 任务窗详情面板移回 (65,294) 204x76，补两个操作图标，去掉多余关闭按钮 |
+| `b25210eb` | 聊天窗 6 条频道提示改用原版原文；去掉轨道多余拖拽交互 |
+| `a1dd77b9` | 腰带按钮 (393,13) 16x14；悬停补 `(血量)/(魔法量)/(负重)/(经验条)` 前缀；隐藏聊天槽错误的 F350 拉伸底板 |
+| `df4c0fa7` | Ctrl+R 恢复可用；C 改为交易请求 |
+| `09e9c541` | 旧版窗口不再按窗口矩形裁子控件（原版只被 800x600 屏幕裁） |
+| `a235fced` | 小地图改为固定 128x128 widget，去 chrome/标题/缩放，隐藏无素材的大地图按钮 |
+| `21df381d` | 修正 `window.chat-pop` 的窗口类映射（G6） |
+| `2bb8c076` `d6374cb8` | NPC 正文换行宽 149；补两列布局（>=7 行切 x=305） |
+| `6b8e17fb` | 聊天历史区裁剪框对齐 (35,28) 485x266 |
+| `0ddb3669` | 技能书位置 (348,0)；8 个分类页签改用各自帧 460/462/464 |
+| `ac8b03ed` | 状态窗 4 个特殊标签改红色；补齐技能书审计断言表 |
+| `c14bfdef` | 技能书关闭控件改用证据的 F440/441，隐藏多加的 161/162 |
+| `db8f7e3f` | 背包补第三个子控件（模式字美术）；消掉模式文字与金币框重叠 |
+| `a2fe956e` | 背包负重文字改两段两色，消除折行 |
+| `081d517b` | 坐骑按钮去掉原版没有的禁用灰态 |
+| `d7cddd38` | 技能书右页改渲染 `Magic.exp` 段落原文（新增 `ClientData/Magic.exp.txt`，50 段） |
+| `8a8b4dbc` | 小地图标记改程序画描边矩形（NPC 黄 0xFFFF、玩家绿 0x64C864，±2px） |
+| `67434a88` | T 键改为小地图 128<->256 切换 |
+| `9df9b101` | 小地图支持 Ctrl+拖动重定位 |
+| `6b6f995d` | 实现 id7 第二状态窗；修复被行尾注释吞掉的技能书位置 |
+| `f3a731e1` | 大地图键改为小地图放大；V 键改为两态开关 |
+| `85c9b0b4` | NPC 对话脚本支持 FCOLOR 行 token（16 色调色板逐项解出） |
+
+## 独立裁决的证据库错误（6 处，均用素材像素或另一份证据交叉验证）
+
+1. `layout.json` 的 `records.hud.belt` = (393,2) 24x16 → **错**。真值 (393,13) 16x14。
+   依据：F50 底图在面板相对 y=0..10 完全空白（lum<25）、内容从 y=11 才开始；
+   F159 实测 16x14。三处独立来源 + ctor 实参亦一致。
+2. `layout.json` 的 `window.skill-book` = (0,0) 296x332 → **错**。真值 (348,0) 452x380
+   （`window_identities_final.id14`，primary-bytes）。296x332 与马窗相同。
+3. `skill-window-context.json` 把 黑暗/幻影/剑 页签记成 450/452/454 → **错**。真值
+   460/462/464（像素解码确认 8 个页签是 8 组不同美术）。
+4. `inventory-window-render-evidence.json::child_controls[2]` 说第三个子控件是
+   Interface1c F267/268 人物精灵 → **错**。GameInter 266-269 无帧头；服务器模式分支
+   换的是 263-275（수리/판매/보관，64x20），该控件是模式按钮。
+5. `legacy_ui.json` 把 `window.group-pop-candidate` 命名为 `GroupPopup` → **错**。
+   真身是 id7「状态窗-角色形象预览」，11 个槽位矩形与 id1 完全一致（已从
+   `setrect_calls.json` 逐条解出）。
+6. `layout.json` 的 `window.chat-pop` 映射到 `CommunicationDialog` → **错**。F350 是
+   聊天窗（572x388），归属 `LegacyChatDialog`；CommunicationDialog 实为 Interface 200。
+
+**另否掉 1 处误报**：审计认为背包 F280 竖轨「零值态仍画拖柄」，但证据原文写的是
+「fill field `[this+0x58]` 在本构建里只有 reset 会写 0、没有任何其它静态写入，
+**所以该条渲染为空**」—— 与我方行为一致，不该改。
+
+## 修正过程中自己犯并抓到的 2 个错误
+
+1. **「注释吞代码」回归**：一次编辑把 `Place(_statusPreviewDialog, ...)` 与
+   `Place(_magicDialog, 348, 0)` 合并到同一行，后者被吞进行尾注释 —— 技能书位置
+   修复静默失效（日志显示退回居中的 (731,0)）。`dotnet build` 完全看不出来，
+   靠 `[LegacyWindowLoc]` 日志发现。已拆行修复并全局扫描同类问题。
+2. **调色板索引 5 写错**：`0x000080` 按 COLORREF(0x00BBGGRR) 应为 (128,0,0) maroon，
+   第一版写成 (0,0,128)。用独立 Python 复算转换后逐项比对发现。
+
+## 仍未处理：全部为「证据阻塞」，需定案
+
+| 项 | 阻塞原因（证据原文要点） |
+|---|---|
+| 状态窗 6 行缺值（腕力/魔法躲避/毒物躲避/中毒恢复/生命恢复/魔法恢复） | `first_column` 只给坐标基准 x/y_start/line_step，**未给这 6 行的取值来源**，无法映射到 Zircon `Stat` |
+| NPC 菜单条 F1101/F1102 | 基址「由 WIL 头尺寸 + 参考常量推导」，且「常量只是二进制输入、**未提升为最终屏幕原点**」，推导公式未给；ctor `0x43EA80` 区域无对应 SetRect 可反推 |
+| NPCIMG 头像 | 只有 blit 调用 `0x466130`/`0x440030`，**屏幕位置未给**；`0x43FF00-0x440100` 无 SetRect |
+| 设置窗 F750 的 4px 垂直偏差 | Rin 的模板匹配显示贴图与控件坐标系统性差 4px，但「**哪一侧该动证据不足**」 |
+| 聊天上下滚动按钮 | F381/382/383 在本机 `GameInter.wil` 里 **WIX 偏移=0（素材缺失）** |
+| Caption 动作 cap2/cap6/cap7/cap15 | 原版是 `[winmgr+0x6208]` 布尔翻转、`[winmgr+0xD40]` 夹取等**内部状态操作**，我方无对应功能 |
+| 证据库 8 处冲突 | 见 Hana 审计清单（背包占位表偏移、槽 stride 两说、状态窗命中 12 槽 vs 绘制 11 条、帧 167/170 被误当人物形象帧等） |
+
+## 服务端缺口（非客户端问题）
+
+坐骑窗 4 个按钮发的 `@上马/@遛马/@收马` 在 Zircon 服务端**未注册**
+（`SEnvir.CommandHandler`），会回 "Command ... does not exist" —— 按钮永久不可用。
+客户端发法与 EI 一致（都是经聊天命令），缺的是服务端实现。

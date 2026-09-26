@@ -73,7 +73,9 @@ public sealed partial class NPCTextControl : DXControl
         AddPlain(text?.Substring(cursor) ?? string.Empty, ref x, ref y, width, fontSize, lineHeight);
         ContentHeight = Math.Max((int)lineHeight, (int)y + (x > 0 ? (int)lineHeight : 0));
         LineCount = Math.Max(1, ContentHeight / linePitch);
-        Size = new Vector2I(width, ContentHeight);
+        // 宽度用 DrawWidth（>0 时）—— 否则会把第 57 行设的宽度覆盖回换行宽度，
+        // 菜单条就被裁到 149（实测诊断 ctrl=(149,504) 即由此而来）。
+        Size = new Vector2I(DrawWidth > 0 ? DrawWidth : width, ContentHeight);
         QueueRedraw();
     }
 
@@ -126,14 +128,16 @@ public sealed partial class NPCTextControl : DXControl
     /// <summary>
     /// 按原版规则给每个选项行铺菜单条：末项 F1102、其余 F1101。
     ///
-    /// 宽度取**帧的可见尺寸**（F1101 = 383x18、F1102 = 384x44），不是选项命中区的宽度
-    /// —— 原版是整行铺满（反汇编：取帧宽/高后 SetRect(rect,0,0,w,h) 再按 384 居中），
-    /// 而选项命中区只覆盖文字本身。第一版按命中区宽度画，截图里菜单条只有约 70px 宽。
-    ///
-    /// 水平：以**文本列**为基准左对齐（原版居中常量 384 即菜单条自身宽，
-    /// 我方文本列起点即 X，故直接用列起点）。
-    /// 垂直：对齐该选项行的顶部（我方行距 21，原版菜单条高 18，逐行贴合）。
+    /// 两个实测坑（见审计文档「两次失败定位」）：
+    /// 1. **不能用 MirSkin.GetOffset** —— 它返回 WIL **header offset**（F1101 是 (7,-44)），
+    ///    而美术可见区实际从画布 **(64,7)** 开始（alpha bbox 实测）。
+    ///    用 header offset 会把条子画到偏低约 95px 的位置。
+    ///    故这里用实测的 alpha bbox 原点。
+    /// 2. 控件宽度必须是菜单条宽度（383），否则被父容器裁掉。
     /// </summary>
+    private static readonly Vector2I Frame1101VisibleOrigin = new(64, 7);
+    private static readonly Vector2I Frame1102VisibleOrigin = new(64, 10);
+
     private void DrawLegacyMenuStrips()
     {
         if (_buttons.Count == 0) return;
@@ -142,13 +146,10 @@ public sealed partial class NPCTextControl : DXControl
             int frame = i == _buttons.Count - 1 ? 1102 : 1101;
             var tex = MirSkin.GetTexture(LibraryFile.GameInter, frame);
             if (tex == null) continue;
-            var size = MirSkin.GetSize(LibraryFile.GameInter, frame);
-            var offset = MirSkin.GetOffset(LibraryFile.GameInter, frame);
+            // alpha bbox 原点：把可见区左上角对齐到该行命中区的左上角。
+            var origin = frame == 1102 ? Frame1102VisibleOrigin : Frame1101VisibleOrigin;
             var rect = _buttons[i].Rect;
-            // 水平：用选项命中区的 X 反推（命中区只覆盖文字，减去 offset 后可见区左缘落在
-            //       文字起点附近）。**不要**用控件左缘：F1101 的 offset 是 (64,7)，
-            //       直接用 -offset.X 会把条子左移 64px 而被裁掉（实测横条变少变淡）。
-            var pos = new Vector2(rect.Position.X - offset.X, rect.Position.Y - offset.Y);
+            var pos = new Vector2(rect.Position.X - origin.X, rect.Position.Y - origin.Y);
             DrawTexture(tex, pos, Colors.White);
         }
     }

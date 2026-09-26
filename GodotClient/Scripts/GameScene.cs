@@ -6029,7 +6029,11 @@ public partial class GameScene : Control
             if (_mouseItemIcon != null && _mouseItemIcon.Visible)
                 _mouseItemIcon.Position = new Vector2(p.X + 8, p.Y + 8);
             _mouseItemLabel.Position = new Vector2(p.X + 42, p.Y + 14);
-            _hoverLabel.Position = new Vector2(p.X + 14, p.Y + 10);
+            // item-tooltip-and-store-family-evidence.json：原版 0x4341F0 的浮动框
+            // 锚点是 (mouse+10, +10)，不是 +14。仅 legacy 用原版锚点。
+            _hoverLabel.Position = AutoLoginArgs.LegacyUi
+                ? new Vector2(p.X + 10, p.Y + 10)
+                : new Vector2(p.X + 14, p.Y + 10);
         }
     }
 

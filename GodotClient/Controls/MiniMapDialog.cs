@@ -74,7 +74,9 @@ public partial class MiniMapDialog : DXWindow
         IsTransparent = false;
         Size = new Vector2I(128, 128);
         AllowResize = false;
-        Movable = false;
+        // 原版是 Ctrl+拖动重定位（0x43DEB0），普通拖动不移动。
+        Movable = true;
+        RequireCtrlToMove = true;
         HasTitle = false;
         HasFooter = false;
         ShowCloseButton = false;

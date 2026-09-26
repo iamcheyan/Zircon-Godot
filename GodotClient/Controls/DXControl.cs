@@ -64,6 +64,13 @@ public partial class DXControl : Control
     /// <summary>鼠标拖拽移动本控件 (原版 DXControl.Movable)</summary>
     public bool Movable;
 
+    /// <summary>
+    /// 为 true 时只有按住 Ctrl 才能拖动本控件。原版 EI 小地图是
+    /// 「Ctrl+拖动」重定位（map-ui-resource-evidence.json
+    /// closed_notes[0]：0x43DEB0），普通拖动不移动。
+    /// </summary>
+    public bool RequireCtrlToMove;
+
     /// <summary>拖拽时不受父控件边界限制 (用于大地图图片)</summary>
     public bool IgnoreMoveBounds;
 
@@ -258,7 +265,7 @@ public partial class DXControl : Control
                     Focus?.Invoke(this, EventArgs.Empty);
                     MouseDown?.Invoke(this, EventArgs.Empty);
 
-                    if (Movable && IsEnabled)
+                    if (Movable && IsEnabled && (!RequireCtrlToMove || Input.IsKeyPressed(Key.Ctrl)))
                     {
                         _dragging = true;
                     }

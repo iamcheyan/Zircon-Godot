@@ -18,6 +18,11 @@ public partial class QuestDialog : DXWindow
     private DXControl _content;
     private DXVScrollBar _scroll;
     private readonly DXControl _detailPanel;
+    private DXImageControl _legacyDetailBackground;
+    private DXLabel _legacyDetailText;
+    private DXButton _legacyAcceptButton;
+    private DXButton _legacyPageButton;
+    private int _legacyDetailOffset;
     private readonly List<(DXButton Button, int Page)> _tabs = new();
     private readonly Dictionary<int, DXImageControl> _tabAlerts = new();
     private ClientUserQuest _selectedQuest;
@@ -121,7 +126,132 @@ public partial class QuestDialog : DXWindow
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(304, 404);
         _closeButton.Size = new Vector2I(28, 26);
+        // Q10 证据 controls 只有两个操作图标，没有关闭控件；此前在 (304,404)
+        // 加的关闭按钮正好压在 F700 底部卷轴装饰上，属于多余控件。
+        _closeButton.Visible = false;
+
+        // Q7 详情面板：证据为 F705 @ (65,294) 204x76（quest-window-render-evidence.json
+        // detail_geometry），正文 (80,310)、行距 15、3 行、滚动 clamp[0,3]。
+        // 此前 _detailPanel 停在 (380,5) 300x405 —— 相对 _content(18,58) 就是绝对
+        // (398,63)，x 越出 340 宽窗口被裁，追踪勾选框/任务名/描述/奖励格/起止NPC/
+        // 操作按钮在旧版下全部不可见。这里改到证据位置。
+        _detailPanel.Location = new Vector2I(65 - _content.Location.X, 294 - _content.Location.Y);
+        _detailPanel.Size = new Vector2I(204, 76);
+        _detailPanel.Border = false;
+        if (_legacyDetailBackground == null)
+        {
+            _legacyDetailBackground = new DXImageControl
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 705,
+                Location = Vector2I.Zero,
+                Size = MirSkin.GetSize(LibraryFile.GameInter, 705),
+                StretchImage = false,
+                IsControl = false,
+            };
+            _detailPanel.AddControl(_legacyDetailBackground);
+        }
+        _legacyDetailBackground.Visible = true;
+
+        // Q3 两个操作图标：证据 controls 为 this+0x74 帧对 723/724 @(290,59) 28x28
+        // 与 this+0x128 帧对 721/722 @(290,89) 28x28（行为链 0x447FA0/0x448230）。
+        // 此前没有任何对应控件 —— 图标由 F700 底图烘焙可见，但完全不可点。
+        if (_legacyAcceptButton == null)
+        {
+            _legacyAcceptButton = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 723,
+                HoverIndex = 724,
+                PressedIndex = 724,
+                Location = new Vector2I(290, 59),
+                Size = new Vector2I(28, 28),
+            };
+            _legacyAcceptButton.MouseClick += (_, _) => OnLegacyActionClick(true);
+            AddControl(_legacyAcceptButton);
+        }
+        if (_legacyPageButton == null)
+        {
+            _legacyPageButton = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 721,
+                HoverIndex = 722,
+                PressedIndex = 722,
+                Location = new Vector2I(290, 89),
+                Size = new Vector2I(28, 28),
+            };
+            _legacyPageButton.MouseClick += (_, _) => OnLegacyActionClick(false);
+            AddControl(_legacyPageButton);
+        }
+        _legacyAcceptButton.Visible = true;
+        _legacyPageButton.Visible = true;
         UpdateClientAreaForLegacySkin();
+    }
+
+    /// <summary>
+    /// 旧版任务窗两个操作图标的行为。证据只给到事件 0x418/0x419 的分发
+    /// （0x447FA0 / 0x448230 → 0x448580），事件语义未定案，所以这里先接到
+    /// 与图标位置最相符的现有业务入口：上方图标=对选中任务切追踪/完成，
+    /// 下方图标=翻页。不宣称与原版逐位等价。
+    /// </summary>
+    private void OnLegacyActionClick(bool accept)
+    {
+        if (accept)
+        {
+            if (_selectedQuest != null)
+            {
+                GameScene.Game?.SendQuestTrack(_selectedQuest.Quest.Index, true);
+                return;
+            }
+            if (_selectedAvailable != null)
+            {
+                GameScene.Game?.SendQuestTrack(_selectedAvailable.Index, true);
+            }
+            return;
+        }
+
+        if (_page == 3) GameScene.Game?.SendMilestoneNotify(false);
+        _page = 0;
+        _background.Index = 700;
+        _selectedQuest = null;
+        _selectedAvailable = null;
+        UpdateTabStyles();
+        RefreshPage();
+    }
+
+    /// <summary>
+    /// 旧版详情面板渲染：只画 F705 底图 + 正文。证据 detail_geometry 为
+    /// 正文 (80,310) 相对面板 (65,294) = 面板内 (15,16)、行距 15、可见 3 行、
+    /// 滚动 clamp[0,3]。现代版的追踪勾选框/奖励格/起止NPC 在旧版里不存在，
+    /// 所以整块走独立分支，避免把现代控件塞进 204x76 的证据框。
+    /// </summary>
+    private void RefreshLegacyDetail()
+    {
+        QuestInfo quest = _selectedQuest?.Quest ?? _selectedAvailable;
+        string text = quest == null
+            ? string.Empty
+            : GameScene.Game?.GetQuestText(quest, _selectedQuest, true) ?? quest.AcceptText ?? string.Empty;
+
+        _legacyDetailOffset = Math.Clamp(_legacyDetailOffset, 0, 3);
+        var lines = text.Replace("\r", string.Empty).Split('\n');
+        string shown = string.Join("\n", lines.Skip(_legacyDetailOffset).Take(3));
+
+        if (_legacyDetailText == null)
+        {
+            _legacyDetailText = new DXLabel
+            {
+                FontSize = 10,
+                TextColour = Colors.White,
+                Location = new Vector2I(15, 16),
+                Size = new Vector2I(174, 45),
+                AutoSize = false,
+                IsControl = false,
+            };
+            _detailPanel.AddControl(_legacyDetailText);
+        }
+        _legacyDetailText.Text = shown;
+        _legacyDetailText.Visible = true;
     }
 
     public override void Close()
@@ -132,6 +262,23 @@ public partial class QuestDialog : DXWindow
 
     public bool AuditLayout(out string details)
     {
+        if (_legacyEiLayout)
+        {
+            // 旧版几何以 layout.json window.quest + quest-window-render-evidence.json
+            // detail_geometry 为准，与现代版完全不同，必须分开断言。
+            bool legacyValid = Size == new Vector2I(340, 440)
+                && _background.Index == 700
+                && _detailPanel.Location == new Vector2I(65 - _content.Location.X, 294 - _content.Location.Y)
+                && _detailPanel.Size == new Vector2I(204, 76)
+                && _legacyAcceptButton?.Location == new Vector2I(290, 59)
+                && _legacyPageButton?.Location == new Vector2I(290, 89)
+                && _closeButton.Visible == false;
+            details = $"legacy size={Size} detail={_detailPanel.Position}/{_detailPanel.Size} "
+                + $"accept={_legacyAcceptButton?.Location} page={_legacyPageButton?.Location} "
+                + $"closeVisible={_closeButton.Visible}";
+            return legacyValid;
+        }
+
         bool valid = Size == new Vector2I(732, 480)
             && _content.Location == new Vector2I(18, 58)
             && _content.Size == new Vector2I(680, 415)
@@ -407,6 +554,12 @@ public partial class QuestDialog : DXWindow
 
     private void RefreshDetail()
     {
+        if (_legacyEiLayout)
+        {
+            RefreshLegacyDetail();
+            return;
+        }
+
         foreach (var child in _detailPanel.GetChildren().OfType<Node>())
         {
             if (child is DXControl control) _detailPanel.RemoveControl(control);

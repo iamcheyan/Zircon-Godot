@@ -203,6 +203,8 @@ public partial class MagicDialog : DXWindow
         ConfigureLegacyPageControls();
         BuildLegacySchoolButtons();
         BuildLegacySkillRows();
+        // 右页改渲染 Magic.exp 段落原文（段号即技能 id）。
+        if (_legacyDetail != null) _legacyDetail.LegacyEiLayout = true;
         UpdateClientAreaForLegacySkin();
     }
 
@@ -751,6 +753,61 @@ public partial class LegacySkillRowView : DXControl
         }
     }
 
+    /// <summary>
+    /// EI 技能书右页逐行渲染 Magic.exp 的段落原文，段号即技能 id
+    /// （skill-window-render-loop-evidence.json 的 observations）。
+    /// 数据来自 ClientData/Magic.exp.txt。
+    /// </summary>
+    public static string LegacyMagicExpParagraph(int skillId)
+    {
+        if (skillId < 0) return null;
+        EnsureLegacyMagicExpLoaded();
+        return _legacyMagicExp.TryGetValue(skillId, out string text) ? text : null;
+    }
+
+    private static void EnsureLegacyMagicExpLoaded()
+    {
+        if (_legacyMagicExpLoaded) return;
+        _legacyMagicExpLoaded = true;
+        try
+        {
+            string projectDir = ProjectSettings.GlobalizePath("res://");
+            foreach (string candidate in new[]
+            {
+                System.IO.Path.Combine(projectDir, "..", "ClientData", "Magic.exp.txt"),
+                System.IO.Path.Combine(projectDir, "ClientData", "Magic.exp.txt"),
+            })
+            {
+                if (!System.IO.File.Exists(candidate)) continue;
+                int currentId = -1;
+                var buffer = new List<string>();
+                foreach (string raw in System.IO.File.ReadAllLines(candidate))
+                {
+                    string line = raw.TrimEnd();
+                    if (line.StartsWith('#'))
+                    {
+                        if (currentId >= 0) _legacyMagicExp[currentId] = string.Join("\n", buffer);
+                        buffer.Clear();
+                        currentId = int.TryParse(line[1..].Trim(), out int id) ? id : -1;
+                        continue;
+                    }
+                    if (currentId >= 0) buffer.Add(line);
+                }
+                if (currentId >= 0) _legacyMagicExp[currentId] = string.Join("\n", buffer);
+                GD.Print($"[LegacyMagicExp] loaded {_legacyMagicExp.Count} paragraphs from {candidate}");
+                return;
+            }
+            GD.Print("[LegacyMagicExp] Magic.exp.txt not found; falling back to generated lines");
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"[LegacyMagicExp] load failed: {ex.Message}");
+        }
+    }
+
+    private static readonly Dictionary<int, string> _legacyMagicExp = new();
+    private static bool _legacyMagicExpLoaded;
+
     public override void _Draw()
     {
         if (_info == null) return;
@@ -813,6 +870,9 @@ public partial class LegacySkillDetailView : DXControl
     private int _page;
     private int _pageCount = 1;
 
+    /// <summary>由 MagicDialog 在旧版布局时置 true：右页改渲染 Magic.exp 段落原文。</summary>
+    public bool LegacyEiLayout;
+
     public LegacySkillDetailView()
     {
         MouseFilter = MouseFilterEnum.Ignore;
@@ -844,28 +904,47 @@ public partial class LegacySkillDetailView : DXControl
         {
             var info = selected.Info;
             var magic = selected.UserMagic;
-            lines.Add($"[{info.Local() ?? info.Name ?? string.Empty}]");
-            lines.Add($"属性 : {info.Property}");
-            lines.Add($"元素 : {SchoolText(info.School)}");
-            lines.Add(magic == null ? "状态 : 未学习" : $"等级 : {magic.Level}");
-            lines.Add(magic == null
-                ? $"修炼1级需要等级 : {info.NeedLevel1}"
-                : $"修炼值 : {magic.Experience}");
-            if (magic == null && info.NeedLevel2 > 0)
-                lines.Add($"修炼2级需要等级 : {info.NeedLevel2}");
-            if (magic == null && info.NeedLevel3 > 0)
-                lines.Add($"修炼3级需要等级 : {info.NeedLevel3}");
-            if (!string.IsNullOrWhiteSpace(info.Description))
-                lines.Add($"说明 : {info.Description}");
+            // EI 右页逐行渲染 Magic.exp 的**段落原文**（skill-window-render-loop-
+            // evidence.json 的 observations：例 #3 共 12 行，[基本技能名]/属性 :/
+            // 元素 :/修炼N级需要等级 :/- 修炼值 :/说明 :），段号即技能 id。
+            // 且 count==1 时是「一行流文本＝一行渲染、无自动换行」。
+            // 现代模式仍用下面这套按当前状态拼的行。
+            string paragraph = LegacyEiLayout ? LegacySkillRowView.LegacyMagicExpParagraph(info?.Index ?? -1) : null;
+            if (!string.IsNullOrEmpty(paragraph))
+            {
+                lines.AddRange(paragraph.Replace("\r", string.Empty).Split('\n'));
+            }
+            else
+            {
+                lines.Add($"[{info.Local() ?? info.Name ?? string.Empty}]");
+                lines.Add($"属性 : {info.Property}");
+                lines.Add($"元素 : {SchoolText(info.School)}");
+                lines.Add(magic == null ? "状态 : 未学习" : $"等级 : {magic.Level}");
+                lines.Add(magic == null
+                    ? $"修炼1级需要等级 : {info.NeedLevel1}"
+                    : $"修炼值 : {magic.Experience}");
+                if (magic == null && info.NeedLevel2 > 0)
+                    lines.Add($"修炼2级需要等级 : {info.NeedLevel2}");
+                if (magic == null && info.NeedLevel3 > 0)
+                    lines.Add($"修炼3级需要等级 : {info.NeedLevel3}");
+                if (!string.IsNullOrWhiteSpace(info.Description))
+                    lines.Add($"说明 : {info.Description}");
+            }
         }
 
+        // 原版 count==1 分支不做自动换行（宽度参数 0），所以 legacy 下直接
+        // 逐行绘制 Magic.exp 原文，不走 Wrap。
+        bool noWrap = LegacyEiLayout && lines.Count > 0 && lines[0].StartsWith("[");
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One / canvasScale);
         try
         {
             float y = 30f;
             foreach (var source in lines)
             {
-                foreach (string line in Wrap(source, font, drawSize, DetailWidth * canvasScale))
+                var drawLines = noWrap
+                    ? new[] { source }
+                    : Wrap(source, font, drawSize, DetailWidth * canvasScale);
+                foreach (string line in drawLines)
                 {
                     if (y > 290f) break;
                     DrawDetailLine(font, line, new Vector2(DetailX * canvasScale, y * canvasScale),

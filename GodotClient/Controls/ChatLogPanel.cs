@@ -85,15 +85,15 @@ public partial class ChatLogPanel : Control
         _tabBar.Size = Size;
         _textArea.Position = Vector2I.Zero;
         _textArea.Size = Size;
-        // 原版聊天面板的滚动条贴在面板右缘，并且只在历史溢出时出现
-        // （HideWhenNoScroll 语义）。旧实现把它压成 1x1 且永久 Visible=false，
-        // 等于永远没有滚动条。
+        // 原版聊天面板的滚动条贴在面板右缘，并且**常驻显示** —— 用户确认
+        // 「它是一直都在的」，不能像现代 ChatTab 那样 HideWhenNoScroll。
         const int legacyScrollWidth = 14;
         _scroll.Position = new Vector2I((int)Size.X - legacyScrollWidth, 0);
         _scroll.Size = new Vector2I(legacyScrollWidth, (int)Size.Y);
         _scroll.VisibleSize = (int)Size.Y;
         _scroll.Change = 14;
-        _scroll.HideWhenNoScroll = true;
+        _scroll.HideWhenNoScroll = false;
+        _scroll.Visible = true;
         // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图），
         // 改用原版聊天框右侧那条锁链滚动条的帧 GameInter F68 (12x154)。
         if (MirSkin.GetSize(LibraryFile.GameInter, 68) != Vector2I.Zero)

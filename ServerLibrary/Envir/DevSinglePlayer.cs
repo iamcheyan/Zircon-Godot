@@ -1,10 +1,12 @@
 using Library;
+using Library.Network.ServerPackets;
 using Library.SystemModels;
 using Server.DBModels;
 using Server.Envir;
 using Server.Models;
 using System;
 using System.Linq;
+using S = Library.Network.ServerPackets;
 
 namespace Server.Envir;
 
@@ -51,6 +53,7 @@ public static class DevSinglePlayer
         if (already)
         {
             SEnvir.Log($"[SingleDev] {TargetEmail} 已注入满级数据，跳过");
+            EnsureVisibleExperience(player);
             return;
         }
 
@@ -105,5 +108,27 @@ public static class DevSinglePlayer
 
         player.RefreshWeight();
         SEnvir.Log($"[SingleDev] 注入完成: 等级 {player.Level}, 装备/物品 {given} 件, 魔法 {player.Character.Magics.Count} 个");
+        EnsureVisibleExperience(player);
+    }
+
+    /// <summary>
+    /// 开发模式让经验条有可见比例。满级角色本级经验往往接近 0，
+    /// 旧版主 HUD 的经验条（GameInter F63）按比例填充，肉眼就是一条空槽，
+    /// UI 验收时无法判断控件是否真的接好。这里在比例过低时补到本级上限的一半，
+    /// 并广播一次 S.LevelChanged 让客户端立刻重画。只影响 --singleplayer-dev。
+    /// </summary>
+    private static void EnsureVisibleExperience(PlayerObject player)
+    {
+        if (player.MaxExperience <= 0) return;
+        if (player.Experience > player.MaxExperience / 100) return; // 已有可见比例则不动
+
+        player.Experience = player.MaxExperience / 2;
+        player.Enqueue(new S.LevelChanged
+        {
+            Level = player.Level,
+            Experience = player.Experience,
+            MaxExperience = player.MaxExperience,
+        });
+        SEnvir.Log($"[SingleDev] 经验条可见化: {player.Experience}/{player.MaxExperience}");
     }
 }

@@ -115,6 +115,21 @@ public partial class QuestDialog : DXWindow
         // 旧版窗口只剩一张空羊皮纸，真实任务数据无法验收。
         _content.Modulate = Colors.White;
         _scroll.Modulate = Colors.White;
+        // 原版任务窗滚动条：window-control-position-analysis.json 给 F723/724 @ (290,59)、
+        // F721/722 @ (290,89)（均 inside-window）；素材实测这四个帧都是 **28x28** 的按钮，
+        // 即上下箭头。故滚动条落在 (290,59)，高度取到下箭头底部 (89+28-59)=58。
+        // 原值沿用现代位置 (704,58) 18x415 —— 远超 340 宽的窗口，截图里表现为窗外一条黑竖条。
+        _scroll.Location = new Vector2I(290, 59);
+        _scroll.Size = new Vector2I(28, 58);
+        _scroll.UpButton.LibraryFile = LibraryFile.GameInter;
+        _scroll.UpButton.Index = 723;
+        _scroll.UpButton.HoverIndex = 724;
+        _scroll.UpButton.PressedIndex = 724;
+        _scroll.DownButton.LibraryFile = LibraryFile.GameInter;
+        _scroll.DownButton.Index = 721;
+        _scroll.DownButton.HoverIndex = 722;
+        _scroll.DownButton.PressedIndex = 722;
+        _scroll.PositionBar.Visible = false;
         foreach (var tab in _tabs)
         {
             tab.Button.Modulate = new Color(1, 1, 1, 0);
@@ -299,8 +314,13 @@ public partial class QuestDialog : DXWindow
             && _background.Index == 700
             && _content.Modulate.A > 0.99f
             && _scroll.Modulate.A > 0.99f
+            // 原版滚动条 (290,59) 28x58，上下箭头用 F723/724 与 F721/722
+            // （window-control-position-analysis.json；素材实测四帧均为 28x28）。
+            && _scroll.Location == new Vector2I(290, 59)
+            && _scroll.Size == new Vector2I(28, 58)
+            && _scroll.UpButton.Index == 723 && _scroll.DownButton.Index == 721
             && _closeButton.Location == new Vector2I(304, 404);
-        details = $"size={Size} background=F{_background.Index} contentAlpha={_content.Modulate.A:0.##} close={_closeButton.Location}";
+        details = $"size={Size} background=F{_background.Index} contentAlpha={_content.Modulate.A:0.##} scroll={_scroll.Location}/{_scroll.Size}#{_scroll.UpButton.Index}/{_scroll.DownButton.Index} close={_closeButton.Location}";
         return ok;
     }
 

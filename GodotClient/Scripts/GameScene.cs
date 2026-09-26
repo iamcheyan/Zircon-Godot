@@ -755,6 +755,7 @@ public partial class GameScene : Control
 
     private InventoryDialog _inventoryDialog;
     private CharacterDialog _characterDialog;
+    private CharacterDialog _statusPreviewDialog;
     private EditCharacterDialog _editCharacterDialog;
     private StorageDialog _storageDialog;
     private BeltDialog _beltDialog;
@@ -4495,6 +4496,13 @@ public partial class GameScene : Control
         _characterDialog = new CharacterDialog();
         _characterDialog.Location = Vector2I.Zero;
         _uiLayer.AddChild(_characterDialog);
+        // id7 第二状态窗（证据 window_identities_final.id7：ctor 0x4503B0、
+        // F200、(560,0)、244x328、「状态窗-角色形象预览」）。11 个装备槽矩形
+        // 与 id1 完全一致（setrect_calls.json 逐条解出），所以直接复用
+        // CharacterDialog 的 legacy 布局。legacy_ui.json 把它误名为 GroupPopup。
+        _statusPreviewDialog = new CharacterDialog();
+        _statusPreviewDialog.Location = Vector2I.Zero;
+        _uiLayer.AddChild(_statusPreviewDialog);
         _editCharacterDialog = new EditCharacterDialog();
         _uiLayer.AddChild(_editCharacterDialog);
 
@@ -4698,10 +4706,16 @@ public partial class GameScene : Control
         };
         _mainPanel.CashShopButton.MouseClick += (o, e) =>
         {
-            // EI cap15 is the status window (id 1); it only happens to reuse
-            // the modern client's cash shop button control/frame slot.
+            // EI cap15 是状态栏：toggle id1 **并**开 id7 第二状态窗
+            // （hud-caption-action-tail-evidence.json：cap15 = toggle id1 +
+            // 0x423E80(+0x29CE4, 0xC8, [0x29CFC], [0x29D00], 0xF4, 0x148)
+            // 开 244x328 面板）。它只是复用了现代客户端的商店按钮控件/帧位。
             if (AutoLoginArgs.LegacyHud)
+            {
                 ToggleCharacterWindow();
+                if (_statusPreviewDialog != null)
+                    WindowManager.Toggle(_statusPreviewDialog, _uiLayer);
+            }
             else
                 OpenGameStoreDialog();
         };
@@ -4764,6 +4778,8 @@ public partial class GameScene : Control
         // 控件树；默认正式布局暂不隐藏尚未完成旧版数据绑定的现代内容。
         LegacyUiSkin.ApplyLegacyTestWindow(_inventoryDialog, _inventoryDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_characterDialog, _characterDialog.Location);
+        if (_statusPreviewDialog != null)
+            LegacyUiSkin.ApplyLegacyTestWindow(_statusPreviewDialog, _statusPreviewDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_magicDialog, _magicDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_groupDialog, _groupDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_questDialog, _questDialog.Location);
@@ -5286,6 +5302,7 @@ public partial class GameScene : Control
 
         Place(_inventoryDialog, 518, 0);   // window.inventory  (GameInter 250, 284x324)
         Place(_characterDialog, 0, 0);     // window.status     (GameInter 200, 244x328)
+        Place(_statusPreviewDialog, 560, 0); // window_identities_final.id7 第二状态窗
         Place(_magicDialog, 348, 0);       // window.skill-book (GameInter 400, 452x380)
         // 位置依据 window-paint-and-hotkey-dispatch-evidence.json 的
         // cell_analysis.window_identities_final.id14（frame 400, x=348, y=0,
@@ -5307,6 +5324,7 @@ public partial class GameScene : Control
         static string Fmt(DXWindow w) =>
             w == null || !IsInstanceValid(w) ? "-" : $"{w.GetType().Name}@{w.Location}";
         GD.Print($"[LegacyWindowLoc] inv={Fmt(_inventoryDialog)} cha={Fmt(_characterDialog)} "
+            + $"cha2={Fmt(_statusPreviewDialog)} "
             + $"mag={Fmt(_magicDialog)} qst={Fmt(_questDialog)} grp={Fmt(_groupDialog)} "
             + $"cfg={Fmt(_configDialog)} hor={Fmt(_horseDialog)} npc={Fmt(_npcDialog)} "
             + $"gld={Fmt(_guildDialog)} trd={Fmt(_tradeDialog)} sto={Fmt(_storageDialog)}");

@@ -103,7 +103,10 @@ public partial class GuildDialog : DXWindow
         _closeButton.Size = new Vector2I(28, 26);
         _content.Location = new Vector2I(18, 80);
         _content.Size = new Vector2I(410, 415);
-        _scroll.Location = new Vector2I(428, 80);
+        // 原版滚动条 0x4179B0@+0x76C，位置 (x+0x224, y+0xD0) = (548,208)
+        // （guild-window-paint-evidence.json；落在 596x446 内，可直接作窗口相对坐标）。
+        // 原值 (428,80) 无证据支撑 —— 截图里表现为窗口中部一条突兀的竖直黑条。
+        _scroll.Location = new Vector2I(548, 208);
         _scroll.Size = new Vector2I(16, 415);
         UpdateClientAreaForLegacySkin();
         // 原版 F600 无页签；此处显式再执行一次，避免构造期先设成可见后无人回收。
@@ -116,6 +119,8 @@ public partial class GuildDialog : DXWindow
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600
             && _content.Location == new Vector2(18, 80)
             && _content.Size == new Vector2(410, 415)
+            // 原版滚动条位置 (548,208)（guild-window-paint-evidence.json）。
+            && _scroll.Location == new Vector2(548, 208)
             // 背景锚点 = alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）；
             // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
             && _background.Location == (_guild == null && _tab == 0

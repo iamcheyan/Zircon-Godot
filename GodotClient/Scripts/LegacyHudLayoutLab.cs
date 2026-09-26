@@ -262,6 +262,11 @@ public partial class LegacyHudLayoutLab : Control
                 "请勿离开发售柜台太远。",
                 "营业时间：全天开放。",
                 "祝您游戏愉快，再见！",
+                // FCOLOR 行 token（npc-dialog-family-evidence.json type4_0x43FF92）：
+                // 之后的正文行改用调色板 [eax*4 + 0x47C4A8] 的颜色。
+                // 这里取索引 10 = 0x00FF00 → RGB(0,255,0) 亮绿，便于肉眼与日志核对。
+                "FCOLOR 10",
+                "本行应使用 FCOLOR 指定的亮绿色。",
             });
             NPCPage page = null;
             try

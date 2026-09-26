@@ -138,7 +138,30 @@ public partial class NPCDialog : DXWindow
         // 商品面板（商店窗 id2 的购买态）一并切到旧版几何：GameInter F1000 / 300x304 /
         // 行距 46 / close 1010-1011 / confirm 1012-1013。
         _goods.ApplyLegacyEiLayout();
+        _legacyGoodsPlaced = true;
+        PlaceGoodsPanel();
     }
+
+    /// <summary>
+    /// 原版商店窗（id2）是**独立窗口**，证据给出其屏幕位置为 (0,184)
+    /// （store-window-render-evidence.json::window_candidate.screen_origin_proof：
+    ///  \"state-0 content rect = (0,186,300,304); panel drawn at screen (0,184)-(299,490)\"）。
+    /// 我方把商品面板做成 NPC 窗的子面板（现代布局是挂在 NPC 窗下方 (0, Size.Y)），
+    /// 所以要用绝对屏幕坐标反推相对位置，否则面板会被排到屏幕外、底部被裁掉
+    /// —— 这一点只查面板自身几何的审计是发现不了的，靠截图才暴露。
+    /// </summary>
+    private void PlaceGoodsPanel()
+    {
+        _goods.Location = new Vector2I(
+            LegacyStoreScreenX - (int)Location.X,
+            LegacyStoreScreenY - (int)Location.Y);
+    }
+
+    /// <summary>原版商店窗（id2）的屏幕原点，证据值 (0,184)。</summary>
+    public static readonly Vector2I LegacyStoreScreen = new(0, 184);
+    private const int LegacyStoreScreenX = 0;
+    private const int LegacyStoreScreenY = 184;
+    private bool _legacyGoodsPlaced;
 
     /// <summary>legacy 行级滚动：_scrollLine ∈ [0, 行数-可视行数]，步进 1。</summary>
     private void ScrollLegacy(int delta)
@@ -163,8 +186,19 @@ public partial class NPCDialog : DXWindow
         _scrollDown.Enabled = maxScroll > 0 && _scrollLine < maxScroll;
     }
 
-    /// <summary>验收测试场用：商品面板（商店窗 id2 购买态）的 legacy 布局审计。</summary>
-    public bool AuditLegacyGoods(out string details) => _goods.AuditLegacyEiLayout(out details);
+    /// <summary>
+    /// 验收测试场用：商品面板（商店窗 id2 购买态）的 legacy 布局审计。
+    /// 除了面板自身几何，还校验**绝对屏幕位置** —— 上一版只查自身几何，
+    /// 面板被排到屏幕外（底部裁掉）时审计仍然 PASS，是截图才暴露的。
+    /// </summary>
+    public bool AuditLegacyGoods(out string details)
+    {
+        bool own = _goods.AuditLegacyEiLayout(out string ownDetails);
+        var screen = new Vector2I(_goods.Location.X + (int)Location.X, _goods.Location.Y + (int)Location.Y);
+        bool placed = screen == LegacyStoreScreen;
+        details = $"screen={screen} expected={LegacyStoreScreen} placed={placed} | {ownDetails}";
+        return own && placed;
+    }
 
     /// <summary>
     /// 验收测试场用：强制显示商品面板。测试场不连服务器、没有 NPC 商品数据，
@@ -298,7 +332,10 @@ public partial class NPCDialog : DXWindow
             foreach (var row in _rowBackgrounds) { RemoveControl(row); row.QueueFree(); }
             _rowBackgrounds.Clear();
         }
-        _goods.Location = new Vector2I(0, (int)Size.Y);
+        // legacy：商品面板的位置由 PlaceGoodsPanel 按原版商店窗的屏幕原点 (0,184) 固定，
+        // 这里不能按现代公式挂在 NPC 窗下方 (0, Size.Y)，否则面板会被排到屏幕外。
+        if (_legacyGoodsPlaced) PlaceGoodsPanel();
+        else _goods.Location = new Vector2I(0, (int)Size.Y);
         _goods.SetGoods(_page.Goods, _page.Currency, _page.Types?.Select(x => x.ItemType));
         _goods.Visible = _page.DialogType == NPCDialogType.BuySell && _page.Goods != null && _page.Goods.Count > 0;
         if (selling)

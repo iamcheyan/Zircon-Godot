@@ -1800,3 +1800,74 @@ ConfigDialog(_page,_titleLabel) / GroupDialog(_allowCheck,_allowLabel,_lfgPanel,
 **可用的确定值**：菜单条 x=0、宽 384；F1100 高 138、F1101 高 18、F1102 高 44（各自可见尺寸）。
 **仍未闭合**：三对引用分别对应哪三种菜单态、以及每态用哪一帧 —— 需要再往下读
 `0x466130` 的签名与调用点上下文。本轮到此，未据此改我方代码。
+
+### NPC 菜单条：推导公式已闭合（2026-09-27 续）
+
+上一轮留下「SetRect 与 push frame 的配对是否成立」的疑点，本轮读 `0x466130` 后闭合。
+
+#### `0x466130` 是**取帧调度器**，不是绘制
+
+```
+0x466130  mov  al, byte ptr [ecx + 4]     ; this->state
+0x466133  test al, al
+0x466135  jne  0x466144
+0x466137  mov  eax, [esp+4]
+0x46613C  call 0x466640                   ; state 0
+0x466141  ret  4
+0x466144  cmp  al, 1 / je 0x466151
+0x466148  cmp  al, 2 / je 0x466151
+0x46614C  xor  eax, eax / ret 4           ; 其它 state -> 返回 0
+0x466151  mov  edx, [esp+4]
+0x466156  call 0x466720                   ; state 1 或 2
+```
+
+所以 `push <frame>; call 0x466130` 只**取帧**（返回 eax，调用方 `test eax,eax; je` 判空），
+**不设置任何矩形** —— 上一轮看到的「紧邻 SetRect」确实属于**上一条绘制**，配对不成立。
+
+#### 真正的推导：拿到帧之后，用**帧自身尺寸**设矩形
+
+```
+0x43EEC7  test eax, eax
+0x43EEC9  je   0x43eee5
+0x43EECB  mov  eax, [esi + 0x2c]
+0x43EECE  mov  eax, [eax + 0x38]          ; 帧的尺寸结构
+0x43EED1  movsx ecx, word ptr [eax + 2]   ; 高
+0x43EED5  movsx edx, word ptr [eax]       ; 宽
+0x43EED8  push ecx
+0x43EED9  push edx
+0x43EEDA  push 0
+0x43EEDC  lea  eax, [esp + 0x1c]
+0x43EEE0  push 0
+0x43EEE2  push eax
+0x43EEE3  call edi                        ; SetRect(rect, 0, 0, 帧宽, 帧高)
+```
+
+紧接着是**居中**计算（用两个参考常量）：
+
+```
+0x43EEF5  sub  eax, 0x12                  ; (... - 18) / 2   <- 行高
+0x43EF09  sub  eax, 0x180                 ; (... - 384) / 2  <- 可见宽
+```
+
+#### 闭合后的公式
+
+```
+对每条菜单条：
+    frame = 0x466130(frame_id)                    ; 取帧
+    if (!frame) 跳过
+    SetRect(rect, 0, 0, frame.width, frame.height) ; 矩形 = 帧的尺寸，原点 (0,0)
+    目标位置 = 居中，参考常量 宽=384(0x180)、行高=18(0x12)
+```
+
+这正是证据所说「基址由 WIL 头尺寸 + 参考常量推导」的**具体公式**（此前未给）。
+
+#### 与我方对照
+
+我方 `NPCDialog` 用 F1101/F1102 时是**按固定坐标摆放**的，而原版是
+**按帧自身尺寸设矩形 + 居中**。所以差异不是「差几个像素」，而是**布局方式不同**：
+原版对每条菜单条都取它的自然尺寸再居中，我方写死了位置。
+
+**未改代码的原因**：要改得先确定我方 F1101/F1102 当前用的是哪套坐标、以及三条
+菜单条分别对应哪三个调用点（`0x43EEBD`/`0x43F0B7`/`0x43F2C1` 三对引用是三处调用）。
+这需要先把我方 NPC 菜单的三态与那三处调用点对上，属于**结构改动**，
+不适合在没有对照验证的情况下改。公式已取得，留作实施依据。

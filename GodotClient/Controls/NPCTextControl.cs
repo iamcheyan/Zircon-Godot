@@ -110,10 +110,56 @@ public sealed partial class NPCTextControl : DXControl
     /// 所以菜单行是"有可点区域但没有原版底图"。此开关补上这层底图。
     /// </summary>
     public bool LegacyMenuStrips { get; set; }
+    /// <summary>诊断用：返回前若干选项行的命中区摘要（确认菜单条 Y 是否与行对齐）。</summary>
+    public string DebugRowSummary()
+    {
+        var sb = new System.Text.StringBuilder();
+        var rows = MenuRows;
+        for (int i = 0; i < rows.Count && i < 3; i++)
+        {
+            var r = rows[i].Rect;
+            sb.Append($"[{rows[i].Id}]@({r.Position.X},{r.Position.Y})+{r.Size.X}x{r.Size.Y} ");
+        }
+        return sb.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// 菜单条的行 = **按选项 Id 合并**后的命中区。
+    ///
+    /// 注意 `_buttons` 是**逐字符**收集的（AddPlain 里每写一个字符就 Add 一次），
+    /// 直接遍历它会给每个字形画一条菜单条 —— 实测 50 条堆叠、且行 Y 全在同一行。
+    /// 这里把同一 Id 的字符合并成一个横向并集矩形（Y 取该选项首字符所在行）。
+    /// </summary>
+    public IReadOnlyList<(Rect2 Rect, int Id)> MenuRows
+    {
+        get
+        {
+            var rows = new List<(Rect2 Rect, int Id)>();
+            var seen = new Dictionary<int, int>();   // Id -> rows 下标
+            foreach (var (rect, id) in _buttons)
+            {
+                if (seen.TryGetValue(id, out int index))
+                {
+                    var existing = rows[index].Rect;
+                    var merged = existing.Merge(rect);
+                    rows[index] = (merged, id);
+                }
+                else
+                {
+                    seen[id] = rows.Count;
+                    rows.Add((rect, id));
+                }
+            }
+            return rows;
+        }
+    }
+    /// <summary>只画菜单条、不画文字（外置菜单条层用；置位可避免重复渲染一份文本）。</summary>
+    public bool StripsOnly { get; set; }
 
     protected override void DrawControl()
     {
         if (LegacyMenuStrips) DrawLegacyMenuStrips();
+        if (StripsOnly) return;   // 纯菜单条层：不重复绘制文字（否则会多出一份文本）
         var font = MirSkin.GetFont();
         if (font == null) return;
         foreach (var glyph in _glyphs)
@@ -140,15 +186,16 @@ public sealed partial class NPCTextControl : DXControl
 
     private void DrawLegacyMenuStrips()
     {
-        if (_buttons.Count == 0) return;
-        for (int i = 0; i < _buttons.Count; i++)
+        var rows = MenuRows;
+        if (rows.Count == 0) return;
+        for (int i = 0; i < rows.Count; i++)
         {
-            int frame = i == _buttons.Count - 1 ? 1102 : 1101;
+            int frame = i == rows.Count - 1 ? 1102 : 1101;
             var tex = MirSkin.GetTexture(LibraryFile.GameInter, frame);
             if (tex == null) continue;
             // alpha bbox 原点：把可见区左上角对齐到该行命中区的左上角。
             var origin = frame == 1102 ? Frame1102VisibleOrigin : Frame1101VisibleOrigin;
-            var rect = _buttons[i].Rect;
+            var rect = rows[i].Rect;
             var pos = new Vector2(rect.Position.X - origin.X, rect.Position.Y - origin.Y);
             DrawTexture(tex, pos, Colors.White);
         }

@@ -18,6 +18,8 @@ public partial class NPCDialog : DXWindow
     private readonly NPCTextControl _text;
     private readonly DXControl _textColumn2Area;
     private readonly NPCTextControl _textColumn2;
+    // 菜单条层：挂在 _textArea 之外，避免被其 350 宽的裁剪切掉（菜单条宽 383）。
+    private NPCTextControl _legacyStripLayer;
     private readonly DXVScrollBar _scroll;
     private readonly DXButton _scrollUp;
     private readonly DXButton _scrollDown;
@@ -80,7 +82,7 @@ public partial class NPCDialog : DXWindow
         _scroll.UpButton.LibraryFile = LibraryFile.GameInter; _scroll.UpButton.Index = 387;
         _scroll.DownButton.LibraryFile = LibraryFile.GameInter; _scroll.DownButton.Index = 385;
         _scroll.PositionBar.LibraryFile = LibraryFile.None; _scroll.PositionBar.Index = -1;
-        _scroll.ValueChanged += (o, e) => _text.Position = new Vector2(0, -_scroll.Value); AddControl(_scroll);
+        _scroll.ValueChanged += (o, e) => { _text.Position = new Vector2(0, -_scroll.Value); SyncStripLayerPosition(); }; AddControl(_scroll);
         // 旧版 F1100 底部滚动箭头 (12×8, F52/53 上, F54/55 下); 仅在 legacy 布局显示。
         _scrollUp = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 52, HoverIndex = 53, PressedIndex = 53, FixedSize = true, Size = new Vector2I(12, 8), Visible = false, Sound = SoundIndex.None };
         _scrollUp.MouseClick += (o, e) => ScrollLegacy(-1);
@@ -137,6 +139,7 @@ public partial class NPCDialog : DXWindow
         // 新页打开时回到顶部 (原版 0x440630: [0x3BC]=0)，并按当前正文高度刷新箭头。
         _scrollLine = 0;
         _text.Position = new Vector2(0, 0);
+        SyncStripLayerPosition();
         UpdateLegacyScrollEnabled();
         UpdateClientAreaForLegacySkin();
         // 商品面板（商店窗 id2 的购买态）一并切到旧版几何：GameInter F1000 / 300x304 /
@@ -174,6 +177,7 @@ public partial class NPCDialog : DXWindow
         int maxScroll = GetLegacyMaxScroll();
         _scrollLine = Mathf.Clamp(_scrollLine + delta, 0, maxScroll);
         _text.Position = new Vector2(0, -_scrollLine * LegacyLinePitch);
+        SyncStripLayerPosition();
         UpdateLegacyScrollEnabled();
     }
 
@@ -181,6 +185,18 @@ public partial class NPCDialog : DXWindow
     {
         int visibleLines = LegacyTextHeight / LegacyLinePitch;
         return Math.Max(0, _text.LineCount - visibleLines);
+    }
+
+    /// <summary>
+    /// 菜单条层与文本层共用同一个滚动偏移。条子挂在 _textArea 之外（为了不被它 350 宽的裁剪
+    /// 切掉），因此不会自动跟随 _text.Position，必须显式同步 —— 否则条子停在未滚动的 Y 上，
+    /// 实测会跑到对话框下方很远。
+    /// </summary>
+    private void SyncStripLayerPosition()
+    {
+        if (_legacyStripLayer == null) return;
+        // 层是 _textArea 的子控件，位置为 _textArea 局部坐标：只需跟随文本的滚动偏移。
+        _legacyStripLayer.Position = new Vector2(0, _text.Position.Y);
     }
 
     private void UpdateLegacyScrollEnabled()
@@ -280,12 +296,32 @@ public partial class NPCDialog : DXWindow
         if (_legacyLayout) raw = ApplyLegacyFColor(raw);
         // legacy 菜单条：原版对每个选项行铺 F1101（末项 F1102），见 NPCTextControl.LegacyMenuStrips。
         // 控件绘制宽度放宽到菜单条宽度（383），否则会被换行宽度 149 裁掉。
-        _text.LegacyMenuStrips = _legacyLayout;
+        _text.LegacyMenuStrips = false;   // 改由 _legacyStripLayer 在外层绘制（见下）
         _text.DrawWidth = _legacyLayout ? 383 : 0;
         _text.SetContent(raw,
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,
             _legacyLayout ? LegacyLinePitch : 18);
+        // 菜单条层必须挂在 _textArea **之外**：_textArea 只有 350 宽（且 Clip=true），
+        // 而菜单条宽 383。挂在里面实测只剩约 200 逻辑像素可见。
+        // 这里复用一个只画条的 NPCTextControl 实例，作为本窗口的直接子控件。
+        if (_legacyLayout)
+        {
+            _legacyStripLayer ??= new NPCTextControl { MouseFilter = MouseFilterEnum.Ignore };
+            _legacyStripLayer.LegacyMenuStrips = true;
+            _legacyStripLayer.StripsOnly = true;
+            _legacyStripLayer.DrawWidth = 383;
+            _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+            // 与文本列同起点（_textArea 位置 15,45 + _text 相对 0,0），并跟随滚动。
+            SyncStripLayerPosition();
+            if (_legacyStripLayer.GetParent() == null) _textArea.AddControl(_legacyStripLayer);
+            // 排在文本层之前，保证条子在文字下面。
+            MoveChild(_legacyStripLayer, 0);
+        }
+        else if (_legacyStripLayer != null)
+        {
+            _legacyStripLayer.Visible = false;
+        }
         // N5 两列：每列 136/21 = 6 行，行数超过 6 才启用第二列。
         if (_legacyLayout)
         {

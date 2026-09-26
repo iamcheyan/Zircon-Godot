@@ -99,6 +99,12 @@ public partial class LegacyHudLayoutLab : Control
         _config = AddWindow(new ConfigDialog(), new Vector2I(280, 160));
         _notice = AddWindow(new NoticeDialog(), new Vector2I(107, 110));
         _miniMap = AddWindow(new MiniMapDialog(), new Vector2I(580, 20));
+        // 小地图是 HUD 固定矩形，不在 LegacyUiSkin 的窗口 profile 表里：
+        // 游戏内由 GameScene 显式调用（GameScene.cs:5192-5193），测试场同样显式调用。
+        // 不调的话截到的是现代小地图（卷轴美术 / LargeMiniMapSize 300），
+        // 会让人误以为 legacy 布局坏了，而实际上它此前根本没人验证。
+        _miniMap.ApplyLegacyEiLayout();
+        _miniMap.Location = new Vector2I(Math.Max(0, 800 - 128), 0);
         _exit = AddWindow(new ExitDialog(), new Vector2I(274, 230));
         _notice.SetNotice("旧版公告窗口测试正文\n正文区域使用 F602 原版坐标。");
     }
@@ -424,7 +430,9 @@ public partial class LegacyHudLayoutLab : Control
         bool storage = _storage.AuditLegacyEiLayout(out string storageDetails);
         bool config = _config.AuditLegacyEiLayout(out string configDetails);
         bool notice = _notice.AuditLegacyEiLayout(out string noticeDetails);
-        bool minimap = _miniMap.AuditLayout(out string minimapDetails);
+        // 小地图：legacy 布局 + 屏幕位置（原版固定矩形贴屏幕右上角 (672,0)-(800,128)）。
+        bool minimap = _miniMap.AuditLegacyEiLayout(out string minimapDetails)
+            && _miniMap.Location == new Vector2I(800 - 128, 0);
         bool lifecycle = AuditWindowLifecycle(out string lifecycleDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)

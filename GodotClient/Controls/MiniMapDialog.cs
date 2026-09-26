@@ -105,6 +105,31 @@ public partial class MiniMapDialog : DXWindow
             + $"bigMapVisible={BigMapButton?.Visible}");
     }
 
+    /// <summary>
+    /// 验收用：旧版小地图布局审计。
+    /// 此前测试场只调 AuditLayout（现代规格），**legacy 布局在测试场里无人验证** ——
+    /// 截图截到的是现代小地图（卷轴美术 / LargeMiniMapSize），会让人误判成 bug。
+    /// 依据 map-ui-resource-evidence.json：固定屏幕矩形 (672,0)-(800,128) = 128x128
+    /// （primary-static-exact-rect）、无独立窗口、边框是程序画的 1px 灰 0x646464。
+    /// </summary>
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = _legacyEiLayout
+            && Size == new Vector2I(128, 128)
+            && !IsLarge
+            && !AllowResize
+            && Area == new Rect2(0, 0, 128, 128)
+            && Panel != null && Panel.Size == new Vector2I(128, 128) && Panel.Location == Vector2I.Zero
+            && Border
+            && !DrawChrome && !HasTitle && !ShowCloseButton
+            && Movable && RequireCtrlToMove
+            && BigMapButton != null && !BigMapButton.Visible;
+        details = $"size={Size} loc={Location} area={Area} panel={Panel?.Size} border={Border} "
+            + $"chrome={DrawChrome} title={HasTitle} resize={AllowResize} ctrlMove={RequireCtrlToMove} "
+            + $"bigMapVisible={BigMapButton?.Visible}";
+        return ok;
+    }
+
     public MiniMapDialog()
     {
         BackColour = Colors.Black;

@@ -29,6 +29,7 @@ public partial class GroupDialog : DXWindow
     private DXButton _lfgButton;
     private DXButton _closeButton;
     private DXButton _legacyPermissionButton;
+    private DXLabel _legacyAllowLabel;
     private DXImageControl _background;
     private DXLabel _titleLabel;
     private DXLabel _allowLabel;
@@ -121,10 +122,32 @@ public partial class GroupDialog : DXWindow
         _background.Location = new Vector2I(0, -6);
         _background.Size = MirSkin.GetSize(LibraryFile.GameInter, 900);
         _background.StretchImage = false;
-        _titleLabel.Visible = false;
+        // P2 原版在 (window.x+0x2D, window.y+0x16)=(45,22) 用色 0xDCE6C8 左对齐
+        // 画组名缓冲 0x7776A0（social-window-render-evidence.json paint_order[0]），
+        // 不是隐藏标题、也不是居中金色。
+        _titleLabel.Visible = true;
+        _titleLabel.Location = new Vector2I(45, 22);
+        _titleLabel.Size = new Vector2I(180, 18);
+        _titleLabel.Align = HorizontalAlignment.Left;
+        _titleLabel.TextColour = new Color(0.863f, 0.902f, 0.784f);
+        _titleLabel.DrawOutline = false;
 
         _allowCheck.Visible = false;
         _allowLabel.Visible = false;
+        // P8 原版用 [允许] 0x47BA08 / [拒绝] 0x47BA00 在 y = window.y+0x3A = 58
+        // 画权限状态文字（x 在证据里是未初始化栈槽，静态不可证；这里贴在权限
+        // 按钮 920 右侧 9+28+4=41，是最保守的落点）。
+        _legacyAllowLabel ??= new DXLabel
+        {
+            FontSize = 9,
+            Location = new Vector2I(41, 58),
+            Size = new Vector2I(64, 16),
+            TextColour = Colors.White,
+            IsControl = false,
+        };
+        if (_legacyAllowLabel.GetParent() == null) AddControl(_legacyAllowLabel);
+        _legacyAllowLabel.Visible = true;
+        _legacyAllowLabel.Text = _allowGroup ? "[允许]" : "[拒绝]";
         _legacyPermissionButton ??= new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
@@ -168,7 +191,9 @@ public partial class GroupDialog : DXWindow
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(224, 212);
+        // P3 证据为 (226,214) 28x26（social-window-render-evidence.json
+        // child_controls[0]，并与 F900 底图烘焙 X 的模板匹配一致），不是 (224,212)。
+        _closeButton.Location = new Vector2I(226, 214);
         _closeButton.Size = new Vector2I(28, 26);
         UpdateClientAreaForLegacySkin();
     }
@@ -236,6 +261,7 @@ public partial class GroupDialog : DXWindow
     {
         _allowGroup = allow;
         if (_allowCheck != null) _allowCheck.Checked = allow;
+        if (_legacyAllowLabel != null) _legacyAllowLabel.Text = allow ? "[允许]" : "[拒绝]";
     }
 
     private void RebuildMembers()

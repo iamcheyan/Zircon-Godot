@@ -1716,3 +1716,87 @@ ConfigDialog(_page,_titleLabel) / GroupDialog(_allowCheck,_allowLabel,_lfgPanel,
 好处是不漏引用（第一版用 `md.disasm` 一次性扫会因遇数据而**提前停止**，
 导致 FCOLOR 调色板明明在用却扫出 0 命中），代价是**数据区会产出伪指令** ——
 读上下文时要留意，必要时从函数序言开始反汇编。
+
+### 用反汇编解开第 2 项：NPC 菜单条 F1101/F1102 的几何（2026-09-27）
+
+**背景**：此前记为「基址由 WIL 头尺寸 + 参考常量推导，未给推导公式；ctor `0x43EA80`
+没有匹配的 SetRect」。本轮直接反汇编取得。
+
+#### ctor 0x43EA80 确认「不设位置」
+
+```
+0x43EA9D  mov  dword ptr [esi], 0x476624     ; 基类 vtable
+0x43EAA3  call 0x423ca0
+0x43EAA8  push 0x4046b0 / 0x404690 / 3
+0x43EAB4  lea  eax, [esi + 0x58]
+0x43EAB7  push 0xb4                          ; stride 0xB4
+0x43EABC  push eax
+0x43EAC5  call 0x4686c4                      ; 分配 3 元素 x 0xB4 的控件数组
+0x43EACA  lea  ecx, [esi + 0x278] ; call 0x465ef0
+0x43EADA  lea  ecx, [esi + 0x3c4] ; call 0x4178e0
+0x43EAEE  mov  dword ptr [esi], 0x476938     ; 派生 vtable
+0x43EAF4  mov  dword ptr [esi + 0x3bc], 0
+0x43EAFE  mov  dword ptr [esi + 0x514], 0
+```
+
+**只分配控件数组（3 个、stride 0xB4），不设任何位置** —— 与证据所述一致。
+所以位置在**绘制代码**里设置，不在 ctor。
+
+#### 帧号引用点
+
+`find_xref(1101)` -> `0x43EEBD` / `0x43F0B7` / `0x43F2C1`
+`find_xref(1102)` -> `0x43EF5E` / `0x43F11B` / `0x43F3B7`
+（三对，对应三种菜单态）
+
+#### 绘制调用与紧邻的 SetRect
+
+`0x466130` 即证据提到的绘制调用（`push <frame>` 后 `call 0x466130`）。
+`0x43EEBD` 那处紧邻的前一段是：
+
+```
+0x43EE9D  push 0x8a          ; 138
+0x43EEA2  push 0x180         ; 384
+0x43EEA7  push 0
+0x43EEA9  lea  edx, [esi + 0x550]
+0x43EEAF  push 0
+0x43EEB1  push edx
+0x43EEB2  call edi           ; SetRect([esi+0x550], 0, 0, 384, 138)
+0x43EEB4  mov  ecx, [esi + 0x2c]
+0x43EEB7  mov  ebp, [esi + 0x55c]
+0x43EEBD  push 0x44d         ; frame 1101
+0x43EEC2  call 0x466130
+```
+
+另一处（`0x43EF5E` 前）：
+```
+0x43EF40  lea eax, [ebp + 0x12]
+0x43EF43  lea ecx, [esi + 0x560]
+0x43EF49  push eax           ; ebp + 18
+0x43EF4A  push 0x180         ; 384
+0x43EF4F  push ebp
+0x43EF50  push 0
+0x43EF52  push ecx
+0x43EF53  call edi           ; SetRect([esi+0x560], 0, ebp, 384, ebp+18)
+0x43EF5E  push 0x44e         ; frame 1102
+0x43EF63  call 0x466130
+```
+
+#### 素材实测（wilsdk）
+
+| 帧 | 画布 | 可见 bbox | 可见尺寸 |
+|---|---|---|---|
+| F1100 | 512x256 | (64,59)-(447,196) | **384x138** |
+| F1101 | 512x32 | (64,7)-(446,24) | **383x18** |
+| F1102 | 512x64 | (64,10)-(447,53) | **384x44** |
+
+#### 结论
+
+- 菜单条的 **x = 0、宽 = 384（0x180）**，两处 SetRect 一致。
+- 高度有两个值：**138（0x8a）** 与 **18（0x12）**。
+- 与素材对照：**384x138 正好等于 F1100 的可见尺寸**、**384x18 正好等于 F1101 的可见尺寸**。
+  说明「SetRect 紧邻在 push frame 之前」这个配对**未必成立**（可能是上一条绘制留下的），
+  更合理的解释是：**每个菜单条按其自身美术尺寸设置矩形**。
+
+**可用的确定值**：菜单条 x=0、宽 384；F1100 高 138、F1101 高 18、F1102 高 44（各自可见尺寸）。
+**仍未闭合**：三对引用分别对应哪三种菜单态、以及每态用哪一帧 —— 需要再往下读
+`0x466130` 的签名与调用点上下文。本轮到此，未据此改我方代码。

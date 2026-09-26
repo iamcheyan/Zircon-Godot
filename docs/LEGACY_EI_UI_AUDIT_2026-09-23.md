@@ -1529,3 +1529,39 @@ godot-mono --path <仓库>/GodotClient res://Scenes/LegacyHudLayoutLab.tscn \
 - **行会窗关闭键**：`(418,570)` → `(556,409)`（`social-window-render-evidence.json`
   paint-time 真值；原值 y=570 超出 F600 可见美术区高度 444）。
 - **行会窗滚动条**：`(428,80)` → `(548,208)`（`guild-window-paint-evidence.json`）。
+
+### 商店窗 state1/3/4 的「坐标空间」已解开（2026-09-27）
+
+`window-control-position-analysis.json` 里商店窗有 6 条标 `outside-window` 的记录：
+
+```
+[1010,1011] rel=(466,169)  [1012,1013] rel=(370,162)
+[1014,1015] rel=(324,159)  [1016,1017] rel=(434,159)   <- 这 4 条是 state1
+[1010,1011] rel=(506,67)   [1012,1013] rel=(392,61)    <- 这 2 条是 state4
+```
+
+**这是工具假象，不是证据矛盾**：该文件用**基础窗口矩形 300x304** 判 inside/outside，
+而这些控件属于别的 state —— 各 state 有**自己的矩形**：
+
+| state | 内容 | 帧 | rect |
+|---|---|---|---|
+| 0 购买 / 3 制作 | five-row panel | 1000 | (0,186,300,304) |
+| 1 出售 | sell grid panel | 1003 | content **498x304** |
+| 2 仓库 | compact panel | 1001 | (-4,182,205,205) |
+| 4 物品详情 | item-detail panel | 1002 | content **540x307** |
+
+- state1 的 (466,169)/(434,159) 等落在 **498x304** 内 -> 合法
+- state4 的 (506,67) 落在 **540x307** 内 -> 合法
+
+**结论**：这些控件的坐标是**相对于各自 state 面板的原点**，与 state0/3 的
+(266,270)/(127,267)（相对 300x304 基础矩形）同一套语义，只是基准矩形不同。
+所以「outside-window」这一列**不能跨 state 直接采信**，必须按控件所属 state 取对应 rect。
+
+**对实现的意义**：商店窗的 4 个模式面板（购买/出售/仓库/物品详情）各自独立定位，
+我方目前把 state1(出售) 放在 `InventoryDialog.SellMode`、state2(仓库) 放在
+`StorageDialog`、state3(制作) 与 state4 未实现 —— 这是**架构差异**，不是单个坐标错误，
+要做需要先决定是否把商店窗合并为单一多模式窗口。
+
+**仍未解开**：交易窗的 close(532,350)/accept(185,332)/cancel(225,332) 落在
+484x330 基础矩形之外，且 F1050 可见美术区仅 483x330，**没有**类似的多 state 矩形可解释
+（trade 只有一个 rect）。这一条继续挂起。

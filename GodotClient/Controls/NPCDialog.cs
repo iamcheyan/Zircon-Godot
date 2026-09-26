@@ -211,6 +211,14 @@ public partial class NPCDialog : DXWindow
             return value?.Value ?? match.Groups["Default"].Value;
         });
         var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>.+?)\]");
+        // NPCIMG/FCOLOR 是原版对话脚本的行级 token
+        // （npc-dialog-family-evidence.json type4_0x43FF92）：
+        //   NPCIMG <n> -> atoi 后取 NPCFace.wil 裸帧号 n 画头像
+        //   FCOLOR <n> -> atoi 后取调色板 [eax*4 + 0x47C4A8] 作为菜单文字色
+        // 调色板 16 项 BGR 已从证据逐项解出（npc-body-strip-evidence.json）。
+        // FCOLOR 之后的正文行改用该色（用本控件已支持的 {text:colour} 语法）。
+        // NPCIMG 的头像位置证据未给（只有 0x466130 的 blit 调用），暂不绘制。
+        if (_legacyLayout) raw = ApplyLegacyFColor(raw);
         _text.SetContent(raw,
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,
@@ -375,6 +383,58 @@ public partial class NPCDialog : DXWindow
     // The legacy dialog sends NPCClose whenever it becomes hidden, including
     // when Escape closes the top window. WindowManager.CloseTop only knows
     // about DXWindow, so preserve that protocol edge here as well.
+    /// <summary>
+    /// EI 对话脚本的 FCOLOR 行 token。证据 npc-body-strip-evidence.json：
+    /// `mov ecx,[eax*4+0x47c4a8]`，0x47C4A8 是 16 项 BGR 调色板
+    /// （0..15：0x000000,0x0000FF,0x008000,0x008080,0x808080,0x000080,
+    /// 0x808000,0x800000,0xC0C0C0,0x800080,0x00FF00,0xFF0000,0xFFFFFF,
+    /// 0xFF00FF,0xFFFF00,0x00FFFF）。值是 Windows COLORREF（0x00BBGGRR），
+    /// 所以取色时要按 R=低字节、B=高字节还原。
+    /// FCOLOR 之后的正文行用该色；NPCIMG 行按证据暂不绘制（位置未给）。
+    /// </summary>
+    private static string ApplyLegacyFColor(string text)
+    {
+        if (string.IsNullOrEmpty(text) || !text.Contains("FCOLOR", StringComparison.Ordinal)) return text;
+        var output = new List<string>();
+        Color? current = null;
+        foreach (string line in text.Replace("\r", string.Empty).Split('\n'))
+        {
+            string trimmed = line.Trim();
+            if (trimmed.StartsWith("FCOLOR ", StringComparison.OrdinalIgnoreCase))
+            {
+                if (int.TryParse(trimmed[7..].Trim(), out int index) && index >= 0 && index < LegacyFColorPalette.Length)
+                    current = LegacyFColorPalette[index];
+                continue;
+            }
+            if (trimmed.StartsWith("NPCIMG ", StringComparison.OrdinalIgnoreCase)) continue;
+            output.Add(current == null || trimmed.Length == 0
+                ? line
+                : $"{{{line}:{current.Value.ToHtml(false)}}}");
+        }
+        return string.Join("\n", output);
+    }
+
+    /// <summary>0x47C4A8 的 16 项 BGR 调色板，已按 COLORREF 还原为 RGB。</summary>
+    private static readonly Color[] LegacyFColorPalette =
+    {
+        new(0x00, 0x00, 0x00), // 0 0x000000
+        new(0xFF, 0x00, 0x00), // 1 0x0000FF red
+        new(0x00, 0x80, 0x00), // 2 0x008000
+        new(0x80, 0x80, 0x00), // 3 0x008080
+        new(0x80, 0x80, 0x80), // 4 0x808080
+        new(0x80, 0x00, 0x00), // 5 0x000080 maroon (R=0x80,G=0,B=0)
+        new(0x00, 0x80, 0x80), // 6 0x808000
+        new(0x00, 0x00, 0x80), // 7 0x800000
+        new(0xC0, 0xC0, 0xC0), // 8 0xC0C0C0
+        new(0x80, 0x00, 0x80), // 9 0x800080
+        new(0x00, 0xFF, 0x00), // 10 0x00FF00
+        new(0x00, 0x00, 0xFF), // 11 0xFF0000 blue
+        new(0xFF, 0xFF, 0xFF), // 12 0xFFFFFF
+        new(0xFF, 0x00, 0xFF), // 13 0xFF00FF
+        new(0x00, 0xFF, 0xFF), // 14 0xFFFF00
+        new(0xFF, 0xFF, 0x00), // 15 0x00FFFF
+    };
+
     public override void Close()
     {
         base.Close();

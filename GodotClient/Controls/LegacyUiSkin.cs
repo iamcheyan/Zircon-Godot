@@ -95,7 +95,13 @@ public static class LegacyUiSkin
 
         window.Location = location;
         window.Size = profile.size;
-        window.Clip = true;
+        // G2 原版窗口**不按窗口矩形裁子控件**，只被 800x600 屏幕边界裁：
+        // chat_window_evidence.paint_order[3] 明示滚动轨在 y=-208 是
+        // "mostly off-screen" 而不是被裁掉；social-window-render-evidence.json
+        // 的 closed_notes 也写 "clipped by the engine"。此前每个 legacy 窗都强制
+        // Clip=true，把越出窗口的证据几何（例如 NPC 背景、F350 的滚动轨）
+        // 切掉。Godot 侧仍会被 viewport（屏幕）裁，语义与原版一致。
+        window.Clip = false;
         window.DrawChrome = false;
         window.DropShadow = false;
         window.HasTitle = false;

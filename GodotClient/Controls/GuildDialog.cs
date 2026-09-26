@@ -17,6 +17,11 @@ public partial class GuildDialog : DXWindow
     private readonly DXVScrollBar _scroll;
     private readonly List<DXLabel> _rows = new();
     private readonly List<DXButton> _tabButtons = new();
+    // 旧版 EI 行会窗（GameInter F600）**没有页签**，只有 9 个原生控件
+    // （会员升职/成员踢出/盟主转让/邀请入会/行会公告/退出行会/行会解散 + 关闭），
+    // 见 window_identities_final.id4 与 social-window-render-evidence.json 的
+    // paint-time SetPosition 真值。legacy 下必须隐藏这 6 个现代页签。
+    private bool _legacyEiLayout;
     private int _tab;
     private readonly ClientUserItem[] _storageItems = new ClientUserItem[1000];
     private DXItemGrid _storageGrid;
@@ -80,6 +85,7 @@ public partial class GuildDialog : DXWindow
     /// <summary>旧版 EI 行会窗口：GameInter F600，根 596×446（证据 id4，横向）。</summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(596, 446);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 600;
@@ -100,6 +106,8 @@ public partial class GuildDialog : DXWindow
         _scroll.Location = new Vector2I(428, 80);
         _scroll.Size = new Vector2I(16, 415);
         UpdateClientAreaForLegacySkin();
+        // 原版 F600 无页签；此处显式再执行一次，避免构造期先设成可见后无人回收。
+        UpdateTabVisibility();
     }
 
     public bool AuditLegacyEiLayout(out string details)
@@ -107,8 +115,15 @@ public partial class GuildDialog : DXWindow
         bool ok = Size == new Vector2I(596, 446)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600
             && _content.Location == new Vector2(18, 80)
-            && _content.Size == new Vector2(410, 415);
-        details = $"size={Size} frame={_background.Index} content={_content.Size}@{_content.Location}";
+            && _content.Size == new Vector2(410, 415)
+            // 背景锚点 = alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）；
+            // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
+            && _background.Location == (_guild == null && _tab == 0
+                ? new Vector2I(-214, -33)
+                : new Vector2I(-214, -33 + 62))
+            // 原版 F600 无页签（见 _legacyEiLayout 说明）。
+            && _tabButtons.All(x => !x.Visible);
+        details = $"size={Size} frame={_background.Index} bg={_background.Location} content={_content.Size}@{_content.Location} tabsVisible={_tabButtons.Count(x => x.Visible)}";
         return ok;
     }
 
@@ -477,15 +492,26 @@ public partial class GuildDialog : DXWindow
         _increaseMemberButton.Location = new Vector2I(18, 500);
         _increaseStorageButton.Location = new Vector2I(146, 500);
         _manageButton.Location = new Vector2I(362, 500);
-        // 背景锚点 = 该帧 alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）。
-        // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
-        _background.Location = _guild == null && _tab == 0
-            ? new Vector2I(-214, -33)
-            : new Vector2I(-214, -33 + 62);
+        // 背景锚点按模式分支：
+        //  legacy —— 该帧 alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）；
+        //            有行会且非首 tab 时在原锚点基础上整体下移 62px。
+        //  现代  —— 沿用原有的 (0,0)/(0,62)，不受 legacy 锚点影响。
+        // （本方法被 ApplyGuild/SelectTab 调用，现代路径也会走到，故必须分支。）
+        _background.Location = _legacyEiLayout
+            ? (_guild == null && _tab == 0 ? new Vector2I(-214, -33) : new Vector2I(-214, -33 + 62))
+            : (_guild == null && _tab == 0 ? Vector2I.Zero : new Vector2I(0, 62));
+        // 原版无页签，立即生效（否则要等下一次行会数据刷新才隐藏）。
+        UpdateTabVisibility();
     }
 
     private void UpdateTabVisibility()
     {
+        // legacy：原版 F600 无页签，全部隐藏（见 _legacyEiLayout 的说明）。
+        if (_legacyEiLayout)
+        {
+            foreach (var tab in _tabButtons) tab.Visible = false;
+            return;
+        }
         for (int i = 0; i < _tabButtons.Count; i++)
             _tabButtons[i].Visible = _guild != null || i == 0;
         if (_tabButtons.Count > 0)

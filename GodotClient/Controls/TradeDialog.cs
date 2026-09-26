@@ -128,7 +128,20 @@ public partial class TradeDialog : DXWindow
         _closeButton.Index = 161;
         _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(456, 304);
+        // 原版关闭键是**不可见热区**，位置 (x+0x214, y+0x15E) = (532,350)
+        // （trade-window-render-evidence.json::buttons.close.args：
+        //   0x417550(0, 161, 162, 532, 350, 0, 1, -1, 0) @ 0x415A4D-0x415A6D）。
+        // 该坐标**超出 484x330 的 UI 矩形**，也超出 F1050 的可见美术区 (483x330) ——
+        // 这是原版设计：证据 conclusions 明写
+        //   \"the UI hit rect is only 484x330, so the art overflows the rect\"、
+        //   \"close/accept/cancel button art ... is baked into frame 1050\"、
+        //   \"buttons are never drawn\"（button render 0x417640 零直接 xref）。
+        // 即：按钮图形在贴图里，代码只放热区。故此处按证据值放热区，不画按钮。
+        //
+        // 一处**有意保留的偏差**：原版 close 命中后\"sound only\"、不关窗
+        // （buttons.close.behavior）。我方保留关窗行为 —— 否则交易窗在 UI 上
+        // 没有可用关闭入口，属功能性倒退。已在审计文档记录该偏差。
+        _closeButton.Location = new Vector2I(532, 350);
         _closeButton.Size = new Vector2I(28, 26);
         // 证据给的是**首格**左上角（trade-window-render-evidence.json：
         // 左 (x+0x15,y+0x30)..(x+0xC9,y+0x108) = (21,48)-(201,264)，右 (253,48)-(397,264)，
@@ -157,9 +170,12 @@ public partial class TradeDialog : DXWindow
             && _userGrid.Location == new Vector2(20, 47)
             && _playerGrid.Location == new Vector2(252, 47)
             // 证据 stride = 36；首格 = 原点 + padding(1,1) = (21,48)/(253,48)。
-            && _userGrid.LegacyCellStep == 36 && _playerGrid.LegacyCellStep == 36;
+            && _userGrid.LegacyCellStep == 36 && _playerGrid.LegacyCellStep == 36
+            // 关闭键为原版不可见热区，位置 (532,350)（超出 484x330 UI 矩形属原版设计，
+            // 按钮图形烘焙在 F1050 里）。
+            && _closeButton.Location == new Vector2(532, 350);
         // details 里同时给出首格（= 原点 + padding），便于与证据的 (21,48)/(253,48) 直接比对。
-        details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location}";
+        details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location} close={_closeButton.Location}";
         return ok;
     }
     public void Unlock() => _confirm.Enabled = true;

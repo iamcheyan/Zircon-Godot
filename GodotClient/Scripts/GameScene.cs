@@ -2010,6 +2010,17 @@ public partial class GameScene : Control
         switch (action)
         {
             case KeyBindAction.MapMiniWindow:
+                // map-ui-resource-evidence.json key_table_evidence + Sora 的审计：
+                // 原版 V 是**开/关两态**（0x451770 开 / [0x6518]=0 关，并发
+                // 0x409 通知服务端），不是三态循环。现代模式保留三态。
+                if (AutoLoginArgs.LegacyUi)
+                {
+                    if (_miniMap == null) break;
+                    bool show = !_miniMap.Visible;
+                    _miniMap.ResetTransparencyForKeyBind();
+                    _miniMap.Visible = show;
+                    break;
+                }
                 // 原版是三态：显示不透明 -> 半透明 -> 隐藏 -> 显示不透明。
                 if (!_miniMap.Visible)
                 {
@@ -2027,7 +2038,16 @@ public partial class GameScene : Control
                 }
                 break;
             case KeyBindAction.MapBigWindow:
-                if (_bigMap.Visible) _bigMap.Visible = false;
+                // map-ui-resource-evidence.json no_separate_map_dialog：
+                // "This EI build has no separate map dialog window." 原版的
+                // 「大地图」就是 256x256 的放大版小地图（mode_switch 的 true
+                // 分支），不是独立窗口。所以 legacy 下该键映射到小地图放大，
+                // 现代模式保留独立大地图窗。
+                if (AutoLoginArgs.LegacyUi)
+                {
+                    if (_miniMap?.Visible == true) _miniMap.ToggleLegacySize();
+                }
+                else if (_bigMap.Visible) _bigMap.Visible = false;
                 else OpenBigMap();
                 break;
             case KeyBindAction.QuestTrackerWindow:

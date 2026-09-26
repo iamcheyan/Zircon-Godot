@@ -69,10 +69,14 @@ public sealed partial class LegacyChatDialog : DXWindow
         };
         AddControl(_scrollRail);
 
+        // C4/4.5 证据 chat_window_evidence.refresh.draw_geometry：
+        // 文字原点 (40,29)，但**首行裁剪框**是 (35,28)-(520,43) = 485x15
+        // （比文字原点左多 5px），按 14px 步进；19 行 -> 高 266。
+        // 此前用 (40,29) 491x279，右边多出 6px、左边少 5px。
         _historyClip = new DXControl
         {
-            Location = new Vector2I(40, 29),
-            Size = new Vector2I(491, 279),
+            Location = new Vector2I(35, 28),
+            Size = new Vector2I(485, 14 * 19),
             Clip = true,
             MouseFilter = MouseFilterEnum.Stop,
         };

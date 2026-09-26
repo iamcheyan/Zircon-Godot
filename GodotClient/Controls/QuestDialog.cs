@@ -37,9 +37,10 @@ public partial class QuestDialog : DXWindow
 
         _background = new DXImageControl
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 291,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 700,
             FixedSize = true,
+            StretchImage = true,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };
@@ -173,9 +174,7 @@ public partial class QuestDialog : DXWindow
         {
             if (_page == 3 && page != 3) GameScene.Game?.SendMilestoneNotify(false);
             _page = page;
-            // F700 自带旧版任务书背景；现代页签背景不能覆盖它。
-            if (!_legacyEiLayout)
-                _background.Index = page == 3 ? 292 : 291;
+            _background.Index = 700;
             _selectedQuest = null;
             _selectedAvailable = null;
             UpdateTabStyles();

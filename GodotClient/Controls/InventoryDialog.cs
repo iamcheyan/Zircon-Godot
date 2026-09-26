@@ -48,9 +48,10 @@ public partial class InventoryDialog : DXWindow
 
         _background = new DXImageControl
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 130,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 250,
             FixedSize = true,
+            StretchImage = true,
             Size = Size,
             MouseFilter = MouseFilterEnum.Ignore,
         };

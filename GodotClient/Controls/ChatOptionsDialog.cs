@@ -42,7 +42,7 @@ public partial class ChatOptionsDialog : DXWindow
         AllowResize = true;
         // 原版 SetClientSize(350, 250) 的总窗口尺寸。
         Size = new Vector2I(368, 350);
-        AddControl(new LegacyWindowFrame { Size = Size, HasTitle = true, HasFooter = true });
+        AddControl(new LegacyUiFrame { LibraryFile = LibraryFile.GameInter, Index = 750, Size = Size, MouseFilter = MouseFilterEnum.Ignore });
         var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
         close.MouseClick += (o, e) => WindowManager.Close(this);

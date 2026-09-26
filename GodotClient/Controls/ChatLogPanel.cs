@@ -53,6 +53,14 @@ public partial class ChatLogPanel : Control
         // ChatTextBox.Width × 150，而 ChatTextBox 的默认宽度是 400。
         Size = new Vector2(400, 150);
         ClipContents = true;
+        AddChild(new LegacyUiFrame
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 350,
+            Size = Size,
+            Opacity = 0.55f,
+            MouseFilter = MouseFilterEnum.Ignore,
+        });
         _tabBar = new DXControl { Location = Vector2I.Zero, Size = new Vector2I(400, 22), MouseFilter = MouseFilterEnum.Ignore };
         AddChild(_tabBar);
         _textArea = new DXControl { Location = new Vector2I(0, 22), Size = new Vector2I(380, 124), Clip = true, MouseFilter = MouseFilterEnum.Ignore };

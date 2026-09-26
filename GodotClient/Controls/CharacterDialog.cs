@@ -122,9 +122,10 @@ public partial class CharacterDialog : DXWindow
 
         _background = new DXImageControl
         {
-            LibraryFile = LibraryFile.Interface,
-            Index = 110,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 200,
             FixedSize = true,
+            StretchImage = true,
             Size = Size,
             MouseFilter = MouseFilterEnum.Stop,
         };

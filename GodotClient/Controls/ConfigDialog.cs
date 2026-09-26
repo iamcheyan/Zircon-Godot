@@ -32,7 +32,7 @@ public partial class ConfigDialog : DXWindow
         HasTitle = false;
         HasFooter = false;
         Size = new Vector2I(364, 416); // 原版 Interface 282
-        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 282, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        _background = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 750, FixedSize = true, StretchImage = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
         AddControl(_background);
 
         _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };

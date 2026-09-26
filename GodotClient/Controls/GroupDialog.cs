@@ -50,7 +50,7 @@ public partial class GroupDialog : DXWindow
         Movable = true;
         HasFooter = false;
         Size = new Vector2I(240, 424);
-        _background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 240, FixedSize = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
+        _background = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 900, FixedSize = true, StretchImage = true, Size = Size, MouseFilter = MouseFilterEnum.Ignore };
         AddControl(_background);
         _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);

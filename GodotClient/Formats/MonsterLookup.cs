@@ -174,7 +174,7 @@ public static class MonsterLookup
         { MonsterImage.IcySpiritSpearman, (LibraryFile.Mon_21, 6) },
         { MonsterImage.Werewolf, (LibraryFile.Mon_21, 7) },
         { MonsterImage.Whitefang, (LibraryFile.Mon_21, 8) },
-        { MonsterImage.IcySpiritSolider, (LibraryFile.Mon_21, 9) },
+        { MonsterImage.IcySpiritSoldier, (LibraryFile.Mon_21, 9) },
         { MonsterImage.WildBoar, (LibraryFile.Mon_18, 1) },
         { MonsterImage.JinamStoneGate, (LibraryFile.Mon_23, 9) },
         { MonsterImage.FrostLordHwa, (LibraryFile.Mon_21, 5) },

@@ -678,7 +678,8 @@ public partial class MagicDialog : DXWindow
             if (info == null || info.School is MagicSchool.None or MagicSchool.Discipline)
                 continue;
             game.UserMagics.TryGetValue(info, out var userMagic);
-            if (userMagic == null && info.Class != game.StartInfo?.Class)
+            var classType = game.StartInfo?.Class;
+            if (userMagic == null && (!classType.HasValue || !info.MatchesClass(classType.Value)))
                 continue;
             if (userMagic?.ItemRequired == true)
             {

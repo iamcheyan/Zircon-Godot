@@ -1160,7 +1160,7 @@ public partial class CharacterDialog : DXWindow
     {
         var classType = GameScene.Game?.StartInfo?.Class;
         var infos = Globals.MagicInfoList?.Binding?
-            .Where(x => x.School == MagicSchool.Discipline && x.Class == classType)
+            .Where(x => x.School == MagicSchool.Discipline && classType.HasValue && x.MatchesClass(classType.Value))
             .OrderBy(x => x.NeedLevel1)
             .Take(_disciplineMagicIcons.Count)
             .ToList() ?? new List<MagicInfo>();

@@ -32,6 +32,7 @@ public partial class InventoryDialog : DXWindow
     private DXImageControl _background;
     private DXButton _legacyActionButton;
     private DXLabel _legacyModeLabel;
+    private DXLabel _legacyWeightValue;
     private DXImageControl _legacyModeArt;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private DXImageControl _legacyScrollTrack;
@@ -347,6 +348,22 @@ public partial class InventoryDialog : DXWindow
         WeightLabel.FontSize = 10;
         WeightLabel.Align = HorizontalAlignment.Left;
         WeightLabel.TextColour = new Color(0xA0 / 255f, 0xA0 / 255f, 0xA0 / 255f);
+        // 第二段：/ 总量:%d，色 0xF8C8C8（证据 paint_geometry[4] 的第二个 rect）。
+        if (_legacyWeightValue == null)
+        {
+            _legacyWeightValue = new DXLabel
+            {
+                FontSize = 10,
+                Align = HorizontalAlignment.Left,
+                AutoSize = false,
+                Size = new Vector2I(120, 14),
+                TextColour = new Color(0xF8 / 255f, 0xC8 / 255f, 0xC8 / 255f),
+                IsControl = false,
+            };
+            AddControl(_legacyWeightValue);
+        }
+        _legacyWeightValue.Location = new Vector2I(0x86, 0x18);
+        _legacyWeightValue.Visible = true;
         _goldTitle.Visible = false;
         GoldLabel.Location = new Vector2I(0x41, 0x11A);
         GoldLabel.Size = new Vector2I(0x8E - 0x41, 0x12B - 0x11A);
@@ -445,9 +462,23 @@ public partial class InventoryDialog : DXWindow
     public void SetWeight(int bagWeight)
     {
         int capacity = GameScene.Game?.PlayerStats?[Stat.BagWeight] ?? 0;
-        WeightLabel.Text = InvMode == InventoryMode.Normal
-            ? (capacity > 0 ? $"负重:{bagWeight} / 总量:{capacity}" : $"负重:{bagWeight} / 总量:0")
-            : string.Empty;
+        // inventory-window-render-evidence.json paint_geometry[4]：负重是**两段
+        // 两色**绘制（0xA0A0A0 与 0xF8C8C8，同一行两个 rect），不是单个标签。
+        // 此前合成一行单色 0xA0A0A0，且 106px 宽在 FontSize 10 下会折行。
+        bool showWeight = InvMode == InventoryMode.Normal;
+        string weightText = $"负重:{bagWeight}";
+        string capacityText = $"/ 总量:{(capacity > 0 ? capacity : 0)}";
+        WeightLabel.Text = showWeight ? weightText : string.Empty;
+        if (_legacyWeightValue != null)
+        {
+            _legacyWeightValue.Text = showWeight ? capacityText : string.Empty;
+            if (showWeight && _legacyEiLayout)
+            {
+                float w = MirSkin.MeasureText(weightText, WeightLabel.FontSize).X;
+                _legacyWeightValue.Location = new Vector2I(
+                    WeightLabel.Location.X + (int)w, WeightLabel.Location.Y);
+            }
+        }
         CenterWeightLabel();
         WeightBar.QueueRedraw();
     }

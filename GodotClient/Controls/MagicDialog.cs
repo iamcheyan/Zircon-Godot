@@ -380,9 +380,9 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Lightning, new(4, 91), 454),
             (MagicSchool.Wind, new(2, 126), 456),
             (MagicSchool.Holy, new(2, 161), 458),
-            (MagicSchool.Dark, new(2, 196), 450),
-            (MagicSchool.Phantom, new(1, 231), 452),
-            (MagicSchool.Physical, new(2, 266), 454),
+            (MagicSchool.Dark, new(2, 196), 460),
+            (MagicSchool.Phantom, new(1, 231), 462),
+            (MagicSchool.Physical, new(2, 266), 464),
         };
         bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
             && button.Location == x.location

@@ -501,8 +501,12 @@ public partial class CharacterDialog : DXWindow
             var label = new DXLabel
             {
                 FontSize = 8,
+                // status-option-names-evidence.json 结论：恰好 4 个标签绘制用
+                // 0xff（红）—— 防御@0x44C41C、攻击@0x44C4A6、魔法@0x44C52B、
+                // 魔法防御力@0x44C90F；其余 28 个标签用 0xfae1c8。
+                // 此前用 Colors.Black，与原版不符。
                 TextColour = row.Name is "防御" or "攻击" or "魔法" or "魔法防御力"
-                    ? Colors.Black : LegacyAttributeLabelColour,
+                    ? new Color(1f, 0f, 0f) : LegacyAttributeLabelColour,
                 AutoSize = true,
                 Location = new Vector2I(0x17F, y),
                 IsControl = false,

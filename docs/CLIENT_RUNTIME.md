@@ -39,6 +39,8 @@ CConnection queues remote actors' ObjectActions. Local actions can already be pr
 
 ## GameScene and other partials
 
+Godot world and HUD scaling, viewport sizing and coordinate conversion: [CLIENT_WORLD_UI_SCALING](CLIENT_WORLD_UI_SCALING.md).
+
 | Source | Responsibility / anchors |
 | --- | --- |
 | `Client/Scenes/GameScene.cs` | Scene singleton/user/observer, construction of all dialog boxes, processing/input, item/magic hints, inventory interactions, disposal |

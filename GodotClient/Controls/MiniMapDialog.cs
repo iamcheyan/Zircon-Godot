@@ -379,13 +379,31 @@ public partial class MiniMapDialog : DXWindow
         }
 
         dot.Visible = true;
-        dot.BackColour = kind switch
+        // map-ui-resource-evidence.json render_evidence.marker_visual_semantics：
+        // 原版标记是**程序画的描边矩形、没有精灵** —— NPC 黄 0xFFFF、玩家与
+        // 邻近列表绿 0x64C864，都是 ±2px（即 4x4）。现代模式仍用彩色小点。
+        if (_legacyEiLayout)
         {
-            ObjectRenderer.Kind.Monster => Colors.Red,
-            ObjectRenderer.Kind.Item => new Color(0.0f, 0.0f, 0.55f), // DarkBlue
-            ObjectRenderer.Kind.Player => Colors.Cyan,
-            _ => Colors.White,
-        };
+            dot.Hollow = false;
+            dot.Size = new Vector2I(4, 4);
+            dot.BackColour = kind switch
+            {
+                ObjectRenderer.Kind.Monster => new Color(1f, 1f, 0f),          // 0xFFFF 黄
+                ObjectRenderer.Kind.Item => new Color(0f, 0f, 0.55f),          // 保留物品色
+                ObjectRenderer.Kind.Player => new Color(100f / 255f, 200f / 255f, 100f / 255f), // 0x64C864
+                _ => new Color(100f / 255f, 200f / 255f, 100f / 255f),
+            };
+        }
+        else
+        {
+            dot.BackColour = kind switch
+            {
+                ObjectRenderer.Kind.Monster => Colors.Red,
+                ObjectRenderer.Kind.Item => new Color(0.0f, 0.0f, 0.55f), // DarkBlue
+                ObjectRenderer.Kind.Player => Colors.Cyan,
+                _ => Colors.White,
+            };
+        }
         dot.Location = new Vector2I(
             (int)(ScaleX * cellX) - (int)dot.Size.X / 2,
             (int)(ScaleY * cellY) - (int)dot.Size.Y / 2);
@@ -415,10 +433,21 @@ public partial class MiniMapDialog : DXWindow
         }
 
         dot.Visible = true;
-        dot.Hollow = true;
-        dot.BackColour = Colors.Lime;
-        dot.Size = new Vector2I(5, 5);
-        dot.Location = new Vector2I((int)(ScaleX * cellX) - 2, (int)(ScaleY * cellY) - 2);
+        // 原版玩家标记是绿色 0x64C864 的 ±2px 描边矩形（4x4），不是空心点。
+        if (_legacyEiLayout)
+        {
+            dot.Hollow = false;
+            dot.BackColour = new Color(100f / 255f, 200f / 255f, 100f / 255f);
+            dot.Size = new Vector2I(4, 4);
+            dot.Location = new Vector2I((int)(ScaleX * cellX) - 2, (int)(ScaleY * cellY) - 2);
+        }
+        else
+        {
+            dot.Hollow = true;
+            dot.BackColour = Colors.Lime;
+            dot.Size = new Vector2I(5, 5);
+            dot.Location = new Vector2I((int)(ScaleX * cellX) - 2, (int)(ScaleY * cellY) - 2);
+        }
 
         // 玩家居中: 地图图平移
         Image.Location = new Vector2I(

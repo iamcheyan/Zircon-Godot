@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using DrawingColor = System.Drawing.Color;
 using Godot;
 using Library;
+using Library.Network;
+using S = Library.Network.ServerPackets;
 using ZirconClient.Controls;
 
 namespace ZirconClient.Scripts;
@@ -29,6 +31,10 @@ public partial class SelectScene : Control
     private DXAnimatedControl _characterAnimation2;
     private DXLabel _slotName0, _slotName1;
     private DXControl _slotHit0, _slotHit1;
+    // EI 进入游戏前的公告框（F602）。原版流程：选中角色 -> 点进入 -> 服务端下发公告 ->
+    // 玩家确认后才真正进游戏。我方此前公告只在 GameScene 里处理（进游戏之后），
+    // 选角屏完全没有这条链。
+    private NoticeDialog _noticeDialog;
     private DXButton _skinConfigButton;
     private ConfigDialog _selectConfig;
     // EI 两个角色槽的屏幕位置。原版以 640x480 中心 (320,240) 为基准
@@ -124,6 +130,9 @@ public partial class SelectScene : Control
             _unsubscribers.Add(() => _net.Connection.DeleteCharacterResultEvent -= OnDeleteCharacterResult);
             _net.Connection.StartGameResultEvent += OnStartGameResult;
             _unsubscribers.Add(() => _net.Connection.StartGameResultEvent -= OnStartGameResult);
+            // 选角屏也要收公告：原版在进入游戏前用 F602 公告框拦住流程。
+            _net.Connection.ChatEvent += OnSelectChat;
+            _unsubscribers.Add(() => _net.Connection.ChatEvent -= OnSelectChat);
         }
 
         RefreshList();
@@ -854,6 +863,30 @@ public partial class SelectScene : Control
             GD.Print($"[Select] 建角色失败: {_pendingNewCharResult}");
             _statusLabel.Text = string.Format(Lang.SelectCreateLabel3, _pendingNewCharResult);
         }
+    }
+
+    /// <summary>
+    /// 选角屏的公告处理（EI 进入游戏前的 F602 公告框）。
+    /// 证据边界：原版 F602 的**触发源**尚未闭合（审计文档 NOTICE-01 记录
+    /// "当前还把公告聊天消息直接当作打开此窗的触发" 属我方猜测）。
+    /// 此处按用户描述与现有网络链实现：收到 Announcement 类消息即弹 F602，
+    /// 玩家确认后关闭；角色进入游戏仍由服务端的 StartGameResult 驱动。
+    /// </summary>
+    private void OnSelectChat(S.Chat p)
+    {
+        if (p == null) return;
+        if (p.Type != MessageType.Announcement) return;
+        if (!AutoLoginArgs.LegacyUi) return;
+        ShowLegacyNotice(p.Text);
+    }
+
+    /// <summary>在选角屏弹出 F602 公告框（EI 进入游戏前的公告环节）。</summary>
+    public void ShowLegacyNotice(string text)
+    {
+        _noticeDialog ??= new NoticeDialog();
+        _noticeDialog.SetNotice(text);
+        WindowManager.Open(_noticeDialog, _uiLayer);
+        GD.Print($"[LegacySelect] 公告框 F602 已弹出: len={text?.Length ?? 0}");
     }
 
     private void OnStartPressed()

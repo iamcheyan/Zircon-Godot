@@ -201,11 +201,43 @@ public partial class LoginScene : Control
             SoundPlayback.Stop(SoundIndex.LoginScene);
             SetStatus(string.Format(Lang.LoginCharacterLabel, _pendingCharacters.Count));
             GD.Print($"[Login] 登录成功, 角色数 {_pendingCharacters.Count}");
-            var selectScene = ResourceLoader.Load<PackedScene>("res://Scenes/SelectScene.tscn");
-            var selectScript = selectScene.Instantiate<SelectScene>();
-            selectScript.SetCharacters(_pendingCharacters);
-            GetTree().Root.AddChild(selectScript);
-            QueueFree();
+            // **2000ms 淡出到黑**（原版 phase 3 的过渡）。
+            // 证据 login-flow-evidence.json::screens.char_select.phase：
+            //   phase 3 = transition fade (tick 0x403560)，时长 **0x7D0 = 2000ms**，
+            //   结束后 0x402970 -> parent（选角屏）。
+            // 该过渡是 0x45FD50 画的**纯色覆盖层**，不是贴图动画 ——
+            // 记录的 "draw frame 0x3C via 0x466130(+0x5B0,0)" 里帧 60 经独立解码
+            // 确认是**空帧**（Interface1c F59-F65 全 alpha 全零），所以不必找素材。
+            // 非 legacy 路径保持原来的立即切换。
+            if (AutoLoginArgs.LegacyUi)
+            {
+                var fade = new ColorRect
+                {
+                    Color = new Color(0f, 0f, 0f, 0f),
+                    MouseFilter = Control.MouseFilterEnum.Ignore,
+                };
+                fade.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+                _uiLayer.AddChild(fade);
+                var tween = CreateTween();
+                tween.TweenProperty(fade, "color:a", 1.0, 2.0);   // 2000ms
+                tween.TweenCallback(Callable.From(() =>
+                {
+                    var sc = ResourceLoader.Load<PackedScene>("res://Scenes/SelectScene.tscn");
+                    var ss = sc.Instantiate<SelectScene>();
+                    ss.SetCharacters(_pendingCharacters);
+                    GetTree().Root.AddChild(ss);
+                    QueueFree();
+                }));
+                GD.Print("[LegacyLogin] phase 3 淡出开始 (2000ms)");
+            }
+            else
+            {
+                var selectScene = ResourceLoader.Load<PackedScene>("res://Scenes/SelectScene.tscn");
+                var selectScript = selectScene.Instantiate<SelectScene>();
+                selectScript.SetCharacters(_pendingCharacters);
+                GetTree().Root.AddChild(selectScript);
+                QueueFree();
+            }
         }
         else
         {

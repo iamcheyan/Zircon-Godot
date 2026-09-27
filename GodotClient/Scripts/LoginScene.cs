@@ -390,41 +390,46 @@ public partial class LoginScene : Control
         // 不要用真实视口尺寸定位：UiScaler 会把整个画布缩放并居中到视口，
         // 若按真实视口坐标布局再叠加缩放 Transform，4K 下元素会超出屏幕。
         Vector2 viewport = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight);
+        // **帧号修正**：Interface1c 实测只有 3 帧（wilsdk 独立解码）：
+        //   F0 = 640x360 沙漠背景（含右下 "WEMADE ENTERTAINMENT (C) 2002"）
+        //   F1 = 640x48  底部条
+        //   F2 = 327x20  「ID」「PASSWORD」标签条
+        // 旧代码用的 F20/F23/F22 **在该库中不存在**，viewer 对三帧都返回 blank ——
+        // 这正是审计文档 PRE-05 记录的"登录美术帧选择不符合目标素材"。
+        // 尺寸按**原生 640x360**绘制在左上，不再拉伸到 1024x768（PRE-04）。
         var background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            Index = 20,
+            Index = 0,
             FixedSize = true,
-            Size = new Vector2I(1024, 768),
+            Size = new Vector2I(640, 360),
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Position = Vector2.Zero,
         };
         _uiLayer.AddChild(background);
+        GD.Print($"[LegacyLogin] 背景: Interface1c[0] size={background.Size} "
+            + $"legacyUi={AutoLoginArgs.LegacyUi} legacyHud={AutoLoginArgs.LegacyHud} "
+            + $"tex={(MirSkin.GetTexture(LibraryFile.Interface1c, 0) != null)}");
 
-        AddLoginAnimation(background, 2200, 100, 10, true, true, false);
-        AddLoginAnimation(background, 2400, 30, 5, true, true, false);
-        AddLoginAnimation(background, 2300, 30, 10, true, false, true);
-        AddLoginAnimation(background, 2500, 30, 8, true, true, false);
+        // **移除 4 个不存在的动画层与 logo 层**：它们引用 Interface1c 的
+        // 2200/2400/2300/2500（动画）与 23/22（logo），而该库**只有 0/1/2 三帧**。
+        // 保留它们等于在登录页上叠 5 个空控件。
+        //
+        // 原版登录的动画 logo 来自 **Data/ei_Login.dat**（`file` 独立识别：
+        // RIFF AVI 640x360 ~30fps，视频 **Intel Indeo 5.0** + PCM 立体声 32kHz，38MB）。
+        // Indeo 5.0 不在 Godot 的 VideoStream 解码范围内，**本轮不实现视频播放**，
+        // 故 logo 区暂缺 —— 这一点如实记录，不假装已还原。
 
-        var logoBackground = new DXImageControl
+        // 底部条：Interface1c F1（实测 640x48，含版权行）。
+        _uiLayer.AddChild(new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            Index = 23,
-            Position = new Vector2((viewport.X - 564) / 2f, 25),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        _uiLayer.AddChild(logoBackground);
-        var logo = new DXImageControl
-        {
-            LibraryFile = LibraryFile.Interface1c,
-            Index = 22,
+            Index = 1,
             FixedSize = true,
-            Size = new Vector2I(564, 300),
-            Position = new Vector2(-35, -35),
-            Blend = true,
+            Size = new Vector2I(640, 48),
+            Position = new Vector2(0, 360),
             MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        logoBackground.AddControl(logo);
+        });
 
         // 主登录框容器 (使用 Interface[151] 贴图)
         var dialog = new DXImageControl

@@ -14,8 +14,16 @@ namespace ZirconClient.Controls;
 /// </summary>
 public static class MirSkin
 {
+    /// <summary>
+    /// 是否启用旧版 UI 图库路由。**必须与 `AutoLoginArgs.LegacyUi` 口径一致** ——
+    /// 此前这里只认 `--legacy-hud`，而登录场景传的是 `--legacy-ui`，导致
+    /// `UiDataPath` 落回主资源目录、`Interface1c.wil` 找不到、登录背景纹理为空
+    /// （实测日志 `[LegacyLogin] ... legacyUi=True ... tex=False`）。
+    /// 两个开关任一为真即启用。
+    /// </summary>
     private static readonly bool LegacyUiRequested = Godot.OS.GetCmdlineUserArgs().Any(x =>
-        string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase));
+        string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(x, "--legacy-ui", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>客户端数据目录。原硬编码为 /home/tetsuya/development/Zircon/...（大写），
     /// 实际检出目录是小写 zircon；Linux 大小写敏感导致 UI 图库加载静默失败、

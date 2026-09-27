@@ -10,7 +10,7 @@
 LegacyEI/login_game.sh
 ```
 
-它负责清理客户端/服务端、构建、启动服务端和启动 Godot 客户端。脚本位于 Zircon 仓库内，但 EI 素材仍从外部工作目录读取。
+这个脚本是仓库推荐的一键入口。**Godot 客户端代码也默认启用 EI 复古 UI**；现代 Zircon UI 需要显式传 `--zircon-ui`。脚本会按选择组装对应参数，并将 EI 素材指向 `LegacyEI/Data`；启动时会结束同一工作树的 Godot 客户端，若目标端口没有服务端还会启动本地服务端，因此不要在用户客户端运行时贸然启动。
 
 ```bash
 ./LegacyEI/login_game.sh              # Legacy 界面，手动登录

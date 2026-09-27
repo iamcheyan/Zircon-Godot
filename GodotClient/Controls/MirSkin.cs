@@ -15,15 +15,20 @@ namespace ZirconClient.Controls;
 public static class MirSkin
 {
     /// <summary>
-    /// 是否启用旧版 UI 图库路由。**必须与 `AutoLoginArgs.LegacyUi` 口径一致** ——
-    /// 此前这里只认 `--legacy-hud`，而登录场景传的是 `--legacy-ui`，导致
-    /// `UiDataPath` 落回主资源目录、`Interface1c.wil` 找不到、登录背景纹理为空
-    /// （实测日志 `[LegacyLogin] ... legacyUi=True ... tex=False`）。
-    /// 两个开关任一为真即启用。
+    /// 默认使用 EI 旧版 UI 图库；只有显式 --zircon-ui 且未指定旧版参数时才关闭。
     /// </summary>
-    private static readonly bool LegacyUiRequested = Godot.OS.GetCmdlineUserArgs().Any(x =>
-        string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(x, "--legacy-ui", StringComparison.OrdinalIgnoreCase));
+    private static readonly bool LegacyUiRequested = ResolveLegacyUiRequested();
+
+    private static bool ResolveLegacyUiRequested()
+    {
+        string[] args = Godot.OS.GetCmdlineUserArgs();
+        bool hasLegacyFlag = args.Any(x =>
+            string.Equals(x, "--legacy-hud", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(x, "--legacy-ui", StringComparison.OrdinalIgnoreCase));
+        bool hasModernFlag = args.Any(x =>
+            string.Equals(x, "--zircon-ui", StringComparison.OrdinalIgnoreCase));
+        return hasLegacyFlag || !hasModernFlag;
+    }
 
     /// <summary>客户端数据目录。原硬编码为 /home/tetsuya/development/Zircon/...（大写），
     /// 实际检出目录是小写 zircon；Linux 大小写敏感导致 UI 图库加载静默失败、
@@ -78,24 +83,37 @@ public static class MirSkin
     {
         if (!LegacyUiRequested) return DataPath;
 
-        string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH")
-            ?? System.Environment.GetEnvironmentVariable("ZIRCON_UI_DATA_PATH");
+        string legacyOverride = System.Environment.GetEnvironmentVariable("ZIRCON_LEGACY_UI_DATA_PATH");
         if (!string.IsNullOrWhiteSpace(legacyOverride) && Directory.Exists(legacyOverride))
             return Path.GetFullPath(legacyOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
                 + Path.DirectorySeparatorChar;
 
+        string zirconEiRoot = System.Environment.GetEnvironmentVariable("ZIRCON_EI_ROOT");
+        string mir3EiRoot = System.Environment.GetEnvironmentVariable("MIR3_EI_ROOT");
+        string homeEiData = Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+            "mir2ei", "LegacyEI", "Data");
         string[] legacyCandidates =
         {
-            "/home/tetsuya/mir2ei/Data/",
-            "/home/tetsuya/mir2ei/LegacyEI/Data/",
+            string.IsNullOrWhiteSpace(zirconEiRoot) ? null : Path.Combine(zirconEiRoot, "Data"),
+            string.IsNullOrWhiteSpace(mir3EiRoot) ? null : Path.Combine(mir3EiRoot, "LegacyEI", "Data"),
+            homeEiData,
             "/home/tetsuya/mir3ei/LegacyEI/Data/",
             "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
         };
         foreach (string candidate in legacyCandidates)
-            if (Directory.Exists(candidate)) return candidate;
+            if (!string.IsNullOrWhiteSpace(candidate) && Directory.Exists(candidate))
+                return Path.GetFullPath(candidate.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                    + Path.DirectorySeparatorChar;
 
-        GD.PrintErr("[MirSkin] --legacy-hud 已请求，但找不到 LegacyEI/Data；继续使用默认 UI 资源");
-        return DataPath;
+        string expectedPath = !string.IsNullOrWhiteSpace(zirconEiRoot)
+            ? Path.Combine(zirconEiRoot, "Data")
+            : !string.IsNullOrWhiteSpace(mir3EiRoot)
+                ? Path.Combine(mir3EiRoot, "LegacyEI", "Data")
+                : homeEiData;
+        GD.PrintErr($"[MirSkin] EI 复古 UI 默认开启，但找不到 EI UI 资源目录: {expectedPath}; 不回退到现代 Zircon 素材");
+        return Path.GetFullPath(expectedPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+            + Path.DirectorySeparatorChar;
     }
 
     private static readonly Dictionary<LibraryFile, ZlLibrary> _libraries = new();

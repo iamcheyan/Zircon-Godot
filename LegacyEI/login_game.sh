@@ -342,6 +342,8 @@ if [ "$AUTO_LOGIN" = "1" ]; then
 fi
 if [ "$LEGACY_HUD" = "1" ]; then
     CLIENT_ARGS+=(--legacy-ui --legacy-hud)
+else
+    CLIENT_ARGS+=(--zircon-ui)
 fi
 godot-mono --path "$ROOT/GodotClient" -- "${CLIENT_ARGS[@]}"
 echo ""

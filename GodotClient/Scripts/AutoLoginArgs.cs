@@ -71,9 +71,12 @@ public static class AutoLoginArgs
     public static bool StayInSelect => Has("--stay-select");
     /// <summary>给每个 DXControl 画红色边框 + 四角方块/四边黄条 (临时布局诊断)</summary>
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
-    /// <summary>显式启用旧版 EI 核心窗口实验布局（未提供时保持现行正式布局）。</summary>
-    public static bool LegacyUi => Has("--legacy-ui");
-    /// <summary>显式审计/启用正式场景的旧版 EI 主 HUD。</summary>
+    /// <summary>
+    /// 默认使用 EI 复古 UI；仅显式传入 --zircon-ui 时切换现代 Zircon UI。
+    /// --legacy-ui 保留兼容，并可覆盖 --zircon-ui。
+    /// </summary>
+    public static bool LegacyUi => Has("--legacy-ui") || !Has("--zircon-ui");
+    /// <summary>默认随 EI 复古 UI 启用旧版 HUD；--zircon-ui 可显式关闭。</summary>
     public static bool LegacyHud => Has("--legacy-hud") || LegacyUi;
 
     /// <summary>

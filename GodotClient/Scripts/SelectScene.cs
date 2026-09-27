@@ -823,11 +823,14 @@ public partial class SelectScene : Control
         if (size == Vector2I.Zero) size = new Vector2I(28, 28);
         var button = new DXButton
         {
-            // EI 证据：phase 2 各钮的 normal/hover 成对（0x56/0x57, 0x59/0x5A,
-            // 0x5C/0x5D, 0x5F/0x60）；0x62 例外（normal==hover==0x62）。
-            // 传入的 frame 是 normal 帧，hover 取 frame+1（0x62 除外，见调用点注释）。
+            // EI 证据：ctor 实参布局为 (ebx, f1, f2, X, Y, 0, 1, **hover**, 1)。
+            // phase 2 的 hover 帧比 normal **小 1**（frame-1）：
+            //   0x56(86)->hover 0x55(85)；0x59(89)->0x58(88)；
+            //   0x5C(92)->0x5B(91)；0x5F(95)->0x5E(94)；0x62(98)->0x61(97)
+            // 注意 phase 0 的方向相反（hover = normal+1，如 51->52），
+            // 两组来自同一 ctor 但传入值不同，按各自实参照抄，不要统一处理。
             LibraryFile = LibraryFile.Interface1c, Index = frame,
-            HoverIndex = frame == 98 ? 98 : frame + 1, PressedIndex = frame,
+            HoverIndex = frame - 1, PressedIndex = frame,
             FixedSize = true, Size = size, Location = location,
         };
         button.MouseClick += (o, e) => action();

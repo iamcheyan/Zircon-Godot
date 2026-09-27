@@ -488,6 +488,8 @@ public partial class LegacyHudLayoutLab : Control
         bool minimap = _miniMap.AuditLegacyEiLayout(out string minimapDetails)
             && _miniMap.Location == new Vector2I(800 - 128, 0);
         bool lifecycle = AuditWindowLifecycle(out string lifecycleDetails);
+        // GROUP-07：组队窗的邀请输入框与提交按钮必须同行（legacy 下两者一起移动）。
+        bool group = _group.AuditLayout(out string groupDetails);
         bool roots = _group.Size == new Vector2I(256, 244)
             && _quest.Size == new Vector2I(340, 440)
             // G6：CommunicationDialog 不再套 F350 聊天窗外壳，回归自身几何
@@ -500,7 +502,7 @@ public partial class LegacyHudLayoutLab : Control
         bool hud = _hud.AuditLegacyHud(out string hudDetails);
         // 商店窗 id2 的购买态面板（NPCGoodsPanel）legacy 布局。
         bool goods = _npc.AuditLegacyGoods(out string goodsDetails);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods;
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods && group;
         GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods}");
         GD.Print($"[LegacyAudit] goods {goodsDetails}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
@@ -513,6 +515,7 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] trade {tradeDetails}");
         GD.Print($"[LegacyAudit] guild {guildDetails}");
         GD.Print($"[LegacyAudit] storage {storageDetails}");
+        GD.Print($"[LegacyAudit] group {groupDetails}");
         GD.Print($"[LegacyAudit] config {configDetails}");
         GD.Print($"[LegacyAudit] notice {noticeDetails}");
         GD.Print($"[LegacyAudit] minimap {minimapDetails}");

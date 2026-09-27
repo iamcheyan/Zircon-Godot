@@ -17,6 +17,7 @@ public partial class GroupDialog : DXWindow
     private DXControl _memberPanel;
     private DXControl _lfgPanel;
     private DXTextInput _inviteName;
+    private DXButton _inviteButton;
     private bool _allowGroup;
     private DXButton _allowButton;
     private DXControl _invitePanel;
@@ -71,18 +72,15 @@ public partial class GroupDialog : DXWindow
 
         _inviteName = new DXTextInput { Location = new Vector2I(14, 260), Size = new Vector2I(130, 23), Visible = false };
         AddControl(_inviteName);
-        var invite = Button(Lang.GroupInviteLabel, new Vector2I(149, 260), new Vector2I(62, 23));
-        invite.Visible = false;
-        invite.MouseClick += (o, e) =>
-        {
-            if (!string.IsNullOrWhiteSpace(_inviteName.Text))
-                GameScene.Game?.SendGroupInvite(_inviteName.Text.Trim());
-            _inviteName.Text = string.Empty;
-            _inviteName.Visible = false;
-            invite.Visible = false;
-        };
+        // 邀请按钮改为字段：legacy 布局移动了输入框，必须同步移动按钮，
+        // 否则两者脱离、输入内容无法提交（审计文档 GROUP-07 记录的阻断级缺口）。
+        _inviteButton = Button(Lang.GroupInviteLabel, new Vector2I(149, 260), new Vector2I(62, 23));
+        _inviteButton.Visible = false;
+        _inviteButton.MouseClick += (o, e) => SubmitInvite();
+        // legacy 下没有提交按钮（见 ApplyLegacyEiLayout），靠回车提交。
+        _inviteName.TextSubmitted += _ => SubmitInvite();
         _addButton = new DXButton { Type = DXButton.ButtonType.AddButton, Size = new Vector2I(36, 36), Location = new Vector2I(35, 217), LibraryFile = LibraryFile.Interface };
-        _addButton.MouseClick += (o, e) => { _inviteName.Visible = !_inviteName.Visible; invite.Visible = _inviteName.Visible; if (_inviteName.Visible) _inviteName.GrabFocus(); };
+        _addButton.MouseClick += (o, e) => { _inviteName.Visible = !_inviteName.Visible; _inviteButton.Visible = _inviteName.Visible; if (_inviteName.Visible) _inviteName.GrabFocus(); };
         AddControl(_addButton);
         _removeButton = new DXButton { Type = DXButton.ButtonType.RemoveButton, Size = new Vector2I(36, 36), Location = new Vector2I(81, 217), LibraryFile = LibraryFile.Interface, Enabled = false };
         _removeButton.MouseClick += (o, e) => RemoveSelectedMember();
@@ -182,7 +180,19 @@ public partial class GroupDialog : DXWindow
         _lfgButton.MouseClick -= OnLegacyLeaveClick;
         _lfgButton.MouseClick += OnLegacyLeaveClick;
         _optionsButton.Visible = false;
-        _inviteName.Location = new Vector2I(17, 194);
+        // legacy 下输入框**占用「邀请」动作按钮的位置** (17,197)/(60,20)，
+        // 靠**回车**提交（DXTextInput.TextSubmitted），不再另放提交按钮。
+        // 原因：legacy 三个动作按钮在 (17,197)/(80,197)/(159,197)，任何额外的
+        // 提交按钮都会与「移除」或「离队」重叠（GROUP-07 的原始缺陷是只移输入框、
+        // 把提交按钮留在现代位置 (149,260)，用户输入后无处提交）。
+        _inviteName.Location = new Vector2I(17, 197);
+        _inviteName.Size = new Vector2I(60, 20);
+        if (_inviteButton != null)
+        {
+            // 提交按钮在 legacy 下隐藏：回车即提交（见构造函数里的 TextSubmitted 绑定）。
+            _inviteButton.Visible = false;
+            _inviteButton.Location = new Vector2I(17, 197);
+        }
         _lfgPanel.Visible = false;
         _lfgScroll.Visible = false;
         foreach (var row in _lfgRows) row.Visible = false;
@@ -354,21 +364,54 @@ public partial class GroupDialog : DXWindow
         WindowManager.Open(_lfgDialog, GameScene.Game?.UILayer ?? GetParent());
     }
 
+    /// <summary>
+    /// 提交邀请：现代模式由「邀请」按钮触发，legacy 模式由输入框回车触发
+    /// （legacy 没有提交按钮，见 ApplyLegacyEiLayout 的注释）。
+    /// </summary>
+    private void SubmitInvite()
+    {
+        if (!string.IsNullOrWhiteSpace(_inviteName.Text))
+            GameScene.Game?.SendGroupInvite(_inviteName.Text.Trim());
+        _inviteName.Text = string.Empty;
+        _inviteName.Visible = false;
+        if (_inviteButton != null) _inviteButton.Visible = false;
+    }
+
     public bool AuditLayout(out string details)
     {
-        bool buttons = _removeButton.Location == new Vector2I(81, 217)
-            && _optionsButton.Location == new Vector2I(173, 217)
+        // legacy 把三个动作按钮移到 EI 的底部热区 (17,197)/(80,197)/(159,197)；
+        // 现代值 (81,217)/(173,217) 已过期。_optionsButton 在 legacy 下隐藏，
+        // 位置不参与判定。
+        bool buttons = _removeButton.Location == new Vector2I(80, 197)
+            && _lfgButton.Location == new Vector2I(159, 197)
             && _allowCheck.Location == new Vector2I(166, 40);
-        bool members = _memberPanel.Location == new Vector2I(13, 60)
-            && _memberPanel.Size == new Vector2I(194, 148);
+        // legacy 故意让成员面板铺满窗口：EI 把成员名直接画在窗口坐标里，
+        // 没有独立的 101px 裁剪框（见 ApplyLegacyEiLayout 的注释）。
+        // 此处旧值 (13,60)/(194,148) 已过期，改为与实现一致。
+        bool members = _memberPanel.Location == Vector2I.Zero
+            && _memberPanel.Size == Size;
         bool lfg = _lfgScroll.Location == new Vector2I(210, 268)
             && _lfgScroll.Size == new Vector2I(24, 140)
             && _lfgScroll.VisibleSize == 5
             && _lfgRows.Count == 5
             && _lfgRows[0].Location == new Vector2I(13, 293)
             && _lfgRows[4].Location == new Vector2I(13, 377);
-        details = $"size={Size} members={_memberPanel.Location}/{_memberPanel.Size} buttons=4 lfg={_lfgRows.Count} scroll={_lfgScroll.Location}/{_lfgScroll.VisibleSize}";
-        return Size == new Vector2I(240, 424) && buttons && members && lfg;
+        // GROUP-07：邀请输入框与提交按钮必须保持同一行、相对偏移 +135。
+        // 只移输入框会让按钮留在现代位置，用户输入后无处提交。
+        // GROUP-07：legacy 下输入框占用「邀请」动作按钮的位置，靠回车提交；
+        // 不得出现"输入框在一处、提交控件在另一处"的脱离（原始缺陷）。
+        bool inviteRow = _inviteButton != null
+            && _inviteName.Location == new Vector2I(17, 197)
+            && _inviteName.Size == new Vector2I(60, 20)
+            && _inviteButton.Location == _inviteName.Location;
+        details = $"size={Size} members={_memberPanel.Location}/{_memberPanel.Size} "
+            + $"remove={_removeButton.Location} options={_optionsButton.Location} allow={_allowCheck.Location} "
+            + $"lfg={_lfgRows.Count} "
+            + $"scroll={_lfgScroll.Location}/{_lfgScroll.VisibleSize} "
+            + $"inviteInput={_inviteName.Location} inviteBtn={_inviteButton?.Location.ToString() ?? "null"}";
+        // 尺寸以 F900 构造证据的 256x244 为准（测试场 roots 检查同值）；
+        // 旧的 240x424 是早期误值。
+        return Size == new Vector2I(256, 244) && buttons && members && lfg && inviteRow;
     }
 }
 

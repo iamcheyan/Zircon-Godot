@@ -2508,3 +2508,46 @@ phase 3 的过渡按"纯色覆盖 + 2000ms 线性插值"实现即可，无需素
 
 **待办**：扩展转换脚本覆盖 CreateChr/StartGame；把两段过场接到 phase 1 与 phase 4；
 回查 `0x47D60C`/`0x47D5F8`/`0x47D5E0` 三个字符串的真实消费者，确认它们到底是不是音效文件名。
+
+### 更正：`CreateChr.wav` 等**确实是音效**，不是"证据有误"（2026-09-27）
+
+上一节结尾我写了「证据里的 `*.wav` 字符串不能直接当作"存在同名音频文件"」——
+**这个结论是错的**，原因是**我只在本机 `LegacyEI/Data/` 里找**，而字符串给的是
+**`Sound\` 子目录**。回查原文：
+
+```
+0x47D60C -> '.\Sound\CreateChr.wav'
+0x47D5F8 -> '.\Sound\SelChr.wav'
+0x47D5E0 -> '.\Sound\StartGame.wav'
+0x47D690 -> '.\Sound\CreateChr.mp3'
+0x47D624 -> '.\Sound\SelChr.mp3'
+```
+
+**关键**：路径是 `.\Sound\...`。而**本机这份 EI 安装根本没有 `Sound/` 目录**
+（`LegacyEI/` 下只有 `Data/`，全盘零个 `.wav`）—— 因此"找不到"是**安装不完整**，
+不是证据错误。
+
+**82 机的原版客户端有完整 `Sound/` 目录（609 个音频）**，其中：
+```
+CreateChr.wav  CreateChr.mp3  SelChr.wav  SelChr.mp3  StartGame.wav  StartGame.mp3
+ToCreateChr.mp3  SWMSel.wav  Tfade in.wav  Tfade out.wav  ...
+```
+
+已取回 6 个与本流程相关的到 `LegacyEI/Sound/`：
+`CreateChr.wav`(349KB)、`SelChr.wav`(358KB)、`StartGame.wav`(581KB)、
+`Tfade in.wav`(266KB)、`Tfade out.wav`(266KB)、`SWMSel.wav`(643KB)。
+
+**注意区分同名不同物**：
+| 路径 | 类型 | 用途 |
+|---|---|---|
+| `Data/CreateChr.dat` | **AVI 视频** 640x480 39 帧 | phase 1 过场动画 |
+| `Sound/CreateChr.wav` | **音频** | 创建角色的音效 |
+两者只是**基名相同**，不是同一资源。
+
+**教训**：证据给的是**相对路径**（`.\Sound\X.wav`）时，必须先在目标机器上
+确认**该子目录是否存在**，再判断"资源缺失"还是"证据有误"。
+我在 `Data/` 下找不到就下了结论，属于**在错误的目录里搜索后否定证据**。
+
+**待办**：把这几个音效接到 Godot 的音频系统（需要 `SoundIndex` 条目与播放时机：
+CreateChr -> 点「创建角色」、SelChr -> 选中角色、StartGame -> 点「开始游戏」、
+Tfade in/out -> 两处过场）。

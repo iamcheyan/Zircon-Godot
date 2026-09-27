@@ -70,6 +70,10 @@ public partial class GameScene : Control
     private StatusWindow _statusWindow;
     private MenuDialog _menuDialog;
     private ExitDialog _exitDialog;
+    // EI 原版「注销人物」确认框：F950 / type 0x65（每次打开重建，因为确认后即销毁）。
+    private LogoutConfirmDialog _logoutDialog;
+    // 原版 F950 调用点 7（business_context = return to character-select screen）的原文。
+    private const string LegacyLogoutMessage = "返回游戏人物选择界面？";
     // EI 原版「退出游戏」是独立于「注销人物」的另一条路径：F800 窗（id 0x64）。
     // 见 ExitGameDialog 的类注释与审计文档 EXIT-01。
     private ExitGameDialog _exitGameDialog;
@@ -387,8 +391,11 @@ public partial class GameScene : Control
 
     public void OpenExitDialog()
     {
-        if (_exitDialog == null) return;
-        WindowManager.Open(_exitDialog, _uiLayer);
+        // EI 原版「注销人物(Alt+X / HUD idx4)」= F950 确认框，type 0x65，
+        // 消息「返回游戏人物选择界面？」，YES = 返回选人、NO = 取消。
+        if (_logoutDialog != null && IsInstanceValid(_logoutDialog)) _logoutDialog.QueueFree();
+        _logoutDialog = new LogoutConfirmDialog(LegacyLogoutMessage, () => GameScene.Game?.LeaveGame());
+        WindowManager.Open(_logoutDialog, _uiLayer);
     }
 
     /// <summary>

@@ -5868,3 +5868,61 @@ ZirconClient - 2028x1316
    `--legacy-select-selftest`（断言而非截图）；
 2. 修截图工具（排查窗口匹配逻辑）作为独立任务；
 3. 在截图工具修好前，**不把截图作为选角屏的验收依据**。
+
+## 断言式验证三钮：自检当场抓到我的错误公式（2026-09-27）
+
+按上一轮结论（截图工具不可靠 → 改用断言），把三钮的行为纳入 `--legacy-select-selftest`。
+
+### 首版断言 FAIL —— **错的是我的断言**
+
+首版我写：
+
+```csharp
+if ((int)cls != frame - 92)   // 臆造的公式
+```
+
+自检立刻报：
+
+```
+[LegacySelectButtonSelfTest] FAIL 帧 95 -> 法师: MirClass 数值 1 与原版 arg3 3 不一致 ;
+                                     帧 98 -> 道士: MirClass 数值 2 与原版 arg3 6 不一致
+```
+
+**`95-92 = 3`、`98-92 = 6`，而原版 arg3 是 `1`、`2`** —— 帧号与 arg3 **没有 `frame-92`
+这种关系**。**是我臆造了公式，代码本身没错。**
+
+### 改为显式表后 PASS
+
+```csharp
+var classMap = new (string name, DXButton btn, int frame, MirClass cls, int arg3)[]
+{
+    ("帧 92 -> 武士", _skinClassWarrior, 92, MirClass.Warrior, 0),
+    ("帧 95 -> 法师", _skinClassWizard,  95, MirClass.Wizard,  1),
+    ("帧 98 -> 道士", _skinClassTaoist,  98, MirClass.Taoist,  2),
+};
+...
+SelectCreateClass(cls);
+if (_skinCreateClass != cls) { ... }      // 行为断言
+if ((int)cls != arg3) { ... }             // 与证据数值一致
+```
+
+```
+[LegacySelectButtonSelfTest] PASS 9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参；
+                             职业三钮(帧92/95/98->Warrior/Wizard/Taoist)的帧号与 MirClass 数值均匹配
+```
+
+### 断言覆盖了什么、没覆盖什么（如实）
+
+- ✅ 断言：三钮的**帧号**（92/95/98）、**`SelectCreateClass` 的行为**（设置后
+  `_skinCreateClass` 等于目标职业）、**`MirClass` 数值与原版 arg3 一致**（0/1/2）；
+- ❌ **未断言**：三钮的 `MouseClick` lambda 绑定本身 —— `MouseClick` 是 `DXButton`
+  的事件，**无法从 `SelectScene` 外部触发**（C# 事件语义）。所以"点击真的会调用
+  `SelectCreateClass`"这一步**只由源码可见性保证，未被运行时断言覆盖**。
+
+**这是本轮能做到的最强断言，且缺口已标明。**
+
+### 断言的价值（本轮实证）
+
+**若没有断言、只靠截图**：我的 `frame - 92` 错误公式**不会被发现**（截图看不出
+"数值对应关系"）。**断言当场把它判 FAIL。** 这与前几轮"像素差分不可靠、属性自检可靠"
+的结论一致，且本轮给出了**更强的一次证明**：断言不仅验证实现，还**验证了我的断言本身**。

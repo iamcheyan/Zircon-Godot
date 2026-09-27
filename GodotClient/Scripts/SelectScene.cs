@@ -528,8 +528,43 @@ public partial class SelectScene : Control
                         + $"loc=({e.x},{e.y}) size=({e.w},{e.h})");
             }
         }
+        // --- 职业三钮的行为断言（帧 92/95/98 -> class Warrior/Wizard/Taoist）---
+        // 依据：0x459DAE/0x459E19/0x459EA5 三格级联 + 0x458440(slot,gender,class,?,str)
+        //       的 arg3 依次为 0/1/2；0x4584C0 随后刷新显示串。
+        // 说明：三钮的实际动作通过 lambda 绑在 DXButton.MouseClick 上，事件无法从外部触发，
+        //       故此处断言**动作的目标方法行为**（SelectCreateClass）与**帧号对应关系**，
+        //       而不是断言 lambda 本身。这是本轮能做到的最强断言，如实标注。
+        // arg3 是 **0/1/2**，而帧号是 **92/95/98** —— 两者**没有 frame-92 这种关系**
+        // （95-92=3≠1、98-92=6≠2）。故此处用**显式表**记录 帧->class->arg3 的对应，
+        // 不写公式。（首版我写成 frame-92，被本自检当场判 FAIL —— 断言的价值正在于此。）
+        var classMap = new (string name, DXButton btn, int frame, MirClass cls, int arg3)[]
+        {
+            ("帧 92 -> 武士", _skinClassWarrior, 92, MirClass.Warrior, 0),
+            ("帧 95 -> 法师", _skinClassWizard,  95, MirClass.Wizard,  1),
+            ("帧 98 -> 道士", _skinClassTaoist,  98, MirClass.Taoist,  2),
+        };
+        foreach (var (name, btn, frame, cls, arg3) in classMap)
+        {
+            if (btn == null) { ok = false; bad.Add($"{name}: null"); continue; }
+            if (btn.Index != frame) { ok = false; bad.Add($"{name}: 帧号 {btn.Index} != {frame}"); }
+            // 行为断言：设置后 _skinCreateClass 应等于该职业，且与 MirClass 数值一致
+            SelectCreateClass(cls);
+            if (_skinCreateClass != cls)
+            {
+                ok = false;
+                bad.Add($"{name}: SelectCreateClass({cls}) 后 _skinCreateClass={_skinCreateClass}");
+            }
+            if ((int)cls != arg3)   // 原版 0x458440 的 arg3 = 0/1/2
+            {
+                ok = false;
+                bad.Add($"{name}: MirClass 数值 {(int)cls} 与原版 arg3 {arg3} 不一致");
+            }
+        }
+        SelectCreateClass(MirClass.Warrior);   // 复位
+
         string details = ok
-            ? "9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参"
+            ? "9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参；"
+              + "职业三钮(帧92/95/98->Warrior/Wizard/Taoist)的帧号与 MirClass 数值均匹配"
             : string.Join(" ; ", bad);
         GD.Print($"[LegacySelectButtonSelfTest] {(ok ? "PASS" : "FAIL")} {details}");
         GetTree().Quit(ok ? 0 : 1);

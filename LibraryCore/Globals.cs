@@ -45,7 +45,11 @@ namespace Library
 
         public static readonly Regex EMailRegex = new Regex(@"\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*", RegexOptions.Compiled);
         public static readonly Regex PasswordRegex = new Regex(@"^[\S]{" + MinPasswordLength + "," + MaxPasswordLength + "}$", RegexOptions.Compiled);
-        public static readonly Regex CharacterReg = new Regex(@"^[A-Za-z0-9]{" + MinCharacterNameLength + "," + MaxCharacterNameLength + @"}$", RegexOptions.Compiled);
+        // 原版 EI 校验器 0x4589B0 采用黑名单（31 个 ASCII 标点/空格），允许字母、数字及多字节（CJK）。
+        // 此处用白名单实现等价效果：ASCII 字母数字 + 中日韩字符。
+        public static readonly Regex CharacterReg = new Regex(
+            @"^[A-Za-z0-9\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]{" + MinCharacterNameLength + "," + MaxCharacterNameLength + @"}$",
+            RegexOptions.Compiled);
         public static readonly Regex GuildNameRegex = new Regex(@"^[A-Za-z0-9]{" + MinGuildNameLength + "," + MaxGuildNameLength + "}$", RegexOptions.Compiled);
         public static readonly Regex GuildTaxReg = new Regex(@"^(0|[1-9][0-9]?|100)$", RegexOptions.Compiled);
         public static readonly Regex CaptionReg = new Regex(@"^[A-Za-z0-9]{" + MinCaptionLength + "," + MaxCaptionLength + @"}$", RegexOptions.Compiled);

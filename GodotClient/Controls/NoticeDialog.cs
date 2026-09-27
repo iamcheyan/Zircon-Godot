@@ -14,6 +14,11 @@ public partial class NoticeDialog : DXWindow
     private readonly DXButton _actionButton;
     private readonly DXTextArea _text;
 
+    /// <summary>勾选（F606）被点击时触发，随后窗口关闭。</summary>
+    public event System.Action Confirmed;
+    /// <summary>关闭（X，F161/162）被点击时触发，随后窗口关闭。</summary>
+    public event System.Action Cancelled;
+
     public NoticeDialog()
     {
         HasTitle = false;
@@ -49,7 +54,7 @@ public partial class NoticeDialog : DXWindow
             Location = new Vector2I(548, 16),
             Size = new Vector2I(28, 26),
         };
-        _closeButton.MouseClick += (o, e) => WindowManager.Close(this);
+        _closeButton.MouseClick += (o, e) => { Cancelled?.Invoke(); WindowManager.Close(this); };
         AddControl(_closeButton);
 
         _actionButton = new DXButton
@@ -61,7 +66,7 @@ public partial class NoticeDialog : DXWindow
             Location = new Vector2I(496, 27),
             Size = new Vector2I(40, 20),
         };
-        _actionButton.MouseClick += (o, e) => WindowManager.Close(this);
+        _actionButton.MouseClick += (o, e) => { Confirmed?.Invoke(); WindowManager.Close(this); };
         AddControl(_actionButton);
 
         _text = new DXTextArea

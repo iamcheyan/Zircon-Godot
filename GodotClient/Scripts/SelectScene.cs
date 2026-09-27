@@ -103,6 +103,7 @@ public partial class SelectScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -346,6 +347,11 @@ public partial class SelectScene : Control
             var dim = new Color(.62f, .58f, .48f);
             if (_slotName0 != null) _slotName0.TextColour = index == 0 ? sel : dim;
             if (_slotName1 != null) _slotName1.TextColour = index == 1 ? sel : dim;
+            // EI 选角屏：角色常驻洞窟槽位（UpdateCaveSlots 已设 Loop=true 循环动画）。
+            // 不调用 UpdateCharacterDisplay —— 那会把 _characterAnimation（= 槽 0）
+            // 拽到屏幕中心 (320,240) 且 Loop=false，选中后槽 0 角色就离开洞窟、
+            // 停止动画，与原版"两个小人原地循环动"不符。
+            return;
         }
         UpdateCharacterDisplay(_characters[index]);
     }
@@ -1178,7 +1184,58 @@ public partial class SelectScene : Control
         _skinStart.Enabled = false;
         _statusLabel.Text = Lang.SelectGameLabel2;
         _lastStartIndex = _characters[idx].CharacterIndex;
-        _net.Connection?.SendStartGame(_characters[idx].CharacterIndex);
+        if (AutoLoginArgs.LegacyUi)
+        {
+            // 原版：点「开始游戏」后弹确认框（F602 公告框），
+            // 用户在框内点勾选（F606）才真正进入。
+            // 按用户指示文字暂时留空（原版内容来自服务端公告链，未接）。
+            ShowStartConfirmDialog();
+            return;
+        }
+        _net.Connection?.SendStartGame(_lastStartIndex);
+    }
+
+    private NoticeDialog _startConfirmDialog;
+
+    /// <summary>
+    /// Legacy 模式：「开始游戏」(F55) 后弹 F602 确认框，用户点框内勾选才真正发送 StartGame。
+    /// 原版流程（login-flow-evidence.json::screens.parent）：
+    ///   F55 点击 0x459B16 -> msgid 0x67 '%s/%s'(账号/角色名) -> 服务端 case 0x20D -> phase 4
+    ///   -> 0x4570A0 进游戏 + StartGame.dat 过场。
+    /// 本确认框 = 该流程的「用户确认」闸；文字按用户指示暂留空。
+    /// </summary>
+    private void ShowStartConfirmDialog()
+    {
+        _startConfirmDialog ??= new NoticeDialog();
+        _startConfirmDialog.SetNotice(string.Empty);
+        _startConfirmDialog.Confirmed += OnStartConfirmConfirmed;
+        _startConfirmDialog.Cancelled += OnStartConfirmCancelled;
+        WindowManager.Open(_startConfirmDialog, _uiLayer);
+        GD.Print("[LegacySelect] 确认框 F602 已弹出（文字暂留空），等待用户点勾选");
+    }
+
+    private void OnStartConfirmConfirmed()
+    {
+        if (_startConfirmDialog != null)
+        {
+            _startConfirmDialog.Confirmed -= OnStartConfirmConfirmed;
+            _startConfirmDialog.Cancelled -= OnStartConfirmCancelled;
+        }
+        GD.Print($"[LegacySelect] 确认框勾选 -> SendStartGame charIndex={_lastStartIndex}");
+        _net.Connection?.SendStartGame(_lastStartIndex);
+    }
+
+    private void OnStartConfirmCancelled()
+    {
+        if (_startConfirmDialog != null)
+        {
+            _startConfirmDialog.Confirmed -= OnStartConfirmConfirmed;
+            _startConfirmDialog.Cancelled -= OnStartConfirmCancelled;
+        }
+        _startBtn.Disabled = false;
+        _skinStart.Enabled = true;
+        _lastStartIndex = -1;
+        GD.Print("[LegacySelect] 确认框被关闭（取消），开始按钮已恢复");
     }
 
     private void OnDeletePressed()

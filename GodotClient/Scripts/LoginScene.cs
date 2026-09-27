@@ -51,6 +51,7 @@ public partial class LoginScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();

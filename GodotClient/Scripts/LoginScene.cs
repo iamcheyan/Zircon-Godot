@@ -579,7 +579,11 @@ public partial class LoginScene : Control
         // 状态提示 Label（审计实测底边 772 → 上移至 84，底边 764 留 4px 余量）
         _skinStatus = new DXLabel { Text = Lang.LoginUi492Label, FontSize = 9, TextColour = new Color(1f, .85f, .45f), DrawOutline = true, Size = new Vector2I(500, 36), Location = new Vector2I(20, 84) };
         // EI 原版登录布局（--legacy-ui 时生效）：视频背景 + 原生 640x480 坐标。
-        if (AutoLoginArgs.LegacyUi) ApplyLegacyEiLoginLayout();
+        if (AutoLoginArgs.LegacyUi)
+        {
+            ApplyLegacyEiLoginLayout();
+            PlayLegacyBootLogo();
+        }
         dialog.AddControl(_skinStatus);
 
         // 初始隐藏弹出的对话框（排行榜和选项配置）
@@ -690,6 +694,40 @@ public partial class LoginScene : Control
             + $"pwd={_skinPassword?.Location} login={_skinLogin?.Location}/{_skinLogin?.Size} idx={_skinLogin?.Index} vis={_skinLogin?.Visible} "
             + $"reg={_skinRegister?.Location} chg={_skinChange?.Location} exit={_skinExit?.Location} "
             + $"frame={_loginDialogFrame?.Location} frameVis={_loginDialogFrame?.Visible} canvas={_uiLayer?.GetChildCount()}");
+    }
+
+    /// <summary>
+    /// EI 的开场 logo：`Data/wemade.dat`（RIFF AVI 640x360 ~30fps **149 帧 / 4.97 秒**，
+    /// 视频编码 Intel Indeo 5.0）—— 山影 + "WeMade ENTERTAINMENT" 标志浮现，
+    /// 播放于登录界面出现之前。
+    ///
+    /// Godot 的 VideoStreamPlayer 不支持 Indeo 5.0，故用
+    /// `Tools/convert_legacy_login_video.sh` 转出的 `wemade.ogv`（画面不变，仅换编码）。
+    ///
+    /// 实现：叠在登录 UI 之上铺满，**不循环**，播完自动移除。
+    /// （原版是独立 boot 阶段；这里用覆盖层达到同样的可观察效果。）
+    /// </summary>
+    private void PlayLegacyBootLogo()
+    {
+        var path = System.IO.Path.Combine(MirSkin.UiDataPath, "wemade.ogv");
+        if (!System.IO.File.Exists(path))
+        {
+            GD.PrintErr($"[LegacyLogin] 缺少开场 logo 视频 {path}，"
+                + "请运行 Tools/convert_legacy_login_video.sh");
+            return;
+        }
+        var logo = new VideoStreamPlayer
+        {
+            Stream = new VideoStreamTheora { File = path },
+            Position = new Vector2(0, 60),
+            Size = new Vector2(640, 360),
+            Loop = false,
+            VolumeDb = -80f,
+        };
+        _uiLayer.AddChild(logo);
+        logo.Play();
+        logo.Finished += () => { if (IsInstanceValid(logo)) logo.QueueFree(); };
+        GD.Print("[LegacyLogin] 开场 WeMade logo 开始播放 (wemade.ogv, 4.97s)");
     }
 
     /// <summary>把按钮换成 EI 的 Interface1c 文字精灵帧（帧内已含文字）。</summary>

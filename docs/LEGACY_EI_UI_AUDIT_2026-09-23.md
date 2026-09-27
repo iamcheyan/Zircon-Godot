@@ -5247,3 +5247,70 @@ PRE-16 记：「完成后进入 phase2，播放角色列表动画并显示 F92/F
 `login-flow-evidence.json::screens.parent.phase`。应**直接查该 JSON 的原文**，
 看它到底怎么描述"密码 EDIT"—— 是 `screens.parent` 的字段，还是别的对象的字段。
 **这可能一次性消解冲突**（关键在于该 EDIT 属于哪个对象）。
+
+## 冲突消解：PRE-16 的「phase 2 密码 EDIT」是误记（2026-09-27 定论）
+
+### JSON 原文
+
+`Mir3-Research/docs/research/ei-ui-layout/login-flow-evidence.json`：
+
+```json
+.screens.char_select.edit_control => {
+  "va": "0x402884",
+  "detail": "0x4511D0(0x8AA488, 0x14) creates the child EDIT (class 0x47C438 'EDIT');
+             account rect SetRect(+0xF44, 0x80, 0x1B8, 0xE3, 0x1C6)=(128,440,227,454),
+             password rect SetRect(+0xF54, 0x146, 0x1B8, 0x1A9, 0x1C6)=(326,440,425,454)"
+}
+.screens.char_select.login_fields.password => { "field": "+0xE3D", "detail": "password string" }
+```
+
+### 与反汇编的对应（本轮已独立读到）
+
+`va` 指向的正是我上一轮读到的位置：
+
+```asm
+0x402884  push 0x14 / mov ecx, 0x8aa488 / call 0x4511d0    ; 创建 EDIT 子控件
+```
+
+并紧邻此前的两个 `SetRect`：
+
+```asm
+0x402865  call ebp    ; SetRect(ebx+0xF44, 128,440,227,454) —— 账号
+0x402882  call ebp    ; SetRect(ebx+0xF54, 326,440,425,454) —— 密码
+```
+
+**三者（`0x402865` / `0x402882` / `0x402884`）在代码上连续，是同一批控件的构造。**
+
+### 消解：该 EDIT 属**登录表单**，不属 phase 2
+
+1. `class 0x47C438 'EDIT'` 由 `0x4511D0(0x8AA488, 0x14)` 创建；
+2. 其宿主偏移是 `+0xF44` / `+0xF54`，而 **`+0xF44`/`+0xF54` 是登录对象**（`0x8A9520`）
+   的字段 —— 该对象在 `0x402xxx` 区构造（构造代码就在 `0x402823`/`0x402845`/`0x402865`
+   `0x402882`/`0x402884` 这段）；
+3. JSON 把它放在 `.screens.char_select` 下，但**该键名不能按字面理解** ——
+   本文档 PRE-09 早已警告：
+   > `phase` 字段明确 **phase1 = login form**（**不能仅凭 JSON 键名 `char_select`
+   > 推成登录后的选角页**）
+4. 本轮的独立扫描（选角屏区 `0x456000`-`0x45A200` 仅有 2 处 `call ebp`，且都是角色槽
+   命中测试、**没有** SetRect 形态）与"选角屏无输入控件"**一致**。
+
+### 结论
+
+**PRE-16 中「完成后进入 phase2，…并显示 F92/F95/F98/F86/F89 五控件与密码 EDIT」
+里的「密码 EDIT」是误记** —— 它实际是**登录表单的账号/密码 EDIT**（`+0xF44`/`+0xF54`），
+被 `char_select` 这个键名带到了 phase 2 的描述里。
+
+**我方不需要在 phase 2 实现任何密码框。** 此时：
+
+- 加密码框 = 凭空造出原版没有的控件（错误）；
+- 不加 = 与证据一致（正确）。
+
+**此前连续多轮追查「phase 2 密码 EDIT」的结论：不存在，无需实现。**
+这一条从"未闭合"转为"**已消解：原版不存在**"。
+
+### 方法价值
+
+消解靠的是**回到一手材料**（JSON 的 `va` 字段 + 独立反汇编核对），
+而不是继续在二手描述（PRE-16 的转述）上推理。
+**二手转述一旦有误，在其上做的所有推理都会沿着错误方向收敛** ——
+本轮前面几轮正是如此（追帧号、追 `+0x932` 族、追 `0x4278xx`，全是在错误前提下工作）。

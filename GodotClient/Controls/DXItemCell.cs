@@ -240,7 +240,7 @@ public partial class DXItemCell : DXControl
 
     private void OnHoverEnter(object sender, EventArgs e)
     {
-        GameScene.Game?.SetHoverItem(Item);
+        GameScene.Game?.SetHoverItem(Item, GridType);
         UpdateBorder();
     }
 

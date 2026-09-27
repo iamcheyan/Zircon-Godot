@@ -765,6 +765,7 @@ public partial class GameScene : Control
     private DXImageControl _mouseItemIcon;  // 拿起物品跟随鼠标的图标
     private DXLabel _mouseItemLabel;    // 拿起物品跟随鼠标的文字
     private DXLabel _hoverLabel;        // 物品悬浮提示
+    private GridType _hoverItemSourceGrid = GridType.None;   // 提示来源容器（决定是否画图标）
     private DXImageControl _hoverItemIcon; // 悬浮框内置物品图标 (证据 el82)
     private ClientUserItem _hoverItem;
     private readonly System.Collections.Generic.Dictionary<int, MirEffectNode> _buffEffects = new();
@@ -1574,7 +1575,12 @@ public partial class GameScene : Control
             Visible = false,
             // 旧版 ItemLabelBuilder.CreateLabel 的悬浮框：深棕半透明底 + 金棕边框。
             // 之前只有文字、没有框，地图/UI 背景下文字看不清。
-            BackColour = new Color(18f / 255f, 15f / 255f, 8f / 255f, 230f / 255f),
+            // 底色改为**原版实测值**：0x4341F0 的 backdrop 是 0x45E570(..., 0x329696, 1)。
+            // 注意 0x329696 是 COLORREF（BGR）→ 实际 RGB = (0x96,0x96,0x32) = (150,150,50)
+            // 橄榄黄，**不是**青绿。此前的深棕 (18,15,8) 与原版不符。
+            BackColour = AutoLoginArgs.LegacyUi
+                ? new Color(150f / 255f, 150f / 255f, 50f / 255f, 1f)
+                : new Color(18f / 255f, 15f / 255f, 8f / 255f, 230f / 255f),
             Border = true,
             BorderColour = new Color(105f / 255f, 95f / 255f, 62f / 255f),
             TextPadding = new Vector2I(6, 4),
@@ -6056,6 +6062,9 @@ public partial class GameScene : Control
             FitHoverLabelSize();
             // 悬浮框内置图标：原版 0x4341F0 用 el82 Inventory.wil 的
             // frame word[+0x28]，即物品自身的图标帧。
+            // **但背包链传 arg=0（不画图标）**，只有商店/仓库等非背包容器才带图标，
+            // 见 SetHoverItem(item, sourceGrid) 的注释与 ITEMTIP-01。
+            bool iconAllowed = _hoverItemSourceGrid is not (GridType.Inventory or GridType.Belt);
             if (_hoverItemIcon != null)
             {
                 int icon = _hoverItem.Info?.Image ?? -1;
@@ -6063,7 +6072,7 @@ public partial class GameScene : Control
                     ? LibraryFile.Inventory
                     : DXItemCell.ItemIconLibraryFile;
                 _hoverItemIcon.Index = icon;
-                _hoverItemIcon.Visible = icon >= 0;
+                _hoverItemIcon.Visible = iconAllowed && icon >= 0;
                 if (icon >= 0)
                 {
                     var size = MirSkin.GetSize(_hoverItemIcon.LibraryFile, icon);
@@ -6085,10 +6094,15 @@ public partial class GameScene : Control
                 _mouseItemIcon.Position = new Vector2(p.X + 8, p.Y + 8);
             _mouseItemLabel.Position = new Vector2(p.X + 42, p.Y + 14);
             // item-tooltip-and-store-family-evidence.json：原版 0x4341F0 的浮动框
-            // 锚点是 (mouse+10, +10)，不是 +14。仅 legacy 用原版锚点。
-            _hoverLabel.Position = AutoLoginArgs.LegacyUi
+            // 锚点是 (mouse+10, +10)，**且矩形本身再向左上各扩 5px**
+            // （rect: left=x-5, top=y-5, right=maxWidth+x+5, bottom=lines*15+y+2）。
+            // 我方此前只做了 +10/+10 而没有 -5 偏移。
+            var anchor = AutoLoginArgs.LegacyUi
                 ? new Vector2(p.X + 10, p.Y + 10)
                 : new Vector2(p.X + 14, p.Y + 10);
+            _hoverLabel.Position = AutoLoginArgs.LegacyUi
+                ? anchor - new Vector2(5, 5)
+                : anchor;
             // 内置图标在框内左上，文字压到图标下方（原版浮动框是图标 + 逐行文本）。
             if (_hoverItemIcon?.Visible == true)
             {
@@ -6098,9 +6112,76 @@ public partial class GameScene : Control
         }
     }
 
+    /// <summary>
+    /// 原版 `0x4341F0` 的浮动框矩形（纯函数，便于自检）。
+    /// 证据（`item-tooltip-and-store-family-evidence.json`）：
+    ///   rect: left = x-5, right = maxWidth+x+5, top = y-5, bottom = lines*15+y+2
+    ///   icon（仅 arg != 0）: width += frame.w + 0xA，画在左侧
+    ///   clip: 右边界裁到 0x320 = 800
+    /// 传入的 (x,y) 是**已加过指针偏移的锚点**（背包链为 mouse+10,+10）。
+    /// </summary>
+    public static Rect2I ComputeLegacyHoverRect(Vector2I anchor, int maxTextWidth, int lineCount,
+        bool hasIcon, int iconWidth)
+    {
+        const int rowHeight = 15;    // 0xF
+        const int pad = 5;           // -5 / +5
+        int left = anchor.X - pad;
+        int top = anchor.Y - pad;
+        int width = maxTextWidth + pad * 2;
+        if (hasIcon) width += iconWidth + 10;   // +0xA
+        int height = lineCount * rowHeight + 2; // +2
+        // 右边界裁到 800（原版 SetRect 到 0x320）。
+        int right = left + width;
+        if (right > 800) width = Math.Max(1, 800 - left);
+        return new Rect2I(left, top, width, height);
+    }
+
+    /// <summary>
+    /// 悬浮提示几何自检：断言与原版 0x4341F0 公式一致（含裁切与图标加宽）。
+    /// </summary>
+    public static (bool Ok, string Details) RunLegacyHoverRectSelfTest()
+    {
+        var failures = new List<string>();
+
+        // 背包链：anchor = mouse+10,+10，arg=0（无图标）。
+        var bag = ComputeLegacyHoverRect(new Vector2I(110, 210), maxTextWidth: 60,
+            lineCount: 3, hasIcon: false, iconWidth: 0);
+        if (bag != new Rect2I(105, 205, 70, 47))
+            failures.Add($"背包提示 rect 期望 (105,205,70,47) 实际 {bag}");
+
+        // 商店链：arg!=0（带图标，宽 +图标宽+10）。
+        var store = ComputeLegacyHoverRect(new Vector2I(110, 210), maxTextWidth: 60,
+            lineCount: 3, hasIcon: true, iconWidth: 32);
+        if (store != new Rect2I(105, 205, 112, 47))
+            failures.Add($"商店提示 rect 期望 (105,205,112,47) 实际 {store}");
+
+        // 右边界裁切：锚点靠右时应裁到 800。
+        var clipped = ComputeLegacyHoverRect(new Vector2I(780, 100), maxTextWidth: 60,
+            lineCount: 1, hasIcon: false, iconWidth: 0);
+        if (clipped.Position.X + clipped.Size.X > 800)
+            failures.Add($"右边界未裁到 800：{clipped}");
+
+        return (failures.Count == 0, failures.Count == 0
+            ? $"背包={bag} 商店={store} 裁切={clipped}"
+            : string.Join("; ", failures));
+    }
+
     public void SetHoverItem(ClientUserItem item)
     {
         _hoverItem = item;
+    }
+
+    /// <summary>
+    /// 悬浮提示的容器级差异（ITEMTIP-01 / `item-tooltip-and-store-family-evidence.json`）：
+    /// 原版 `0x4341F0(item, x, y, arg)` 的 **arg 决定是否画内置图标**。
+    /// 背包鼠标链 `0x42FAB0` 调用时 **arg=0**（不画图标）；商店链
+    /// `0x44E650→0x44E800→0x44E7D0` 才按物品类型 `[item+0x22]` 为 0xA/0xB 时带图标。
+    /// 故此处记录来源容器，只对非背包容器显示图标。
+    /// </summary>
+    public void SetHoverItem(ClientUserItem item, GridType sourceGrid)
+    {
+        _hoverItem = item;
+        _hoverItemSourceGrid = item == null ? GridType.None : sourceGrid;
     }
 
     /// <summary>
@@ -6119,6 +6200,9 @@ public partial class GameScene : Control
             if (w > maxW) maxW = w;
         }
         float lineH = lines.Length == 0 ? 0f : MirSkin.MeasureText(Lang.ChatLogPanelUi114Label, _hoverLabel.FontSize).Y;
+        // 原版 0x4341F0 的行高是**常量 0xF = 15px**（[esp+0x14] += 0xF），
+        // 不是字体实测高度。legacy 用原版常量。
+        if (AutoLoginArgs.LegacyUi) lineH = 15f;
         _hoverLabel.Size = new Vector2I(Mathf.RoundToInt(maxW + padding * 2f), Mathf.RoundToInt(lineH * lines.Length + padding * 2f));
     }
 

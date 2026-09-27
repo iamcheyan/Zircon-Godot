@@ -217,6 +217,16 @@ public partial class LegacyHudLayoutLab : Control
             GetTree().Quit(cok ? 0 : 1);
             return;
         }
+        bool tipSelfTest = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            tipSelfTest |= arg == "--legacy-tooltip-selftest";
+        if (tipSelfTest)
+        {
+            var (tok, tdetails) = GameScene.RunLegacyHoverRectSelfTest();
+            GD.Print($"[LegacyTooltipSelfTest] {(tok ? "PASS" : "FAIL")} {tdetails}");
+            GetTree().Quit(tok ? 0 : 1);
+            return;
+        }
         if (npcSelfTest)
             _ = RunNpcSelfTest();
 

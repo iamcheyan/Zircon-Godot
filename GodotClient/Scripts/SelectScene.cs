@@ -986,6 +986,10 @@ public partial class SelectScene : Control
         if (_pendingStartResult == StartGameResult.Success)
         {
             _gameTransitionStarted = true;
+            // EI phase **4 = 进游戏**，写入者是服务端 case **0x20D**
+            // （login-flow-evidence.json::screens.parent.phase.writers）。
+            // 对应我方 StartGameResult.Success。
+            if (AutoLoginArgs.LegacyUi) SetSelectPhase(4);
             SoundPlayback.Stop(SoundIndex.SelectScene);
             GD.Print($"[Select] *** StartGame 成功! 进入游戏 ***");
             var gameScene = ResourceLoader.Load<PackedScene>("res://Scenes/GameScene.tscn");
@@ -996,6 +1000,9 @@ public partial class SelectScene : Control
         }
         else if (_pendingStartResult == StartGameResult.Delayed)
         {
+            // EI phase **3 = 等待**，写入者是服务端 case **0x209** 与 F89(0x459D48)。
+            // 我方 StartGameResult.Delayed（冷却中、稍后重试）正是"等待"语义。
+            if (AutoLoginArgs.LegacyUi) SetSelectPhase(3);
             GD.Print("[Select] StartGame 冷却中, 3秒后重试...");
             _statusLabel.Text = Lang.SelectUi540Label;
             var timer = new Timer();

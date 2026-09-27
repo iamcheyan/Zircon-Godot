@@ -395,11 +395,16 @@ public partial class SelectScene : Control
             (MirClass.Wizard, MirGender.Male) => 1040,
             (MirClass.Wizard, MirGender.Female) => 1340,
             (MirClass.Taoist, MirGender.Male) => 1640,
-            _ => 1940,   // 道士女；其余（含刺客）本库无对应块，退回女性角色帧
+            (MirClass.Taoist, MirGender.Female) => 1940,
+            // **原版只有三职业（武士/法师/道士）**，故这里显式列全 3×2=6 种组合。
+            // 我方移植版还有其它职业（如 Assassin），但**不在 legacy 选角屏的契约内**，
+            // 按用户决定"多余职业直接无视"，此处不做其映射；若被传进来属越界调用，
+            // 退回战士男帧（而非静默套用某职业的帧）。
+            _ => 440,
         };
         int baseFrames = baseFrame switch
         {
-            440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, _ => 15,
+            440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, 1940 => 15, _ => 15,
         };
         GD.Print($"[LegacySelect] 角色帧: class={info.Class} gender={info.Gender} "
             + $"base={baseFrame} frames={baseFrames}");
@@ -677,8 +682,11 @@ public partial class SelectScene : Control
         if (_skinCreateConfirm != null)
             _skinCreateConfirm.Enabled = !string.IsNullOrWhiteSpace(_skinCreateName?.Text);
 
-        int[] normalClass = { 121, 126, 131, 136 };
-        int[] pressedClass = { 120, 125, 130, 135 };
+        // **只保留三职业的帧**（121/126/131 与 120/125/130）。
+        // 原为 4 个元素（第 4 对 136/135 是给多余职业预留的），按"原版只有三职业"
+        // 的决定删除，避免代码里出现第四个职业的位置。
+        int[] normalClass = { 121, 126, 131 };
+        int[] pressedClass = { 120, 125, 130 };
         for (int i = 0; i < _createClassButtons.Count && i < normalClass.Length; i++)
             _createClassButtons[i].Index = (int)_skinCreateClass == i ? pressedClass[i] : normalClass[i];
         for (int i = 0; i < _createGenderButtons.Count && i < 2; i++)

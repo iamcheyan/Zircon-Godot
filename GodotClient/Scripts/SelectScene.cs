@@ -58,7 +58,7 @@ public partial class SelectScene : Control
     private DXTextInput _skinCreateName;
     private DXButton _skinStart, _skinCreate, _skinDelete;
     // EI 选角屏（640x480）的其余原版按钮与背景。
-    private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinIconWeapon, _skinIconFace, _skinIconScroll;
+    private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinIconPen, _skinIconArrow, _skinIconScroll;
     private DXImageControl _selectBackground;
     private DXButton _skinCreateConfirm, _skinCreateCancel;
     private DXNumberField _skinHairNumber;
@@ -487,8 +487,8 @@ public partial class SelectScene : Control
             ("p0-2 删除角色", _skinDelete, 53, 54, 79, 243, 96, 26, true),
             ("p0-3 开始游戏", _skinStart, 55, 56, 259, 49, 96, 24, true),
             ("p0-4 结束",     _skinExit,   57, 58, 28, 438, 48, 26, true),
-            ("p2-1",          _skinIconWeapon, 92, 91, 266, 419, 40, 38, false),
-            ("p2-2",          _skinIconFace,   95, 94, 308, 419, 40, 38, false),
+            ("p2-1",          _skinIconPen, 92, 91, 266, 419, 40, 38, false),
+            ("p2-2",          _skinIconArrow,   95, 94, 308, 419, 40, 38, false),
             ("p2-3",          _skinIconScroll, 98, 97, 352, 419, 40, 38, false),
             // p2-4/p2-5 的帧 0x56(86)/0x59(89) 实测是 28x28（圆钮），
             // 而 p2-1/p2-2/p2-3 的 0x5C/0x5F/0x62 是 40x38。尺寸随帧走，不是统一值。
@@ -529,7 +529,7 @@ public partial class SelectScene : Control
         if (_skinDelete != null) _skinDelete.Visible = p0;
         if (_skinStart != null) _skinStart.Visible = p0;
         if (_skinExit != null) _skinExit.Visible = p0;
-        foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinIconWeapon, _skinIconFace, _skinIconScroll })
+        foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinIconPen, _skinIconArrow, _skinIconScroll })
             if (b != null) b.Visible = p2;
         GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)");
     }
@@ -862,9 +862,15 @@ public partial class SelectScene : Control
         // 语义未闭合，暂接"开始游戏"。
         _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => OnStartPressed());
         _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => SetSelectPhase(3));
-        // 三个圆形图标钮（武器/人脸/卷轴）。
-        _skinIconWeapon = MakeSelectIconButton(92, new Vector2I(266, 419), () => { });
-        _skinIconFace = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });
+        // 三枚图形钮。命名依审计文档 PRE-02 对 Interface1c 帧的实测描述：
+        //   F86/F87 = 勾选态图形  -> _skinConfirmYes（名实相符）
+        //   F89/F90 = 叉形图形    -> _skinConfirmNo （名实相符）
+        //   F92/F93 = 斜笔 / 金色圆形底图 -> 原名"武器"错误，改 _skinIconPen
+        //   F95/F96 = 环形箭头图        -> 原名"人脸"错误，改 _skinIconArrow
+        //   F98/F99 = 卷页 / 文书图     -> _skinIconScroll（与证据近似，保留）
+        // （原 _skinIconWeapon/_skinIconFace 是未见证据时的猜测命名，本轮按证据更正。）
+        _skinIconPen = MakeSelectIconButton(92, new Vector2I(266, 419), () => { });
+        _skinIconArrow = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });
         _skinIconScroll = MakeSelectIconButton(98, new Vector2I(352, 419), () => { });
 
         // **EI 此屏没有居中面板** —— 原 _skinPanel 是自制列表容器（320x425 带窗口框）。

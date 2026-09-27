@@ -4603,3 +4603,62 @@ public static class UiScaler
 3. 核实**登录页坐标是否也是 800×600 系**（登录矩形 `(128,440)`、按钮 `(459,436)` 等）
    —— 若登录页也是 800×600 系，则 legacy 两个场景统一用 800×600，改动理由更充分；
 4. 改完跑 `AuditOverflow` 看有无新溢出，再截图验证。
+
+## 查证结果：`UiScaler` 只被两个 legacy 场景使用（2026-09-27）
+
+按"不再估影响面、先查证"的要求，用 grep 列出全部调用方（不靠记忆）：
+
+```
+SelectScene.cs:114   UiScaler.UpdateScale(_uiLayer, GetViewport());
+SelectScene.cs:119   GetViewport().SizeChanged += () => UiScaler.UpdateScale(...);
+LoginScene.cs:84     UiScaler.UpdateScale(_uiLayer, GetViewport());
+LoginScene.cs:90     GetViewport().SizeChanged += () => UiScaler.UpdateScale(...);
+SelectScene.cs:624   var viewport = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight);
+LoginScene.cs:427    Vector2 viewport = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight);
+```
+
+**全部调用方只有这两个场景类，共 6 处。**
+
+### 而且这两个场景整体就是 legacy
+
+`SelectScene._Ready()`：
+
+```csharp
+110  // 2 倍 UI 缩放：DX 旧版 UI 挂到缩放层，窗口放大时跟随缩放。
+111  _uiLayer = new CanvasLayer { Name = "UiScaleLayer" };
+112  AddChild(_uiLayer);
+113  BuildLegacySelectUi();          // **无条件调用，没有分支**
+114  UiScaler.UpdateScale(_uiLayer, GetViewport());
+115  // 调试审计：ZIRCON_UI_AUDIT=1 时列出所有超出逻辑画布的控件
+116  if (System.Environment.GetEnvironmentVariable("ZIRCON_UI_AUDIT") == "1")
+117      UiScaler.AuditOverflow(_uiLayer, "SelectScene");
+```
+
+`BuildLegacySelectUi()` **无条件执行** ⇒ **该场景整体是 legacy 布局**，不存在"同一个场景里
+现代 UI 与 legacy UI 并存、需要按模式切换基准"的情况。
+
+### 更正我上一轮的结论
+
+我上一轮说"直接改 `UiScaler` 常量会影响**现代 UI**，所以需要新增按场景基准的机制"。
+**该结论错误**：
+
+- `UiScaler` **只被这两个 legacy 场景使用**，没有任何"现代 UI"调用它；
+- 因此**不需要**引入按场景基准的机制 —— 直接把基准改为 800×600 即可，
+  影响面就是这两个场景**本身**（而它们本来就该是 800×600 系）。
+
+**错误性质**：我在没 grep 的情况下估了影响面，把"全局 `const`"直接等同于"全局影响"。
+`const` 只说明**值唯一**，不说明**被谁使用** —— 这两件事我混为一谈了。
+
+### 附带：已有可用的验证工具
+
+`UiScaler.AuditOverflow(layer, sceneName)`，由环境变量 `ZIRCON_UI_AUDIT=1` 触发，
+会打印"超出 右+N / 下+N"。**改完基准后可用它检查有无新溢出。**
+
+### 下一步（下一轮实施）
+
+1. 把 `UiScaler.BaseWidth/BaseHeight` 从 `1024×768` 改为 **`800×600`**；
+2. 同时**保持**：F50 仍画 (0,0)、不拉伸不居中；角色模型中心仍是 (640×480 图的中心 (320,240))；
+   所有原版控件坐标数值不变；
+3. 用 `ZIRCON_UI_AUDIT=1` 跑一次看有无溢出；
+4. 截图 + OCR 验证按钮位置是否从"偏左上"回到原版比例；
+5. `--legacy-select-selftest` 复验属性未变。

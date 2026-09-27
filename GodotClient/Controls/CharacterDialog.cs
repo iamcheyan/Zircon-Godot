@@ -42,6 +42,29 @@ public partial class CharacterDialog : DXWindow
     private readonly List<(DXLabel Label, DXLabel Value, string Name, Stat? Stat, Stat? MaxStat)> _legacyExpandedLabels = new();
     private static readonly Color LegacyAttributeLabelColour = new(250f / 255f, 225f / 255f, 200f / 255f);
     private static readonly Color LegacyAttributeValueColour = new(250f / 255f, 250f / 255f, 250f / 255f);
+    /// <summary>
+    /// EI 状态窗「标签 + 格式串 + 值来源」完整对照表。
+    /// 取证方式：反汇编状态窗 paint（0x44BD00-0x44C4B0）里所有 `push imm32` 且
+    /// imm 落在 .rdata 的指令，读出格式串；值来源由同一区域对全局量的读取得出。
+    ///
+    ///   腕力      0x47C708 + "%d / %d"(0x47C740)   dword [0x7DA124]
+    ///   准确      0x47C700 + "+%d%"(0x47C6F8)      byte  [0x7DA16B]
+    ///   敏捷      0x47C6F0 + "+%d%"(0x47C6F8)      byte  [0x7DA16C]
+    ///   魔法躲避  0x47C6E4 + "+%d%"(0x47C6F8)      word  [0x7DA169]（值 x10 = 一位小数）
+    ///   毒物躲避  0x47C6D8 + "+%d%"(0x47C6F8)      byte  [0x7DA16D]
+    ///   中毒恢复  0x47C6CC + "+%d%"(0x47C6F8)      byte  [0x7DA16E]
+    ///   生命恢复  0x47C6C0 + "+%d"(0x47C6BC)       byte  [0x7DA16F]
+    ///   魔法恢复  0x47C6B0 + "+%d"(0x47C6BC)       byte  [0x7DA170]
+    ///   防御      0x47C6A8 + "%d-%d"(0x47BD28)
+    ///   攻击      0x47C6A0 + ...
+    ///
+    /// 值来源链（本轮查清）：这些全局量在主 exe 里**只有读、没有写** ——
+    /// 0x7DA121/0x7DA124/0x7DA16B/0x7DA169/0x7DA16D 各只有 1 个 xref，
+    /// 全落在状态窗 paint；0x429740 是个拷贝函数，把 0x7D9262/0x7D9264/0x7D9266
+    /// 抄进 0x7DA10B/0x7DA10D/0x7DA10F/0x7DA111，而 0x7D9262/64/66 自身
+    /// 在 exe 内也只被该拷贝函数引用。即：**写入方在客户端 DLL 之外**，
+    /// 故「EI 字段 → Zircon Stat」的语义等价无法证明，相关行保持空值而不编造。
+    /// </summary>
     private static readonly string[] LegacyFirstAttributeNames =
     {
         "LEVEL", "HP", "MP", "经验", "包袱负重", "装备负重", "腕力",
@@ -423,6 +446,81 @@ public partial class CharacterDialog : DXWindow
         }
     }
 
+    /// <summary>
+    /// 状态窗属性值的格式化（纯函数，便于自检）。
+    /// 格式全部来自原版 paint 的 sprintf 格式串取证，见上方对照表注释。
+    /// </summary>
+    public static string[] FormatLegacyAttributeValues(
+        int level, int curHealth, int maxHealth, int curMana, int maxMana, string experience,
+        int bagWeight, int bagWeightMax, int wearWeight, int wearWeightMax,
+        int accuracy, int agility)
+        => new[]
+        {
+            level.ToString(),
+            $"{curHealth}/{maxHealth}",
+            $"{curMana}/{maxMana}",
+            experience,
+            $"{bagWeight}/{bagWeightMax}",
+            $"{wearWeight}/{wearWeightMax}",
+            // 腕力：原版格式 %d / %d（0x44C04D push 0x47C740），值取 dword [0x7DA124]。
+            // 尚无对应 Zircon Stat，保持空值而不编造。
+            string.Empty,
+            // 准确：原版格式 **+%d%**（0x44C0C5 push 0x47C6F8），值取 byte [0x7DA16B]。
+            $"+{accuracy}%",
+            // 敏捷：原版格式 **+%d%**（0x44C141 push 0x47C6F8），值取 byte [0x7DA16C]。
+            $"+{agility}%",
+            // 以下 5 行原版格式已取证，但 EI 专有字段在 Zircon 无独立语义对应
+            // （写入方在主 exe 与客户端 DLL 之外，无法证明等价），保持空值不冒充。
+            string.Empty, // 魔法躲避：+%d%（word [0x7DA169]，值 x10 即一位小数）
+            string.Empty, // 毒物躲避：+%d%（byte [0x7DA16D]）
+            string.Empty, // 中毒恢复：+%d%（byte [0x7DA16E]）
+            string.Empty, // 生命恢复：+%d（byte [0x7DA16F]）
+            string.Empty, // 魔法恢复：+%d（byte [0x7DA170]）
+        };
+
+    /// <summary>
+    /// 状态窗属性格式自检：用固定输入断言输出串，确认与原版 sprintf 格式串一致。
+    /// 原版对照（见上方取证表）：准确/敏捷/魔法躲避/毒物躲避/中毒恢复 = "+%d%"，
+    /// 生命恢复/魔法恢复 = "+%d"，装备负重/腕力 = "%d / %d"，防御 = "%d-%d"。
+    /// </summary>
+    public static (bool Ok, string Details) RunLegacyAttributeFormatSelfTest()
+    {
+        var v = FormatLegacyAttributeValues(
+            level: 42, curHealth: 111, maxHealth: 222, curMana: 33, maxMana: 44,
+            experience: "12.34%", bagWeight: 55, bagWeightMax: 66,
+            wearWeight: 7, wearWeightMax: 88, accuracy: 9, agility: 10);
+
+        var expected = new (int Index, string Name, string Want)[]
+        {
+            (0, "LEVEL", "42"),
+            (1, "HP", "111/222"),
+            (2, "MP", "33/44"),
+            (3, "经验", "12.34%"),
+            (4, "包袱负重", "55/66"),
+            (5, "装备负重", "7/88"),
+            (6, "腕力", ""),
+            (7, "准确", "+9%"),
+            (8, "敏捷", "+10%"),
+            (9, "魔法躲避", ""),
+            (10, "毒物躲避", ""),
+            (11, "中毒恢复", ""),
+            (12, "生命恢复", ""),
+            (13, "魔法恢复", ""),
+        };
+
+        var failures = new List<string>();
+        foreach (var (index, name, want) in expected)
+        {
+            if (LegacyFirstAttributeNames[index] != name)
+                failures.Add($"标签[{index}] 期望 {name} 实际 {LegacyFirstAttributeNames[index]}");
+            if (v[index] != want)
+                failures.Add($"{name} 期望 \"{want}\" 实际 \"{v[index]}\"");
+        }
+        return (failures.Count == 0, failures.Count == 0
+            ? $"14 项全部匹配；准确={v[7]} 敏捷={v[8]}"
+            : string.Join("; ", failures));
+    }
+
     private void RefreshLegacyAttributeLabels()
     {
         if (_legacyAttributeLabels.Count == 0) return;
@@ -432,27 +530,24 @@ public partial class CharacterDialog : DXWindow
         string experience = game == null || game.PlayerMaxExperience <= 0
             ? string.Empty
             : $"{game.PlayerExperience / game.PlayerMaxExperience * 100m:0.00}%";
-        string[] values =
-        {
-            game?.PlayerLevel.ToString() ?? string.Empty,
-            game == null ? string.Empty : $"{game.CurrentHealth}/{value(Stat.Health)}",
-            game == null ? string.Empty : $"{game.CurrentMana}/{value(Stat.Mana)}",
-            experience,
-            game == null ? string.Empty : $"{game.BagWeight}/{value(Stat.BagWeight)}",
-            game == null ? string.Empty : $"{game.WearWeight}/{value(Stat.WearWeight)}",
-            string.Empty, // EI 腕力字段的原始 byte 尚未映射到 Zircon Stat。
-            value(Stat.Accuracy).ToString(),
-            value(Stat.Agility).ToString(),
-            string.Empty, // 魔法躲避：无独立 Zircon 语义证据。
-            string.Empty, // 毒物躲避：不把 PoisonResistance 冒充为原字段。
-            string.Empty, // 中毒恢复：无独立 Zircon 语义证据。
-            string.Empty, // 生命恢复：无独立 Zircon 语义证据。
-            string.Empty, // 魔法恢复：无独立 Zircon 语义证据。
-        };
+        string[] values = game == null
+            ? FormatLegacyAttributeValues(0, 0, 0, 0, 0, string.Empty, 0, 0, 0, 0, 0, 0)
+            : FormatLegacyAttributeValues(
+                game.PlayerLevel, game.CurrentHealth, value(Stat.Health),
+                game.CurrentMana, value(Stat.Mana), experience,
+                game.BagWeight, value(Stat.BagWeight), game.WearWeight, value(Stat.WearWeight),
+                value(Stat.Accuracy), value(Stat.Agility));
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
         {
             _legacyAttributeLabels[i].Label.Text = LegacyFirstAttributeNames[i];
             _legacyAttributeLabels[i].Value.Text = values[i];
+        }
+        if (_legacyEiLayout)
+        {
+            // 直接打印实际写入的文本：截图里属性页文字可能不渲染，日志才是可核验证据。
+            GD.Print("[LegacyCharacterStats] "
+                + string.Join(" | ", System.Linq.Enumerable.Range(0, _legacyAttributeLabels.Count)
+                    .Select(i => $"{LegacyFirstAttributeNames[i]}={values[i]}")));
         }
 
         foreach (var entry in _legacyExpandedLabels)

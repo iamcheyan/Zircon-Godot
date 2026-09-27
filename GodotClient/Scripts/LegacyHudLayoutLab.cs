@@ -196,8 +196,19 @@ public partial class LegacyHudLayoutLab : Control
         if (auditRequested)
             RunLegacyAudit();
         bool npcSelfTest = false;
+        bool charSelfTest = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
+        {
             npcSelfTest |= arg == "--legacy-npc-selftest";
+            charSelfTest |= arg == "--legacy-character-selftest";
+        }
+        if (charSelfTest)
+        {
+            var (cok, cdetails) = CharacterDialog.RunLegacyAttributeFormatSelfTest();
+            GD.Print($"[LegacyCharacterSelfTest] {(cok ? "PASS" : "FAIL")} {cdetails}");
+            GetTree().Quit(cok ? 0 : 1);
+            return;
+        }
         if (npcSelfTest)
             _ = RunNpcSelfTest();
 

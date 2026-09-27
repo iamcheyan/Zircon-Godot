@@ -3809,3 +3809,48 @@ SHA256 也不同（`114f7f66…` vs `223fea5b…`）。
 
 **本轮不改代码** —— 因为"改用逐帧时长"需要先知道时长从哪来，否则会把一个
 无依据的常量换成另一个无依据的实现。
+
+## 更正上一节：ZL 资源**不含**时间字段 ⇒ 用固定常量是正当的（2026-09-27）
+
+上一节我说我方 `2400ms` "无证据"。读 `RenderingCore/LibraryFormat/ZlImageMetadata.cs`
+的**完整字段表**后，该判断需要修正。
+
+`ZlImageMetadata.Read` 读入的字段是：
+
+```
+Version, Position, Width, Height, OffSetX, OffSetY,
+ShadowType, ShadowWidth, ShadowHeight, ShadowOffSetX, ShadowOffSetY,
+OverlayWidth, OverlayHeight, AtlasPage, ShadowAtlasPage(=-1), OverlayAtlasPage(=-1),
+SourceRectangle, VisibleBounds,
+ImageCodec, ShadowCodec, OverlayCodec,
+ImageRuntimePreference, ShadowRuntimePreference, OverlayRuntimePreference,
+StoredImageDataSize, ImageBc7DataSize, ImageFallbackDataSize,
+StoredShadowDataSize, ShadowBc7DataSize, ShadowFallbackDataSize,
+StoredOverlayDataSize, OverlayBc7DataSize, OverlayFallbackDataSize
+```
+
+**没有任何时间/时长/延迟字段。**
+
+### 结论
+
+**ZL 资源不携带逐帧时长** ⇒ EI 的 `[edi+4]`（每帧时长 word）**必然来自代码里的定时逻辑**
+（固定值或运行期写入），**不来自资源**。
+
+因此：
+
+- **"用固定常量"在原理上是正当的**，我方 `2400ms` 不是"凭空捏造"；
+- EI 存**每帧一个 word**，我方存**整段周期再均分** ——
+  **若 EI 各帧时长均等，两者等价**（如 15 帧 × 160 ms = 2400 ms），
+  **若不等，则我方节奏有偏**。
+
+### 仍然成立的待办（但性质变了）
+
+不再是"2400 无依据"，而是：**EI 的每帧时长是否均等？** 若是 → 我方现状正确，
+不必改；若否 → 需要照抄 EI 的时长表。**这才是该查的问题。**
+
+查法：找 `[edi+4]` 的写入者。`edi = [esi+0x18]`（当前帧对象），
+其来源是 `esi`（`+0x10E0` 起的动画槽）—— 需反汇编写入该帧对象 `+4` 的代码，
+或写入动画槽 `+0x18` 的地方。
+
+**本轮不改代码。** 上一轮"不改"的理由（不知道时长来源）已消除，但**新问题（是否均等）
+尚未回答**，所以仍不改 —— 改了也是碰运气。

@@ -934,6 +934,10 @@ public partial class SelectScene : Control
             if (_pendingNewCharInfo != null)
                 _characters.Add(_pendingNewCharInfo);
             RefreshList();
+            // EI 证据：创建流程完成时 `0x45763D mov byte [esi+0x930], 2`
+            // —— **转 phase 2**（动画角色列表 + 5 底部按钮 F92/F95/F98/F86/F89 + 密码框）。
+            // 我方此前创建成功后没有阶段推进。
+            if (AutoLoginArgs.LegacyUi) SetSelectPhase(2);
             _statusLabel.Text = Lang.SelectCharacterLabel10;
             // headless 自动测试: 建完直接进游戏
             if (AutoLoginArgs.AutoLogin && _characters.Count > 0)

@@ -4798,3 +4798,46 @@ mov  dword [本阶段+0x1164], 0
 
 **注意**：Godot 能否直接解码 `.mp3` 尚未验证；若不能，需转 `.ogg`（本机 ffmpeg 缺
 `libvorbis`，需另找工具。）
+
+## 已实施：相位 BGM 计时循环（2026-09-27，含运行验证）
+
+这是此前反复出现的"结构性缺失"——我方没有按相位跑的每帧更新，导致两个 BGM 无处承载。
+本轮补上。
+
+### 实现
+
+`GodotClient/Scripts/SelectScene.cs`：
+
+- 新增字段 `_phaseBgmArmed` / `_phaseBgmAccumMs`（镜像 EI 的 `+0x1160` / `+0x1164`）；
+- `SetSelectPhase(phase)` 里**换相位即重新武装**：`_phaseBgmArmed = true; _phaseBgmAccumMs = 0;`
+  （对应原版进入相位时把 `+0x1160` 置 1、`+0x1164` 清 0）；
+- `_Process(delta)` 首部调用 `TickPhaseBgm(delta)`；
+- `TickPhaseBgm`：未武装则返回；累加 `delta * 1000`；**超过 1000 ms** 才复位开关
+  （`false` + 清零）并按相位播 BGM：
+
+| 相位 | BGM | 证据 |
+|---|---|---|
+| 0 或 3 | `LegacySelChrBgm` | `0x4577C0` + `0x47D624` |
+| 2 | `LegacyCreateChrBgm` | `0x457AE6` + `0x47D690` |
+| 其他 | 不播 | — |
+
+**注意**：既有的 `_Process` 已用于角色叠加层绘制，故把计时**合并进**它
+（首次实现时我新建了同名方法，编译报 CS0111 重复定义 —— 已改为调用 `TickPhaseBgm`）。
+
+### 运行验证
+
+```
+[LegacySelect] phase=2 (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)
+[LegacySelect] 相位 BGM: phase=2 -> LegacyCreateChrBgm
+```
+
+- 日志确认 `phase=2` 触发 `LegacyCreateChrBgm`；
+- 日志**无音频加载错误**（无 FileNotFound / LoadFromFile 失败）；
+- 两个资源就位（`SelChr_bgm.wav` 1247694 B / `CreateChr_bgm.wav` 1221198 B）。
+
+### 限制（如实记录）
+
+**"播放成功"未在音频层面验证得到** —— 日志只证明走到了播放调用且无加载错误，
+不能证明**扬声器有声**。无头环境下无法做音频回放验证。若要更强证据，需在
+有音频设备的会话里跑，或检查 `AudioStreamPlayer.Playing` 状态。
+**本轮不宣称"音效已验证发声"，只宣称"调用链与资源加载无错"。**

@@ -59,6 +59,18 @@ public partial class SelectScene : Control
     private DXButton _skinStart, _skinCreate, _skinDelete;
     // EI 选角屏（640x480）的其余原版按钮与背景。
     private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinIconPen, _skinIconArrow, _skinIconScroll;
+
+    // ---- 相位 BGM 计时（镜像 EI 的 +0x1160 / +0x1164 机制）----
+    // 证据 0x4577A0（phase 0/3）与 0x457AB0（phase 2）同构：
+    //   cmp eax, 0x3E8        ; 累计 > 1000 ms
+    //   push <该阶段的 mp3 名>
+    //   mov ecx, 0x8AB130 / call 0x45B390    ; 音频管理器
+    //   mov dword [本阶段+0x1160], 0         ; 复位开关
+    //   mov dword [本阶段+0x1164], 0         ; 复位累计
+    // 语义 = **进入该相位后播一次该相位的 BGM**（开关复位表示"已播过"）。
+    // 我方此前没有按相位跑的每帧更新，故本组字段与 _Process 是新增的承载点。
+    private bool _phaseBgmArmed;
+    private double _phaseBgmAccumMs;
     private DXImageControl _selectBackground;
     private DXButton _skinCreateConfirm, _skinCreateCancel;
     private DXNumberField _skinHairNumber;
@@ -190,6 +202,7 @@ public partial class SelectScene : Control
     public override void _Process(double delta)
     {
         base._Process(delta);
+        TickPhaseBgm(delta);
         if (_characterAnimation == null || !_characterAnimation.Visible) return;
 
         bool showOverlays = !_characterAnimation.Loop && _characterAnimation.Animated;
@@ -522,9 +535,38 @@ public partial class SelectScene : Control
         GetTree().Quit(ok ? 0 : 1);
     }
 
+    /// <summary>
+    /// 相位 BGM 计时。EI 在相位更新函数里累计 delta，超过 1000 ms 才播该相位的 BGM
+    /// 并复位开关（见字段注释处的反汇编）。这里用 _Process 做同样的事。
+    /// </summary>
+    private void TickPhaseBgm(double delta)
+    {
+        if (!_phaseBgmArmed) return;
+        _phaseBgmAccumMs += delta * 1000.0;
+        if (_phaseBgmAccumMs <= 1000.0) return;
+
+        // 复位开关（原版 mov [..+0x1160], 0 与 mov [..+0x1164], 0）
+        _phaseBgmArmed = false;
+        _phaseBgmAccumMs = 0;
+
+        // 相位 -> BGM（证据：0x4577C0 phase0/3 用 SelChr.mp3；0x457AE6 phase2 用 CreateChr.mp3）
+        SoundIndex? bgm = _selectPhase switch
+        {
+            0 or 3 => SoundIndex.LegacySelChrBgm,
+            2      => SoundIndex.LegacyCreateChrBgm,
+            _      => null,
+        };
+        if (bgm == null) return;
+        GD.Print($"[LegacySelect] 相位 BGM: phase={_selectPhase} -> {bgm}");
+        SoundPlayback.Play(this, bgm.Value);
+    }
+
     public void SetSelectPhase(int phase)
     {
         _selectPhase = phase;
+        // 换相位即重新武装 BGM 计时（对应原版进入相位时把 +0x1160 置 1、+0x1164 清 0）
+        _phaseBgmArmed = true;
+        _phaseBgmAccumMs = 0;
         bool p0 = phase == 0;
         bool p2 = phase == 2;
         if (_skinCreate != null) _skinCreate.Visible = p0;

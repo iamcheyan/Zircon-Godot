@@ -58,7 +58,7 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
             exit 2
         fi
     done
-    REMOTE_PORT=$(ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" "cat /home/tetsuya/development/zircon/Debug/ServerCore/Server.ini" | iconv -f UTF-16 -t UTF-8 | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\\r]/, "", $2); print $2; exit}') || {
+    REMOTE_PORT=$(ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" 'cat "${ZIRCON_REMOTE_REPO:-$HOME/development/zircon}/Debug/ServerCore/Server.ini"' | iconv -f UTF-16 -t UTF-8 | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\\r]/, "", $2); print $2; exit}') || {
         echo "无法通过 SSH 读取远程 Server.ini。" >&2
         exit 1
     }
@@ -207,7 +207,7 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
     ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" bash -s -- "$PORT" <<'REMOTE_SCRIPT'
 set -euo pipefail
 PORT="$1"
-REPO=/home/tetsuya/development/zircon
+REPO="${ZIRCON_REMOTE_REPO:-$HOME/development/zircon}"
 SERVER_DIR="$REPO/Debug/ServerCore"
 BUILD_LOG=/tmp/zircon_remote_server_build.log
 if [ ! -f "$REPO/ServerCore/ServerCore.csproj" ] || [ ! -d "$SERVER_DIR" ]; then
@@ -316,9 +316,12 @@ fi
 echo ""
 if [ -z "$CLIENT_PORT" ]; then CLIENT_PORT="$PORT"; fi
 echo "[4/4] 启动客户端 ($SERVER_HOST:$CLIENT_PORT)..."
+TEST_USER="${ZIRCON_TEST_USER:-test@test.com}"
+TEST_PASS="${ZIRCON_TEST_PASS:-test123}"
+TEST_CHAR="${ZIRCON_TEST_CHAR:-TestHero}"
 CLIENT_ARGS=(--server "$SERVER_HOST" --port "$CLIENT_PORT" --window)
 if [ "$AUTO_LOGIN" = "1" ]; then
-    CLIENT_ARGS+=(--user test@test.com --pass test123 --char TestHero)
+    CLIENT_ARGS+=(--user "$TEST_USER" --pass "$TEST_PASS" --char "$TEST_CHAR")
 fi
 if [ "$LEGACY_HUD" = "1" ]; then
     CLIENT_ARGS+=(--legacy-ui --legacy-hud)

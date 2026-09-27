@@ -347,16 +347,23 @@ public static class ClientSettings
         }
     }
 
-    /// <summary>Legacy 进游戏前（登录 / 选角）窗口固定 800×600，与原版 EI 窗口一致。</summary>
+    /// <summary>
+    /// Legacy 进游戏前（登录 / 选角）窗口固定 800×600 逻辑尺寸，与原版 EI 窗口一致。
+    /// Godot 在 macOS/Windows 上以物理像素为 WindowSetSize 单位，因此需乘以显示
+    /// 缩放因子（Retina 2x → 物理 1600×1200 = 800×600 点；1x → 800×600），
+    /// 使窗口在屏幕上始终呈现"正常"的 800×600 观感，并跟随用户显示比例放大。
+    /// 视口随之放大后 UiScaler 自动计算对应倍率（800/600 设计稿填满窗口）。
+    /// </summary>
     public static void ApplyLegacyPregameWindow()
     {
         if (DisplayServer.GetName() == "headless") return;
         DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-        DisplayServer.WindowSetSize(new Vector2I(800, 600));
-        ZirconClient.Controls.MirSkin.SetUiScale(1f);
-        UpdateWindowTitle();
-        GD.Print("[Display] Legacy pre-game window: 800x600");
+        int displayScale = (int)Mathf.Max(1f, DisplayServer.ScreenGetScale(0));
+        int w = 800 * displayScale;
+        int h = 600 * displayScale;
+        DisplayServer.WindowSetSize(new Vector2I(w, h));
+        GD.Print($"[Display] Legacy pre-game window: 800x600 logical (x{displayScale} → {w}x{h} px)");
     }
 
     /// <summary>将原版 Graphics 页的窗口选项映射到 Godot 当前窗口。</summary>

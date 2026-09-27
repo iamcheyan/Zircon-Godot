@@ -454,7 +454,11 @@ public partial class SelectScene : Control
                 anim.AnimationDelay = TimeSpan.FromMilliseconds(2400);
                 anim.Loop = true;
                 anim.Location = new Vector2I(x, SlotY);
-                anim.Restart(false);
+                // Restart 的 loop 参数会**覆盖** Loop 属性（Restart(bool loop=false)
+                // 内部先执行 Loop = loop）。之前 Restart(false) 把刚设的
+                // Loop=true 又打回 false → 角色播完一轮 2400ms 就冻在末帧，
+                // 这正是"小人不动了"的根因。必须 Restart(true) 才真正循环。
+                anim.Restart(true);
             }
             if (label != null)
             {
@@ -898,9 +902,15 @@ public partial class SelectScene : Control
             ApplyLegacyEiSelectLayout();
             // 验证用：--legacy-phase2 直接进入 phase 2（动画列表 + 5 个图形钮），
             // 便于截图核对 phase 2 的贴图/hover，不需要真走一遍创建流程。
-            bool forceP2 = false;
-            foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--legacy-phase2") forceP2 = true;
-            SetSelectPhase(forceP2 ? 2 : 0);
+            // --legacy-create 再进一步直接显示创建面板（含大人物预览）。
+            bool forceP2 = false, forceCreate = false;
+            foreach (var a in OS.GetCmdlineUserArgs())
+            {
+                if (a == "--legacy-phase2") forceP2 = true;
+                if (a == "--legacy-create") forceCreate = true;
+            }
+            SetSelectPhase(forceP2 || forceCreate ? 2 : 0);
+            if (forceCreate) ShowCreateCharacterPanel();
             RunSelectButtonSelfTestIfRequested();
         }
         GetNode<Control>("VBox").Visible = false;
@@ -1075,27 +1085,16 @@ public partial class SelectScene : Control
     private void UpdateCreatePreview()
     {
         if (_createPreview == null) return;
-        int baseIndex = (_skinCreateClass, _skinCreateGender) switch
-        {
-            (MirClass.Warrior, MirGender.Male) => 300,
-            (MirClass.Warrior, MirGender.Female) => 500,
-            (MirClass.Wizard, MirGender.Male) => 800,
-            (MirClass.Wizard, MirGender.Female) => 1000,
-            (MirClass.Taoist, MirGender.Male) => 1300,
-            (MirClass.Taoist, MirGender.Female) => 1500,
-            (MirClass.Assassin, MirGender.Male) => 1800,
-            _ => 2000,
-        };
-        int frames = (_skinCreateClass, _skinCreateGender) switch
-        {
-            (MirClass.Warrior, MirGender.Male) or (MirClass.Warrior, MirGender.Female) => 13,
-            (MirClass.Wizard, MirGender.Male) or (MirClass.Wizard, MirGender.Female) => 10,
-            (MirClass.Taoist, MirGender.Male) or (MirClass.Taoist, MirGender.Female) => 15,
-            _ => 16,
-        };
-        _createPreview.BaseIndex = baseIndex;
-        _createPreview.FrameCount = frames;
-        _createPreview.AnimationDelay = TimeSpan.FromMilliseconds(1900);
+        // **帧基址复用洞窟槽已验证的大人物块**（CharacterBaseFrame，
+        // 实测 440/740/1040/1340/1640/1940 是 80~144×240~268 的完整角色块，
+        // 帧数由 CharacterFrameCount 实测连续有效帧数决定）。
+        // 旧值 300/500/800/1000/1300/1500 经 WIL 独立解码核实是小碎块
+        // （60x54 / 40x94 / 100x34 / 52x52 / 4x2），1500 甚至全空 ——
+        // 创建界面"大人物动画"因此渲染不出来，这是本次修复目标。
+        int baseFrame = CharacterBaseFrame(_skinCreateClass, _skinCreateGender);
+        _createPreview.BaseIndex = baseFrame;
+        _createPreview.FrameCount = CharacterFrameCount(baseFrame);
+        _createPreview.AnimationDelay = TimeSpan.FromMilliseconds(2400);
         _createPreview.Restart(true);
     }
 

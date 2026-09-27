@@ -3694,6 +3694,11 @@
    "file": "StartGame.wav",
    "category": "System",
    "loop": false
+  },
+  "LegacySelChr": {
+   "file": "SelChr.wav",
+   "category": "System",
+   "loop": false
   }
  },
  "magic": {

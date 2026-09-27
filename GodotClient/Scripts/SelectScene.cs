@@ -920,6 +920,12 @@ public partial class SelectScene : Control
     }
     private void ShowNewCharacterResult()
     {
+        // EI 证据 0x459220-0x459254：服务端 case **0x209** 的处理点读 +0x1140
+        // （= SelChr.wav）并 call 0x45b900 播放，随后 `add ebp,0x780`
+        // —— 0x780 正是**创建角色**的 pump 数据。故 0x209 = 创建角色的服务端响应，
+        // `SelChr.wav` 在**角色创建完成时**播一次性音效（不是选角屏 BGM）。
+        // 对应我方 NewCharacterResultEvent。
+        if (AutoLoginArgs.LegacyUi) SoundPlayback.Play(this, SoundIndex.LegacySelChr);
         _createBtn.Disabled = false;
         if (_pendingNewCharResult == NewCharacterResult.Success)
         {

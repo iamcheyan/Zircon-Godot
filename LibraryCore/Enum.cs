@@ -3476,6 +3476,7 @@ namespace Library
         // 服务端 case 0x20D (0x459456) —— 三者都是**一次性音效**（非循环 BGM）。
         // 本次只接线时机无歧义的两个：创建角色、进游戏。
         LegacyCreateChr,
+        LegacySelChr,
         LegacyStartGame,
 
         #endregion

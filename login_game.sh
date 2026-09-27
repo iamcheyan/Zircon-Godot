@@ -2,11 +2,12 @@
 # Zircon 游戏一键登录脚本
 # 功能：1) 杀游戏进程 2) 构建 3) 启动服务器 4) 启动客户端登录
 # 用法：
-#   bash login_game.sh        # 默认：只杀客户端，服务器若在跑则直接连（不重启）
-#   bash login_game.sh all    # 连服务器一起杀并重启（服务器代码有更新时用）
-#   bash login_game.sh legacy # 使用旧版 EI HUD 登录（不重启服务器）
-#   bash login_game.sh all legacy # 重启服务器并使用旧版 EI HUD
-#   bash login_game.sh remote 192.168.3.82 legacy # 用 Debian 工作树重启服务端，本机客户端连远程
+#   bash login_game.sh              # 默认：启动 Legacy 界面，不自动登录
+#   bash login_game.sh test         # Legacy 界面 + 自动登录测试账号
+#   bash login_game.sh zircon       # 现代 Zircon 界面，不自动登录
+#   bash login_game.sh test zircon  # 现代 Zircon 界面 + 自动登录测试账号
+#   bash login_game.sh all test     # 重启服务器并自动登录测试账号
+#   bash login_game.sh remote 192.168.3.82 test # 远程服务端 + 自动登录
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,7 +24,8 @@ elif [ "$(uname)" = "Darwin" ]; then
     PORT=7001
 fi
 KILL_ALL=0
-LEGACY_HUD=0
+LEGACY_HUD=1
+AUTO_LOGIN=0
 REMOTE_SERVER_IP=""
 REMOTE_SSH_TARGET="${ZIRCON_REMOTE_SSH_TARGET:-debian}"
 REMOTE_TUNNEL_SOCKET=""
@@ -32,6 +34,8 @@ ARGS=("$@")
 for ((i=0; i<${#ARGS[@]}; i++)); do
     case "${ARGS[$i]}" in
         all) KILL_ALL=1 ;;
+        test) AUTO_LOGIN=1 ;;
+        zircon) LEGACY_HUD=0 ;;
         legacy) LEGACY_HUD=1 ;;
         remote)
             if [ $((i + 1)) -ge ${#ARGS[@]} ]; then
@@ -107,7 +111,14 @@ else
     echo "  模式: 快速（只杀客户端，服务器在跑则直接连）"
 fi
 if [ "$LEGACY_HUD" = "1" ]; then
-    echo "  HUD: 旧版 EI（--legacy-ui --legacy-hud）"
+    echo "  HUD: 复古 Legacy EI"
+else
+    echo "  HUD: 现代 Zircon"
+fi
+if [ "$AUTO_LOGIN" = "1" ]; then
+    echo "  登录: 自动登录测试账号"
+else
+    echo "  登录: 手动登录"
 fi
 if [ -n "$REMOTE_SERVER_IP" ]; then
     echo "  服务端: SSH $REMOTE_SSH_TARGET 工作树（$REMOTE_SERVER_IP:${PORT}，经本地隧道连接）"
@@ -304,8 +315,11 @@ fi
 # ---------- 4. 启动客户端 ----------
 echo ""
 if [ -z "$CLIENT_PORT" ]; then CLIENT_PORT="$PORT"; fi
-echo "[4/4] 启动客户端登录 ($SERVER_HOST:$CLIENT_PORT)..."
-CLIENT_ARGS=(--server "$SERVER_HOST" --port "$CLIENT_PORT" --user test@test.com --pass test123 --char TestHero --window)
+echo "[4/4] 启动客户端 ($SERVER_HOST:$CLIENT_PORT)..."
+CLIENT_ARGS=(--server "$SERVER_HOST" --port "$CLIENT_PORT" --window)
+if [ "$AUTO_LOGIN" = "1" ]; then
+    CLIENT_ARGS+=(--user test@test.com --pass test123 --char TestHero)
+fi
 if [ "$LEGACY_HUD" = "1" ]; then
     CLIENT_ARGS+=(--legacy-ui --legacy-hud)
 fi

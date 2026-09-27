@@ -904,7 +904,14 @@ public partial class SelectScene : Control
         // phase 2 的 ✔(F86) / ✘(F89)：F89 的证据写入者是 0x459D48 -> phase 3 并
         // 发 msgid 0x64 '%s/%d'。F86 的门控读 0x459879/0x459A29（phase 相关），
         // 语义未闭合，暂接"开始游戏"。
-        _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => OnStartPressed());
+        // **帧 86(F86, 勾选图形) = 「创建角色」提交**，不是「开始游戏」。证据（0x459F30-0x45A02A）：
+        //   命中(PtInRect) -> 取选中槽(+0x1488，须 0..1) -> GetWindowTextA(0x8AA48C) 读输入文本
+        //   -> 文本为空则不动 -> 长度 >14 弹消息框(140,150) -> 否则 call 0x4589B0 校验
+        //   -> 通过则 push 槽的两个字节 + 文本，mov ecx,0x8AB828，call 0x451FE0 **网络发送**
+        // 即「用输入框文本(角色名) + 槽字段(职业/性别) 提交创建请求」，对应我方 SubmitSkinCharacter()。
+        // 此前误接为 OnStartPressed()（开始游戏）—— 开始游戏在 phase 0 的 F55/F56（_skinStart），
+        // 两者是不同按钮、不同阶段，不能混用。
+        _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => SubmitSkinCharacter());
         _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => SetSelectPhase(3));
         // 三枚图形钮。命名依审计文档 PRE-02 对 Interface1c 帧的实测描述：
         //   F86/F87 = 勾选态图形  -> _skinConfirmYes（名实相符）

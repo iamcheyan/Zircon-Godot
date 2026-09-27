@@ -5682,3 +5682,59 @@ if (!Globals.CharacterReg.IsMatch(p.CharacterName))
    我方目前只在服务端校验，**错误反馈时机不同**；
 3. 核对 `MinCharacterNameLength` / `MaxCharacterNameLength` 是否与 EI 的"≤14"一致
    （帧 86 处的长度上限是 **14**，且那是**字节数**还是**字符数**需确认）。
+
+## 帧 89（F89，叉形）= 「取消/退出创建」；与帧 86 配对成确认/取消（2026-09-27 语义闭合）
+
+API 名解出后重读帧 89 那格（`0x459D1D` 起）：
+
+```asm
+; --- 命中 ---
+0x459D23  mov edx, [esi+0x1008] / lea ecx,[esi+0x1008]
+0x459D37  call dword ptr [edx+0x10]     ; **PtInRect**（命中测试）
+0x459D3C  je 0x459d8d                   ; 未命中 -> 下一格（p2-1 / +0xD38）
+
+; --- 命中后的动作 ---
+0x459D3E  mov ecx, 0x8ab130 / call 0x45b3d0   ; **音频管理器：播放音效**
+0x459D48  mov byte [esi+0x930], 3       ; **phase = 3**
+0x459D4F  mov dword [esi+0x1160], 0     ; **关闭相位 BGM 开关**
+0x459D59  mov ecx, [0x8ab7b0]           ; 主窗口句柄
+0x459D5F  push ecx
+0x459D60  call dword ptr [0x4762b8]     ; **SetFocus(主窗口)**
+0x459D66  mov edx, [0x8aa48c]           ; 输入框句柄（那个通用文本输入控件）
+0x459D6C  push 0
+0x459D6E  push edx
+0x459D6F  call dword ptr [0x4762ac]     ; **ShowWindow(输入框, 0) = SW_HIDE —— 隐藏输入框**
+0x459D75  mov ecx, 0x8ab828 / call 0x451f90   ; **网络发送**
+```
+
+### 结论
+
+**帧 89（F89，叉形图形）= 「取消 / 退出创建」**：
+
+> 播音效 → phase=3 → 关 BGM → `SetFocus` 回主窗口 → **`ShowWindow(输入框, SW_HIDE)` 隐藏输入框**
+> → 发一个网络消息
+
+**与帧 86 恰好配对**：
+
+| 按钮 | 图形 | 动作 | 语义 |
+|---|---|---|---|
+| **帧 86**（`+0xF54`） | 勾选 ✔ | 读输入框 → 校验 → 发送（角色名+职业+性别） | **确认：提交创建** |
+| **帧 89**（`+0x1008`） | 叉形 ✘ | 隐藏输入框 → phase=3 → 发送 | **取消：退出创建** |
+
+**这解释了 `ShowWindow` 的用途**：输入框（`0x8AA48C`）在 phase 2 由帧 86/89 的流程
+**动态显隐** —— 帧 86 用它作角色名输入，帧 89 把它藏起来回到列表态。
+
+### 我方对应关系
+
+| EI | 我方 | 判定 |
+|---|---|---|
+| 帧 86 = 确认提交 | `_skinConfirmYes` → `SubmitSkinCharacter()` | ✅ **上一轮已改对** |
+| 帧 89 = 取消退出 | `_skinConfirmNo` → `SetSelectPhase(3)` | ⚠️ phase 3 对了，**但缺：播音效、关 BGM、隐藏输入控件、发消息** |
+
+**我方帧 89 已"方向正确但不完整"** —— 目标态（phase 3）一致，缺的是副作用。
+
+### 附：本轮的 API 表兑现
+
+`0x4762B8` = **`SetFocus`**、`0x4762AC` = **`ShowWindow`** —— 上一轮解出的表
+**立刻让这段代码从"一堆不明间接调用"变成可读语义**。这印证了"解 API 表"这个突破的价值：
+**它不是只解开一处，而是解开了所有 `call [0x4762xx]` 的语义。**

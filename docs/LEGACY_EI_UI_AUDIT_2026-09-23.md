@@ -6393,3 +6393,58 @@ PRE-09 也记录过「WIL frame offset 均 (-24,-16)」——**"均"字正说明
 
 `MirClass` 枚举本身仍保留 `Assassin = 3`（**不动**）—— 它是**共享定义**，现代游戏与
 服务端可能仍用它；本次只收敛 **legacy 选角屏**的呈现，不删共享枚举值。
+
+## `+32` y 偏移排查：已排除两条假设，成因仍未定位（2026-09-27）
+
+### 已排除
+
+| 假设 | 排除依据 |
+|---|---|
+| **帧自身 offset** 导致 | 读 WIL 帧头：**所有帧 offset 恒为 `(-24,-16)`**，不随帧变化，无法解释"五钮统一 +32" |
+| **`UseOffSet` 应用了帧偏移** | `DXImageControl.UseOffSet` 是**默认 `false` 的公开字段**；`MakeSelectIconButton` **未设置它** ⇒ 帧偏移未参与 |
+
+### 实测数据（重新核对）
+
+- 假定：`Location.Y = 444`（F86），屏幕 `y = 58 + 444×2 = 946`
+- **实测**：包围盒起点屏幕 `y = 1010`
+- ⇒ 反推**实际源 y = (1010 − 58) / 2 = 476**
+- **`476 − 444 = 32`** —— 与前面量到的 `+32` 源像素一致
+
+### 已读但**不符合**的代码位置
+
+`MakeSelectIconButton`（我方）：
+
+```csharp
+var size = MirSkin.GetSize(LibraryFile.Interface1c, frame);
+...
+var button = new DXButton
+{
+    LibraryFile = LibraryFile.Interface1c, Index = frame,
+    HoverIndex = frame - 1, PressedIndex = frame,
+    FixedSize = true, Size = size, Location = location,   // **无 y 偏移**
+};
+button.MouseClick += (o, e) => action();
+```
+
+`DXButton` 内部（已看的片段）只涉及 `_label`（文本子控件）的定位，**未见到对贴图的 y 偏移**。
+
+### 剩余方向（下一步）
+
+1. **`DXButton` 的贴图绘制实现**：它内部应有自己的图控件（`_image`?），
+   需看它在 `DrawControl`/`_Draw` 里是否用了 `Location + something`；
+   也需确认它如何取图（是否经 `DXImageControl` 而后者又加了偏移）；
+2. **`FixedSize` 的语义**：若 `FixedSize = true` 时控件会按图片原始尺寸/偏移布局，
+   可能引入 y 偏移；
+3. **比较对照组**：**phase 0 的四钮**用 `SkinSelectButton`（另一条设置路径，视觉上位置正确、
+   差分显示 0 偏移）—— **对比两条路径的差异**，最可能直接暴露 `+32` 来自何处。
+
+### 为什么优先做第 3 条
+
+phase 0 四钮**位置正确**（差分验证未变/未偏移），phase 2 五钮**偏移 32** ——
+**两条不同的控件构造路径**。**对比它们**比继续单点猜测更快。
+
+### 状态（诚实）
+
+`+32` 偏移**已量化、已缩小范围（在我方渲染路径内）、已排除两条假设**，
+但**成因尚未确定**。**未对其做任何"临时补偿"（如手动把 Location.Y 减 32）** ——
+那是掩盖问题而非修正，且在成因不明时可能引入新的偏差。

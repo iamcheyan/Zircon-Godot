@@ -3478,6 +3478,11 @@ namespace Library
         LegacyCreateChr,
         LegacySelChr,
         LegacyStartGame,
+        // 阶段 BGM（EI 同名 .mp3 是 ~28 秒的曲子，与同名 .wav 短音效不同）。
+        // 见审计文档 2026-09-27「四个 mp3 的时长分类」。
+        // 资源为 mp3 转出的 wav（SoundPlayback 只支持 AudioStreamWav）。
+        LegacySelChrBgm,
+        LegacyCreateChrBgm,
 
         #endregion
     }

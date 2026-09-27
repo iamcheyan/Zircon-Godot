@@ -3699,6 +3699,16 @@
    "file": "SelChr.wav",
    "category": "System",
    "loop": false
+  },
+  "LegacySelChrBgm": {
+   "file": "SelChr_bgm.wav",
+   "category": "Music",
+   "loop": false
+  },
+  "LegacyCreateChrBgm": {
+   "file": "CreateChr_bgm.wav",
+   "category": "Music",
+   "loop": false
   }
  },
  "magic": {

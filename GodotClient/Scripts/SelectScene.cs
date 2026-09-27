@@ -232,13 +232,15 @@ public partial class SelectScene : Control
     {
         _characters = chars ?? new List<SelectInfo>();
         RefreshList();
-        // EI 证据 0x4591D8-0x459240：服务端 case **0x209** 分支的三条路是
-        //   无角色   -> 提示「请先建立至少一个角色才能进行游戏.」(0x47D818)
-        //   认证失效 -> 提示「服务器认证已不可用,请重新登录.」(0x47D7F8)
-        //   否则     -> 设 phase=3 + 播 SelChr.wav(0x459240)
-        // 即 0x209 是**角色列表/认证响应**，`SelChr.wav` 在**拿到角色列表时**播。
-        // 我方对应"登录成功 -> 注入角色列表 -> 进 SelectScene"这一刻，即本方法。
-        if (AutoLoginArgs.LegacyUi) SoundPlayback.Play(this, SoundIndex.LegacySelChr);
+        // **此处不播 SelChr**（我此前接在这里，是错的）：
+        //   0x459220 读的 +0x1140 不是 SelChr；真正的 SelChr 证据在
+        //   0x4577C0 -> push 0x47D624 = '.\Sound\SelChr.mp3'，
+        //   那是 **phase 0/3 更新路径**里的 1000ms 周期音效（与 phase 2 的
+        //   CreateChr.mp3 同构：同一对字段 +0x1160/+0x1164、同一门限 0x3E8、
+        //   同一音频管理器 0x8AB130、同一复位方式）。
+        // 我方目前没有"按 phase 跑每帧更新"的循环，故该音效**暂不播放**，
+        // 待实现 phase 更新循环时再接（见审计文档 2026-09-27 音效归属表）。
+        // 不在此处保留任何 SelChr 播放：位置错误比缺失更糟。
     }
 
     private void RefreshList()

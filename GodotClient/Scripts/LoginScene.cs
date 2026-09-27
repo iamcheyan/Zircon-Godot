@@ -25,6 +25,9 @@ public partial class LoginScene : Control
     private DXLabel _skinForgot;
     private DXCheckBox _skinRemember;
     private DXLabel _skinStatus;
+    // EI 登录页：640x480 基准，视频背景 + 4 个文字按钮，没有居中对话框。
+    private DXImageControl _loginDialogFrame;
+    private VideoStreamPlayer _loginVideo;
     private RankingDialog _loginRanking;
     private ConfigDialog _loginConfig;
     private LegacyLoginDialog _accountDialog, _changeDialog, _requestResetDialog, _resetDialog, _activationDialog, _requestActivationDialog;
@@ -437,6 +440,7 @@ public partial class LoginScene : Control
             LibraryFile = LibraryFile.Interface,
             Index = 151,
         };
+        _loginDialogFrame = dialog;
         _uiLayer.AddChild(dialog);
 
         // 原版 LoginDialog 的底框位置 (居中偏下)
@@ -542,6 +546,8 @@ public partial class LoginScene : Control
 
         // 状态提示 Label（审计实测底边 772 → 上移至 84，底边 764 留 4px 余量）
         _skinStatus = new DXLabel { Text = Lang.LoginUi492Label, FontSize = 9, TextColour = new Color(1f, .85f, .45f), DrawOutline = true, Size = new Vector2I(500, 36), Location = new Vector2I(20, 84) };
+        // EI 原版登录布局（--legacy-ui 时生效）：视频背景 + 原生 640x480 坐标。
+        if (AutoLoginArgs.LegacyUi) ApplyLegacyEiLoginLayout();
         dialog.AddControl(_skinStatus);
 
         // 初始隐藏弹出的对话框（排行榜和选项配置）
@@ -554,6 +560,119 @@ public partial class LoginScene : Control
         if (vbox != null)
             vbox.Visible = false;
         dialog.Position = new Vector2((viewport.X - dialog.Size.X) / 2f, viewport.Y - dialog.Size.Y - 20f);
+    }
+
+    /// <summary>
+    /// EI 原版登录页布局（640x480 基准）。证据 `login-flow-evidence.json`
+    /// 的 `screens.char_select`（screen obj 0x8A9520，ctor 0x4026E0）：
+    ///
+    ///   背景动画  Data/ei_Login.dat  AVI 640x360，draw rect **SetRect(+0x740, 0, 0x3C, 0x280, 0x1A4)**
+    ///             = (0, 60) - (640, 420)。原版是 Indeo 5.0 AVI，Godot 只认 Ogg Theora，
+    ///             故用 Tools/convert_legacy_login_video.sh 转出的 ei_Login.ogv（画面不变）。
+    ///   账号输入  SetRect(+0xF44, 0x80, 0x1B8, 0xE3, 0x1C6) = **(128, 440) - (227, 454)**，99x14
+    ///   密码输入  SetRect(+0xF54, 0x146, 0x1B8, 0x1A9, 0x1C6) = **(326, 440) - (425, 454)**，99x14
+    ///   按钮（frame/hover_frame，全部取自 Interface1c.wil 文字精灵帧）：
+    ///     连接游戏 F11 @ **(459, 436)**  96x24   —— 原版 label "选择角色 (select character)"
+    ///     创建账号 F12/F13 @ **(139, 379)**  96x26
+    ///     修改密码 F14/F15 @ **(279, 379)**  96x26
+    ///     结束     F16/F17 @ **(439, 379)**  48x26
+    ///
+    /// **帧号纠偏**：证据里写的是 11/12、13/14、15/16、17/18。独立解码 Interface1c.wil
+    /// 逐帧渲染确认实际配对是 **(F12,F13) (F14,F15) (F16,F17)** —— F11 是「连接游戏」单帧，
+    /// F18 是空帧；F13/F15/F17 是**绿色 hover** 变体（F12/F14/F16 是白色 normal）。
+    /// 故按资源实测值实现，而不是照抄证据的 +1 偏移。
+    ///
+    /// 原版此屏还有 phase 状态机（1=登录表单 -> 2=服务器列表 -> 3=2 秒淡出 -> parent 选角屏），
+    /// 本轮先还原**静态布局与交互**，phase 过渡另列。
+    /// </summary>
+    private void ApplyLegacyEiLoginLayout()
+    {
+        // 1) EI 没有居中对话框底框。**不能设 Visible=false** —— 输入框和按钮
+        // 都是这个容器的子控件，隐藏容器会把它们一起藏掉（实测第一版就是这样，
+        // 截图里只有视频、没有表单）。改为清空底图纹理，并把容器移到原点，
+        // 使子控件的 Location 就是 EI 的 640x480 屏幕坐标。
+        if (_loginDialogFrame != null)
+        {
+            _loginDialogFrame.LibraryFile = LibraryFile.None;
+            _loginDialogFrame.Index = -1;
+            _loginDialogFrame.Position = Vector2.Zero;
+            // **容器必须放大**：原 dialog 尺寸是 780x115（现代布局的居中底框），
+            // 子控件在 y=440 会被容器自身裁掉 —— 实测第一版就是"位置日志全对、
+            // 屏幕上什么都看不见"。EI 是整屏 640x480 布局，容器按此放宽。
+            _loginDialogFrame.Size = new Vector2I(640, 480);
+            _loginDialogFrame.Clip = false;
+        }
+
+        // 2) 背景动画：ei_Login.ogv @ (0,60) 640x360，循环播放。
+        var videoPath = System.IO.Path.Combine(MirSkin.UiDataPath, "ei_Login.ogv");
+        if (System.IO.File.Exists(videoPath))
+        {
+            var stream = new VideoStreamTheora { File = videoPath };
+            _loginVideo = new VideoStreamPlayer
+            {
+                Stream = stream,
+                Position = new Vector2(0, 60),
+                Size = new Vector2(640, 360),
+                Loop = true,
+                VolumeDb = -80f,   // 原版此视频的音轨未被播放（转换时已去音轨）
+            };
+            _uiLayer.AddChild(_loginVideo);
+            _loginVideo.Play();
+            GD.Print($"[LegacyLogin] 背景视频 ei_Login.ogv @ (0,60) 640x360 已播放");
+        }
+        else
+        {
+            GD.PrintErr($"[LegacyLogin] 缺少背景视频 {videoPath}，"
+                + "请运行 Tools/convert_legacy_login_video.sh");
+        }
+
+        // 3) 输入框：EI 原生 640x480 坐标。
+        if (_skinEmail != null)
+        {
+            _skinEmail.Location = new Vector2I(128, 440);
+            _skinEmail.Size = new Vector2I(99, 14);
+        }
+        if (_skinPassword != null)
+        {
+            _skinPassword.Location = new Vector2I(326, 440);
+            _skinPassword.Size = new Vector2I(99, 14);
+        }
+
+        // 4) 四个按钮换成 Interface1c 的文字精灵帧（帧内含文字，故清空 Text）。
+        SkinLegacyLoginButton(_skinLogin, 11, 11, new Vector2I(459, 436), new Vector2I(96, 24));
+        SkinLegacyLoginButton(_skinRegister, 12, 13, new Vector2I(139, 379), new Vector2I(96, 26));
+        SkinLegacyLoginButton(_skinChange, 14, 15, new Vector2I(279, 379), new Vector2I(96, 26));
+        SkinLegacyLoginButton(_skinExit, 16, 17, new Vector2I(439, 379), new Vector2I(48, 26));
+
+        // 5) EI 此屏没有的现代入口：隐藏（保留接线，避免影响其它路径）。
+        foreach (var extra in new Control[] { _skinRanking, _skinOptions, _skinForgot, _skinRemember, _skinActivation })
+            if (extra != null) extra.Visible = false;
+        // 状态文字保留（登录失败/连接状态要显示），移到屏幕左下空白处。
+        if (_skinStatus != null)
+        {
+            _skinStatus.Location = new Vector2I(8, 460);
+            _skinStatus.Size = new Vector2I(620, 16);
+        }
+
+        GD.Print($"[LegacyLogin] EI 布局: email={_skinEmail?.Location}/{_skinEmail?.Size} vis={_skinEmail?.Visible} "
+            + $"pwd={_skinPassword?.Location} login={_skinLogin?.Location}/{_skinLogin?.Size} idx={_skinLogin?.Index} vis={_skinLogin?.Visible} "
+            + $"reg={_skinRegister?.Location} chg={_skinChange?.Location} exit={_skinExit?.Location} "
+            + $"frame={_loginDialogFrame?.Location} frameVis={_loginDialogFrame?.Visible} canvas={_uiLayer?.GetChildCount()}");
+    }
+
+    /// <summary>把按钮换成 EI 的 Interface1c 文字精灵帧（帧内已含文字）。</summary>
+    private static void SkinLegacyLoginButton(DXButton button, int normalFrame, int hoverFrame,
+        Vector2I location, Vector2I size)
+    {
+        if (button == null) return;
+        button.LibraryFile = LibraryFile.Interface1c;
+        button.Index = normalFrame;
+        button.HoverIndex = hoverFrame;
+        button.PressedIndex = hoverFrame;
+        button.FixedSize = true;
+        button.Text = string.Empty;   // 文字在帧里
+        button.Location = location;
+        button.Size = size;
     }
 
     private static void AddLoginAnimation(DXControl parent, int baseIndex, int frameCount, int seconds, bool loop, bool offset, bool blend)

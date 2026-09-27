@@ -4494,3 +4494,112 @@ EI 的**屏幕输出**是 800×600；**F50 是一张 640×480 的图，画在 (0
 
 若只把基准改成 800×600 而**顺带把背景或模型也居中**，就会引入**新的**与 EI 不符的差异。
 改动时必须逐条对照上面 4 点。
+
+## 更正：我方逻辑画布是 **1024×768**，不是 640×480（2026-09-27）
+
+上一节我写"我方 `ApplyLegacyEiSelectLayout()` 按 640×480 布局"、并列出改动清单。
+读代码后发现**该说法错误**：
+
+`GodotClient/Scripts/SelectScene.cs` `BuildLegacySelectUi()`：
+
+```csharp
+// 623 行
+// 布局基准 = 逻辑画布 1024x768，UiScaler 负责缩放 + 居中（同 LoginScene）。
+var viewport = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight);
+```
+
+即：
+
+- **逻辑画布** = `UiScaler.BaseWidth` × `UiScaler.BaseHeight` = **1024×768**（与 `LoginScene` **共用**同一个 `UiScaler`）；
+- **F50 背景**（640×480）在**这个 1024×768 画布里**画在 (0,0)（`Size=(640,480)`、`Position=Zero`）；
+- 所有原版控件坐标（`(440,93)` 等）是**写入这个 1024×768 画布的绝对值**。
+
+**所以真正的情形是**：
+
+| | 画布 | 原版坐标的落点 |
+|---|---|---|
+| EI | **800×600** | 相对 800×600 的绝对位置 |
+| 我方 | **1024×768** | 同样的绝对值，但画布大得多 |
+
+**绝对坐标相同、画布更大 ⇒ 所有控件相对画面偏左上。** 这就是截图 OCR 里
+"创建角色偏右上、开始游戏偏左上"的成因 —— 不是"640 画布挤到边上"（我上一轮的描述），
+而是"**1024 画布显得控件偏左上**"。两种描述的现象方向一致，但**成因与改法不同**。
+
+### 修正后的改动结论（仍是同一件事，但落点不同）
+
+要改的不是"640→800"，而是：
+
+**把选角屏的逻辑画布基准从 1024×768 改为 800×600。**
+
+**难点**：`UiScaler.BaseWidth/BaseHeight` 是**选角屏与登录页共用的**。
+- 若直接改全局常量 → **登录页布局同时受影响**，需一并核对登录页的所有坐标
+  （登录页矩形 `(128,440)`/`(326,440)`、按钮 `(459,436)` 等，须确认它们也是 800×600 系）；
+- 若局部改 → 需确认 `UiScaler` 是否支持按场景设置基准。
+
+**两种做法都要先查清 `UiScaler` 的接口与共享范围**，不能直接改一个常量了事。
+
+### 本轮不改代码
+
+理由：改动的**影响面**（共享 `UiScaler`）与我上一轮理解的**不同且更大**，
+必须先查 `UiScaler` 的接口、以及登录页是否也在 800×600 系下才动手。
+上一轮我把它写成"只有第 1 条（基准）"，**低估了影响面**。
+
+### 顺带确认上一轮清单里仍然正确的两条
+
+- **F50 仍画 (0,0)、不拉伸不居中**：正确，且与本次改动不冲突；
+- **模型中心仍是 (320,240)**（640×480 图的中心）：正确；改基准时**不要**顺手改成
+  (400,300) 或画布中心。
+
+### `UiScaler` 是全局 `const`，无法按场景设置基准（2026-09-27 查证）
+
+读 `GodotClient/Scripts/UiScaler.cs`：
+
+```csharp
+public static class UiScaler
+{
+    public const float BaseHeight = 768f;
+    public const float BaseWidth  = 1024f;
+
+    public static float ComputeScale(Viewport viewport) { ... byHeight = size.Y/BaseHeight; byWidth = size.X/BaseWidth; ... }
+    public static void UpdateScale(CanvasLayer layer, Viewport viewport)
+    {
+        ...
+        Vector2 offset = (vp - new Vector2(BaseWidth, BaseHeight) * scale) / 2f;   // 居中
+    }
+    public static void AuditOverflow(CanvasLayer layer, string sceneName) { ... }
+}
+```
+
+三个关键事实：
+
+1. **`BaseWidth`/`BaseHeight` 是 `const`** —— 编译期常量，**全程序唯一**，
+   所有场景（`LoginScene`、`SelectScene`、以及非 legacy 的现代 UI）**共用**。
+2. **`UpdateScale` 用它做"缩放 + 居中"** —— 即基准也决定画面在窗口中的**居中偏移**。
+3. **已有 `AuditOverflow(layer, sceneName)`** —— 会报告控件矩形是否超出基准
+   （`End.X > BaseWidth + 2` 等），并打印"超出 右+N / 下+N"。**这是一个现成的审计工具。**
+
+### 由此产生的结论（改动方案需重新设计）
+
+**直接把 `1024×768` 改成 `800×600` 是错的** —— 那会同时改变：
+
+- 选角屏（legacy，应为 800×600）；
+- **登录页**（legacy，若其坐标也是 800×600 系则一致，需核对）；
+- **非 legacy 的现代 UI**（现代 UI 的布局是按 1024×768 设计的，改了会全乱）。
+
+**正确做法**：引入**按场景可设的基准**，legacy 场景用 800×600、现代场景保持 1024×768。
+这是**一项功能改动**，不是改常量。
+
+### 本轮不改代码
+
+理由：改动需要新增"按场景基准"的机制，涉及 `UiScaler` 的公共接口与所有调用方
+（`LoginScene`、`SelectScene`、现代场景），**影响面远大于我前两轮的估计**。
+在没有把调用方逐一列清、并确认现代 UI 不受影响之前动手，会引入大范围回归。
+
+### 下一步（下一轮）
+
+1. **列出 `UiScaler.BaseWidth`/`BaseHeight`/`UpdateScale` 的全部调用方**；
+2. 设计按场景基准的最小改动（例如给 `UpdateScale` 加可选基准参数，
+   legacy 传 800×600，其余取默认）；
+3. 核实**登录页坐标是否也是 800×600 系**（登录矩形 `(128,440)`、按钮 `(459,436)` 等）
+   —— 若登录页也是 800×600 系，则 legacy 两个场景统一用 800×600，改动理由更充分；
+4. 改完跑 `AuditOverflow` 看有无新溢出，再截图验证。

@@ -5618,3 +5618,67 @@ _skinConfirmYes = MakeSelectIconButton(86, (450,444), () => OnStartPressed());
 1. **读完剩余禁用字符**（`0x458A40` 之后至 `0x458A5E` 的成功分支之前）；
 2. 核对我方 `SubmitSkinCharacter()` / `SendNewCharacter` 路径上的名字校验；
 3. 若缺失或不一致，按此表补齐（这属于**功能差异**，且有完整证据）。
+
+## 重大功能差异：角色名字符集（2026-09-27）
+
+### EI 的校验（`0x4589B0`，已在客户端发送前调用）
+
+完整黑名单（**31 个字符**，已读全）：
+
+```
+空格  !  "  #  $  %  &  '  (  )  *  +  ,  -  .  /
+:  ;  ?  @  [  \  ]  ^  _  `  {  |  }  ~
+```
+
+⇒ **未被排除的即允许**：**ASCII 字母、数字**、**`<` `>`**（`0x3C`/`0x3E` 不在表内）、
+以及**所有非 ASCII 字符（中日文等多字节字符）**。
+
+（校验逻辑：逐字符比对，命中黑名单即返回 0；遍历完返回 1。空串在帧 86 处已被先行拦下。）
+
+### 我方的校验（服务端 `Globals.CharacterReg`）
+
+```csharp
+// LibraryCore/Globals.cs:48
+public static readonly Regex CharacterReg =
+    new Regex(@"^[A-Za-z0-9]{" + MinCharacterNameLength + "," + MaxCharacterNameLength + @"}$",
+              RegexOptions.Compiled);
+```
+
+⇒ **只允许 ASCII 字母与数字**。
+
+使用处：
+```csharp
+// ServerLibrary/Envir/SEnvir.cs:3828
+if (!Globals.CharacterReg.IsMatch(p.CharacterName))
+    con.Enqueue(new S.NewCharacter { Result = NewCharacterResult.BadCharacterName });
+```
+
+**客户端 `SelectScene` 没有任何名字校验**（grep 仅命中一条注释）—— 校验完全依赖服务端。
+
+### 差异
+
+| | 允许的角色名 |
+|---|---|
+| **EI** | 字母、数字、`<` `>`、**中日文等** |
+| **我方** | **仅 `[A-Za-z0-9]`** |
+
+**影响**：我方**无法创建中文角色名**，而原版可以。这属于**功能差异**，不只是外观。
+
+### 处置：**记录，但本轮不改**
+
+理由：放宽 `CharacterReg` 属于**削弱输入校验**。工程约定明确：
+> Do not weaken existing authentication, authorization, or input validation unless the
+> user explicitly asks.
+
+用户的目标是"UI 与 EI 一比一"，**并未明确要求放宽服务端名字校验**。
+二者相关但不等同，**该决定应由用户做出**。
+
+**本轮只记录差异与两侧证据，不改 `CharacterReg`。**
+
+若用户确认要按原版对齐，则需同时考虑：
+
+1. 放宽服务端正则以匹配 EI 的字符集（**含中文**）；
+2. 在**客户端**补上与 EI 对应的校验（`0x4589B0` 的黑名单）——原版是**发送前客户端校验**，
+   我方目前只在服务端校验，**错误反馈时机不同**；
+3. 核对 `MinCharacterNameLength` / `MaxCharacterNameLength` 是否与 EI 的"≤14"一致
+   （帧 86 处的长度上限是 **14**，且那是**字节数**还是**字符数**需确认）。

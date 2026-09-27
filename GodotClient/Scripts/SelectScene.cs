@@ -35,6 +35,15 @@ public partial class SelectScene : Control
     // 玩家确认后才真正进游戏。我方此前公告只在 GameScene 里处理（进游戏之后），
     // 选角屏完全没有这条链。
     private NoticeDialog _noticeDialog;
+    // EI 选角屏的 5 阶段状态机（证据 login-flow-evidence.json::screens.parent.phase，
+    // 阶段表 0x457778 = [0x4575F3, 0x457615, 0x457604, 0x4576FA, 0x45773C]）：
+    //   0 = 4 按钮角色列表（创建角色/删除角色/开始游戏/结束）
+    //   1 = 创建角色中（+0x780 泵，CreateChr.dat）
+    //   2 = 动画角色列表 + **5 底部按钮 F92/F95/F98/F86/F89** + 密码框
+    //   3 = 等待（F89 0x459D48 与服务端 case 0x209 写入）
+    //   4 = 进游戏（服务端 case 0x20D 写入）
+    // **按钮是分阶段显示的**：phase 0 显示那 4 个、phase 2 显示 F92/95/98/86/89。
+    private int _selectPhase;
     private DXButton _skinConfigButton;
     private ConfigDialog _selectConfig;
     // EI 两个角色槽的屏幕位置。原版以 640x480 中心 (320,240) 为基准
@@ -446,10 +455,30 @@ public partial class SelectScene : Control
         440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, _ => 15,
     };
 
+    /// <summary>
+    /// 切换选角屏阶段并按阶段显示对应按钮组（EI 是**分阶段换按钮**的，不是全部同时可见）。
+    /// 证据：phase 0 用 4 按钮（+0x9E8/+0xA9C/+0xB50/+0xC04），
+    ///       phase 2 用 5 按钮（+0xD38/+0xDEC/+0xEA0/+0xF54/+0x1008 = F92/F95/F98/F86/F89）。
+    /// </summary>
+    public void SetSelectPhase(int phase)
+    {
+        _selectPhase = phase;
+        bool p0 = phase == 0;
+        bool p2 = phase == 2;
+        if (_skinCreate != null) _skinCreate.Visible = p0;
+        if (_skinDelete != null) _skinDelete.Visible = p0;
+        if (_skinStart != null) _skinStart.Visible = p0;
+        if (_skinExit != null) _skinExit.Visible = p0;
+        foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinIconWeapon, _skinIconFace, _skinIconScroll })
+            if (b != null) b.Visible = p2;
+        GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)");
+    }
+
     private void HideCreateCharacterPanel()
     {
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = false;
-        if (_skinPanel != null) _skinPanel.Visible = true;
+        if (AutoLoginArgs.LegacyUi) SetSelectPhase(0);
+        else if (_skinPanel != null) _skinPanel.Visible = true;
         if (_characterAnimation != null) _characterAnimation.Visible = true;
     }
 
@@ -604,7 +633,9 @@ public partial class SelectScene : Control
         _skinDelete = new DXButton { Text = Lang.SelectCharacterLabel, FontSize = 10, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(215, 382), Size = new Vector2I(80, defaultButtonHeight), Enabled = false };
         _skinStart.MouseClick += (o, e) => OnStartPressed();
         _skinDelete.MouseClick += (o, e) => OnDeletePressed();
-        _skinCreate.MouseClick += (o, e) => { if (_characters.Count < 4) ShowCreateCharacterPanel(); };
+        // 原版 F51（创建角色）证据写入者 0x459AC5 把 phase 写成 1（创建中），
+        // 再由 0x45763D 转到 phase 2。我方创建面板是自制的，这里只做阶段推进。
+        _skinCreate.MouseClick += (o, e) => { if (_characters.Count < 4) { SetSelectPhase(1); ShowCreateCharacterPanel(); } };
         _skinPanel.AddControl(_skinStart); _skinPanel.AddControl(_skinCreate); _skinPanel.AddControl(_skinDelete);
 
         // 原版 NewCharacterDialog: 260x650，职业、性别、外观和底部创建按钮均保留原坐标。
@@ -666,7 +697,7 @@ public partial class SelectScene : Control
         _skinCreatePanel.AddControl(_skinCreateCancel);
         UpdateCreateButtonStates();
         UpdateCreatePreview();
-        if (AutoLoginArgs.LegacyUi) ApplyLegacyEiSelectLayout();
+        if (AutoLoginArgs.LegacyUi) { ApplyLegacyEiSelectLayout(); SetSelectPhase(0); }
         GetNode<Control>("VBox").Visible = false;
     }
 
@@ -714,8 +745,11 @@ public partial class SelectScene : Control
         _uiLayer.AddChild(_skinExit);
 
         // 右下两个圆形确认钮（✔ / ✘）。
+        // phase 2 的 ✔(F86) / ✘(F89)：F89 的证据写入者是 0x459D48 -> phase 3 并
+        // 发 msgid 0x64 '%s/%d'。F86 的门控读 0x459879/0x459A29（phase 相关），
+        // 语义未闭合，暂接"开始游戏"。
         _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => OnStartPressed());
-        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => { });
+        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => SetSelectPhase(3));
         // 三个圆形图标钮（武器/人脸/卷轴）。
         _skinIconWeapon = MakeSelectIconButton(92, new Vector2I(266, 419), () => { });
         _skinIconFace = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });

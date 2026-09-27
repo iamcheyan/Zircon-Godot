@@ -299,28 +299,46 @@ public partial class SelectScene : Control
         _characterAnimation.Loop = false;
         _characterAnimation.AnimationStart = DateTime.MinValue;
 
-        (int intro, int introFrames, int idle, int idleFrames, int introMs, int idleMs) = (info.Class, info.Gender) switch
+        // **帧基址按反汇编证据重写**。旧表是猜测值：8 组里有 5 组（240/300/940/1240/
+        // 1440/1740）在 Interface1c.wil 里落在**空帧**上，导致部分职业/性别的角色
+        // 在选角屏渲染不出来。
+        //
+        // 证据 1（索引公式）：0x458EC0(arg1, arg2, flags) 计算
+        //     index = (arg1 + arg2*2) * 5 + flags，要求 index < 30、flags < 5，
+        //   即 arg1 + arg2*2 ∈ 0..5 —— 正是「职业 + 2*性别」的 6 种组合。
+        //   （arg1/arg2 来自角色槽 [+4]/[+5]，由 0x458B20 传入。）
+        // 证据 2（块识别）：逐帧渲染 Interface1c 候选块，真角色块只有 6 个，
+        //   外观顺序与上面的组合顺序一致：
+        //     0 战士男 = 440（铠甲+剑男性）   连续有效 18 帧
+        //     1 战士女 = 740（红衣+剑女性）   连续有效 16 帧
+        //     2 法师男 = 1040（红袍+帽男性）  连续有效 15 帧
+        //     3 法师女 = 1340（红衣+法杖女性）连续有效 17 帧
+        //     4 道士男 = 1640（白衣+剑男性）  连续有效 17 帧
+        //     5 道士女 = 1940（绿衣+剑女性）  连续有效 15 帧
+        //   其余候选块是技能特效（840/900/1080 火球、1202 光效、1260 雷电、1860 冰）。
+        //
+        // 帧数用**实测连续有效帧数**，不用旧表的猜测值；旧表的 intro/idle 分段
+        // 在原版没有对应物（原版每块是一段连续动画，帧数由 anim 对象首字给出）。
+        int baseFrame = (info.Class, info.Gender) switch
         {
-            (MirClass.Warrior, MirGender.Male) => (240, 22, 300, 13, 2200, 1900),
-            (MirClass.Warrior, MirGender.Female) => (440, 28, 500, 13, 2800, 1900),
-            (MirClass.Wizard, MirGender.Male) => (740, 20, 800, 10, 2000, 1500),
-            (MirClass.Wizard, MirGender.Female) => (940, 26, 1000, 15, 2600, 2250),
-            (MirClass.Taoist, MirGender.Male) => (1240, 27, 1300, 15, 2700, 2250),
-            (MirClass.Taoist, MirGender.Female) => (1440, 20, 1500, 10, 2000, 1500),
-            (MirClass.Assassin, MirGender.Male) => (1740, 25, 1800, 16, 2500, 2400),
-            _ => (1940, 20, 2000, 10, 2000, 1500),
+            (MirClass.Warrior, MirGender.Male) => 440,
+            (MirClass.Warrior, MirGender.Female) => 740,
+            (MirClass.Wizard, MirGender.Male) => 1040,
+            (MirClass.Wizard, MirGender.Female) => 1340,
+            (MirClass.Taoist, MirGender.Male) => 1640,
+            _ => 1940,   // 道士女；其余（含刺客）本库无对应块，退回女性角色帧
         };
+        int baseFrames = baseFrame switch
+        {
+            440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, _ => 15,
+        };
+        GD.Print($"[LegacySelect] 角色帧: class={info.Class} gender={info.Gender} "
+            + $"base={baseFrame} frames={baseFrames}");
 
-        _characterAnimation.BaseIndex = intro;
-        _characterAnimation.FrameCount = introFrames;
-        _characterAnimation.AnimationDelay = TimeSpan.FromMilliseconds(introMs);
-        _characterAnimation.AfterAnimation += (sender, args) =>
-        {
-            _characterAnimation.BaseIndex = idle;
-            _characterAnimation.FrameCount = idleFrames;
-            _characterAnimation.AnimationDelay = TimeSpan.FromMilliseconds(idleMs);
-            _characterAnimation.Restart(true);
-        };
+        _characterAnimation.BaseIndex = baseFrame;
+        _characterAnimation.FrameCount = baseFrames;
+        _characterAnimation.AnimationDelay = TimeSpan.FromMilliseconds(2400);
+        _characterAnimation.Loop = true;
         _characterAnimation.Restart(false);
     }
 
@@ -420,7 +438,11 @@ public partial class SelectScene : Control
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
             UseOffSet = true,
-            Location = new Vector2I(450, 200),
+            // EI 以 **640x480 屏幕中心 (320,240)** 为基准定位角色：
+            // 0x4570D0 里 X 用 `[edi] += delta*0.5 - 320.0`、Y 用 `240.0 - ...`
+            // （常量 0x476394=240.0、0x476398=320.0，实测 float）。
+            // 旧值 (450,200) 无证据来源。
+            Location = new Vector2I(320, 240),
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
         };

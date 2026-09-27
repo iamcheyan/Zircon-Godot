@@ -3470,6 +3470,14 @@ namespace Library
         TerracottaBossStruck,
         TerracottaBossDie,
 
+        // EI 选角屏的一次性音效（见 docs/LEGACY_EI_UI_AUDIT_2026-09-23.md）。
+        // 证据：0x456F0C-0x456F56 把三个 wav 预加载进字段 +0x113C/+0x1140/+0x1144，
+        // 读者分别是 F51「创建角色」(0x459AB6)、服务端 case 0x209 (0x459220)、
+        // 服务端 case 0x20D (0x459456) —— 三者都是**一次性音效**（非循环 BGM）。
+        // 本次只接线时机无歧义的两个：创建角色、进游戏。
+        LegacyCreateChr,
+        LegacyStartGame,
+
         #endregion
     }
 

@@ -670,7 +670,13 @@ public partial class SelectScene : Control
             if (_characters.Count >= 4) return;
             SetSelectPhase(1);
             // 原版 phase 1（0x457615）载入 CreateChr.dat 到 +0x780 并 pump。
-            if (AutoLoginArgs.LegacyUi) PlayLegacyTransition("CreateChr");
+            if (AutoLoginArgs.LegacyUi)
+            {
+                PlayLegacyTransition("CreateChr");
+                // 证据 0x459AB6（紧邻 F51 处理器 0x459AC5）读 +0x113C = CreateChr.wav
+                // -> 点「创建角色」时播一次性音效。
+                SoundPlayback.Play(this, SoundIndex.LegacyCreateChr);
+            }
             ShowCreateCharacterPanel();
         };
         _skinPanel.AddControl(_skinStart); _skinPanel.AddControl(_skinCreate); _skinPanel.AddControl(_skinDelete);
@@ -1031,6 +1037,9 @@ public partial class SelectScene : Control
                 SetSelectPhase(4);
                 // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
                 PlayLegacyTransition("StartGame");
+                // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
+                // = StartGame.wav -> 进游戏时播一次性音效。
+                SoundPlayback.Play(this, SoundIndex.LegacyStartGame);
             }
             SoundPlayback.Stop(SoundIndex.SelectScene);
             GD.Print($"[Select] *** StartGame 成功! 进入游戏 ***");

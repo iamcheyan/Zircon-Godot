@@ -3684,6 +3684,16 @@
    "file": "m419-5.wav",
    "category": "Monster",
    "loop": false
+  },
+  "LegacyCreateChr": {
+   "file": "CreateChr.wav",
+   "category": "System",
+   "loop": false
+  },
+  "LegacyStartGame": {
+   "file": "StartGame.wav",
+   "category": "System",
+   "loop": false
   }
  },
  "magic": {

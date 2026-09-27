@@ -58,7 +58,7 @@ public partial class SelectScene : Control
     private DXTextInput _skinCreateName;
     private DXButton _skinStart, _skinCreate, _skinDelete;
     // EI 选角屏（640x480）的其余原版按钮与背景。
-    private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinIconPen, _skinIconArrow, _skinIconScroll;
+    private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinClassWarrior, _skinClassWizard, _skinClassTaoist;
 
     // ---- 相位 BGM 计时（镜像 EI 的 +0x1160 / +0x1164 机制）----
     // 证据 0x4577A0（phase 0/3）与 0x457AB0（phase 2）同构：
@@ -502,9 +502,9 @@ public partial class SelectScene : Control
             ("p0-2 删除角色", _skinDelete, 53, 54, 79, 243, 96, 26, true),
             ("p0-3 开始游戏", _skinStart, 55, 56, 259, 49, 96, 24, true),
             ("p0-4 结束",     _skinExit,   57, 58, 28, 438, 48, 26, true),
-            ("p2-1",          _skinIconPen, 92, 91, 266, 419, 40, 38, false),
-            ("p2-2",          _skinIconArrow,   95, 94, 308, 419, 40, 38, false),
-            ("p2-3",          _skinIconScroll, 98, 97, 352, 419, 40, 38, false),
+            ("p2-1",          _skinClassWarrior, 92, 91, 266, 419, 40, 38, false),
+            ("p2-2",          _skinClassWizard,   95, 94, 308, 419, 40, 38, false),
+            ("p2-3",          _skinClassTaoist, 98, 97, 352, 419, 40, 38, false),
             // p2-4/p2-5 的帧 0x56(86)/0x59(89) 实测是 28x28（圆钮），
             // 而 p2-1/p2-2/p2-3 的 0x5C/0x5F/0x62 是 40x38。尺寸随帧走，不是统一值。
             ("p2-4",          _skinConfirmYes, 86, 85, 450, 444, 28, 28, false),
@@ -573,7 +573,7 @@ public partial class SelectScene : Control
         if (_skinDelete != null) _skinDelete.Visible = p0;
         if (_skinStart != null) _skinStart.Visible = p0;
         if (_skinExit != null) _skinExit.Visible = p0;
-        foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinIconPen, _skinIconArrow, _skinIconScroll })
+        foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinClassWarrior, _skinClassWizard, _skinClassTaoist })
             if (b != null) b.Visible = p2;
         GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)");
     }
@@ -916,13 +916,22 @@ public partial class SelectScene : Control
         // 三枚图形钮。命名依审计文档 PRE-02 对 Interface1c 帧的实测描述：
         //   F86/F87 = 勾选态图形  -> _skinConfirmYes（名实相符）
         //   F89/F90 = 叉形图形    -> _skinConfirmNo （名实相符）
-        //   F92/F93 = 斜笔 / 金色圆形底图 -> 原名"武器"错误，改 _skinIconPen
-        //   F95/F96 = 环形箭头图        -> 原名"人脸"错误，改 _skinIconArrow
-        //   F98/F99 = 卷页 / 文书图     -> _skinIconScroll（与证据近似，保留）
+        //   F92/F93 = 斜笔 / 金色圆形底图 -> 原名"武器"错误，改 _skinClassWarrior
+        //   F95/F96 = 环形箭头图        -> 原名"人脸"错误，改 _skinClassWizard
+        //   F98/F99 = 卷页 / 文书图     -> _skinClassTaoist（与证据近似，保留）
         // （原 _skinIconWeapon/_skinIconFace 是未见证据时的猜测命名，本轮按证据更正。）
-        _skinIconPen = MakeSelectIconButton(92, new Vector2I(266, 419), () => { });
-        _skinIconArrow = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });
-        _skinIconScroll = MakeSelectIconButton(98, new Vector2I(352, 419), () => { });
+        // **三枚图形钮 = 职业选择**（帧 92 / 95 / 98 -> class 0 / 1 / 2）。
+        // 证据（0x459DAE / 0x459E19 / 0x459EA5 三格级联 + 0x458440 的 ret 0x14 = 5 参数）：
+        //   0x458440(slot, gender, **class**, ?, str) —— 内部 arg3 -> dl -> [slot+4] = class，
+        //   而 [slot+4]/[slot+5] 正是帧号公式 0x458EC0 读取的 class/gender 字段。
+        //   帧 92 传 class=0、帧 95 传 class=1、帧 98 传 class=2（递增）。
+        // 配套：0x4584C0 在每次设置后刷新显示串 —— 它正是组装
+        //   「[男/[女 + 武 士 ]/法 师 ]/道 士 ]」的函数。
+        // 我方 MirClass 枚举 Warrior=0 / Wizard=1 / Taoist=2 —— 与原版 0/1/2 数值一致（已核对 Enum.cs）。
+        // 命名按语义：此前按外观猜的"武器/人脸/卷轴"已废弃。
+        _skinClassWarrior = MakeSelectIconButton(92, new Vector2I(266, 419), () => SelectCreateClass(MirClass.Warrior));
+        _skinClassWizard = MakeSelectIconButton(95, new Vector2I(308, 419), () => SelectCreateClass(MirClass.Wizard));
+        _skinClassTaoist = MakeSelectIconButton(98, new Vector2I(352, 419), () => SelectCreateClass(MirClass.Taoist));
 
         // **EI 此屏没有居中面板** —— 原 _skinPanel 是自制列表容器（320x425 带窗口框）。
         // 角色改由洞窟里的 2 个槽位渲染（见 UpdateCaveSlots），面板整块隐藏，

@@ -947,7 +947,21 @@ public partial class SelectScene : Control
         // 此前误接为 OnStartPressed()（开始游戏）—— 开始游戏在 phase 0 的 F55/F56（_skinStart），
         // 两者是不同按钮、不同阶段，不能混用。
         _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => SubmitSkinCharacter());
-        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => SetSelectPhase(3));
+        // **帧 89(F89, 叉形) = 取消/退出创建**。证据（0x459D1D-0x459D8A）：
+        //   PtInRect 命中后 -> 播一个 UI 音（0x45B3D0，无参转发，具体音效未定）
+        //   -> phase=3 -> **关相位 BGM 开关（mov dword [esi+0x1160], 0）**
+        //   -> SetFocus(主窗口) -> ShowWindow(输入框, SW_HIDE) -> 网络发送
+        // 我方缺"那个输入框控件"，故 SW_HIDE 与 SetFocus 无对应物；
+        // 「播音效」的具体音效未定（0x45A510 未读），暂不接；
+        // 本轮只实现**确定且有对应物**的一项：关相位 BGM（对应我方 _phaseBgmArmed）。
+        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () =>
+        {
+            SetSelectPhase(3);
+            // **必须在 SetSelectPhase 之后**：SetSelectPhase 内部会重新武装 BGM 计时
+            // （_phaseBgmArmed = true），若放在前面会被立刻覆盖 —— 首版就是这个问题，
+            // 等于什么都没做。原版此处是 mov dword [esi+0x1160], 0（关开关）。
+            _phaseBgmArmed = false;
+        });
         // 三枚图形钮。命名依审计文档 PRE-02 对 Interface1c 帧的实测描述：
         //   F86/F87 = 勾选态图形  -> _skinConfirmYes（名实相符）
         //   F89/F90 = 叉形图形    -> _skinConfirmNo （名实相符）

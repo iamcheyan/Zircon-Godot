@@ -102,6 +102,7 @@ public partial class LoginScene : Control
         int port = AutoLoginArgs.ServerPort
                    ?? (ClientSettings.UseNetworkConfig ? ClientSettings.Port : 7000);
         GD.Print($"[Login] 目标服务器: {host}:{port}");
+        foreach (var a in OS.GetCmdlineUserArgs()) GD.Print($"[Login] arg: {a}");
         // 单机模式：目标端口无监听时自动拉起本地 ServerCore（进程生命周期绑定，
         // 客户端退出时由 Shutdown 关闭）。远程 --server 参数指定时不触发。
         var launcher = GetNodeOrNull<SinglePlayerLauncher>("/root/SinglePlayerLauncher");
@@ -254,12 +255,13 @@ public partial class LoginScene : Control
 
     private void OnVersionOK(string version, string dbKey)
     {
-        GD.Print($"[Login] 版本校验通过, version={version}, dbKey={dbKey}");
+        GD.Print($"[Login] 版本校验通过, version={version}, dbKeyLen={dbKey}");
         CallDeferred(nameof(ShowVersionOK), version);
         if (AutoLoginArgs.AutoLogin)
         {
-            GD.Print($"[Login] 自动登录: {AutoLoginArgs.User}");
+            GD.Print($"[Login] 自动登录: {AutoLoginArgs.User}, 发送 Login 包...");
             _net.Connection.SendLogin(AutoLoginArgs.User, AutoLoginArgs.Password);
+            GD.Print("[Login] Login 包已入发送队列");
         }
     }
 

@@ -689,18 +689,21 @@ public partial class SelectScene : Control
 
     /// <summary>
     /// 选角屏的**全屏过场动画**（640x480）。两段都来自 EI：
-    ///   `CreateChr.dat` 39 帧  -> phase 1「创建角色中」的镜头移动过场
-    ///   `StartGame.dat` 41 帧  -> 进入游戏前的过场（后段淡入黑）
+    /// <summary>
+    /// EI 过场：CreateChr.dat / StartGame.dat（640×480, 29.97fps, ~1.3s，39/41 帧）。
+    /// - CreateChr: phase 1「创建中」泵播，播完才进 phase 2（显示编辑面板）。
+    /// - StartGame: phase 4「进游戏」泵播，播完才切 GameScene。
     /// 两者都是 Intel Indeo 5.0 AVI，Godot 不能解码，
     /// 由 `Tools/convert_legacy_login_video.sh` 转成同名 .ogv。
     /// </summary>
-    private void PlayLegacyTransition(string name)
+    private void PlayLegacyTransition(string name, Action onFinished = null, bool attachToRoot = false)
     {
         var path = System.IO.Path.Combine(MirSkin.UiDataPath, name + ".ogv");
         if (!System.IO.File.Exists(path))
         {
             GD.PrintErr($"[LegacySelect] 缺少过场视频 {path}，"
                 + "请运行 Tools/convert_legacy_login_video.sh");
+            onFinished?.Invoke();
             return;
         }
         var video = new VideoStreamPlayer
@@ -711,10 +714,18 @@ public partial class SelectScene : Control
             Loop = false,
             VolumeDb = -80f,
         };
-        _uiLayer.AddChild(video);
+        // StartGame 过场要在 SelectScene 销毁后继续播放，因此挂到根 Viewport。
+        // CreateChr 过场保留在 _uiLayer，随 SelectScene 生命周期即可。
+        Node parent = attachToRoot ? (Node)GetTree().Root : _uiLayer;
+        parent.AddChild(video);
         video.Play();
-        video.Finished += () => { if (IsInstanceValid(video)) video.QueueFree(); };
-        GD.Print($"[LegacySelect] 过场动画 {name}.ogv 开始播放");
+        video.Finished += () =>
+        {
+            if (IsInstanceValid(video)) video.QueueFree();
+            GD.Print($"[LegacySelect] 过场 {name}.ogv 播放完毕");
+            onFinished?.Invoke();
+        };
+        GD.Print($"[LegacySelect] 过场动画 {name}.ogv 开始播放 (attachToRoot={attachToRoot})");
     }
 
     private void HideCreateCharacterPanel()
@@ -769,6 +780,9 @@ public partial class SelectScene : Control
         if (_skinCreateName == null || string.IsNullOrWhiteSpace(_skinCreateName.Text)) return;
         _skinCreateConfirm.Enabled = false;
         _statusLabel.Text = Lang.SelectCreateLabel;
+        // EI phase 3 = 等待服务器回包；发送建角请求后按钮门控，
+        // 由 OnNewCharacterResult 回到 phase 0（成功）或停留在编辑面板（失败）。
+        if (AutoLoginArgs.LegacyUi) SetSelectPhase(3);
         _net.Connection?.SendNewCharacter(_skinCreateName.Text.Trim(), _skinCreateClass, _skinCreateGender, _skinHairType, _skinHairColour, _skinArmourColour);
     }
 
@@ -889,20 +903,33 @@ public partial class SelectScene : Control
         _skinStart.MouseClick += (o, e) => OnStartPressed();
         _skinDelete.MouseClick += (o, e) => OnDeletePressed();
         // 原版 F51（创建角色）证据写入者 0x459AC5 把 phase 写成 1（创建中），
-        // 再由 0x45763D 转到 phase 2。我方创建面板是自制的，这里只做阶段推进。
+        // 再由 0x45763D 在 CreateChr.dat 泵完时转到 phase 2。CreateChr 过场
+        // 1.30s (39 帧) 期间没有任何输入；视频结束回调里才显示编辑面板。
         _skinCreate.MouseClick += (o, e) =>
         {
             if (_characters.Count >= 4) return;
+            if (_selectPhase == 1) return; // 过场中防重入
             SetSelectPhase(1);
             // 原版 phase 1（0x457615）载入 CreateChr.dat 到 +0x780 并 pump。
             if (AutoLoginArgs.LegacyUi)
             {
-                PlayLegacyTransition("CreateChr");
+                // 过场期间隐藏主按钮面板，避免用户点击穿透
+                if (_skinPanel != null) _skinPanel.Visible = false;
                 // 证据 0x459AB6（紧邻 F51 处理器 0x459AC5）读 +0x113C = CreateChr.wav
                 // -> 点「创建角色」时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyCreateChr);
+                PlayLegacyTransition("CreateChr", onFinished: () =>
+                {
+                    // 视频播完，phase 2：显示创建编辑面板
+                    SetSelectPhase(2);
+                    if (_skinPanel != null) _skinPanel.Visible = true;
+                    ShowCreateCharacterPanel();
+                });
             }
-            ShowCreateCharacterPanel();
+            else
+            {
+                ShowCreateCharacterPanel();
+            }
         };
         _skinPanel.AddControl(_skinStart); _skinPanel.AddControl(_skinCreate); _skinPanel.AddControl(_skinDelete);
 
@@ -1193,11 +1220,20 @@ public partial class SelectScene : Control
             GD.Print($"[Select] 建角色成功: {_pendingNewCharInfo?.CharacterName}");
             if (_pendingNewCharInfo != null)
                 _characters.Add(_pendingNewCharInfo);
+            // 建角成功回到 phase 0（4 按钮列表）。EI 原始协议 phase 2 下还要
+            // 走密码提交 + 服务端 0x209/0x64 往返才最终回到列表；Zircon 协议
+            // NewCharacter 一次往返即完成，这里直接复位到 phase 0 列表态。
+            if (AutoLoginArgs.LegacyUi)
+            {
+                HideCreateCharacterPanel();
+                SetSelectPhase(0);
+            }
+            else if (_skinPanel != null)
+            {
+                _skinPanel.Visible = true;
+            }
+            if (_characterAnimation != null) _characterAnimation.Visible = true;
             RefreshList();
-            // EI 证据：创建流程完成时 `0x45763D mov byte [esi+0x930], 2`
-            // —— **转 phase 2**（动画角色列表 + 5 底部按钮 F92/F95/F98/F86/F89 + 密码框）。
-            // 我方此前创建成功后没有阶段推进。
-            if (AutoLoginArgs.LegacyUi) SetSelectPhase(2);
             _statusLabel.Text = Lang.SelectCharacterLabel10;
             // headless 自动测试: 建完直接进游戏（--stay-select 时留在选角屏验证）
             if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect && _characters.Count > 0)
@@ -1210,6 +1246,9 @@ public partial class SelectScene : Control
         {
             GD.Print($"[Select] 建角色失败: {_pendingNewCharResult}");
             _statusLabel.Text = string.Format(Lang.SelectCreateLabel3, _pendingNewCharResult);
+            // 失败回到 phase 2 让用户重试
+            if (AutoLoginArgs.LegacyUi) SetSelectPhase(2);
+            _skinCreateConfirm.Enabled = true;
         }
     }
 
@@ -1306,18 +1345,160 @@ public partial class SelectScene : Control
         if (selected.Length == 0 || selected[0] >= _characters.Count) return;
         int listIndex = selected[0];
         var character = _characters[listIndex];
-        var confirm = new ConfirmationDialog { Title = Lang.SelectCharacterLabel, DialogText = string.Format(Lang.SelectCharacterLabel12, character.CharacterName) };
-        AddChild(confirm);
-        confirm.Confirmed += () =>
+        if (AutoLoginArgs.LegacyUi)
+        {
+            // 旧 Client/Scenes/SelectScene.cs L588-611（source-confirmed）：
+            //   DeleteButton_MouseClick → DXMessageBox Yes/No；Yes 按钮默认禁用，
+            //   倒计时 5 秒后才启用，同时动态更新文字显示剩余秒数。
+            //   确认后发 C.DeleteCharacter{CharacterIndex, CheckSum=CEnvir.C}。
+            // EI 反编目前未闭合 F53 具体 handler，此处保守沿用旧 C# 行为，
+            // 避免即时误删角色（evidence level = source-confirmed）。
+            ShowLegacyDeleteConfirm(character);
+        }
+        else
+        {
+            var confirm = new ConfirmationDialog { Title = Lang.SelectCharacterLabel, DialogText = string.Format(Lang.SelectCharacterLabel12, character.CharacterName) };
+            AddChild(confirm);
+            confirm.Confirmed += () =>
+            {
+                _deleteBtn.Disabled = true;
+                _skinDelete.Enabled = false;
+                _statusLabel.Text = Lang.SelectDeleteLabel;
+                _net.Connection?.SendDeleteCharacter(character.CharacterIndex);
+                confirm.QueueFree();
+            };
+            confirm.Canceled += () => confirm.QueueFree();
+            confirm.PopupCentered();
+        }
+    }
+
+    private DXControl _legacyDeleteDialog;
+    private DXLabel _legacyDeleteCountdownLabel;
+    private DXButton _legacyDeleteYes, _legacyDeleteNo;
+    private Timer _legacyDeleteTimer;
+    private double _legacyDeleteCountdown;
+    private SelectInfo _legacyDeleteTarget;
+
+    private void ShowLegacyDeleteConfirm(SelectInfo character)
+    {
+        if (_legacyDeleteDialog != null)
+        {
+            _legacyDeleteDialog.QueueFree();
+            _legacyDeleteDialog = null;
+        }
+        _legacyDeleteTarget = character;
+        _legacyDeleteCountdown = 5.0;
+
+        var dlg = new DXControl
+        {
+            Size = new Vector2I(360, 140),
+            Position = new Vector2((UiScaler.BaseWidth - 360) / 2f, (UiScaler.BaseHeight - 140) / 2f),
+        };
+        _uiLayer.AddChild(dlg);
+        _legacyDeleteDialog = dlg;
+
+        dlg.AddControl(new LegacyWindowFrame { Size = new Vector2I(360, 140), HasTitle = true, HasFooter = false });
+        dlg.AddControl(new DXLabel
+        {
+            Text = Lang.SelectCharacterLabel,
+            FontSize = 12,
+            TextColour = new Color(1f, .85f, .35f),
+            DrawOutline = true,
+            Align = HorizontalAlignment.Center,
+            Size = new Vector2I(360, 28),
+            Location = new Vector2I(0, 10),
+            IsControl = false,
+        });
+        _legacyDeleteCountdownLabel = new DXLabel
+        {
+            Text = string.Format(Lang.SelectCharacterLabel12, character.CharacterName)
+                   + $"\nPlease wait {_legacyDeleteCountdown:0.0} seconds before confirming.",
+            FontSize = 9,
+            TextColour = Colors.White,
+            DrawOutline = true,
+            Align = HorizontalAlignment.Center,
+            Size = new Vector2I(340, 60),
+            Location = new Vector2I(10, 38),
+            IsControl = false,
+        };
+        dlg.AddControl(_legacyDeleteCountdownLabel);
+
+        _legacyDeleteYes = new DXButton
+        {
+            Text = "Yes",
+            FontSize = 10,
+            LibraryFile = LibraryFile.Interface,
+            Index = -1,
+            Location = new Vector2I(90, 108),
+            Size = new Vector2I(80, 24),
+            Enabled = false,
+        };
+        _legacyDeleteNo = new DXButton
+        {
+            Text = "No",
+            FontSize = 10,
+            LibraryFile = LibraryFile.Interface,
+            Index = -1,
+            Location = new Vector2I(190, 108),
+            Size = new Vector2I(80, 24),
+        };
+        _legacyDeleteYes.MouseClick += (o, e) =>
         {
             _deleteBtn.Disabled = true;
             _skinDelete.Enabled = false;
             _statusLabel.Text = Lang.SelectDeleteLabel;
+            // 旧 C# 带 CheckSum=CEnvir.C；Zircon 的 SendDeleteCharacter 目前
+            // 只发 CharacterIndex。CheckSum 是 EI 协议校验字段，Zircon 协议
+            // 无需此字段；此处保留普通删除调用，证据标 source-confirmed 注释。
             _net.Connection?.SendDeleteCharacter(character.CharacterIndex);
-            confirm.QueueFree();
+            CloseLegacyDeleteConfirm();
         };
-        confirm.Canceled += () => confirm.QueueFree();
-        confirm.PopupCentered();
+        _legacyDeleteNo.MouseClick += (o, e) => CloseLegacyDeleteConfirm();
+        dlg.AddControl(_legacyDeleteYes);
+        dlg.AddControl(_legacyDeleteNo);
+
+        if (_legacyDeleteTimer == null)
+        {
+            _legacyDeleteTimer = new Timer { WaitTime = 0.1, OneShot = false };
+            AddChild(_legacyDeleteTimer);
+            _legacyDeleteTimer.Timeout += TickLegacyDeleteConfirm;
+        }
+        _legacyDeleteTimer.Start();
+    }
+
+    private void TickLegacyDeleteConfirm()
+    {
+        if (_legacyDeleteDialog == null) return;
+        _legacyDeleteCountdown -= 0.1;
+        if (_legacyDeleteCountdown <= 0)
+        {
+            _legacyDeleteCountdown = 0;
+            if (_legacyDeleteYes != null) _legacyDeleteYes.Enabled = true;
+            if (_legacyDeleteCountdownLabel != null)
+                _legacyDeleteCountdownLabel.Text =
+                    $"Are you sure you want to delete the character {_legacyDeleteTarget?.CharacterName}.";
+            _legacyDeleteTimer?.Stop();
+        }
+        else if (_legacyDeleteCountdownLabel != null)
+        {
+            _legacyDeleteCountdownLabel.Text =
+                string.Format(Lang.SelectCharacterLabel12, _legacyDeleteTarget?.CharacterName)
+                + $"\nPlease wait {_legacyDeleteCountdown:0.0} seconds before confirming.";
+        }
+    }
+
+    private void CloseLegacyDeleteConfirm()
+    {
+        _legacyDeleteTimer?.Stop();
+        if (_legacyDeleteDialog != null)
+        {
+            _legacyDeleteDialog.QueueFree();
+            _legacyDeleteDialog = null;
+        }
+        _legacyDeleteYes = null;
+        _legacyDeleteNo = null;
+        _legacyDeleteCountdownLabel = null;
+        _legacyDeleteTarget = null;
     }
 
     private void OnDeleteCharacterResult(DeleteCharacterResult result, int deletedIndex)
@@ -1328,13 +1509,27 @@ public partial class SelectScene : Control
             RefreshList();
             _startBtn.Disabled = true;
             _deleteBtn.Disabled = true;
+            if (_skinStart != null) _skinStart.Enabled = false;
+            if (_skinDelete != null) _skinDelete.Enabled = false;
+            if (AutoLoginArgs.LegacyUi) SetSelectPhase(0);
             _statusLabel.Text = Lang.SelectDeleteLabel2;
         }
         else
         {
             _deleteBtn.Disabled = false;
+            if (_skinDelete != null) _skinDelete.Enabled = true;
             _statusLabel.Text = string.Format(Lang.SelectDeleteLabel3, result);
         }
+    }
+
+    private void EnterGameScene()
+    {
+        GD.Print("[Select] StartGame 过场结束 -> 进入游戏世界");
+        var gameScene = ResourceLoader.Load<PackedScene>("res://Scenes/GameScene.tscn");
+        var game = gameScene.Instantiate<GameScene>();
+        game.StartInfo = _pendingStartInfo;
+        GetTree().Root.AddChild(game);
+        QueueFree();
     }
 
     private StartGameResult _pendingStartResult;
@@ -1354,22 +1549,24 @@ public partial class SelectScene : Control
             // EI phase **4 = 进游戏**，写入者是服务端 case **0x20D**
             // （login-flow-evidence.json::screens.parent.phase.writers）。
             // 对应我方 StartGameResult.Success。
+            SoundPlayback.Stop(SoundIndex.SelectScene);
             if (AutoLoginArgs.LegacyUi)
             {
                 SetSelectPhase(4);
                 // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
-                PlayLegacyTransition("StartGame");
+                // 过场期间隐藏选角 UI、禁用输入，视频完整播完 (1.37s / 41 帧)
+                // 再切 GameScene；视频挂到 Root 以免 SelectScene 销毁时被连带释放。
+                if (_uiLayer != null) _uiLayer.Visible = false;
                 // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
                 // = StartGame.wav -> 进游戏时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyStartGame);
+                GD.Print($"[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后进入游戏 ***");
+                PlayLegacyTransition("StartGame", onFinished: EnterGameScene, attachToRoot: true);
             }
-            SoundPlayback.Stop(SoundIndex.SelectScene);
-            GD.Print($"[Select] *** StartGame 成功! 进入游戏 ***");
-            var gameScene = ResourceLoader.Load<PackedScene>("res://Scenes/GameScene.tscn");
-            var game = gameScene.Instantiate<GameScene>();
-            game.StartInfo = _pendingStartInfo;
-            GetTree().Root.AddChild(game);
-            QueueFree();
+            else
+            {
+                EnterGameScene();
+            }
         }
         else if (_pendingStartResult == StartGameResult.Delayed)
         {

@@ -218,8 +218,19 @@ public partial class LegacyHudLayoutLab : Control
             return;
         }
         bool tipSelfTest = false;
+        bool keySelfTest = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
+        {
             tipSelfTest |= arg == "--legacy-tooltip-selftest";
+            keySelfTest |= arg == "--legacy-keychain-selftest";
+        }
+        if (keySelfTest)
+        {
+            var (kok, kdetails) = LogoutConfirmDialog.RunKeyboardChainSelfTest();
+            GD.Print($"[LegacyKeyChainSelfTest] {(kok ? "PASS" : "FAIL")} {kdetails}");
+            GetTree().Quit(kok ? 0 : 1);
+            return;
+        }
         if (tipSelfTest)
         {
             var (tok, tdetails) = GameScene.RunLegacyHoverRectSelfTest();

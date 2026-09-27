@@ -4,8 +4,13 @@
 # 背景：原版登录流程由两个 AVI 驱动，Godot 的 VideoStreamPlayer **只支持
 # Ogg Theora**（实测 mp4 会报 `No loader found for resource`）：
 #
-#   Data/wemade.dat   RIFF AVI 640x360 ~30fps 149 帧  (4.97s)  WeMade 开场 logo
-#   Data/ei_Login.dat RIFF AVI 640x360 ~30fps 1629 帧 (54.35s) 登录页背景动画
+#   Data/wemade.dat    RIFF AVI 640x360 ~30fps 149 帧  (4.97s)  WeMade 开场 logo
+#   Data/ei_Login.dat  RIFF AVI 640x360 ~30fps 1629 帧 (54.35s) 登录页背景动画
+#   Data/CreateChr.dat RIFF AVI **640x480** 39 帧           选角屏 phase 1「创建角色中」过场
+#   Data/StartGame.dat RIFF AVI **640x480** 41 帧 (1.368s)  进入游戏前过场（后段淡入黑）
+#
+# 注意后两个是 **640x480 全屏**，前两个是 640x360（登录页留出下方表单区）。
+# 四个文件都是 Intel Indeo 5.0，Godot 无法解码，统一转 .ogv。
 #
 # 两者视频编码都是 **Intel Indeo 5.0**，Godot 无法解码；本脚本用
 # `ffmpeg2theora` 转封装为 .ogv（画面内容不变，仅换编码）。
@@ -22,7 +27,7 @@ if ! command -v ffmpeg2theora >/dev/null 2>&1; then
     exit 1
 fi
 
-for name in wemade ei_Login; do
+for name in wemade ei_Login CreateChr StartGame; do
     src="$DATA_DIR/$name.dat"
     dst="$DATA_DIR/$name.ogv"
     if [[ ! -f "$src" ]]; then

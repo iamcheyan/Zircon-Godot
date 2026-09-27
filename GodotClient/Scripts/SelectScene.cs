@@ -474,6 +474,36 @@ public partial class SelectScene : Control
         GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)");
     }
 
+    /// <summary>
+    /// 选角屏的**全屏过场动画**（640x480）。两段都来自 EI：
+    ///   `CreateChr.dat` 39 帧  -> phase 1「创建角色中」的镜头移动过场
+    ///   `StartGame.dat` 41 帧  -> 进入游戏前的过场（后段淡入黑）
+    /// 两者都是 Intel Indeo 5.0 AVI，Godot 不能解码，
+    /// 由 `Tools/convert_legacy_login_video.sh` 转成同名 .ogv。
+    /// </summary>
+    private void PlayLegacyTransition(string name)
+    {
+        var path = System.IO.Path.Combine(MirSkin.UiDataPath, name + ".ogv");
+        if (!System.IO.File.Exists(path))
+        {
+            GD.PrintErr($"[LegacySelect] 缺少过场视频 {path}，"
+                + "请运行 Tools/convert_legacy_login_video.sh");
+            return;
+        }
+        var video = new VideoStreamPlayer
+        {
+            Stream = new VideoStreamTheora { File = path },
+            Position = Vector2.Zero,
+            Size = new Vector2(640, 480),
+            Loop = false,
+            VolumeDb = -80f,
+        };
+        _uiLayer.AddChild(video);
+        video.Play();
+        video.Finished += () => { if (IsInstanceValid(video)) video.QueueFree(); };
+        GD.Print($"[LegacySelect] 过场动画 {name}.ogv 开始播放");
+    }
+
     private void HideCreateCharacterPanel()
     {
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = false;
@@ -635,7 +665,14 @@ public partial class SelectScene : Control
         _skinDelete.MouseClick += (o, e) => OnDeletePressed();
         // 原版 F51（创建角色）证据写入者 0x459AC5 把 phase 写成 1（创建中），
         // 再由 0x45763D 转到 phase 2。我方创建面板是自制的，这里只做阶段推进。
-        _skinCreate.MouseClick += (o, e) => { if (_characters.Count < 4) { SetSelectPhase(1); ShowCreateCharacterPanel(); } };
+        _skinCreate.MouseClick += (o, e) =>
+        {
+            if (_characters.Count >= 4) return;
+            SetSelectPhase(1);
+            // 原版 phase 1（0x457615）载入 CreateChr.dat 到 +0x780 并 pump。
+            if (AutoLoginArgs.LegacyUi) PlayLegacyTransition("CreateChr");
+            ShowCreateCharacterPanel();
+        };
         _skinPanel.AddControl(_skinStart); _skinPanel.AddControl(_skinCreate); _skinPanel.AddControl(_skinDelete);
 
         // 原版 NewCharacterDialog: 260x650，职业、性别、外观和底部创建按钮均保留原坐标。
@@ -989,7 +1026,12 @@ public partial class SelectScene : Control
             // EI phase **4 = 进游戏**，写入者是服务端 case **0x20D**
             // （login-flow-evidence.json::screens.parent.phase.writers）。
             // 对应我方 StartGameResult.Success。
-            if (AutoLoginArgs.LegacyUi) SetSelectPhase(4);
+            if (AutoLoginArgs.LegacyUi)
+            {
+                SetSelectPhase(4);
+                // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
+                PlayLegacyTransition("StartGame");
+            }
             SoundPlayback.Stop(SoundIndex.SelectScene);
             GD.Print($"[Select] *** StartGame 成功! 进入游戏 ***");
             var gameScene = ResourceLoader.Load<PackedScene>("res://Scenes/GameScene.tscn");

@@ -3661,3 +3661,58 @@ p2-1 的代码体对**两个槽都**调用了：
 
 **新增判据（下次先做）**：**任何"这是消息 id"的假设，必须先统计该立即数在 .text 里
 的出现次数**。真 id 通常 1–3 处；出现十几处的必然是通用常量。
+
+## `0x457AB0` = phase 2 的动画更新函数；周期播 `CreateChr.mp3`（2026-09-27 定论）
+
+反汇编 `0x457AB0`（此前只知它是"phase 2 的动画角色列表"）：
+
+```asm
+0x457AB0  sub esp, 0x17c              ; 局部 0x17C 字节
+0x457ABC  mov eax, [ebx+0x1160]       ; 计时器开关
+0x457AC8  mov eax, [esp+0x190]        ; **delta（时间增量）—— 每帧调用的更新函数**
+0x457ACF  mov ecx, [ebx+0x1164]
+0x457AD5  add ecx, eax / mov [ebx+0x1164], ecx   ; 累计
+0x457ADF  cmp eax, 0x3e8              ; **超过 1000 ms**
+0x457AE4  jbe 0x457b03
+0x457AE6  push 1 / push 0x47d690
+0x457AED  mov ecx, 0x8ab130 / call 0x45b390      ; **音频管理器（0x8AB130）**
+0x457AF7  mov [ebx+0x1160], 0         ; 复位开关
+0x457AFD  mov [ebx+0x1164], 0         ; 复位累计
+0x457B03  lea ecx, [ebx+0x14c] / push 0x50 / call 0x466130   ; 帧调度
+0x457B14  mov eax, [ebx+0x184] / mov ecx, [ebx+0x188]
+0x457B35  mov ecx, 0x8ab7a8 / call 0x45fd50                  ; 绘制
+0x457B40  mov ecx, ebx / call 0x4586f0
+0x457B47  lea esi, [ebx+0x10e0]                              ; **动画槽数组**
+0x457B58  mov edi, [esi+0x18]                                ; 当前帧对象
+0x457B63  mov cx, [esp+0x190] / add word [esi], cx           ; **推进动画计时**
+0x457B71  cmp ax, [edi+4] / jbe 0x457bd5                     ; 与帧时长比较
+```
+
+### 字符串读出
+
+`0x47D690` = **`.\Sound\CreateChr.mp3`**
+
+### 结论
+
+1. **`0x457AB0` 是每帧更新函数**（带 delta 参数），不是"列表构造"。
+2. 它维护 **`+0x1160`（开关）/ `+0x1164`（累计毫秒）**；超过 **1000 ms** 就通过
+   **音频管理器 `0x8AB130`** 播放 **`CreateChr.mp3`**，然后复位两者 —— 即**周期播放**
+   （1000 ms 一次），直到开关被关掉。
+3. `+0x10E0` 起是**动画槽数组**；`word [esi]` 是计时器，`[edi+4]` 是**当前帧的时长**，
+   超时即推进到下一帧。这就是"动画角色列表"的实现。
+
+### 对我方音效接线的直接影响
+
+**`CreateChr` 这个音效的证据位置有两处，含义不同**：
+
+| 位置 | 证据 | 我方 |
+|---|---|---|
+| F51（点"创建角色"） | `0x459AB6` 附近（此前记录） | 已接 `LegacyCreateChr` |
+| **phase 2 周期播放** | **`0x457AB0` + `0x47D690` = `CreateChr.mp3`（本轮）** | **未接** |
+
+注意两处的**文件不同**：`0x457AB0` 用的是 **`.mp3`**，而此前从 82 机器取回的
+`LegacyEI/Sound/` 里 `CreateChr` 同时有 `.wav` 和 `.mp3`。**这说明 EI 里
+"创建角色"音效确实有两份资源、两个用法**，不是重复。
+
+**待办**：确认我方 `LegacyCreateChr` 指向的是哪一个（我接的是 `CreateChr.wav`），
+以及是否需要在 phase 2 加周期播放 `CreateChr.mp3`。**本轮不改** —— 先把两条证据分清楚。

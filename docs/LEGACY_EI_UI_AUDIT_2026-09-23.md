@@ -3894,3 +3894,49 @@ StoredOverlayDataSize, OverlayBc7DataSize, OverlayFallbackDataSize
 
 "是否均等"已判定为**均等** ⇒ 我方结构正确，无需改结构。
 若日后要精确对齐速度，需先读出 `[edi+4]` 的实际数值 —— 记为次要待办。
+
+## 动画槽推进：我方 `DXAnimatedControl` 与 EI 逐项等价（2026-09-27 定论）
+
+原先立的待办"实现 phase 2 动画槽推进"经核对后**撤销** —— 我方已实现且结构与 EI 等价。
+
+读 `GodotClient/Controls/DXAnimatedControl.cs`：
+
+```csharp
+// 第 8 行注释：「AnimationDelay 与原客户端相同，表示播放一轮的总时长，而不是单帧时长。」
+double duration = AnimationDelay.TotalSeconds;
+int frame = (int)Math.Floor(elapsed / duration * FrameCount);
+if (Loop)
+{
+    if (frame >= FrameCount) { AfterAnimationLoop?.Invoke(this, EventArgs.Empty); frame %= FrameCount; }
+}
+else if (frame >= FrameCount) { Index = BaseIndex + FrameCount - 1; }
+
+Index = BaseIndex + Math.Clamp(frame, 0, FrameCount - 1);
+```
+
+逐项对照 EI（`0x457AB0`）：
+
+| EI | 我方 | 判定 |
+|---|---|---|
+| 每个动画槽一份 `esi` 结构，各自 `[esi]` 计时器累加 delta | 每个 `DXAnimatedControl` 实例各有自己的计时状态 | **等价**（都是逐控件独立计时） |
+| 到上限 `[edi+2]` 后回绕到 `[edi+0]` | `frame %= FrameCount` 后取 `BaseIndex` | **等价**（回绕到起始帧） |
+| 上限 `[edi+2]` | `BaseIndex + FrameCount - 1` | **等价** |
+| 时长 `[edi+4]`（每支动画一个值） | `AnimationDelay`（**一轮总时长**，注释已说明与原客户端一致） | **等价** |
+| 比较 `[esi]`（word 计时器）与 `[edi+4]` | `Math.Floor(elapsed / duration * FrameCount)` | **等价**（离散化到帧号，避免逐毫秒误差累积） |
+
+**四项全部等价。** 我方实现**不需要改**，待办**撤销**。
+
+### 说明：这一轮与上一轮都是"判定不需要改"
+
+连续两轮结论都是"我方正确、无需改动"。这不是空转 —— 若不核对就按"我方缺动画推进"的
+假设去写代码，会**新写一套与现有一致的逻辑**，或更糟：改成与 EI 不同的行为。
+但也必须承认：**这两轮没有产生任何代码改动**，实际交付只有文档。
+
+### 剩余真实差异（已确认要改的）
+
+当前**唯一确认"我方确实不同"**的 phase 2 项是：
+
+1. **phase 2 的密码框**：EI 有，我方**没有实现**（尚未定位其帧号与坐标）。
+2. **五钮动作**：帧 86/89 的动作方向是"先发消息再等回应"，我方是"直接切状态"；
+   帧 92/95/98 我方为空动作而 EI 有动作。**但**其确切语义依赖静态不可解的运行期
+   指针，**在拿到运行期证据前不能改**。

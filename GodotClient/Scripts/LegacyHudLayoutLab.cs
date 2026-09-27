@@ -40,6 +40,7 @@ public partial class LegacyHudLayoutLab : Control
     private ExitDialog _exit;
     private LogoutConfirmDialog _logout;
     private ConfirmDialog _confirmLegacy;
+    private LogoutConfirmDialog _f950Input;
     private ExitGameDialog _exitGame;
 
     public override void _Ready()
@@ -114,6 +115,9 @@ public partial class LegacyHudLayoutLab : Control
         // 通用 ConfirmDialog 的 legacy 外观（应等同 F950，验证它不再用 F281）。
         _confirmLegacy = AddWindow(new ConfirmDialog("您确定要执行此操作吗？", "Confirm", null),
             LogoutConfirmDialog.LegacyLocation);
+        // 输入型调用点（原版：转账金额 / 丢金币 / 建行会名称）——F950 + 输入框。
+        _f950Input = AddWindow(new LogoutConfirmDialog("您要付给对方多少金币?", null,
+            LogoutConfirmDialog.ButtonMode.YesNo, _ => { }), LogoutConfirmDialog.LegacyLocation);
         // EI 原版「退出游戏」F800 窗：位置由原版证据给出 (218,176)，不再由测试场摆放。
         _exitGame = AddWindow(new ExitGameDialog(), ExitGameDialog.LegacyLocation);
         _notice.SetNotice("旧版公告窗口测试正文\n正文区域使用 F602 原版坐标。");
@@ -187,6 +191,7 @@ public partial class LegacyHudLayoutLab : Control
                 "exit" or "logout" => _exit,
                 "logoutconfirm" or "f950" => _logout,
                 "confirm" or "confirmdialog" => _confirmLegacy,
+                "f950input" or "goldinput" => _f950Input,
                 "exitgame" or "quit" => _exitGame,
                 _ => null,
             };

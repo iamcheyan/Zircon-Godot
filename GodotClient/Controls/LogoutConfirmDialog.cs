@@ -56,13 +56,17 @@ public partial class LogoutConfirmDialog : DXWindow
     private static readonly Color MessageColour = Color.Color8(0xC8, 0xFA, 0xFF);
 
     private readonly Action _confirm;
+    private readonly Action<string> _submitWithText;
+    private DXTextInput _input;
     private readonly DXButton[] _buttons = new DXButton[3];   // 0 = YES/middle, 1 = NO, 2 = 备用
     private readonly Action[] _buttonActions = new Action[3];
     private int _activeIndex;
 
-    public LogoutConfirmDialog(string message, Action confirm, ButtonMode mode = ButtonMode.YesNo)
+    public LogoutConfirmDialog(string message, Action confirm, ButtonMode mode = ButtonMode.YesNo,
+        Action<string> submitWithText = null)
     {
         _confirm = confirm;
+        _submitWithText = submitWithText;
         HasTitle = false;
         HasFooter = false;
         Size = LegacySize;
@@ -105,6 +109,37 @@ public partial class LogoutConfirmDialog : DXWindow
                 AddButton(MiddleRect, 156, 0, () => { _confirm?.Invoke(); WindowManager.Close(this); });
                 break;
         }
+
+        if (submitWithText != null) AddLegacyInputBox();
+    }
+
+    /// <summary>
+    /// 输入型调用点的文本框（原版 3 个：转账金额 / 丢金币 / 建行会名称）。
+    /// 原版复用**聊天输入框的 HWND** `[0x8AA48C]`：
+    ///   MoveWindow([0x8AA48C], mouse_x+0xDF, mouse_y+0x23A, 0x162, 0x10, 1)
+    ///   GetWindowTextA([0x8AA48C], this+0x130, 0x104) 取回文本
+    /// 尺寸 **0x162×0x10 = 354×16** 明确；但锚点 (mouse+0xDF, mouse+0x23A) 的
+    /// 参照物（窗口原点还是屏幕）在现有材料里**未闭合** —— 354 宽与 360 宽的对话框
+    /// 只差 6px，故此处按"框内水平居中、按钮上方"摆放，并把该推导标注为未证实。
+    /// </summary>
+    private void AddLegacyInputBox()
+    {
+        _input = new DXTextInput
+        {
+            Size = new Vector2I(354, 16),
+            Location = new Vector2I(3, 100),
+            MaxLength = 32,
+            FontSize = 10,
+        };
+        _input.TextSubmitted += _ =>
+        {
+            _submitWithText?.Invoke(_input.Text);
+            WindowManager.Close(this);
+        };
+        AddControl(_input);
+        _input.GrabFocus();
+        GD.Print($"[LegacyF950Input] 输入框已加: size={_input.Size} loc={_input.Location} "
+            + "（原版 MoveWindow 尺寸 0x162x0x10 = 354x16；锚点 (mouse+0xDF, mouse+0x23A) 参照物未闭合）");
     }
 
     /// <summary>

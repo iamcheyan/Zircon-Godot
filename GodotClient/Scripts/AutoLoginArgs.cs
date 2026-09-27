@@ -63,6 +63,12 @@ public static class AutoLoginArgs
     public static bool OperationAuditExt => Has("--operation-audit-ext");
     public static bool ScreenshotAfterEnter => Has("--screenshot-after-enter");
 
+    /// <summary>
+    /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
+    /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
+    /// （洞窟槽位角色、创建面板等）。
+    /// </summary>
+    public static bool StayInSelect => Has("--stay-select");
     /// <summary>给每个 DXControl 画红色边框 + 四角方块/四边黄条 (临时布局诊断)</summary>
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
     /// <summary>显式启用旧版 EI 核心窗口实验布局（未提供时保持现行正式布局）。</summary>

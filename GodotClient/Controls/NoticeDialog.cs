@@ -25,6 +25,9 @@ public partial class NoticeDialog : DXWindow
         HasFooter = false;
         Movable = false;
         Size = new Vector2I(584, 252);
+        // 原版 F602 公告窗 (id15) 固定位置 (107,110)：主初始化 0x427960 传参
+        // (GameInter, 602, x=107, y=110, 584, 252)，800x600 父原点 primary-static。
+        Location = new Vector2I(107, 110);
 
         _background = new DXImageControl
         {

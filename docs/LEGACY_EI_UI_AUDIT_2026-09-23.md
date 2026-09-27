@@ -2551,3 +2551,34 @@ ToCreateChr.mp3  SWMSel.wav  Tfade in.wav  Tfade out.wav  ...
 **待办**：把这几个音效接到 Godot 的音频系统（需要 `SoundIndex` 条目与播放时机：
 CreateChr -> 点「创建角色」、SelChr -> 选中角色、StartGame -> 点「开始游戏」、
 Tfade in/out -> 两处过场）。
+
+### 音效接线调查：文件都在，但**语义用法不同**（2026-09-27）
+
+查我方音频链路（`SoundPlayback.Play` + `ClientData/sounds.json` 目录表）：
+
+* `SoundPlayback.Play(owner, SoundIndex)` 从 `res://../Debug/Client/Sound/<entry.FileName>` 加载
+  （`Debug/Client` 软链到 `mir2ei/`，即实际读 `mir2ei/Sound/`）。
+* 目录表 `ClientData/sounds.json` 由 `Tools/magiclab/extract_sound_catalogs.py` 生成，
+  含 731 条 `sounds`。
+* `mir2ei/Sound/` **已有 3172 个音频**，其中 **`CreateChr.wav`/`.ogg`、`SelChr.wav`/`.ogg`、
+  `StartGame.wav`/`.ogg` 全都存在**（我上一轮从 82 机取的 `LegacyEI/Sound/` 那几个其实是冗余的）。
+
+**但目录表里的用法与 EI 证据不一致**：
+
+| SoundIndex | 我方目录表指向 | 类别/循环 | EI 证据里的用途 |
+|---|---|---|---|
+| `SelectScene` | **`SelChr.wav`** | **Music / loop=true** | `.\Sound\SelChr.wav` 是**点击音效**（ctor `0x45B6D0` 的三个文件之一） |
+| `LoginScene` | `Opening.wav` | Music/loop | — |
+| `CreateChr` | **无此条目** | — | `.\Sound\CreateChr.wav` 音效 |
+| `StartGame` | **无此条目** | — | `.\Sound\StartGame.wav` 音效 |
+
+即：我方把 `SelChr.wav` 当成**选角屏背景音乐循环播放**，而 EI 里它是**一次性点击音效**；
+`CreateChr` / `StartGame` 两个音效**根本没接**。
+
+**同基名不同用法的又一个例子** —— 与 `Data/CreateChr.dat`（视频）vs `Sound/CreateChr.wav`（音频）
+是同类陷阱：**光看文件名判断用途会错，必须看调用点**。
+
+**待办**：确认 EI 里 `SelChr.wav` 到底是"选角屏 BGM"还是"点击音效"（证据显示是后者，
+但需核 `0x45B900` 的调用时机与循环标志）；再决定我方 `SelectScene` 的 BGM 该换成哪一首
+（`Sound/` 里有 `Main.wav`/`Opening.wav`/`Ending.wav` 等候选）。
+在语义定论前**不接线** —— 直接把 `SelChr` 从 BGM 改成点击音会破坏现有背景音乐。

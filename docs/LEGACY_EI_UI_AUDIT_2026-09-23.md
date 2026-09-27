@@ -2203,3 +2203,29 @@ source viewport 800x600，**未证明目标 EI 根窗裁剪细节**」，因此�
 仍未有已证证据（旧审计 SKL-02/03 的阻塞点不变）；段落取用依赖
 `LegacySkillRowView.LegacyMagicExpParagraph(info.Index)`，其段号语义
 （`Magic.exp` 的 `#N`）与 EI 网络技能 ID 的等价性未证明。
+
+### SKL-02 技能格帧误用：**已不存在**（2026-09-27 复核，撤销「F410..F421 被误作格子图标」的旧结论）
+
+旧结论称 `MagicDialog.BuildLegacySkillSlots()` 把 F410..F421 全用作 12 个技能格背景，
+从而混入箭头（F410/411、F412/413 是导航控件）、空帧（F414–419）与数字标签（F420–431 为 F1–F12 字样）。
+
+**复核当前源码：该函数已不存在。** 现在 legacy 技能格由 `MagicDialog.BuildLegacySkillRows()`
+（`MagicDialog.cs:251`）创建 `LegacySkillRowView`（`MagicDialog.cs:746`）：
+
+- 格子外观是**程序化绘制**（`_Draw()` 里 `DrawRect` 画选中/悬停/常态三态底色与边框），
+  **完全不使用 GameInter F410..F421** —— 旧结论指出的"混入箭头/空帧/数字标签"不再成立。
+- 技能图标走 `MirSkin.GetTexture(LibraryFile.MagicIcon, _info.Icon)`（`MagicDialog.cs:856` 一带），
+  与证据 `skill-window-render-loop-evidence.json` 所述"EI 列表技能图标取自技能记录 `[skill+6]`，
+  经 selector `0x566C90`（全局数组 el85）绘制"的**图库家族一致**：
+  `mir3-dat-resource-path-table.json` 把 el85 绑定到 `Data/MIcon.wil`，而
+  `LibraryFile.MagicIcon` 注册为 `Data\MIcon.Zl` 且已在 `MirSkin.IsUiLibrary` 里，
+  legacy 下会回退到同 stem 的 `MIcon.wil`。
+
+**仍未闭合（SKL-02 的实质阻塞点不变）**：EI `[skill+6]` 与当前 `MagicInfo.Icon` 的
+**逐技能帧语义映射**没有已证证据。文件级复核已知：本机旧版 `MIcon.wil` 有 1106 帧/138 非空，
+现代 `Data/MIcon.Zl` 有 1773 帧/224 非空，两边共有的 54 个非空索引**尺寸/offset 全部不同** ——
+故不能以索引或画布规格推定 EI 图标一致。
+
+**本轮方法**：先查当前源码是否仍存在旧结论描述的结构（`BuildLegacySkillSlots`），
+发现已被 `BuildLegacySkillRows` + `LegacySkillRowView` 取代，再逐项核对帧来源。
+**审计文档的「阻断」条目会随实现推进而过期，引用前必须先核当前源码。**

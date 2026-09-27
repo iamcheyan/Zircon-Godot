@@ -41,7 +41,8 @@ public enum KeyBindAction
     BlockListWindow,
     QuestLogWindow,
     ChatOptionsWindow,  // Ctrl+O
-    ExitGameWindow,     // Esc
+    ExitGameWindow,     // Alt+Q —— EI HUD idx3「退出游戏」→ F800 窗 (id 0x64)
+    LogoutCharacter,    // Alt+X —— EI HUD idx4「注销人物」→ F950 确认框 type 0x65
     GroupAllowSwitch,
     GroupTarget,
     TradeRequest,
@@ -131,7 +132,8 @@ public static class KeyBindManager
         new KeyBindInfo(KeyBindAction.BlockListWindow, Key.F),
         new KeyBindInfo(KeyBindAction.QuestLogWindow, Key.J),
         new KeyBindInfo(KeyBindAction.ChatOptionsWindow, Key.O, control1: true),
-        new KeyBindInfo(KeyBindAction.ExitGameWindow, Key.Q, alt1: true) { Key2 = Key.X, Alt2 = true },
+        new KeyBindInfo(KeyBindAction.ExitGameWindow, Key.Q, alt1: true),
+        new KeyBindInfo(KeyBindAction.LogoutCharacter, Key.X, alt1: true),
         new KeyBindInfo(KeyBindAction.GroupAllowSwitch, Key.P, alt1: true),
         new KeyBindInfo(KeyBindAction.GroupTarget, Key.G, control1: true),
         new KeyBindInfo(KeyBindAction.TradeRequest, Key.T),

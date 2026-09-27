@@ -38,6 +38,7 @@ public partial class LegacyHudLayoutLab : Control
     private NoticeDialog _notice;
     private MiniMapDialog _miniMap;
     private ExitDialog _exit;
+    private ExitGameDialog _exitGame;
 
     public override void _Ready()
     {
@@ -106,6 +107,8 @@ public partial class LegacyHudLayoutLab : Control
         _miniMap.ApplyLegacyEiLayout();
         _miniMap.Location = new Vector2I(Math.Max(0, 800 - 128), 0);
         _exit = AddWindow(new ExitDialog(), new Vector2I(274, 230));
+        // EI 原版「退出游戏」F800 窗：位置由原版证据给出 (218,176)，不再由测试场摆放。
+        _exitGame = AddWindow(new ExitGameDialog(), ExitGameDialog.LegacyLocation);
         _notice.SetNotice("旧版公告窗口测试正文\n正文区域使用 F602 原版坐标。");
     }
 
@@ -175,6 +178,7 @@ public partial class LegacyHudLayoutLab : Control
                 "notice" or "prompt" => _notice,
                 "minimap" or "map" => _miniMap,
                 "exit" or "logout" => _exit,
+                "exitgame" or "quit" => _exitGame,
                 _ => null,
             };
             if (window != null) WindowManager.Open(window, _canvas);

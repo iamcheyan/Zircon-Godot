@@ -70,6 +70,9 @@ public partial class GameScene : Control
     private StatusWindow _statusWindow;
     private MenuDialog _menuDialog;
     private ExitDialog _exitDialog;
+    // EI 原版「退出游戏」是独立于「注销人物」的另一条路径：F800 窗（id 0x64）。
+    // 见 ExitGameDialog 的类注释与审计文档 EXIT-01。
+    private ExitGameDialog _exitGameDialog;
     private NoticeDialog _noticeDialog;
     private ChatLogPanel _chatLog;
     private ChatTextBox _chatTextBox;
@@ -386,6 +389,15 @@ public partial class GameScene : Control
     {
         if (_exitDialog == null) return;
         WindowManager.Open(_exitDialog, _uiLayer);
+    }
+
+    /// <summary>
+    /// EI 原版「退出游戏(Alt+Q / HUD idx3)」：打开 F800 窗（id 0x64）。
+    /// 与「注销人物」不同路径 —— 后者是 F950 确认框 type 0x65「返回游戏人物选择界面？」。
+    /// </summary>
+    public void OpenExitGameDialog()
+    {
+        if (_exitGameDialog != null) WindowManager.Open(_exitGameDialog, _uiLayer);
     }
 
     public void OpenHelpDialog()
@@ -2185,6 +2197,9 @@ public partial class GameScene : Control
                 WindowManager.Toggle(_chatOptionsDialog, _uiLayer);
                 break;
             case KeyBindAction.ExitGameWindow:
+                OpenExitGameDialog();
+                break;
+            case KeyBindAction.LogoutCharacter:
                 OpenExitDialog();
                 break;
             case >= KeyBindAction.UseBelt01 and <= KeyBindAction.UseBelt10:
@@ -4585,6 +4600,7 @@ public partial class GameScene : Control
 
         _exitDialog = new ExitDialog();
         _exitDialog.Location = new Vector2I(40, 80);
+        _exitGameDialog = new ExitGameDialog();
         _uiLayer.AddChild(_exitDialog);
 
         _noticeDialog = new NoticeDialog { Location = new Vector2I(107, 110) };
@@ -4765,7 +4781,7 @@ public partial class GameScene : Control
         {
             if (_miniMap != null) _miniMap.Visible = !_miniMap.Visible;
         };
-        _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitDialog();
+        _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitGameDialog();
         _mainPanel.PartyButton.MouseClick += (o, e) => OpenGroupDialog();
         _mainPanel.GuildButton.MouseClick += (o, e) => OpenGuildDialog();
         _mainPanel.ExchangeButton.MouseClick += (o, e) =>

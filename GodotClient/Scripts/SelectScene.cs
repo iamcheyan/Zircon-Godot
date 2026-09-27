@@ -24,8 +24,21 @@ public partial class SelectScene : Control
     private DXControl _skinCreatePanel;
     private DXAnimatedControl _characterAnimation;
     private DXImageControl _characterOverlay1, _characterOverlay2;
+    // EI 选角屏是 **2 个角色槽**（base +0xCB8/+0x10BC，stride 0x40，idx 0..1），
+    // 角色直接站在 F50 洞窟背景里，不是列表面板。这里补第 2 槽与两个名称标签。
+    private DXAnimatedControl _characterAnimation2;
+    private DXLabel _slotName0, _slotName1;
+    private DXControl _slotHit0, _slotHit1;
     private DXButton _skinConfigButton;
     private ConfigDialog _selectConfig;
+    // EI 两个角色槽的屏幕位置。原版以 640x480 中心 (320,240) 为基准
+    // （0x4570D0 的 X 用 `delta*0.5 - 320.0`、Y 用 `240.0 - ...`），
+    // 槽位在拱门左右；具体 X 偏移在静态证据里未给出，此处按 F50 背景构图取
+    // 拱门两侧（**推导值**，非原版常量）。
+    private const int Slot0X = 205;
+    private const int Slot1X = 435;
+    private const int SlotY = 250;
+
     private DXTextInput _skinName;
     private DXTextInput _skinCreateName;
     private DXButton _skinStart, _skinCreate, _skinDelete;
@@ -213,7 +226,14 @@ public partial class SelectScene : Control
             _charList.AddItem($"#{c.CharacterIndex} {c.CharacterName} Lv{c.Level} {c.Class}");
         foreach (var button in _skinCharacters) { _skinPanel.RemoveControl(button); button.QueueFree(); }
         _skinCharacters.Clear();
-        if (_skinPanel != null)
+        // EI 模式：**不建列表面板行**，改为把角色渲染到 F50 洞窟里的 2 个槽位。
+        // 原版选角屏没有居中面板，角色是直接站在背景中的 3D 模型
+        // （槽 base +0xCB8，stride 0x40，idx 0..1）。
+        if (AutoLoginArgs.LegacyUi)
+        {
+            UpdateCaveSlots();
+        }
+        else if (_skinPanel != null)
         {
             for (int i = 0; i < _characters.Count && i < 4; i++)
             {
@@ -277,6 +297,15 @@ public partial class SelectScene : Control
                 ? new Color(.28f, .14f, .14f)
                 : new Color(.095f, .047f, .047f);
             _skinCharacters[i].Border = i != index;
+        }
+        // EI 模式没有列表行，选中态体现在洞窟槽的名称标签上
+        // （原版选中态是槽字段 +0x1168，详情由 0x458150 渲染）。
+        if (AutoLoginArgs.LegacyUi)
+        {
+            var sel = new Color(1f, .92f, .6f);
+            var dim = new Color(.62f, .58f, .48f);
+            if (_slotName0 != null) _slotName0.TextColour = index == 0 ? sel : dim;
+            if (_slotName1 != null) _slotName1.TextColour = index == 1 ? sel : dim;
         }
         UpdateCharacterDisplay(_characters[index]);
     }
@@ -342,6 +371,72 @@ public partial class SelectScene : Control
         _characterAnimation.Restart(false);
     }
 
+    /// <summary>
+    /// 把已选中的角色列表渲染到洞窟里的 **2 个槽位**（EI 结构）。
+    /// 每槽：角色动画（按职业/性别取 Interface1c 角色块）+ 槽下名称标签；
+    /// 槽位命中区不可见（图形由角色本身承担）。
+    /// 位置与偏移见 Slot0X/Slot1X/SlotY 的注释（**推导值**）。
+    /// </summary>
+    private void UpdateCaveSlots()
+    {
+        var slots = new (DXAnimatedControl anim, DXLabel label, DXControl hit, int x)[]
+        {
+            (_characterAnimation,  _slotName0, _slotHit0, Slot0X),
+            (_characterAnimation2, _slotName1, _slotHit1, Slot1X),
+        };
+        for (int i = 0; i < slots.Length; i++)
+        {
+            var (anim, label, hit, x) = slots[i];
+            bool has = i < _characters.Count;
+            if (anim != null) anim.Visible = has;
+            if (label != null) label.Visible = has;
+            if (hit != null) hit.Visible = has;
+            if (!has) continue;
+
+            var c = _characters[i];
+            int baseFrame = CharacterBaseFrame(c.Class, c.Gender);
+            int frames = CharacterFrameCount(baseFrame);
+            if (anim != null)
+            {
+                anim.BaseIndex = baseFrame;
+                anim.FrameCount = frames;
+                anim.AnimationDelay = TimeSpan.FromMilliseconds(2400);
+                anim.Loop = true;
+                anim.Location = new Vector2I(x, SlotY);
+                anim.Restart(false);
+            }
+            if (label != null)
+            {
+                label.Text = $"{c.CharacterName}  Lv{c.Level} {c.Class.Local()}";
+                label.Location = new Vector2I(x - 80, SlotY + 6);
+            }
+            if (hit != null) hit.Location = new Vector2I(x - 60, SlotY - 190);
+        }
+        GD.Print($"[LegacySelect] 洞窟槽位: 角色数={_characters.Count} "
+            + $"slot0=({Slot0X},{SlotY}) slot1=({Slot1X},{SlotY})");
+    }
+
+    /// <summary>EI 角色帧基址：index = 职业 + 2*性别（反汇编 0x458EC0 的索引公式）。</summary>
+    private static int CharacterBaseFrame(MirClass cls, MirGender gender)
+    {
+        int index = (int)cls + 2 * (int)gender;
+        return index switch
+        {
+            0 => 440,   // 战士男
+            1 => 740,   // 战士女
+            2 => 1040,  // 法师男
+            3 => 1340,  // 法师女
+            4 => 1640,  // 道士男
+            _ => 1940,  // 道士女（刺客本库无对应块，退回女性帧）
+        };
+    }
+
+    /// <summary>实测连续有效帧数（见审计文档的角色块识别表）。</summary>
+    private static int CharacterFrameCount(int baseFrame) => baseFrame switch
+    {
+        440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, _ => 15,
+    };
+
     private void HideCreateCharacterPanel()
     {
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = false;
@@ -351,7 +446,7 @@ public partial class SelectScene : Control
 
     private void ShowCreateCharacterPanel()
     {
-        if (_skinPanel != null) _skinPanel.Visible = false;
+        if (_skinPanel != null) _skinPanel.Visible = !AutoLoginArgs.LegacyUi;
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = true;
         if (_characterAnimation != null) _characterAnimation.Visible = false;
     }
@@ -447,10 +542,35 @@ public partial class SelectScene : Control
             MouseFilter = MouseFilterEnum.Ignore,
         };
         background.AddControl(_characterAnimation);
-        _characterOverlay1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(450, 200), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        _characterOverlay2 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(450, 200), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        _characterOverlay1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        _characterOverlay2 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
         background.AddControl(_characterOverlay1);
         background.AddControl(_characterOverlay2);
+
+        // 第 2 个角色槽（EI 有 2 槽）。两个槽分列洞窟拱门左右。
+        _characterAnimation2 = new DXAnimatedControl
+        {
+            LibraryFile = LibraryFile.Interface1c,
+            FrameCount = 1,
+            AnimationDelay = TimeSpan.FromMilliseconds(1),
+            UseOffSet = true,
+            Location = new Vector2I(320, 240),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        background.AddControl(_characterAnimation2);
+
+        // 每槽一个不可见命中区 + 一个名称标签（原版把名字画在角色附近）。
+        _slotHit0 = new DXControl { Size = new Vector2I(120, 200), Location = new Vector2I(Slot0X - 60, SlotY - 190) };
+        _slotHit1 = new DXControl { Size = new Vector2I(120, 200), Location = new Vector2I(Slot1X - 60, SlotY - 190) };
+        _slotHit0.MouseClick += (o, e) => SelectSkinCharacter(0);
+        _slotHit1.MouseClick += (o, e) => SelectSkinCharacter(1);
+        background.AddControl(_slotHit0);
+        background.AddControl(_slotHit1);
+        _slotName0 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot0X - 80, SlotY + 6), IsControl = false };
+        _slotName1 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot1X - 80, SlotY + 6), IsControl = false };
+        background.AddControl(_slotName0);
+        background.AddControl(_slotName1);
 
         _skinPanel = new DXControl
         {
@@ -560,6 +680,19 @@ public partial class SelectScene : Control
     /// </summary>
     private void ApplyLegacyEiSelectLayout()
     {
+        // **先把三个主按钮从 _skinPanel 摘到 _uiLayer，再设坐标** ——
+        // 顺序不能反：Reparent 默认**保留全局变换**，会把局部坐标换算成补偿值
+        // （实测先设坐标再 reparent，create 从 (440,93) 变成 (792,264)）。
+        // 它们是面板的子控件（`_skinPanel.AddControl(...)`），不摘出来就会被
+        // 后面隐藏面板时一起藏掉（与登录页那次同一个坑）。
+        // 用 Reparent 而不是 RemoveChild+AddChild：RemoveChild 是延迟移除，
+        // 紧接着 AddChild 会失败（实测按钮 parent 仍是 DXControl、屏幕上不出现）。
+        foreach (var b in new[] { _skinStart, _skinCreate, _skinDelete })
+        {
+            if (b == null || b.GetParent() == _uiLayer) continue;
+            b.Reparent(_uiLayer);
+        }
+
         // 主按钮：改成 Interface1c 文字精灵帧（帧内含字）。
         SkinSelectButton(_skinCreate, 51, 51, new Vector2I(440, 93), new Vector2I(96, 26));
         SkinSelectButton(_skinDelete, 53, 53, new Vector2I(79, 243), new Vector2I(96, 26));
@@ -579,12 +712,13 @@ public partial class SelectScene : Control
         _skinIconFace = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });
         _skinIconScroll = MakeSelectIconButton(98, new Vector2I(352, 419), () => { });
 
-        // EI 此屏没有居中面板：原 _skinPanel 是自制列表容器，移到屏幕左侧并去掉标题框，
-        // 避免遮挡 F50 的洞窟画面（角色渲染链另列）。
-        if (_skinPanel != null)
-        {
-            _skinPanel.Position = new Vector2(8, 8);
-        }
+        // **EI 此屏没有居中面板** —— 原 _skinPanel 是自制列表容器（320x425 带窗口框）。
+        // 角色改由洞窟里的 2 个槽位渲染（见 UpdateCaveSlots），面板整块隐藏，
+        // 否则它会盖住 F50 的洞窟画面。
+        if (_skinPanel != null) _skinPanel.Visible = false;
+        GD.Print($"[LegacySelect] 按钮状态: create={_skinCreate?.Location}/{_skinCreate?.Size} vis={_skinCreate?.Visible} "
+            + $"parent={_skinCreate?.GetParent()?.GetType().Name} delete={_skinDelete?.Location} start={_skinStart?.Location} "
+            + $"panelVis={_skinPanel?.Visible}");
         GD.Print("[LegacySelect] EI 布局已应用: 背景 F50@(0,0) 640x480; "
             + "创建(440,93) 删除(79,243) 开始(259,49) 结束(28,438) "
             + "✔(450,444) ✘(491,444) 武器(266,419) 人脸(308,419) 卷轴(352,419)");

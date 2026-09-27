@@ -467,6 +467,59 @@ public partial class SelectScene : Control
     /// 证据：phase 0 用 4 按钮（+0x9E8/+0xA9C/+0xB50/+0xC04），
     ///       phase 2 用 5 按钮（+0xD38/+0xDEC/+0xEA0/+0xF54/+0x1008 = F92/F95/F98/F86/F89）。
     /// </summary>
+    /// <summary>
+    /// 选角屏 9 个按钮的**属性**自检（对应 EI 反汇编出的 ctor 实参）。
+    /// 触发：--legacy-select-selftest。断言控件属性而非渲染像素 ——
+    /// 像素差分受窗口缩放/视口原点干扰（本日已三次失败），属性断言不受影响。
+    ///
+    /// 期望值来自 0x456DBB-0x456EC2 各调用点实参，布局：
+    ///   (ebx, f1, f2, X, Y, 0, 1, hover, 1)
+    /// </summary>
+    private void RunSelectButtonSelfTestIfRequested()
+    {
+        bool want = false;
+        foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--legacy-select-selftest") want = true;
+        if (!want) return;
+
+        var expect = new (string name, DXButton btn, int idx, int hov, int x, int y, int w, int h, bool vis)[]
+        {
+            ("p0-1 创建角色", _skinCreate, 51, 52, 440, 93, 96, 26, true),
+            ("p0-2 删除角色", _skinDelete, 53, 54, 79, 243, 96, 26, true),
+            ("p0-3 开始游戏", _skinStart, 55, 56, 259, 49, 96, 24, true),
+            ("p0-4 结束",     _skinExit,   57, 58, 28, 438, 48, 26, true),
+            ("p2-1",          _skinIconWeapon, 92, 91, 266, 419, 40, 38, false),
+            ("p2-2",          _skinIconFace,   95, 94, 308, 419, 40, 38, false),
+            ("p2-3",          _skinIconScroll, 98, 97, 352, 419, 40, 38, false),
+            // p2-4/p2-5 的帧 0x56(86)/0x59(89) 实测是 28x28（圆钮），
+            // 而 p2-1/p2-2/p2-3 的 0x5C/0x5F/0x62 是 40x38。尺寸随帧走，不是统一值。
+            ("p2-4",          _skinConfirmYes, 86, 85, 450, 444, 28, 28, false),
+            ("p2-5",          _skinConfirmNo,  89, 88, 491, 444, 28, 28, false),
+        };
+
+        bool ok = true;
+        var bad = new System.Collections.Generic.List<string>();
+        foreach (var e in expect)
+        {
+            if (e.btn == null) { ok = false; bad.Add($"{e.name}: null"); continue; }
+            var b = e.btn;
+            bool m = b.Index == e.idx && b.HoverIndex == e.hov
+                     && b.Location.X == e.x && b.Location.Y == e.y
+                     && b.Size.X == e.w && b.Size.Y == e.h;
+            if (!m)
+            {
+                ok = false;
+                bad.Add($"{e.name}: got idx={b.Index} hov={b.HoverIndex} "
+                        + $"loc={b.Location} size={b.Size} | want idx={e.idx} hov={e.hov} "
+                        + $"loc=({e.x},{e.y}) size=({e.w},{e.h})");
+            }
+        }
+        string details = ok
+            ? "9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参"
+            : string.Join(" ; ", bad);
+        GD.Print($"[LegacySelectButtonSelfTest] {(ok ? "PASS" : "FAIL")} {details}");
+        GetTree().Quit(ok ? 0 : 1);
+    }
+
     public void SetSelectPhase(int phase)
     {
         _selectPhase = phase;
@@ -755,6 +808,7 @@ public partial class SelectScene : Control
             bool forceP2 = false;
             foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--legacy-phase2") forceP2 = true;
             SetSelectPhase(forceP2 ? 2 : 0);
+            RunSelectButtonSelfTestIfRequested();
         }
         GetNode<Control>("VBox").Visible = false;
     }

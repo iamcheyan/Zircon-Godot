@@ -29,6 +29,9 @@ public partial class SelectScene : Control
     private DXTextInput _skinName;
     private DXTextInput _skinCreateName;
     private DXButton _skinStart, _skinCreate, _skinDelete;
+    // EI 选角屏（640x480）的其余原版按钮与背景。
+    private DXButton _skinExit, _skinConfirmYes, _skinConfirmNo, _skinIconWeapon, _skinIconFace, _skinIconScroll;
+    private DXImageControl _selectBackground;
     private DXButton _skinCreateConfirm, _skinCreateCancel;
     private DXNumberField _skinHairNumber;
     private DXAnimatedControl _createPreview;
@@ -376,15 +379,21 @@ public partial class SelectScene : Control
     {
         // 布局基准 = 逻辑画布 1024x768，UiScaler 负责缩放 + 居中（同 LoginScene）。
         var viewport = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight);
+        // **背景必须按 EI 原生 640x480 绘制在左上**，不能拉伸到 1024x768。
+        // 证据 login-flow-evidence.json::screens.parent.background：
+        //   Interface1c.wil **F50**，w=640 h=480。
+        // 旧实现把 640x480 的图拉伸铺满 1024x768 并居中，正是审计文档 PRE-04 记录的
+        // 「贴图按原生 640x480 绘制在左上」不符。
         var background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
             Index = 50,
             FixedSize = true,
-            Size = new Vector2I(1024, 768),
+            Size = new Vector2I(640, 480),
             MouseFilter = MouseFilterEnum.Ignore,
-            Position = (viewport - new Vector2(1024, 768)) / 2f,
+            Position = Vector2.Zero,
         };
+        _selectBackground = background;
         _uiLayer.AddChild(background);
 
         _skinConfigButton = new DXButton
@@ -401,32 +410,9 @@ public partial class SelectScene : Control
         };
         _uiLayer.AddChild(_skinConfigButton);
 
-        var leftGlow = new DXAnimatedControl
-        {
-            LibraryFile = LibraryFile.Interface1c,
-            BaseIndex = 2800,
-            FrameCount = 17,
-            AnimationDelay = TimeSpan.FromSeconds(3),
-            Animated = true,
-            Loop = true,
-            Blend = true,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        background.AddControl(leftGlow);
-        var rightGlow = new DXAnimatedControl
-        {
-            LibraryFile = LibraryFile.Interface1c,
-            BaseIndex = 2900,
-            FrameCount = 17,
-            AnimationDelay = TimeSpan.FromSeconds(3),
-            Animated = true,
-            Loop = true,
-            Blend = true,
-            UseOffSet = true,
-            Location = new Vector2I(20, 25),
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        background.AddControl(rightGlow);
+        // **移除左右光晕动画**：原实现用 Interface1c BaseIndex 2800/2900 各 17 帧，
+        // 但独立解码该库确认 **F2800..F2816 与 F2900..F2916 全是空帧**（alpha 全零），
+        // 等于在选角屏上叠两个不可见控件。EI 此屏也没有这两个光晕。
 
         _characterAnimation = new DXAnimatedControl
         {
@@ -529,7 +515,85 @@ public partial class SelectScene : Control
         _skinCreatePanel.AddControl(_skinCreateCancel);
         UpdateCreateButtonStates();
         UpdateCreatePreview();
+        if (AutoLoginArgs.LegacyUi) ApplyLegacyEiSelectLayout();
         GetNode<Control>("VBox").Visible = false;
+    }
+
+    /// <summary>
+    /// EI 原版选角屏（`login-flow-evidence.json::screens.parent`，screen obj 0x8A7140，
+    /// ctor 0x456CB0）。**640x480 基准**，背景 F50，控件散点摆放、没有居中面板：
+    ///
+    ///   +0x9E8  F51  @ **(440, 93)**  96x26  「创建角色」 (create)
+    ///   +0xA9C  F53  @ **(79, 243)**  96x26  「删除角色」 (evidence 标 unlabeled，实为删除)
+    ///   +0xB50  F55  @ **(259, 49)**  96x24  「开始游戏」 (enter game)
+    ///   +0xC04  F57  @ **(28, 438)**  48x26  「结束」     (exit -> WM_DESTROY)
+    ///   +0xF54  F86  @ **(450, 444)** 28x28  ✔ 确认
+    ///   +0x1008 F89  @ **(491, 444)** 28x28  ✘ 取消     (confirm -> phase 3)
+    ///   +0xD38  F92  @ **(266, 419)** 40x38  武器图标圆钮
+    ///   +0xDEC  F95  @ **(308, 419)** 40x38  人脸图标圆钮
+    ///   +0xEA0  F98  @ **(352, 419)** 40x38  卷轴图标圆钮
+    ///
+    /// 帧内含文字/图形，故这些按钮清空 Text。原版角色槽是 2 个（base +0xCB8/+0x10BC，
+    /// stride 0x40，idx 0..1），渲染链另列。
+    /// </summary>
+    private void ApplyLegacyEiSelectLayout()
+    {
+        // 主按钮：改成 Interface1c 文字精灵帧（帧内含字）。
+        SkinSelectButton(_skinCreate, 51, 51, new Vector2I(440, 93), new Vector2I(96, 26));
+        SkinSelectButton(_skinDelete, 53, 53, new Vector2I(79, 243), new Vector2I(96, 26));
+        SkinSelectButton(_skinStart, 55, 55, new Vector2I(259, 49), new Vector2I(96, 24));
+
+        // 「结束」按钮（原实现没有）。
+        _skinExit = new DXButton { LibraryFile = LibraryFile.Interface1c, Index = 57, HoverIndex = 57,
+            PressedIndex = 57, FixedSize = true, Size = new Vector2I(48, 26), Location = new Vector2I(28, 438) };
+        _skinExit.MouseClick += (o, e) => GetTree().Quit();
+        _uiLayer.AddChild(_skinExit);
+
+        // 右下两个圆形确认钮（✔ / ✘）。
+        _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => OnStartPressed());
+        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () => { });
+        // 三个圆形图标钮（武器/人脸/卷轴）。
+        _skinIconWeapon = MakeSelectIconButton(92, new Vector2I(266, 419), () => { });
+        _skinIconFace = MakeSelectIconButton(95, new Vector2I(308, 419), () => { });
+        _skinIconScroll = MakeSelectIconButton(98, new Vector2I(352, 419), () => { });
+
+        // EI 此屏没有居中面板：原 _skinPanel 是自制列表容器，移到屏幕左侧并去掉标题框，
+        // 避免遮挡 F50 的洞窟画面（角色渲染链另列）。
+        if (_skinPanel != null)
+        {
+            _skinPanel.Position = new Vector2(8, 8);
+        }
+        GD.Print("[LegacySelect] EI 布局已应用: 背景 F50@(0,0) 640x480; "
+            + "创建(440,93) 删除(79,243) 开始(259,49) 结束(28,438) "
+            + "✔(450,444) ✘(491,444) 武器(266,419) 人脸(308,419) 卷轴(352,419)");
+    }
+
+    private DXButton MakeSelectIconButton(int frame, Vector2I location, Action action)
+    {
+        var size = MirSkin.GetSize(LibraryFile.Interface1c, frame);
+        if (size == Vector2I.Zero) size = new Vector2I(28, 28);
+        var button = new DXButton
+        {
+            LibraryFile = LibraryFile.Interface1c, Index = frame, HoverIndex = frame, PressedIndex = frame,
+            FixedSize = true, Size = size, Location = location,
+        };
+        button.MouseClick += (o, e) => action();
+        _uiLayer.AddChild(button);
+        return button;
+    }
+
+    private static void SkinSelectButton(DXButton button, int normalFrame, int hoverFrame,
+        Vector2I location, Vector2I size)
+    {
+        if (button == null) return;
+        button.LibraryFile = LibraryFile.Interface1c;
+        button.Index = normalFrame;
+        button.HoverIndex = hoverFrame;
+        button.PressedIndex = hoverFrame;
+        button.FixedSize = true;
+        button.Text = string.Empty;
+        button.Location = location;
+        button.Size = size;
     }
 
     private DXControl CreateOptionBox(string title, Vector2I location)

@@ -1029,6 +1029,10 @@ public partial class GameScene : Control
         // 完成、每个窗口 _Ready（deferred）和 F12 热重载时应用。
         UiOverlay.Load();
         ClientSettings.ApplyDisplaySettings();
+        // legacy 会话（登录/选角/进游戏）全程保持原版 800x600 窗口，
+        // 否则 ApplyDisplaySettings 会把窗口重置为存档 GameSize（1014x658pt 等），
+        // 导致 800x600 legacy HUD 布局被拉伸。与 LoginScene/SelectScene 一致。
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -4934,12 +4938,13 @@ public partial class GameScene : Control
     }
 
     /// <summary>
-    /// 世界和 HUD 都基于原版 1024x768 设计尺寸缩放，并使用同一个屏幕倍率。取高/宽
+    /// 世界和 HUD 都基于设计尺寸缩放，并使用同一个屏幕倍率。取高/宽
     /// 两个方向中较小的缩放
-    /// 倍率 (限制因素), 保证逻辑画布「至少」1024x768 —— 固定 HUD (主面板宽 1024)
-    /// 在任何窗口比例下都装得下, 不会越过右/下屏幕边缘。常规 16:9/16:10 屏幕高度是
-    /// 限制因素, 倍率与原来按高度计算完全一致; 只有竖向/接近 4:3 的窄窗口才
-    /// 由宽度接管, 避免主面板溢出右边。
+    /// 倍率 (限制因素), 保证固定 HUD 在任何窗口比例下都装得下, 不会越过右/下屏幕边缘。
+    /// 现代版以 1024x768 为设计尺寸；Legacy(EI 原版)以原版 800x600 为设计尺寸
+    /// (证据：全局帧绘制入口 0x45FD50 裁剪边界 0x320/0x258 = 800/600)。Legacy 会话窗口
+    /// 固定为 800x600 x displayScale，因此 byWidth==byHeight==displayScale，逻辑画布
+    /// 恰好为 800x600，原版所有绝对坐标（小地图 (672,0)、主面板 (0,465) 等）直接生效。
     /// </summary>
     private void RefreshUiScale()
     {
@@ -4956,8 +4961,11 @@ public partial class GameScene : Control
             baseScale = 2f;
         else
         {
-            float byHeight = viewport.Y / UiScaleBaseHeight;
-            float byWidth = viewport.X / 1024f;
+            // Legacy 用原版 800x600 设计基准；现代版用 1024x768。
+            float baseW = AutoLoginArgs.LegacyUi ? LegacyHudLayout.LogicalWidth : 1024f;
+            float baseH = AutoLoginArgs.LegacyUi ? LegacyHudLayout.LogicalHeight : UiScaleBaseHeight;
+            float byHeight = viewport.Y / baseH;
+            float byWidth = viewport.X / baseW;
             baseScale = Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
         }
         WorldScale = baseScale;

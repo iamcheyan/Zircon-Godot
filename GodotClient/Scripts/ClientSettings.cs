@@ -348,7 +348,7 @@ public static class ClientSettings
     }
 
     /// <summary>
-    /// Legacy 进游戏前（登录 / 选角）窗口固定 800×600 逻辑尺寸，与原版 EI 窗口一致。
+    /// Legacy 会话（登录 / 选角 / 进游戏）窗口固定 800×600 逻辑尺寸，与原版 EI 窗口一致。
     /// Godot 在 macOS/Windows 上以物理像素为 WindowSetSize 单位，因此需乘以显示
     /// 缩放因子（Retina 2x → 物理 1600×1200 = 800×600 点；1x → 800×600），
     /// 使窗口在屏幕上始终呈现"正常"的 800×600 观感，并跟随用户显示比例放大。

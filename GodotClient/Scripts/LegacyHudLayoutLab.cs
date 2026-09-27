@@ -39,6 +39,7 @@ public partial class LegacyHudLayoutLab : Control
     private MiniMapDialog _miniMap;
     private ExitDialog _exit;
     private LogoutConfirmDialog _logout;
+    private ConfirmDialog _confirmLegacy;
     private ExitGameDialog _exitGame;
 
     public override void _Ready()
@@ -110,6 +111,9 @@ public partial class LegacyHudLayoutLab : Control
         _exit = AddWindow(new ExitDialog(), new Vector2I(274, 230));
         // EI 原版「注销人物」F950 确认框：位置由原版证据给出 (220,151)。
         _logout = AddWindow(new LogoutConfirmDialog("返回游戏人物选择界面？", null), LogoutConfirmDialog.LegacyLocation);
+        // 通用 ConfirmDialog 的 legacy 外观（应等同 F950，验证它不再用 F281）。
+        _confirmLegacy = AddWindow(new ConfirmDialog("您确定要执行此操作吗？", "Confirm", null),
+            LogoutConfirmDialog.LegacyLocation);
         // EI 原版「退出游戏」F800 窗：位置由原版证据给出 (218,176)，不再由测试场摆放。
         _exitGame = AddWindow(new ExitGameDialog(), ExitGameDialog.LegacyLocation);
         _notice.SetNotice("旧版公告窗口测试正文\n正文区域使用 F602 原版坐标。");
@@ -182,6 +186,7 @@ public partial class LegacyHudLayoutLab : Control
                 "minimap" or "map" => _miniMap,
                 "exit" or "logout" => _exit,
                 "logoutconfirm" or "f950" => _logout,
+                "confirm" or "confirmdialog" => _confirmLegacy,
                 "exitgame" or "quit" => _exitGame,
                 _ => null,
             };

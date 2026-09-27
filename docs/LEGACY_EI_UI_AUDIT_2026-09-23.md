@@ -6492,3 +6492,62 @@ phase 0 四钮**位置正确**（差分验证未变/未偏移），phase 2 五�
 若偏移消失则定位到具体那一项；若不变则排除该方向。
 
 **与之前的"试错"区别**：这是**受控 A/B + 直接观察**，且每次只动一项。
+
+## 更正：差分 0 被误读为"正确隐藏"（2026-09-27）
+
+### 我此前的解读
+
+差分检查中，**phase 0 四钮位置差异为 0**，我写成：
+
+> 「phase 0 四钮 —— 全部未变（0 像素）⇒ **phase 2 时它们确实全部隐藏**」
+
+### 这个解读**不成立**
+
+**差异 0 只说明"两个相位下该处画面相同"**，它**同样兼容**另一种解释：
+
+> **phase 0 时那四个按钮就没有渲染出来**（两相位都是空的，故差异为 0）。
+
+**两种情形差分都是 0。我选了对自己有利的那一种，而没有去区分。**
+这与本任务反复出现的"用一个合理解释代替验证"是同一毛病。
+
+### 如何区分（下一步必做）
+
+**在 phase 0 的截图里直接确认那四个按钮存在** —— 现在有了看图能力，做法是：
+
+1. 裁 `(440,93)`、`(79,243)`、`(259,49)`、`(28,438)` 四处的屏幕区域（按 `scale=2,
+   offset=(214,58)` 映射）；
+2. **直接看图**确认「创建角色 / 删除角色 / 开始游戏 / 结束」四钮是否真的画在那里；
+3. 若**没画** ⇒ 找到"为什么没渲染"（可能是位置错、可能被 `Visible=false`、可能被遮挡）；
+   若**画了** ⇒ 此前的"隐藏"解读成立，但**仍需看它们在 phase 2 是否真的消失**（
+   这次要用"phase 2 该处是否为背景"来判，而不是靠差分）。
+
+### 顺带：本轮读到的 `DXButton.DrawControl` 分支
+
+```csharp
+protected override void DrawControl()
+{
+    if (LegacyHudCaption)
+    {
+        if (IsPressed || Pressed) { ... DrawTextureRect(texture, Rect2(Vector2.Zero, Size), false); }
+        return;                     // 不调 base ⇒ 不加帧偏移
+    }
+    int index = GetCurrentIndex();
+    if (index >= 0)
+    {
+        base.DrawControl();          // DXImageControl.DrawControl：UseOffSet 为真才加 off
+        if (MirSkin.GetTexture(LibraryFile, index) == null) DrawFallbackButton();
+        return;
+    }
+    ...
+```
+
+`DXButton : DXImageControl`（第 10 行）。五钮**未设 `LegacyHudCaption`**，走第二条路径，
+而 `UseOffSet` 默认为 `false` ⇒ `off = Zero` ⇒ **`+32` 仍不是来自这里**。
+
+**⇒ `+32` 的成因仍未定位，且现在多了一个更根本的疑点：四钮在 phase 0 到底画没画。**
+
+### 状态（诚实）
+
+- `+32` 偏移：已量化、已排除 3 条假设（帧 offset / `UseOffSet` / `DrawControl` 分支），**成因未定**；
+- **四钮相位 0 渲染情况：此前"已正确隐藏"的结论作废**，需重新确认；
+- **未做任何临时补偿**。

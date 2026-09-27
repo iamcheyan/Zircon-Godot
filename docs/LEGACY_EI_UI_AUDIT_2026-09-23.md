@@ -4662,3 +4662,44 @@ LoginScene.cs:427    Vector2 viewport = new Vector2(UiScaler.BaseWidth, UiScaler
 3. 用 `ZIRCON_UI_AUDIT=1` 跑一次看有无溢出；
 4. 截图 + OCR 验证按钮位置是否从"偏左上"回到原版比例；
 5. `--legacy-select-selftest` 复验属性未变。
+
+## 已实施：逻辑画布基准 1024×768 → **800×600**（2026-09-27，含验证）
+
+`GodotClient/Scripts/UiScaler.cs`：
+
+```csharp
+public const float BaseHeight = 600f;   // 原 768f
+public const float BaseWidth  = 800f;   // 原 1024f
+```
+
+并附注释记录依据（`0x45FD50` 的立即数裁剪边界 0x320/0x258 = 800/600 + 该函数是全局绘制
+入口；本类只被两个 legacy 场景使用）、以及**三条"不要顺手改"**警告
+（F50 仍 (0,0) 不拉伸；模型中心仍 (320,240)；控件坐标数值不变）。
+
+### 验证（非仅 build）
+
+1. **属性自检**：
+   `[LegacySelectButtonSelfTest] PASS 9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参`
+   —— 基准改动**未影响**任何控件属性。
+2. **缩放日志**：
+   ```
+   改动前: [UiScaler] scale=1.7135416 viewport=(2028,1316) offset=(136.67, 0)
+   改动后: [UiScaler] scale=2       viewport=(2028,1316) offset=(214, 58)
+   ```
+   800×600 × 2 = 1600×1200，偏移 (214,58) ⇒ 右界 1814 ≤ 2028、下界 1258 ≤ 1316，
+   **4:3 与窗口匹配**。此前 1024×768 的纵向偏移为 0（顶满高度）。
+3. **截图 + OCR**（`dim ocr recognize`）读出四个按钮，且**顺序符合原版坐标关系**：
+   ```
+   开始游戏   <- (259,49)  更高更左
+   创建角色   <- (440,93)
+   删除角色   <- (79,243)
+   结束       <- (28,438)
+   ```
+   改动前同样四钮可见但整体贴向画布左上；改动后落点回到 800×600 的比例位置。
+
+截图归档 `.artifacts/legacy-800x600-base-2026-09-27/select_800.png`。
+
+### 说明：本次是"基准"修正，不是"坐标"修正
+
+四钮坐标数值**一个字都没改**（它们一直与 EI ctor 实参一致）；改的是**画布基准**。
+这与前几轮的结论自洽：逐个坐标都对、整体比例不对 —— 问题在参照系不在数值。

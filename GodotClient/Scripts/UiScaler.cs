@@ -21,8 +21,17 @@ namespace ZirconClient.Scripts;
 /// </summary>
 public static class UiScaler
 {
-    public const float BaseHeight = 768f;
-    public const float BaseWidth = 1024f;
+    // **EI 原版屏幕尺寸是 800x600**（证据：全局帧绘制入口 0x45FD50 的裁剪边界用的是
+    // 立即数 0x320 / 0x258 = 800 / 600，且该函数有 23 个调用者、遍布各子系统，
+    // 是全局绘制入口）。选角屏与登录页的原版控件坐标（如 (440,93)、(459,436)）都是
+    // 这个 800x600 系下的绝对值。
+    // 此前为 1024x768，导致同一批绝对坐标落在大画布上、控件整体偏左上。
+    // **注意**：本类只被 SelectScene 与 LoginScene 两个 legacy 场景使用（已 grep 查证），
+    // 现代 UI 不引用，故改基准只影响这两个场景 —— 而这正是期望的。
+    // **不要顺手改**：F50 背景仍画 (0,0) 且尺寸 640x480 不拉伸；角色模型中心仍是
+    // 640x480 那张图自身的中心 (320,240)，不是本画布中心。
+    public const float BaseHeight = 600f;
+    public const float BaseWidth = 800f;
 
     /// <summary>按视口大小计算 UI 缩放倍率（1..2，与 GameScene.RefreshUiScale 一致）。</summary>
     public static float ComputeScale(Viewport viewport)

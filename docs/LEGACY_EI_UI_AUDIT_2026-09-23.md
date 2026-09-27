@@ -5483,3 +5483,92 @@ call dword ptr [0x4762cc]    ; 字符串拷贝/格式化（**又一个运行期�
 这与本任务里反复出现的"过早锁定一个解释"完全同源
 （640×480 误判、`0x104` 误判为 msgid、`0x64` 误判为模板串、帧 81/84 误判归属）。
 **每一次都是"第一种解释不成立"被我当成了"没有解释"。**
+
+## 决定性：帧 86（F86）= 「创建角色」提交按钮，不是"开始游戏"（2026-09-27 语义闭合）
+
+API 表解出后（`PtInRect`/`GetWindowTextA`/`SetWindowTextA`/`SetRect`），帧 86 的参数链
+终于可完整解读：
+
+```asm
+; --- 命中与前置检查 ---
+0x459F4B  call [eax+0x10]              ; **PtInRect**（命中测试）
+0x459F50  je 0x45A079                  ; 未命中 -> 结束
+0x459F56  mov eax, [esi+0x1488]        ; 选中槽
+0x459F5C  cmp eax, -1 / je 0x45A079    ; 无选中 -> 结束
+0x459F65  cmp eax, 2  / jge 0x45A079   ; 越界 -> 结束
+
+; --- 读聊天输入框的文本 ---
+0x459F79  push 0x104                   ; nMaxCount
+0x459F7E  rep stosd                    ; 清零缓冲
+0x459F8C  call [0x476304]              ; **GetWindowTextA(0x8AA48C, buf, 0x104)**
+0x459F9E  call [0x4762cc]              ; **SetWindowTextA(0x8AA48C, 0x8B187C)**
+0x459FA8  test al,al / je 0x45A079     ; **文本为空 -> 不动**
+0x459FB9  repne scasb ; dec ecx
+0x459FBE  cmp ecx, 0xe                 ; **长度 > 14 ?**
+0x459FC1  jle 0x459fdd                 ; <=14 -> 走校验
+
+; --- 长度 > 14：报错 ---
+0x459FC3  push 0xffff / push 0x96(150) / push 0x8c(140)
+(0x459FD2) push 0x47d848               ; 错误文案
+0x45A074  call 0x418030                ; **弹消息框 (140,150)**
+
+; --- 长度 <= 14：校验 ---
+0x459FDD  lea eax, [esp+0x1c]          ; 文本
+0x459FE4  call 0x4589b0                ; **校验函数**
+0x459FEB  je 0x45A02D                  ; 校验失败 -> 另一分支
+
+; --- 校验通过：发送 ---
+0x459FED  mov eax, [esi+0x1488]        ; 选中槽
+0x459FF7  add eax, 0x43
+0x459FFA  shl ecx, 6 / shl eax, 6
+0x45A000  mov dl, [ecx+esi+0x10c1]     ; **槽的字节 A**
+0x45A009  mov cl, [eax+esi]            ; **槽的字节 B**
+0x45A00C  push edx / push ecx          ; A、B 作参数
+0x45A012  push 1
+0x45A014  push 文本 / mov ecx, 0x8ab828
+0x45A01A  call 0x451fe0                ; **网络发送**
+
+; --- 校验失败 ---
+0x45A02D  rep stosd 清另一缓冲
+0x45A047  push 0x321 (801)
+0x45A04C  call 0x403ad0                ; 格式化
+0x45A051  push 0xffff / 0x96 / 0x8c
+0x45A074  call 0x418030                ; **弹消息框**
+```
+
+### 结论
+
+**帧 86（F86，勾选态图形）的动作 = 「以聊天输入框的文本 + 选中槽的 A/B 两个字段，
+向服务器发送一个请求」**，并带**输入长度校验**（>14 报错）与**校验函数**（`0x4589B0`）。
+
+**这与"创建角色"的语义高度吻合**：
+
+- 文本 = **角色名**（`0x8AA48C` 是那个输入框；长度上限 14 与角色名长度限制吻合）；
+- 两个字节 = **职业与性别**（`+0x10C1` 与 `+0x43` 偏移处的槽字段）；
+- 发送目标 `0x8AB828` 与 `[0x451F90]` 族 = **网络**。
+
+### 我方实现**接错了**
+
+我方现在：
+
+```csharp
+_skinConfirmYes = MakeSelectIconButton(86, (450,444), () => OnStartPressed());
+```
+
+即**帧 86 → 开始游戏**。**证据显示应为「提交创建角色」**（发送角色名 + 职业 + 性别），
+即应对应我方的 `SubmitSkinCharacter()`（走 `SendNewCharacter`）。
+
+**这是一处实质错误，且现在有完整证据可以修正。**
+
+### 附：`0x8AA48C` 是那个输入框
+
+文档 NOTICE-01 已记「`[0x8AA48C]` 是 chat-input 编辑框」。此处帧 86 正是**读它作角色名**。
+⇒ 该"聊天输入框"在**选角屏**语境下就是**角色名输入框**（同一控件，不同语境用途不同 ——
+这也解释了为什么它被称作 chat-input：它是**通用文本输入控件**）。
+
+### 下一步（可执行）
+
+1. **修正帧 86 的动作** → `SubmitSkinCharacter()`；
+2. **同时检查**：我方创建流程目前挂在"创建角色面板"的确认按钮上（`_skinCreateConfirm`），
+   而原版是在 **phase 2 点 F86** 提交 —— 需核对我方的 phase 1→2→提交 的路径是否与原版一致；
+3. 改后截图 + 自检验证。

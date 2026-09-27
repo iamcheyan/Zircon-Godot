@@ -747,7 +747,15 @@ public partial class SelectScene : Control
         _skinCreatePanel.AddControl(_skinCreateCancel);
         UpdateCreateButtonStates();
         UpdateCreatePreview();
-        if (AutoLoginArgs.LegacyUi) { ApplyLegacyEiSelectLayout(); SetSelectPhase(0); }
+        if (AutoLoginArgs.LegacyUi)
+        {
+            ApplyLegacyEiSelectLayout();
+            // 验证用：--legacy-phase2 直接进入 phase 2（动画列表 + 5 个图形钮），
+            // 便于截图核对 phase 2 的贴图/hover，不需要真走一遍创建流程。
+            bool forceP2 = false;
+            foreach (var a in OS.GetCmdlineUserArgs()) if (a == "--legacy-phase2") forceP2 = true;
+            SetSelectPhase(forceP2 ? 2 : 0);
+        }
         GetNode<Control>("VBox").Visible = false;
     }
 

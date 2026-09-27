@@ -784,13 +784,13 @@ public partial class SelectScene : Control
         }
 
         // 主按钮：改成 Interface1c 文字精灵帧（帧内含字）。
-        SkinSelectButton(_skinCreate, 51, 51, new Vector2I(440, 93), new Vector2I(96, 26));
-        SkinSelectButton(_skinDelete, 53, 53, new Vector2I(79, 243), new Vector2I(96, 26));
-        SkinSelectButton(_skinStart, 55, 55, new Vector2I(259, 49), new Vector2I(96, 24));
+        SkinSelectButton(_skinCreate, 51, 52, new Vector2I(440, 93), new Vector2I(96, 26));
+        SkinSelectButton(_skinDelete, 53, 54, new Vector2I(79, 243), new Vector2I(96, 26));
+        SkinSelectButton(_skinStart, 55, 56, new Vector2I(259, 49), new Vector2I(96, 24));
 
         // 「结束」按钮（原实现没有）。
-        _skinExit = new DXButton { LibraryFile = LibraryFile.Interface1c, Index = 57, HoverIndex = 57,
-            PressedIndex = 57, FixedSize = true, Size = new Vector2I(48, 26), Location = new Vector2I(28, 438) };
+        _skinExit = new DXButton { LibraryFile = LibraryFile.Interface1c, Index = 57, HoverIndex = 58,
+            PressedIndex = 58, FixedSize = true, Size = new Vector2I(48, 26), Location = new Vector2I(28, 438) };
         _skinExit.MouseClick += (o, e) => GetTree().Quit();
         _uiLayer.AddChild(_skinExit);
 
@@ -823,7 +823,11 @@ public partial class SelectScene : Control
         if (size == Vector2I.Zero) size = new Vector2I(28, 28);
         var button = new DXButton
         {
-            LibraryFile = LibraryFile.Interface1c, Index = frame, HoverIndex = frame, PressedIndex = frame,
+            // EI 证据：phase 2 各钮的 normal/hover 成对（0x56/0x57, 0x59/0x5A,
+            // 0x5C/0x5D, 0x5F/0x60）；0x62 例外（normal==hover==0x62）。
+            // 传入的 frame 是 normal 帧，hover 取 frame+1（0x62 除外，见调用点注释）。
+            LibraryFile = LibraryFile.Interface1c, Index = frame,
+            HoverIndex = frame == 98 ? 98 : frame + 1, PressedIndex = frame,
             FixedSize = true, Size = size, Location = location,
         };
         button.MouseClick += (o, e) => action();

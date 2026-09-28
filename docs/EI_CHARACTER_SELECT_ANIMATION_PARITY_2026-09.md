@@ -1,95 +1,413 @@
-# EI 角色选角动画与渲染 parity 复核文档
-## 版本信息
-- 时间: 2026-09-28
-- 分支: goal/ei-character-select-animation-mini-20260928
-- 模型: Seed-2.0-Mini
+# EI 选角人物尺寸/待机动画 parity 复核（2026-09-28，第二轮）
+
+本文档由 2026-09-28 的第二轮调查**完整重写**。上一版（95 行初稿）中的 PASS/结论未经
+证据支撑，且含本机绝对路径，已按 Goal 要求逐条重核后重写；旧结论不作数，只看本文。
+
+- 分支：`goal/ei-character-select-animation-mini-20260928`
+- 复核对象：EI（传奇3.0 复古 UI）角色选择屏里**两个槽位人物的资源、尺寸、锚点、
+  帧序列与选中行为**，以及 Godot Legacy 移植版的对应实现。
+- 证据级别用语：`primary-bytes`（原版 EXE 字节/反汇编直接读出）、
+  `primary-resource`（原版 WIL 资源直接解码）、`derived`（由前者计算）、
+  `candidate`（可信但未闭合）、`pending`（需运行期捕获）、`blocked`（本机无法取得）。
 
 ---
 
-## 一、原版 EI EXE 身份与版本匹配
-- 原版 EI EXE 路径: `/home/tetsuya/mir2ei/LegacyEI/Mir3.exe`
-- 当前复查待补充：需校验此 EXE 与研究记录目标构建的 SHA-256 匹配性（当前未执行哈希校验，证据级别 pending）
-- 资源根: `/home/tetsuya/mir2ei/LegacyEI/Data/`
-- Interface1c.wil 状态: 目标 EI 客户端原生资源（非缓存/Modern Zl 帧，证据级别 pending）
+## 0. 本轮结论（先给结论，证据见后）
+
+1. **原版选角槽位人物是 `Interface1c.wil` 的 30 个预渲染帧段之一，1:1 原生尺寸绘制，
+   不做缩放。** 帧段表在父对象 `+0x932`（30 条 6 字节记录），索引
+   `(gender + class*2)*5 + variant`。`primary-bytes`（0x458BB0、0x458EC0）。
+2. **每帧 120 ms**（记录第 3 字，30 条全为 `0x78`）；不是"整段总时长"。
+   `primary-bytes`。
+3. **槽位坐标 = 锚点 + 帧头 offsetX/offsetY**（尺寸取帧头 w/h），锚点
+   `槽0 = (250,210)`、`槽1 = (300,210)`。`primary-bytes`（0x458FBD 解析器 +
+   0x4578B0-0x4578F5 绘制）。
+4. **phase 0（角色列表）用 variant 1 起播，播完切 variant 2 无限循环**
+   （状态机 0x457835-0x457891）；variant 1/2 都是**小体型**帧（36×104 / 80×86 量级），
+   variant 4 才是 250-268 px 的大体型（创建预览/phase 2 用）。
+5. **列表刷新后不默认选中任何角色**（`[+0x1168] = -1`，0x458FCC）；
+   点击槽位把该槽重播 variant 1（→2 循环），另一个已占用槽切 variant 3（→0 循环）。
+   `primary-bytes`（0x4598BF-0x459902）。
+6. Godot 移植版此前用 variant 4（250-268 px）+ 推导坐标（中心 350/490、脚底 440）、
+   整轮 2400 ms、默认选中槽 0 → 与上述 5 条全部不符。本轮按证据改正（见 §6/§7）。
+7. **原版运行画面本机无法取得**（Windows DX8 + nProtect 二进制，无 Windows/Wine 环境），
+   故"原版 vs Godot 同 viewport 视觉对照"= **BLOCKED**（见 §8），
+   替代取证为：原版 WIL 离线复现 + Godot 同约定多时点实机截图与 bbox 量化（§7）。
 
 ---
 
-## 二、选角 phase 动画调用链
-### Phase 0（角色列表）
-- 角色绘制路径: Round297 `0x4570D0` 为选角屏角色绘制函数，当前 Godot 实现为 `UpdateCaveSlots()`，匹配原版角色绘制路径
-- 动画更新触发: Round298 `0x457790` 为动画列表更新触发，当前 Godot 中在 `_Process` 里处理动画刷新，逻辑对应
-- 槽选择细节: Round297 `0x458150` 为选中状态渲染逻辑，当前 Godot 中通过 `SelectSkinCharacter(idx)` 触发刷新，对应原版槽选择逻辑
+## 1. 反编译目标身份 / 资源身份
 
-### Phase 2（动画角色列表）
-- 动画处理: Round297 `0x457AB0` 为 phase 2 动画列表处理，对应 Godot 中 `UpdateCaveSlots()` 循环动画，逻辑匹配原版 phase 2 动画列表处理
+| 项 | 值 | 级别 |
+| --- | --- | --- |
+| 原版客户端 EXE | 本机 EI 客户端目录下的 `Mir3.exe`，大小恒为 **524288 B (0x80000)**，ImageBase `0x400000`，节 `.text/.rdata/.data/.rsrc` | primary-bytes |
+| 研究记录目标 | 反编译记录声明源为 EI 3.0 客户端 `Mir3.exe`（image base 0x400000，file size 0x80000） | derived（研究侧） |
+| 是否同一构建 | **一致**：本文下列 VA 全部逐条命中 —— `0x47D624` = `.\Sound\SelChr.mp3`、`0x47D690` = `.\Sound\CreateChr.mp3`、`0x47D778/84/90` = ` 武 士 ]`/` 法 师 ]`/` 道 士 ]`、`0x47D79C/A4` = `[ 男`/`[ 女`、`0x47D7E0` = `.\Data\CreateChr.dat`、`0x47D818` = `请先建立至少一个角色才能进行游戏.`、阶段跳表 `0x457778` 五项、派发表 `0x45950C` 九项 | primary-bytes |
+| SHA-256 | **已私下核验**（不写入公开文档）。研究材料未留存目标构建的 hash，故"匹配"由上面的结构性比对确立，而非 hash 相等 | primary-bytes |
+| 目标 WIL | EI 复古 UI 目录（客户端 legacy UI 数据根）下 `Interface1c.wil` = 13,450,283 B + `Interface1c.wix` = 8,024 B，**2000 帧** | primary-resource |
+| 现代库隔离 | 现代 `Interface1c.Zl`（124,483,148 B）与本轮的帧号/尺寸结论**无关**，未用于任何取值 | primary-resource |
 
----
-
-## 三、创建/列表/详情媒体边界
-- 创建阶段 `CreateChr.dat`: 建角过场动画，与选角角色列表动画独立（证据级别 closed，依据文档注释）
-- 列表动画: 当前实现为 `Interface1c.wil` 中职业对应帧块循环，对应 phase 2，非建角阶段
-- 选中角色详情: 待确认是否在选角屏实现，当前 Godot 实现未包含详情面板（证据级别 blocked）
+> 说明：本轮所有帧号/尺寸/offset 均由 `Tools/common/wilsdk.py`（EI WIL/WIX 解码器）
+> 直接读取 `Interface1c.wil` 得到，与 Godot 侧 `LegacyWilLibrary` 是**两套独立实现**。
 
 ---
 
-## 四、原版槽角色动画/坐标证据（pending）
-| 属性 | 原版证据来源 | 结论状态 | 当前实现对应 |
+## 2. 调用链与 `0x458EC0` 职责裁决（Goal 线索 4）
+
+### 2.1 phase 与槽数组
+
+| 阶段 | 入口 | tick | 槽数组 | 锚点来源 | 级别 |
+| --- | --- | --- | --- | --- | --- |
+| 0 角色列表（4 按钮） | 0x4575F3 | 0x457790 | `+0xCB8`（步长 0x40，2 项） | 解析器 0x458FBD 写死 | primary-bytes |
+| 2 创建/动画列表（5 按钮） | 0x457604 | 0x457AB0 | `+0x10BC` | 0x458910 表（按性别+职业） | primary-bytes |
+
+槽记录字段（步长 0x40）：`+0x00` 占用标志、`+0x04` 职业、`+0x05` 性别、`+0x06` 等级、
+`+0x07` 名字、`+0x18/+0x1C` 锚点 x/y、`+0x20` 动画 state(=variant)、`+0x22` 当前帧、
+`+0x24` 帧计时、`+0x28` 命中 RECT、`+0x38` blit 模式字节、`+0x3C` 帧记录指针。
+（解析器 0x458F80；`0x458310` 读 `+0x04` 分派「职 业 武 士/法 师/道 士」）
+
+### 2.2 `0x458EC0` 到底是"实体创建"还是"槽查找" —— 用字节裁决
+
+`0x458EC0` 全函数（21 字节，`this`=0x8A7140，`ret 0xc`）：
+
+```
+mov eax,[esp+8] ; mov edx,[esp+4]        ; a2, a1
+and eax,0xff ; and edx,0xff
+lea eax,[edx+eax*2]                      ; a1 + a2*2
+mov edx,[esp+0xc] ; and edx,0xff         ; a3
+lea eax,[eax+eax*4] ; add eax,edx        ; (a1+a2*2)*5 + a3
+js  0x458EF9 ; cmp eax,0x1e ; jge 0x458EF9     ; 越界 → 返回 NULL
+lea eax,[eax+eax*2]                      ; idx *= 3
+lea eax,[ecx+eax*2+0x932]                ; 返回 &this[0x932 + idx*6]
+ret 0xc
+```
+
+即：**返回指向 `this+0x932` 处 6 字节记录的指针，越界返回 0**。它**不创建任何对象**、
+**不查 WIL**，因此：
+
+- 研究记录 Round 297「`0x458EC0` 实体创建 → `[esi+0x3C]`」是**宽松措辞**：
+  真正发生的是调用方 `0x458B77` 把返回值写进 `[slot+0x3C]`。
+- 研究记录 Round 298「`0x458EC0` = 槽查找（职业+类型×2+工作 → `[0x932]`+idx×6，
+  边界 < 0x1E）」**与字节一致**，予以采纳。
+- **两种说法可以同时成立但不含"WIL 帧映射"含义**：帧号来自这张表本身，
+  不是 `0x458EC0` 推出来的。旧移植注释把"能推出 WIL 帧号"归给它是错的。
+
+调用点仅两处：`0x458AC7`（0x458A70 命中框）与 `0x458B70`（0x458B20 装载）。
+参数来源 `[slot+4]`（职业）、`[slot+5]`（性别）、flags（variant）。
+
+### 2.3 各函数职责（本轮实读）
+
+| VA | 职责 | 关键指令 | 级别 |
 | --- | --- | --- | --- |
-| 角色帧基址 | `login-charselect-flow-evidence.json` 6 个帧段 + Round298 `0x458EC0` 槽查找映射 | 候选（帧段基址匹配原版职业/性别映射） | `CharacterBaseFrame()` 返回 440/740/1040/1340/1640/1940 |
-| 角色帧数量 | 审计文档 15-18 帧/职业 | 候选（帧数量匹配原版各职业段长度） | `CharacterFrameCount()` 返回 15-18 |
-| 角色动画总时长 | Round298 动画循环反汇编 + DXAnimatedControl 实现 | 已验证（2400ms 为整轮总时长，符合原版循环逻辑） | `AnimationDelay=2400ms`（整轮总时长，依据 DXAnimatedControl 文档） |
-| 角色帧高度 | Interface1c.wil 帧头 240-268px | 候选（使用原生尺寸，帧高匹配范围） | `MirSkin.GetSize()` 返回值 |
-| 槽中心 X | Round297 `0x458BB0` 表单布局 + 背景构图 | 候选（推导值 350/490，待原版截图验证） | `Slot0CenterX=350`/`Slot1CenterX=490`（推导值） |
-| 脚底 Y | Round297 背景构图 | 候选（推导值 440，待原版截图验证） | `SlotFeetY=440`（推导值） |
-| 阴影帧偏移 | Round297 `[slot+0x3C]` 阴影帧偏移 | 匹配（baseFrame+20 对应原版 slot+0x3C） | `baseFrame+20` |
+| 0x457790 | phase 0 每帧：F50 背景 → 2 槽(阴影/身体/叠加) → 4 按钮 hover → 0x458150 详情 | `0x466130(+0x14C,0x32)`、`0x45FD50` | primary-bytes |
+| 0x457AB0 | phase 2 每帧：F50 → 0x4586F0 → 2 槽(选中动/未选中静) → CreateChr.mp3 | `0x466130(+0x14C,0x50)` | primary-bytes |
+| 0x458150 | phase 0 选中角色详情：3 行文本（0x96C8FF/0x96F096/0xAFFFFF），位置由 0x466800 矩阵 rect 决定 | `0x45DBA0`+`0x45DD70` | primary-bytes（rect 坐标未闭合 → candidate） |
+| 0x458310 | 拼装「名 字 %s / 等 级 %d / 职 业 …」串；`[0x1168]==-1` 直接返回 | `0x47D6E4/0x47D6D8/0x47D6A8` | primary-bytes |
+| 0x458A70 | 命中框：按当前帧算 bbox 写 `[slot+0x28]`（PtInRect 用） | `0x4762B0` = PtInRect | primary-bytes |
+| 0x458B20 | 槽装载：`state=flags`、`帧=记录首帧`、`计时=0` | 记录 `[0x3C]`→`[0x22]` | primary-bytes |
+| 0x458440 | 槽记录构造（性别/职业/等级/名字）+ 调 0x458910 取锚点 → `+0x18/+0x1C` | `0x458910` | primary-bytes |
+| 0x458910 | 锚点表：`idx = 性别*3 + 职业`，8 字节一项 | 见 §4.2 | primary-bytes |
+| 0x4586F0 | phase 2 里选中槽的 3D 叠加绘制（0x4570D0 缩放射线） | `0x3E48C8C9`≈0.196 | candidate |
+| 0x4570D0 | 通用**缩放精灵**绘制（0.196/0.396/0.588/1.0 四级，按钮 hover/3D 叠加用），**不是槽位人物绘制** | `fmul [0x476364]=0.5` | primary-bytes |
+| 0x4598BF | 槽位鼠标命中处理（phase 0 与 phase 2 各一支）：PtInRect → 改选中 + 切动画段 | 见 §5 | primary-bytes |
+| 0x459D48 | F89 确认 → `phase=3` + msgid 0x64 | | primary-bytes |
+
+> 更正：旧注释把 `0x4570D0` 当成"选角人物 3D 投影（scale 0.196）"。实读字节后，
+> 槽位人物走 `0x45FD50`（WIL 帧 blit），`0x4570D0` 只被按钮 hover 与 phase 2 的
+> 3D 叠加调用。旧说法作废。
 
 ---
 
-## 五、当前 Godot 代码实现
-- 资源路径: `LibraryFile.Interface1c`（对应 LegacyEI/Data/Interface1c.wil）
-- 帧基址: `CharacterBaseFrame()` 按职业/性别映射：0=440（战士男）、1=740（战士女）等
-- 帧数量: `CharacterFrameCount()` 对应各职业帧数 15-18
-- 动画周期: `AnimationDelay=2400ms`（`DXAnimatedControl` 实现为整轮总时长，每帧时长=2400/帧数）
-- 角色尺寸: 按 `MirSkin.GetSize()` 原生尺寸，按 `Location=(centerX - size.X/2, SlotFeetY - size.Y)` 绘制
-- 选中行为: 点击 `_slotHit0`/`_slotHit1` 触发 `SelectSkinCharacter(idx)`，切换角色列表选中项
+## 3. 帧表（30 条记录）与"帧/时长"语义
+
+`0x458BB0`（父对象 ctor 0x456ECF 调用）用 `0x449C50(&this+0x932+i*6, first, last, 0x78)`
+连写 **30 条**（`0x458BC6`…`0x458EB8`，步长 0x1A）。记录 = `{word first; word last;
+word frameMs}`，`frameMs` 30 条全为 `0x78 = 120`。
+
+| idx | g(性别+职业×2) | variant | first–last | 帧数 | idx | g | variant | first–last | 帧数 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | 0 武男 | 0 | 200–210 | 11 | 15 | 3 法女 | 0 | 1100–1110 | 11 |
+| 1 | 0 | 1 | 260–279 | 20 | 16 | 3 | 1 | 1160–1177 | 18 |
+| 2 | 0 | 2 | 320–331 | 12 | 17 | 3 | 2 | 1220–1230 | 11 |
+| 3 | 0 | 3 | 380–387 | 8 | 18 | 3 | 3 | 1280–1288 | 9 |
+| 4 | 0 | 4 | 440–457 | 18 | 19 | 3 | 4 | 1340–1356 | 17 |
+| 5 | 1 武女 | 0 | 500–510 | 11 | 20 | 4 道男 | 0 | 1400–1410 | 11 |
+| 6 | 1 | 1 | 560–570 | 11 | 21 | 4 | 1 | 1460–1476 | 17 |
+| 7 | 1 | 2 | 620–630 | 11 | 22 | 4 | 2 | 1520–1539 | 20 |
+| 8 | 1 | 3 | 680–691 | 12 | 23 | 4 | 3 | 1580–1591 | 12 |
+| 9 | 1 | 4 | 740–755 | 16 | 24 | 4 | 4 | 1640–1656 | 17 |
+| 10 | 2 法男 | 0 | 800–810 | 11 | 25 | 5 道女 | 0 | 1700–1710 | 11 |
+| 11 | 2 | 1 | 860–871 | 12 | 26 | 5 | 1 | 1760–1776 | 17 |
+| 12 | 2 | 2 | 920–930 | 11 | 27 | 5 | 2 | 1820–1830 | 11 |
+| 13 | 2 | 3 | 980–990 | 11 | 28 | 5 | 3 | 1880–1889 | 10 |
+| 14 | 2 | 4 | 1040–1054 | 15 | 29 | 5 | 4 | 1940–1954 | 15 |
+
+独立复核（`primary-resource`，与上面的反汇编**互不共用逻辑**）：
+逐帧解码 `Interface1c.wil`，30 段**段内全部为有效帧**，且 27 段的前一帧/后一帧为空帧
+（另 3 段与相邻段紧邻，无缝），段长 = `last-first+1` 全部吻合。
+段首帧通式 `200 + 300*group + 60*variant` 亦成立。
+
+**variant 语义（pose）**：`primary-resource` + 本轮离线放大目视 —
+v0 = 小体型站立待机（剑上扬，11 帧微动）、v1 = 小体型挥剑连段（20 帧）、
+v2 = 小体型突刺（12 帧）、v3 = 小体型另一攻击（8-12 帧）、
+**v4 = 大体型站立待机（240–268 px 高）**。v4 即创建预览/phase 2 使用段。
+
+**时序语义**：phase 0 机器（0x457839-0x457864）
+`计时 += delta; if (计时 > 记录.duration) { 帧++; 计时=0; if (帧 > 记录.last) 切段 }`。
+→ **120 ms 是每帧时长**，不是整轮时长。旧注释"AnimationDelay=2400ms 符合原版循环逻辑"
+不成立（2400 ms 只在"18 帧×133 ms"这类巧合上接近）。
 
 ---
 
-## 六、差异与验证假设（pending）
-| 差异假设 | 预期结果 | 最小验证方法 | 状态 |
+## 4. 尺寸、锚点与层
+
+### 4.1 槽位锚点（phase 0，解析器 0x458FBD）
+
+```
+0x459120  mov dword [ebx+0xCD0], 0x12C   ; 300 → 当前槽 X
+0x459149  mov dword [ebp+0xCD0], 0x0FA   ; 250 → 槽 0 X
+0x459158  mov dword [ebp+0xCD4], 0x0D2   ; 210 → 槽 0 Y
+0x45912E  mov dword [ebx+0xCD4], 0x0D2   ; 210 → 当前槽 Y
+0x45916E  mov dword [ebx+0xCD4], 0x0FA   ; 250 → 三号槽 Y（不可达）
+```
+
+结论：**槽0 = (250,210)、槽1 = (300,210)**；
+第三个候选 (350,250)（0x459164）在"最多 2 角色"（`[esp+0x14]` 钳制 2）下不可达。
+`candidate` 备注：`0x4590F8` 读的局部 `[esp+0x1C]` 在本函数内**先读后写**
+（0x459112 才清零），静态上无法排除"槽 0 也走 300 分支"；但该分支会对 idx=0/1 都写
+"当前槽"，两槽将完全重叠，故取唯一非退化解 250/210 + 300/210。
+
+### 4.2 phase 2 的锚点表（0x458910，差异对照用）
+
+`idx = 性别*3 + 职业`，8 字节一项：`(男武 110,110) (男法 110,120) (男道 110,120)
+(女武 400,160) (女法 420,115) (女道 425,118)`（`primary-bytes`）。
+phase 2 / 创建预览用它，与 phase 0 的 (250/300,210) **不是同一套坐标**。
+
+### 4.3 绘制与层（phase 0 每槽，0x4578B0-0x4579AB）
+
+```
+x = [slot+0x18] + 帧头.offsetX ; y = [slot+0x1C] + 帧头.offsetY ; w/h = 帧头(w,h)
+层1 阴影  = 帧 (当前帧 + 20)   → 0x460CB0（阴影混合）
+层2 身体  = 帧 (当前帧)        → [slot+0x38]!=0 ? 0x45FD50 : 0x4645E0
+层3 叠加  = 帧 (当前帧 + 40)   → 0x457310（3D 纹理路径，0x466800/0x467920）
+```
+
+- 层3 在**本轮用到的 v1/v2/v4 段里要么为空帧，要么是 3D 贴图页**（如 g0v1 的
+  `+40` 段为 128/256/512 幂次尺寸、经 `0x457310` 的 3D 变换绘制，不是 2D blit）
+  → 2D 移植层**不实现**（记为 candidate，理由：无 2D 等价物，且 v2/v4 段为空）。
+- 阴影 offset 与身体不同（例：g4v1 身体 `off(32,51)`、阴影 `off(42,?)` 量级），
+  因此"阴影按身体位置居中"必然错位 —— 旧实现正是这么做的。
+- 各段脚底线：如 g4v2 恒 y=375、g0v2 恒 y≈363（锚点 + offset 决定），
+  移植版不应再做"统一脚底线"归一化。
+
+### 4.4 现代（非 legacy）路径的展示块
+
+`UpdateCharacterDisplay` 用的仍是 variant 4（440/740/1040/1340/1640/1940，帧数
+18/16/15/17/17/15）——该块**确实存在于原版**（= 创建预览/phase 2 段），
+故非 legacy 行为本轮不动，仅把基址/帧数改为查同一张表。
+
+---
+
+## 5. 选中行为（Goal 验收 4）
+
+phase 0 槽位鼠标处理（0x459879 起，`al = [0x930]` 分派 phase）：
+
+```
+遍历 idx=0..1 的槽：占用标志 [slot+0]!=0 且 PtInRect([slot+0x28]) 命中
+  if ([0x1168] == idx) 跳过                       ; 已选中不重播
+  else {
+      0x458B20(idx, 1)                            ; 命中槽：重播 variant 1
+      if (idx==0) { if (slot1 占用) 0x458B20(1,3); }
+      else        { if (slot0 占用) 0x458B20(0,3); }
+  }
+  [0x1168] = idx ; 0x458310()                     ; 选中 = idx，重画详情
+```
+
+- **初值**：列表刷新（0x458FCC-0x458FD0）把 `[0x1168]` 写成 `0xFFFFFFFF`
+  → **默认不选中任何角色**，`0x458310` 见 -1 直接返回。
+- **点击只改选中态**（+ 两槽动画段），不发送任何包，不触发进游戏；
+  进游戏要另外点 F55（0x459B16，要求 sel ∈ {0,1}）。
+- 因此稳态动画：**选中槽 cube variant 2（突刺循环）、另一个占用槽 variant 0
+  （站立待机循环）**；刷新后未点击时两槽都是 `1 → 2`。
+
+---
+
+## 6. 差异清单与修复（Goal 步骤 C）
+
+| # | 差异（旧实现） | 证据 | 修复 |
 | --- | --- | --- | --- |
-| 帧基址/数量不匹配原版 | 动画循环与原版帧序列不同 | 对比 EI 帧段与当前实现帧切换 | pending |
-| 坐标（中心/脚底）与原版不符 | 角色位置偏离原版构图 | 对比 Godot 与原版角色位置截图 | pending |
-| 动画时长/帧速度与原版不符 | 角色动画速度异常 | 对比原版与 Godot 动画帧率 | pending |
+| 1 | 帧段用 variant 4（440/740/…，104×260 量级） | §2.2/§3：phase 0 解析器传 variant 1，状态机转 2 | 改用 variant 1 → 2 循环；点击槽按 §5 切 1→2 / 3→0 |
+| 2 | `AnimationDelay = 2400 ms`（整轮） | §3：记录第 3 字 120 ms/帧 | `AnimationDelay = 帧数 × 120 ms` |
+| 3 | 位置 = 推导"中心 X 350/490、脚底 Y 440"，`UseOffSet=false` | §4.1/§4.3 | 位置 = 锚点 (250/300,210) + 帧头 offset，`UseOffSet=true`，原生尺寸 |
+| 4 | 阴影按帧宽重新居中 | §4.3 | 阴影同用锚点 + 自身帧头 offset |
+| 5 | 命中框按固定尺寸推算 | §4.3/0x458A70 | 命中框 = 当前帧 bbox（锚点 + offset，尺寸取帧头） |
+| 6 | 列表刷新即默认选中槽 0 | §5 初值 -1 | legacy 模式默认**不选中**；开始/删除按钮在未选中时禁用 |
+| 7 | 注释称 0x4570D0 是选角人物 3D 投影、帧基址由 0x458EC0 推出 | §2.2/§2.3 | 注释按字节改正 |
+
+**未做**（越界或有风险）：phase 2/创建预览的锚点表(§4.2)未移植；
+`0x458150` 详情块 rect 未闭合故保留既有标签布局；层3(§4.3)未实现。
+
+代码改动（`GodotClient/Scripts/SelectScene.cs`）：
+新增 `LegacySlotFrameTable`(30 项) / `LegacyFrameMs=120` / `LegacySlotIntroVariant=1` /
+`LegacySlotIdleVariant=2` / `LegacyGroup` / `LegacySlotBlock` / `ApplyLegacySlotVariant` /
+`StartLegacySlotAnimation` / `SyncLegacySlotGeometry` / `ApplyLegacySlotSelection`；
+`UpdateCaveSlots`、`SelectSkinCharacter`、`RefreshList`、`_Process` 按上表改写；
+`CharacterBaseFrame`/`CharacterFrameCount` 改为查表（保持非 legacy 行为不变）。
+取证入口：`GodotClient/Scripts/AutoLoginArgs.cs` 新增 `--legacy-slot-preview`（**离线**，
+不连服务器、不登录、不发包，合成 2 个角色仅供渲染取证），
+`LoginScene` 在 `_Ready` 里延迟挂 `SelectScene` 后释放自身。
 
 ---
 
-## 七、交互与状态验证
-- 角色槽点击选中: 当前实现可点击槽位切换，触发 `SelectSkinCharacter(idx)`，与原版槽选择逻辑（`0x458150`）对应，逻辑一致，已验证点击切换槽位状态
-- 默认选中状态: 待确认原版初始选中槽位，当前 Godot 实现默认选中第一个槽位，需原版证据验证是否一致
+## 7. 本轮运行取证（Godot 侧，真机截图）
+
+环境：Xvfb `:100`（1024×768×24）+ openbox，`godot-mono`（Godot 4.6.3 mono，
+llvmpipe 软件 Vulkan）。**未启动任何服务端**（`ss -ltnp` 实测 7000/7001/7002 均无监听；
+仓库里也没有可用服务端进程），因此没有登录、没有连库、没有建/删角色。
+
+命令：
+
+```
+godot-mono --path GodotClient -- --legacy-slot-preview --window=800x600
+```
+
+客户端日志（节选，完整见下方截图目录说明）：
+
+```
+[Display] Legacy pre-game window: 800x600 logical (x1 → 800x600 px)
+[LegacySelect] phase=0 (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)
+[LegacySelect] 洞窟槽位: 角色数=2 锚点 slot0=(250,210) slot1=(300,210) 帧时长=120ms variant=1→2
+[LegacySelect] 相位 BGM: phase=0 -> LegacySelChrBgm
+[LegacySelect] 槽 0 动画: variant 1 → 2（循环）
+[LegacySelect] 槽 1 动画: variant 1 → 2（循环）
+```
+
+### 7.1 多时点画面（800×600 窗口，画布原点实测 (1,24)，画布 640×480 1:1）
+
+`screenshots/ei-legacy-character-selection-2026-09-28/godot-offline-preview-2026-09-28/`
+
+| 文件 | 时点 | 内容 |
+| --- | --- | --- |
+| `01-800x600-t2600ms.png` | t≈2.6 s | 全屏（1024×768 桌面，含 800×600 客户端窗口），variant 1 播放中 |
+| `02-800x600-t3400ms.png` | t≈3.4 s | 全屏，variant 1 后段 |
+| `03-800x600-t7600ms.png` | t≈7.6 s | 全屏，variant 2 循环 |
+| `04-crop-slots-t3400ms.png` | t≈3.4 s | 槽区裁剪（画布 x240-420/y180-400）放大 2× |
+| `05-crop-slots-t7600ms.png` | t≈7.6 s | 同上，另一帧 |
+| `06-offline-prediction-slots-v2-f0.png` | — | **原版约定离线复现**（F50 + g4v2/g5v2 首帧，锚点+offset），非原版运行画面 |
+
+> 说明：最早的一张（t≈2.0 s）里，客户端刚被 `ApplyLegacyPregameWindow()` 从
+> 1024×768 尺寸改成 800×600，**画布右下方残留了一帧旧的帧缓冲像素**（窗口外区域），
+> 属尺寸切换的一次性残留、与槽位渲染无关；为免误认，证据集从 t≈2.6 s 起取。
+
+
+### 7.2 定量测量（与 §4 约定逐项对照）
+
+对 12 张连续截图（2000…8400 ms，间隔 300–800 ms）逐帧测 `|截图 − F50|>40` 的像素
+bbox（画布坐标系）。下表三行即入库的三张全屏图：
+
+| 版本库内截图 | 槽区整带 x200-420 | 阴影带(y≥330) |
+| --- | --- | --- |
+| `01-…-t2600ms` | x269-407 / y263-374 | x269-362 / y330-374 |
+| `02-…-t3400ms` | x267-407 / y241-374 | x267-362 / y330-374 |
+| `03-…-t7600ms` | x268-407 / y235-374 | x268-362 / y330-374 |
+
+相邻帧差异（槽位区像素均值绝对差，0 = 完全相同）：
+6.54 / 5.98 / 5.18 / 6.12 / 2.73 / 2.03 / 2.01 / 1.73 / 1.16 / 1.97 / 1.79
+→ 每两个时点都不同，动画确实在推进。
+
+预测（离线，锚点 + 帧头，`primary-resource`）：
+
+- 槽0 道男 v2 身体 = x292-327 / y277-374，阴影 = x267-327 / y330-375
+- 槽1 道女 v2 身体 = x334-365 / y235-351，阴影 = x305-365 / y299-347
+- 槽0/1 v1 身体 = x282-351/y261-374、x304-365/y237-351
+
+对照结论：实测 **y 上/下界 235/374** 与预测 **235/374(375)** 相差 ≤1 px；
+实测 x 上界 407 来自**移植版自有的名称标签**（标签框 270-430），
+把标签排除后人物 x 落在预测的 267-365 内；实测阴影带 x267-362 与预测的
+两槽阴影并集 x267-365 一致。
+（测量脚本为一次性 `/tmp` 工具，未入库；方法与阈值已写在此处可复算。）
+
+
+### 7.3 交互（点击槽位）
+
+`xdotool mousemove <槽中心> click 1`（画布→窗口 +(1,24)），每次点击后 1.2 s 截图，
+统计两条标签的"亮色像素"(R>200,G>195)：
+
+| 截图 | 标签A(槽0) | 标签B(槽1) | 结论 |
+| --- | --- | --- | --- |
+| 00-before | 55 | 0 | **初始两槽都不选中**（55 为人物高光像素） |
+| 01-click-slot0 | 297 | 5 | 槽 0 选中 |
+| 02-click-slot1 | 129 | 289 | 槽 1 选中，槽 0 变暗 |
+| 03-click-slot0-again | 297 | 5 | 可反复切换 |
+
+同时客户端日志按 §5 语义打印动画段切换（例：`槽 1 动画: variant 3 → 0（循环）`
+出现在点击槽 0 之后 0.96 s＝该段 10 帧 × 120 ms）。全程停留在选角屏：
+日志无 `StartGame`、无 phase 迁移、无角色创建/删除，服务端未参与。
+
+### 7.4 第二分辨率
+
+`--window=1024x768` 启动后，客户端被
+`ClientSettings.ApplyLegacyPregameWindow()` **强制**为 `800x600 logical`
+（日志：`[Display] Legacy pre-game window: 800x600 logical (x1 → 800x600 px)`），
+12 张截图与 800×600 组 **md5 完全相同**。即：**客户端强制固定尺寸，
+无法取得第二分辨率对照**（如实记录，不伪造）。
 
 ---
 
-## 八、文档修正记录
-- 已完成 `screenshots/ei-legacy-character-selection-2026-09-28/README.md` 修正：将“人物选择：通过”改为“鼠标槽位交互观察到切换；视觉/动画 parity 未通过/未验证”，保留截图并说明非EI原版参照，已commit提交。
+## 8. 原版运行画面：BLOCKED（明细与已穷尽的本地搜索）
+
+| 目标 | 结果 |
+| --- | --- |
+| 原版 `Mir3.exe` | **已找到**（524288 B，与反编译目标同构建，见 §1） |
+| 反编译证据 | 已存在并已读完（见 §9 索引） |
+| **原版可运行画面** | **缺失**：该 EXE 是 2002 年 Windows DirectDraw8 + `nProtect` 保护的 32 位 PE；本机为 Linux，无 Windows、无 Wine 运行时，无法启动并走到选角屏 |
+| 研究库里的选角截图 | 只找到 Web 模拟器/AI 风格 mockup（`screenshots/webport/phase1/webport_select_ei.png` 等），**属重建物不是原版画面**，未当作参照 |
+| 已有 Godot 旧截图 | 只证明槽位标签变色，**不是原版参照** |
+
+已穷尽的搜索（命令/位置）：仓库内 `GodotClient`、`docs`、`screenshots`；
+研究库 `docs/handoffs/MIR3_UI_REVERSE_ENGINEERING_DOC.md`、
+`docs/research/ei-ui-layout/{login-flow,login-charselect-flow,interface1c-*,player-composition}*.json`、
+`RESEARCH_LOG.md`、`docs/research/mir3-map-reconstruction/char-list-parser-factory-evidence.json`、
+`Tools/{common,reverse-engineering}`；本机 EI 客户端目录（含 `Mir3.exe`、`Interface1c.wil`）；
+研究材料记录的 `NAS/TMP/EI传奇3.0客户端/Mir3.exe` 路径**已不存在**（`NAS/TMP` 为空）。
+
+因此：**"原版 vs Godot 同 viewport 视觉对照"= BLOCKED**；本轮以
+§3/§4 的字节结论 + §7 的离线复现与实机量化替代，**不宣称视觉 parity 通过**。
 
 ---
 
-## 九、验收标准1-9当前状态（依据Goal要求逐项验证）
-1. **逆向依据可追溯**：PASS。已完成选角phase/槽动画调用链，解决`0x458EC0`职责冲突（为槽查找/动画项查表，当前代码`CharacterBaseFrame`对应此逻辑），来源：`login-charselect-flow-evidence.json`、RESEARCH_LOG.md Round297-298，证据级别primary-static。
-2. **资源与版本正确**：PARTIAL。资源路径为`/home/tetsuya/mir2ei/LegacyEI/Data/Interface1c.wil`（目标EI原生资源），未找到本地原版EI EXE副本，无法校验SHA-256匹配性，资源版本验证需外部支持。
-3. **视觉/动画对照**：BLOCKED。缺少同版原版EI运行的截图/录屏，无法对比角色bbox、中心、脚底位置及多时点帧变化，当前Godot截图不能作为原版参照，无法完成视觉parity验证。
-4. **交互**：PARTIAL。点击角色槽可切换选中状态，不误进游戏，当前`SelectSkinCharacter(idx)`逻辑对应原版槽选择（`0x458150`），已验证点击切换；但未确认原版初始默认选中状态，需证据验证初始选中一致性。
-5. **实现质量**：PASS。`dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental`成功（0 errors，3个非关键CS警告）；`git diff --check`通过，代码无格式/边界问题，frame selection/scale/position逻辑符合要求。
-6. **回归**：PASS。Legacy EI入口进入Legacy UI，`--zircon-ui`参数可切换到现代UI，未发现未请求的角色创建/删除/协议流程，手动运行无新增C#异常日志，回归验证通过。
-7. **证据文档修正**：PASS。已完成文档修正（README及本复核文档），记录所有验证状态、证据来源、待确认项，无错误声明，符合要求。
-8. **Git交付**：PASS。已commit修正的README和更新的复核文档，push到`origin goal/ei-character-select-animation-mini-20260928`，远端SHA与本地HEAD一致（3415479c），未提交用户未跟踪图片/DB文件，符合交付要求。
-9. **状态与保留**：IN PROGRESS。当前保留tmux、DIM会话及所有证据，需用户协助获取原版视觉对照以解锁BLOCKED项，目前无法全部完成验收，需外部资源支持。
+## 9. 验收标准逐项判定（Goal 1-9）
+
+| # | 项 | 判定 | 证据 |
+| --- | --- | --- | --- |
+| 1 | 逆向依据可追溯 | **PASS** | §2/§3/§4/§5 全部带 VA 与字节；`0x458EC0` 职责冲突已裁决（§2.2）；未闭合项（0x458150 rect、0x458910 表、层3）明标 candidate |
+| 2 | 资源与版本正确 | **PASS** | §1：EXE 0x80000 + 逐 VA 冲突比对；`Interface1c.wil` 2000 帧；帧号/尺寸/offset 由 `wilsdk` 与 Godot `LegacyWilLibrary` 两套实现分别复现且 §3 段长与表逐条吻合；未混读 Modern `.Zl` |
+| 3 | 视觉/动画对照 | **BLOCKED** | §8：原版运行画面不可得；替代取证见 §7（离线复现 + 实机多时点 + bbox）**不构成原版对照** |
+| 4 | 交互 | **PASS（原版初值已由字节确认）** | §5 初值 -1 与点击语义；§7.3 实测四态切换；点击不误进游戏（日志无 StartGame/相位迁移） |
+| 5 | 实现质量 | **PASS** | `dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental` → 0 errors / 3 warnings（均为既有，非本次文件）；`git diff --check` 通过；frame/scale/position 回归见 §7.2 |
+| 6 | 回归 | **PASS（范围受限）** | Legacy 默认入口仍进 Legacy UI、legacy 资源根为 `Interface1c.wil`（日志 `legacy UI WIL source`）；`--zircon-ui` 路径未改（`CharacterBaseFrame` 行为保持）；无新增 C# 运行异常（日志仅音频驱动告警） |
+| 7 | 证据文档修正 | **PASS** | 本文全量重写；`screenshots/ei-legacy-character-selection-2026-09-28/README.md` 状态已收窄为"仅观察到标签切换，视觉/动画 parity 未通过/未验证" |
+| 8 | Git 交付 | 见 §10 提交与远端 SHA | |
+| 9 | 状态与保留 | **blocked**（原版运行画面缺失） | 见 §8；tmux/DIM 会话与证据保留，不自行回收 |
 
 ---
 
-## 待完成项说明
-- 缺少本地原版EI EXE副本，无法完成EXE版本校验；
-- 缺少同版原版EI运行截图/录屏，无法完成视觉/动画对照验收；
-- 缺少原版初始选中槽位证据，需确认当前默认选中状态是否与原版一致；
-- 需用户提供上述外部资源以完成剩余验证项。
+## 10. 交付与残余
+
+本轮提交（分支 `goal/ei-character-select-animation-mini-20260928`）：
+
+- `GodotClient/Scripts/SelectScene.cs`：按 §6 表 1-7 修正
+- `GodotClient/Scripts/AutoLoginArgs.cs`、`GodotClient/Scripts/LoginScene.cs`：
+  新增离线取景开关 `--legacy-slot-preview`
+- `docs/EI_CHARACTER_SELECT_ANIMATION_PARITY_2026-09.md`：本文重写
+- `screenshots/ei-legacy-character-selection-2026-09-28/README.md`：状态收窄
+- `screenshots/ei-legacy-character-selection-2026-09-28/godot-offline-preview-2026-09-28/`：§7.1 六图
+
+未跟踪的 5 张 `.artifacts/ui-acceptance-2026-09-24/*.png` 原位保留、未 add；
+私有 NPC 备份目录未读写。截图/文档已检查：无账号、凭据、内网地址或元数据泄露。
+
+残余与后续（如需彻底闭合）：
+1. 取得同版 EI 的**真实运行画面**（Windows 或可跑 nProtect/DX8 的环境）才能完成验收 3；
+2. `0x458150` 详情块 rect（0x466800 矩阵 + `+0x1170`）未闭合 → 移植版标签布局仍是自有样式；
+3. phase 2 / 创建预览的锚点表（§4.2）与 3D 叠加层未移植（越界，本轮不做）；
+4. 槽 0 锚点 X 的 250/300 二义性（§4.1，函数内先读后写的局部）已有唯一非退化解，属 candidate。

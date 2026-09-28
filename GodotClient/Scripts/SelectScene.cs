@@ -421,6 +421,8 @@ public partial class SelectScene : Control
         bool has = index >= 0 && index < _characters.Count;
         if (_skinStart != null) _skinStart.Enabled = has;
         if (_skinDelete != null) _skinDelete.Enabled = has;
+        GD.Print($"[LegacySelect] 槽位选中: index={index} 开始={_skinStart?.Enabled} "
+            + $"删除={_skinDelete?.Enabled}（原版 [0x1168] 语义，点击只改选中态）");
     }
 
     private string GetLocationName(int index)

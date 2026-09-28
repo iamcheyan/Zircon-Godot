@@ -389,21 +389,33 @@ bbox（画布坐标系）。下表三行即入库的三张全屏图：
 | 5 | 实现质量 | **PASS** | `dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental` → 0 errors / 3 warnings（均为既有，非本次文件）；`git diff --check` 通过；frame/scale/position 回归见 §7.2 |
 | 6 | 回归 | **PASS（范围受限）** | Legacy 默认入口仍进 Legacy UI、legacy 资源根为 `Interface1c.wil`（日志 `legacy UI WIL source`）；`--zircon-ui` 路径未改（`CharacterBaseFrame` 行为保持）；无新增 C# 运行异常（日志仅音频驱动告警） |
 | 7 | 证据文档修正 | **PASS** | 本文全量重写；`screenshots/ei-legacy-character-selection-2026-09-28/README.md` 状态已收窄为"仅观察到标签切换，视觉/动画 parity 未通过/未验证" |
-| 8 | Git 交付 | 见 §10 提交与远端 SHA | |
+| 8 | Git 交付 | **PASS** | 3 个小提交（`a736b648` 修复 / `04d12458` 文档+取证 / `310a4bb6` BLOCKED 事实），已 push，`git ls-remote` 与本地 HEAD 同为 `310a4bb6`；未提交 DB/日志/缓存/用户未跟踪图；截图已脱敏 |
 | 9 | 状态与保留 | **blocked**（原版运行画面缺失） | 见 §8；tmux/DIM 会话与证据保留，不自行回收 |
 
 ---
 
-## 10. 交付与残余
+## 10. 交付与远端 SHA
 
-本轮提交（分支 `goal/ei-character-select-animation-mini-20260928`）：
+提交（分支 `goal/ei-character-select-animation-mini-20260928`，基线 `aaf7594a`）：
 
-- `GodotClient/Scripts/SelectScene.cs`：按 §6 表 1-7 修正
-- `GodotClient/Scripts/AutoLoginArgs.cs`、`GodotClient/Scripts/LoginScene.cs`：
-  新增离线取景开关 `--legacy-slot-preview`
-- `docs/EI_CHARACTER_SELECT_ANIMATION_PARITY_2026-09.md`：本文重写
-- `screenshots/ei-legacy-character-selection-2026-09-28/README.md`：状态收窄
-- `screenshots/ei-legacy-character-selection-2026-09-28/godot-offline-preview-2026-09-28/`：§7.1 六图
+| SHA | 内容 |
+| --- | --- |
+| `a736b648` | `fix(ei选角)`：`SelectScene.cs`（§6 表 1-7）+ `AutoLoginArgs.cs`/`LoginScene.cs`（`--legacy-slot-preview`） |
+| `04d12458` | `docs(ei选角)`：本文重写 + 截图 README 收窄 + `godot-offline-preview-2026-09-28/` 六图 |
+| `310a4bb6` | `docs(ei选角)`：§8 补 BLOCKED 可核验事实（PE32 / 无 wine / 无 Mud3 服务端） |
+
+核验命令与结果：
+
+```
+git ls-remote origin refs/heads/goal/ei-character-select-animation-mini-20260928
+  → 310a4bb679ddb06f2099b3269938ea4f67a8d595
+git rev-parse HEAD
+  → 310a4bb679ddb06f2099b3269938ea4f67a8d595            # 一致
+dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental
+  → 0 个错误 / 3 个警告（均为既有文件）
+git diff --check
+  → 无输出（exit 0）
+```
 
 未跟踪的 5 张 `.artifacts/ui-acceptance-2026-09-24/*.png` 原位保留、未 add；
 私有 NPC 备份目录未读写。截图/文档已检查：无账号、凭据、内网地址或元数据泄露。

@@ -35,7 +35,12 @@ SERVER_LOG="/tmp/servercore_login.log"
 # 端口配置：macOS ControlCenter 占 7000 时自动使用 7001
 PORT=7000
 if [ -f "$SERVER_DIR/Server.ini" ]; then
-    INI_PORT=$(grep -E '^[[:space:]]*Port[[:space:]]*=' "$SERVER_DIR/Server.ini" | head -n1 | cut -d'=' -f2 | tr -d '\r\n[:space:]')
+    if INI_CONTENT=$(iconv -f UTF-16 -t UTF-8 "$SERVER_DIR/Server.ini" 2>/dev/null); then
+        :
+    else
+        INI_CONTENT=$(iconv -f UTF-8 -t UTF-8 "$SERVER_DIR/Server.ini")
+    fi
+    INI_PORT=$(printf '%s\n' "$INI_CONTENT" | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\r]/, "", $2); print $2; exit}')
     if [ -n "$INI_PORT" ]; then PORT="$INI_PORT"; fi
 elif [ "$(uname)" = "Darwin" ]; then
     PORT=7001
@@ -46,7 +51,7 @@ AUTO_LOGIN=0
 REMOTE_SERVER_IP=""
 REMOTE_SSH_TARGET="${ZIRCON_REMOTE_SSH_TARGET:-debian}"
 REMOTE_TUNNEL_SOCKET=""
-CLIENT_PORT=""
+CLIENT_PORT="${ZIRCON_CLIENT_PORT:-}"
 ARGS=("$@")
 for ((i=0; i<${#ARGS[@]}; i++)); do
     case "${ARGS[$i]}" in
@@ -63,6 +68,21 @@ for ((i=0; i<${#ARGS[@]}; i++)); do
             ;;
     esac
 done
+STAY_SELECT="${ZIRCON_STAY_SELECT:-0}"
+if [[ "$STAY_SELECT" != "0" && "$STAY_SELECT" != "1" ]]; then
+    echo "ZIRCON_STAY_SELECT 只能是 0 或 1。" >&2
+    exit 2
+fi
+if [ -n "$CLIENT_PORT" ]; then
+    if [[ ! "$CLIENT_PORT" =~ ^[0-9]+$ ]] || [ "$CLIENT_PORT" -lt 1 ] || [ "$CLIENT_PORT" -gt 65535 ]; then
+        echo "ZIRCON_CLIENT_PORT 必须是 1 到 65535 之间的端口号。" >&2
+        exit 2
+    fi
+    if [ "$KILL_ALL" = "1" ]; then
+        echo "指定 ZIRCON_CLIENT_PORT 时不能使用 all。" >&2
+        exit 2
+    fi
+fi
 if [ -n "$REMOTE_SERVER_IP" ]; then
     if [[ ! "$REMOTE_SERVER_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || [ "$KILL_ALL" = "1" ]; then
         echo "remote 模式需要 IPv4 地址，且不能同时指定 all。" >&2
@@ -292,38 +312,46 @@ REMOTE_SCRIPT
     echo "  SSH 转发已建立：127.0.0.1:$CLIENT_PORT → $REMOTE_SERVER_IP:$PORT"
 else
     # 默认模式: 服务器已在跑则跳过; all 模式: 总是重启
-    PORT_OPEN=0
-    if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
-        PORT_OPEN=1
-    fi
-    if [ "$KILL_ALL" = "0" ] && [ "$PORT_OPEN" = "1" ]; then
-        echo "  服务器已在运行 (端口 $PORT 监听中)，跳过启动"
-    else
-        cd "$SERVER_DIR"
-        # macOS 没有 setsid；nohup + 后台即可，脚本退出时由 trap 负责清理。
-        if command -v setsid >/dev/null 2>&1; then
-            setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
-        else
-            nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+    if [ -n "$CLIENT_PORT" ] && [ "$CLIENT_PORT" != "$PORT" ]; then
+        if ! nc -z 127.0.0.1 "$CLIENT_PORT" 2>/dev/null; then
+            echo "指定客户端端口 $CLIENT_PORT 没有服务监听；拒绝在配置端口 $PORT 启动另一服务端。" >&2
+            exit 1
         fi
-        SERVER_PID=$!
-        SERVER_STARTED_BY_SCRIPT=1
-        echo "  服务器 PID: $SERVER_PID"
+        echo "  使用已运行的指定客户端端口 $CLIENT_PORT；不启动配置端口 $PORT 的服务端"
+    else
+        PORT_OPEN=0
+        if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
+            PORT_OPEN=1
+        fi
+        if [ "$KILL_ALL" = "0" ] && [ "$PORT_OPEN" = "1" ]; then
+            echo "  服务器已在运行 (端口 $PORT 监听中)，跳过启动"
+        else
+            cd "$SERVER_DIR"
+            # macOS 没有 setsid；nohup + 后台即可，脚本退出时由 trap 负责清理。
+            if command -v setsid >/dev/null 2>&1; then
+                setsid nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+            else
+                nohup dotnet ServerCore.dll > "$SERVER_LOG" 2>&1 < /dev/null &
+            fi
+            SERVER_PID=$!
+            SERVER_STARTED_BY_SCRIPT=1
+            echo "  服务器 PID: $SERVER_PID"
 
-    # 等待服务器就绪
-        echo "  等待服务器就绪 (端口 $PORT)..."
-        for i in $(seq 1 30); do
-            if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
-                echo "  ✓ 服务器已就绪 (端口 $PORT 监听中)"
-                break
-            fi
-            sleep 1
-            if [ "$i" -eq 30 ]; then
-                echo "  ⚠️ 服务器 30 秒未就绪，查看日志:"
-                tail -20 "$SERVER_LOG"
-                exit 1
-            fi
-        done
+            # 等待服务器就绪
+            echo "  等待服务器就绪 (端口 $PORT)..."
+            for i in $(seq 1 30); do
+                if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
+                    echo "  ✓ 服务器已就绪 (端口 $PORT 监听中)"
+                    break
+                fi
+                sleep 1
+                if [ "$i" -eq 30 ]; then
+                    echo "  ⚠️ 服务器 30 秒未就绪，查看日志:"
+                    tail -20 "$SERVER_LOG"
+                    exit 1
+                fi
+            done
+        fi
     fi
 
     SERVER_HOST=127.0.0.1
@@ -339,6 +367,7 @@ TEST_CHAR="${ZIRCON_TEST_CHAR:-TestHero}"
 CLIENT_ARGS=(--server "$SERVER_HOST" --port "$CLIENT_PORT" --window)
 if [ "$AUTO_LOGIN" = "1" ]; then
     CLIENT_ARGS+=(--user "$TEST_USER" --pass "$TEST_PASS" --char "$TEST_CHAR")
+    if [ "$STAY_SELECT" = "1" ]; then CLIENT_ARGS+=(--stay-select); fi
 fi
 if [ "$LEGACY_HUD" = "1" ]; then
     CLIENT_ARGS+=(--legacy-ui --legacy-hud)

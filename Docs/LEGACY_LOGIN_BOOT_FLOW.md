@@ -43,6 +43,15 @@ export ZIRCON_TEST_PASS=test123
 export ZIRCON_TEST_CHAR=TestHero
 ```
 
+隔离验收时可以选用以下启动变量：
+
+```bash
+export ZIRCON_CLIENT_PORT="${LOCAL_TEST_PORT:?set an already-running isolated test port}"  # 不同于 Server.ini 时要求目标端口已有服务
+export ZIRCON_STAY_SELECT=1     # 与 test 自动登录一起使用，登录后停在人物选择界面
+```
+
+启动器同时支持 UTF-16 与 UTF-8 编码的 `Server.ini`。远程隧道模式会继续使用隧道分配的端口。
+
 ## 动画来源与播放链路
 
 动画逻辑在客户端 `GodotClient/Scripts/LoginScene.cs` 和 `SelectScene.cs` 中，但视频文件是运行时资源，不在 Zircon Git 仓库内。

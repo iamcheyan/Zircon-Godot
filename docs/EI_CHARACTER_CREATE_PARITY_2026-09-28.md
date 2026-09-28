@@ -33,9 +33,12 @@
    （`primary-resource`），人物形象/位置/动画也与原版完全不同。见 §8 差异矩阵。
 6. 实机验证：创建界面与**独立正向预测**（只用 `wilsdk` 解码 + 原版绘制约定，
    不依赖被测代码）的**全画布 MAE = 0.011–0.195 / 255**，
-   背景残差 **0.00**；帧号识别出屏幕上的帧段随 120 ms/帧推进并正确回绕。见 §9。
-7. 「原版运行画面 vs Godot」仍需同版 Windows/DX8 环境才能做，本机不可得 → 该项 **blocked**
-   （与选角文档 §8 同一结论），替代取证为 §9 的独立预测对照。
+   背景残差 **0.000**；帧号识别出屏幕上的帧段随 120 ms/帧推进并正确回绕。见 §9。
+7. **真实服务端往返在隔离副本上通过**：提交 → 服务器回 0x209 → 重播 `CreateChr.ogv` →
+   回列表并出现新角色；分别验证了「默认男武」与「点选**女**槽 + 道士」两条路径
+   （后者即用户指定的女性道士样本，见 §9.4）。
+8. 「原版运行画面 vs Godot」仍需同版 Windows/DX8 环境才能做，本机不可得 → 该项 **blocked**
+   （与选角文档 §8 同一结论），替代取证为 §9 的独立预测对照 + §9.4 的真实往返。
 
 ---
 
@@ -219,6 +222,9 @@ ctor `0x417550`（`ret 0x24`，9 参数，0x456DA7-0x456EC8 逐条立即数实�
 | 15 | 选中槽叠加层（帧+40，3D） | 有（g5 段为 256² 幂次页） | 无 | **candidate**（无 2D 等价物，未移植） |
 | 16 | 创建失败提示 | Mirmg.dll LoadString 文案 + 0x418030 弹窗 | `_statusLabel`（legacy 下不可见） | **pending**：Zircon 协议下的失败码→文案映射与原版弹窗外观未闭合 |
 | 17 | F88 退出的网络包 | `CM_QUERYCHR 0x64`（刷新列表） | 无对应包（不发） | **差异已记录**：Zircon 列表本就在内存，不发该包 |
+| 18 | 提交后是否改阶段 | **不改阶段**：F86 清空输入框 + 发 0x65 后直接返回，留在 stage 2；阶段 3 由服务器 0x209 写入 | 提交即 `SetSelectPhase(3)`（画面跳到空背景） | **resolved** |
+| 19 | stage 3 的画面 | tick 只泵过场视频、**不绘制任何控件**（DirectDraw 下保留上一相位画面） | 隐藏全部按钮并把背景切回 F50（"空背景"闪帧） | **resolved**：phase 3 不再改按钮/图层/背景 |
+| 20 | 创建成功链路 | 服务器 0x209 → SelChr.wav + 重播 `CreateChr.dat` → phase 3 → 播完 → phase 0 + 刷新列表 | 直接跳 phase 0，无过场 | **resolved**：重播 `CreateChr.ogv` 后回列表 |
 
 ---
 
@@ -293,13 +299,37 @@ godot-mono --path GodotClient -- --legacy-slot-preview --window=800x600         
 `screenshots/ei-create-character-2026-09-28/`（均为 **800×600 客户端完整 viewport**，
 画布原点 (1,24) 已核，索引见该目录 README）。
 
-### 9.4 未做/不可得
+### 9.4 真实服务端往返（隔离副本）
+
+**隔离设置（先证明隔离，再操作）**：把 `Debug/ServerCore` 的可执行文件、`Server.ini`、
+`Translations`、`Config` 拷到 `/tmp/ei-create-srv`，`Database/{Users,System}.db` 用**副本**，
+`Map/` 软链（只读），`Server.ini` 改 `Port=7001` / `UserCountPort=3001`，
+并以 `cwd=/tmp/ei-create-srv` 启动（MirDB 的 `.\Database\` 相对 cwd）。
+- 副本 `Users.db` 初始 md5 = 仓库内 `Debug/ServerCore/Database/Users.db` 的 md5
+  （`138ac3549426fae0682a93af0afbed2d`）；全部写操作只发生在前者。
+- 验收后仓库内 `Users.db` **md5 不变、mtime 仍为 2026-09-27 10:15**（未被触碰）。
+- 端口 7001/3001 监听只属于该副本进程；未触碰 7000 或任何共享服务。
+
+客户端：`godot-mono --path GodotClient -- --server 127.0.0.1 --port 7001 --user … --pass … --stay-select`。
+
+实测两条路径：
+
+| # | 操作 | 结果（客户端日志） |
+| --- | --- | --- |
+| 1 | 点「创建角色」→ 键入 `EITest02`（默认武士/男）→ 点 ✔ | `phase=1` + `CreateChr.ogv` → `phase=2 背景F=80` → `建角色成功: EITest02` → `phase=3 保留上一相位画面` + `LegacySelChrBgm` + 重播 `CreateChr.ogv` → `phase=0 背景F=50` + `角色数=2`；列表第 2 槽出现 **`EITest02` Lv8 战士**（截图 `09`） |
+| 2 | 点**女**预览槽 → 点**道士**钮 → 键入 `EITest03` → 点 ✔ | `选中预览槽 1（性别 Female）` → `槽重建 class=Taoist 锚点 slot0=(110,120) slot1=(425,118) 帧段 (1640,1656)/(1940,1954)` → `建角色成功: EITest03` → 回列表出现 **`EITest03` Lv8 道士**（截图 `11`） |
+
+→ 证明：名字取自原版 (288,405) 那个输入框、职业取自两槽共用的 class、
+**性别取自被点选的预览槽**（`[+0x1488]` 语义），成功后按 §2/§4 的阶段链回到列表。
+
+### 9.5 未做/不可得
 
 - **第二分辨率**：`ClientSettings.ApplyLegacyPregameWindow()` 把窗口强制为 800×600
   （与选角文档 §7.4 同一现象），无法取得 1024×768 对照 → 如实记录。
 - **原版运行画面**：本机无 Windows/Wine、无 Mud3 服务端 → **blocked**（同选角文档 §8）。
-- 交互验证通过离线合成角色完成（`--legacy-slot-preview`），**未**走真实登录/建角/删角，
-  因此"创建成功后回到列表并出现新角色"这一环**未测试**（需服务端）→ 见 §11。
+- **创建失败路径**：未实测（原版 0x20A 弹 Mirmg 文案框；移植版 legacy 下错误文案落在隐藏的
+  `_statusLabel`，见 §11）。
+- 删除角色、第三个角色（原版上限 2）未测。
 
 ---
 
@@ -320,8 +350,9 @@ godot-mono --path GodotClient -- --legacy-slot-preview --window=800x600         
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
 | 原版运行画面（创建界面截图） | **blocked** | 无 Windows/Wine、无 Mud3 服务端；§9 的独立预测对照不能替代 |
-| 「创建成功 → 回列表并出现新角色」真实往返 | **pending** | 需要服务端（隔离副本）；本轮离线取景未覆盖 |
-| 创建失败提示（原版 Mirmg 文案 + 0x418030 弹窗） | **pending** | Zircon 失败码 → 原版文案的映射未闭合；legacy 下错误信息目前不可见 |
+| 创建失败提示（原版 Mirmg 文案 + 0x418030 弹窗） | **pending** | Zircon 失败码 → 原版文案的映射未闭合；legacy 下错误信息目前不可见（未实测失败路径） |
+| stage 3 等待期间的输入未加锁 | **candidate** | 原版 stage 3 的鼠标派发不动作；移植版未禁止点击（清空后的名字框使 F86 无效果，窗口 <100 ms，影响有限） |
+| 删除角色 / 第三个角色（原版上限 2） | **pending** | 本轮只测了创建（成功）两条路径 |
 | 选中槽 3D 叠加层（帧+40） | **candidate** | 3D 贴图页，无 2D 等价物 |
 | 钮旁悬停标签的原版渲染（缩放 sprite + 文字条） | **candidate** | 文案与位置已按证据；渲染改用移植版 tooltip |
 | `CM_QUERYCHR 0x64`（F88 退出时刷新列表） | 差异已记录 | Zircon 协议无对应包；列表本就在内存，故不发送 |

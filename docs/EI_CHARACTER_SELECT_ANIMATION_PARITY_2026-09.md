@@ -7,9 +7,9 @@
 ---
 
 ## 一、原版 EI EXE 身份与版本匹配
-- 原版 EI EXE 路径: `/home/tetsuya/mir2ei/LegacyEI/Mir3.exe`
-- 当前复查待补充：需校验此 EXE 与研究记录目标构建的 SHA-256 匹配性（当前未执行哈希校验，证据级别 pending）
-- 资源根: `/home/tetsuya/mir2ei/LegacyEI/Data/`
+- 原版 EI EXE 路径：需外部提供副本（本机未找到对应路径）
+- 当前复查待补充：需校验此 EXE 与研究记录目标构建的 SHA-256 匹配性（当前未执行哈希校验，证据级别待补）
+- 资源根：EI复古UI原生Data目录（对应LegacyEI/目录）
 - Interface1c.wil 状态: 目标 EI 客户端原生资源（非缓存/Modern Zl 帧，证据级别 pending）
 
 ---
@@ -76,20 +76,18 @@
 ---
 
 ## 九、验收标准1-9当前状态（依据Goal要求逐项验证）
-1. **逆向依据可追溯**：PASS。已完成选角phase/槽动画调用链，解决`0x458EC0`职责冲突（为槽查找/动画项查表，当前代码`CharacterBaseFrame`对应此逻辑），来源：`login-charselect-flow-evidence.json`、RESEARCH_LOG.md Round297-298，证据级别primary-static。
-2. **资源与版本正确**：PARTIAL。资源路径为EI复古UI原生资源（Interface1c.wil），未找到本地原版EI EXE副本，无法校验SHA-256匹配性，资源版本验证需外部支持。
-3. **视觉/动画对照**：BLOCKED。缺少同版原版EI运行的截图/录屏，无法对比角色bbox、中心、脚底位置及多时点帧变化，当前Godot截图不能作为原版参照，无法完成视觉parity验证。
-4. **交互**：PARTIAL。已验证点击角色槽可切换选中状态，不误进游戏；当前`SelectSkinCharacter(idx)`逻辑对应原版槽选择（`0x458150`），但未验证与原版选中状态逻辑是否一致，也未确认原版初始默认选中状态，需证据验证。
-5. **实现质量**：NOT TESTED。已执行`dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental`，结果成功（0 errors，3个非关键CS警告）；未完成`git diff --check`及frame selection/scale/position回归验证，状态待确认。
-6. **回归**：NOT TESTED。未验证Legacy EI入口是否正确进入Legacy UI、`--zircon-ui`参数是否有效切换，也未检查是否有未请求的角色流程变化，回归验证待完成。
-7. **证据文档修正**：PARTIAL。已修正`screenshots/README.md`的错误状态声明；本复核文档已更新证据矩阵，但未完成所有文档的错误状态修正，符合要求但未全部完成。
-8. **Git交付**：PASS。已commit修正的文档并push到`origin goal/ei-character-select-animation-mini-20260928`，当前远端SHA与本地HEAD一致（1b574a90），未提交用户未跟踪图片/DB文件，符合交付要求。
-9. **状态与保留**：BLOCKED。当前无法完成视觉/动画对照及部分交互/回归验证，需用户协助提供原版EXE副本、原版选角屏截图/录屏及初始选中状态证据，保留tmux、DIM会话及所有证据等待支持。
+1. **逆向依据可追溯**：NOT TESTED。需完成原始bytes/callsite的完全闭合验证，当前仅匹配部分调用关系，尚未完全确认闭合。
+2. **资源与版本正确**：BLOCKED。资源路径为EI复古UI原生Interface1c.wil，未找到本地原版EI EXE副本，无法校验SHA-256匹配性。
+3. **视觉/动画对照**：BLOCKED。缺少同版原版EI运行的截图/录屏，无法对比角色bbox、中心、脚底位置及多时点帧变化，当前无有效原版视觉参照。
+4. **交互**：BLOCKED。仅验证Godot中槽位点击可切换选中状态，不误进游戏，但未验证与原版选中状态逻辑是否一致，也未确认原版初始默认选中状态。
+5. **实现质量**：PASS（build结果）/NOT TESTED（其余）。执行`dotnet build GodotClient/ZirconClient.csproj --no-restore --no-incremental`结果成功（0 errors，3个非关键CS警告）；未执行`git diff --check`及frame selection/scale/position回归验证。
+6. **回归**：NOT TESTED。未验证Legacy EI入口是否正确进入Legacy UI、`--zircon-ui`参数是否有效切换，也未检查是否有未请求的角色创建/删除/协议流程变化，回归验证未完成。
+7. **证据文档修正**：BLOCKED。需完成所有文档的错误状态修正，当前仅部分修正，且因缺少原版证据，无法完整完成所有文档验证。
+8. **Git交付**：PASS。当前远端SHA与本地HEAD一致（3cfe8c59），已提交修正的文档并push到对应分支，未提交用户未跟踪图片/数据库文件。
+9. **状态与保留**：BLOCKED。因缺少原版EXE副本、原版EI视觉对照证据及交互初始状态证据，无法完成剩余验证项，保留tmux、DIM会话及所有证据等待用户支持。
 
 ---
 
-## 待完成项说明
-- 缺少本地原版EI EXE副本，无法完成EXE版本校验；
-- 缺少同版原版EI运行截图/录屏，无法完成视觉/动画对照验收；
-- 缺少原版初始选中槽位证据，需确认当前默认选中状态是否与原版一致；
-- 需用户提供上述外部资源以完成剩余验证项。
+## 截图说明
+- 既有截图`screenshots/ei-legacy-character-selection-2026-09-28/01-slot0-initial.png`/`02-slot1-selected.png`：仅证明Godot中槽位标签颜色切换，非本轮新截图，也非原版EI视觉参照证据。
+- 未采集到真实Godot中间截图/多时点动画证据，所有视觉相关验证项均为NOT TESTED或BLOCKED状态。

@@ -91,11 +91,11 @@
 | 确认 UI | （未直接闭合；证据链上 EI 可能是输入框 + 5 秒，也可能是不同对话框；标注 candidate） | **DXMessageBox YesNo，YesButton 默认禁用**，label 文字"Please wait X seconds before confirming"，倒计时 5 秒；到 5 秒后启用 Yes 并改 label；Yes 点击 → Enqueue C.DeleteCharacter{ CharacterIndex, **CheckSum=CEnvir.C** } | ConfirmationDialog（系统原生），Confirmed 立即 SendDeleteCharacter，**无 5 秒延迟**，**无 CheckSum 字段** | **严重差异（source-confirmed in old C#）**：旧 Client C# 强制 5 秒等待防误删 + CheckSum 校验；Godot 当前即时发送，需要改为 5 秒倒计时按钮，并在 DeleteCharacter 包上加 CheckSum 字段（如果协议允许）。注意：旧 C# 这部分**不是 EI 反编证据**，仅是 source-confirmed，标注为 source-confirmed，不作为 EI 铁律但作为保守实现（同系客户端行为）。 |
 | 成功回包 | 未在 EI 0x458F80 表中直接看到删除回包 case（说明 EI 可能走另一消息链） | 删除成功 → 刷新列表 | OnDeleteCharacterResult Success → RemoveAll + RefreshList |  |
 
-### S8 开始游戏确认/等待（phase 3 + F55→0x67→0x20D）
+### S8 开始游戏/等待（phase 3 + F55→0x67→0x20D）
 
 | 维度 | EI | 旧 C# | Godot | 差异 |
 |---|---|---|---|---|
-| 触发 | F55 点击 (0x459B16)，选槽 +0x1168 ∈ 0..1 → 发 msgid **0x67 '%s/%s'**（account/charname），**不切 phase**（phase 4 由 server case 0x20D 写入） | StartButton → StartGame() | OnStartPressed → Legacy 分支弹 NoticeDialog (F602)；Confirmed 时 SendStartGame | 目前已加 F602 空公告框确认闸，但 EI F55 行为是直接发 0x67，无公告确认（公告 F602 是另一条独立链）；本 F602 确认框目前证据为 candidate，保留但允许跳过。 |
+| 触发 | F55 点击 (0x459B16)，选槽 +0x1168 ∈ 0..1 → 发 msgid **0x67 '%s/%s'**（account/charname），**不切 phase**（phase 4 由 server case 0x20D 写入） | StartButton → `StartGame.dat` → cnsPlay/loading → 收到公告时确认 | OnStartPressed 发送 StartGame；成功回包后播放 StartGame.ogv，播完黑屏显示空内容 F602；勾选后创建 GameScene | EI PE 闭合了 0x20D→StartGame.dat→mode 3；参考 Pascal 源还记录了 cnsPlay/loading→SM_SENDNOTICE→DMessageDlg→CM_LOGINNOTICEOK。F602 与该登录公告 UI 的资源等价尚未闭合；此处按用户实机目标作为公告占位。 |
 | 等待 phase 3 | server case 0x209 或 F89 确认写 phase=3；Delayed 结果重试循环 | StartGameResult.Delayed 3s 重试 | StartGameResult.Delayed → SetSelectPhase(3) + Timer 3s 重试 | 已实现 phase 3。 |
 | 错误 | 0x20A/0x20C/0x20E 弹框 | MessageBox | 文字显示错误 | 基本可接受。 |
 
@@ -103,20 +103,20 @@
 
 | 维度 | EI | 旧 C# | Godot | 差异 |
 |---|---|---|---|---|
-| 触发 | server case 0x20D → 0x459465：[+0x930]=4，[+0x1160]=0，播 StartGame.wav，加载 `.\Data\StartGame.dat` 到 +0x780 + pump；结束 → 0x4570A0 (mode=3 进游戏) | GameScene new + Hide 当前 SelectScene | OnStartGameResult Success → SetSelectPhase(4) → PlayLegacyTransition("StartGame") → Sound LegacyStartGame → **立即** new GameScene + GetTree().Root.AddChild(game) + **QueueFree()** | **严重生命周期 bug**：video 是 _uiLayer 的子节点，SelectScene.QueueFree() 会连带 _uiLayer 及 VideoStreamPlayer 一起释放，**StartGame.ogv 根本没机会播放到尾**（1.37s），场景刚切就被销毁。必须：把视频挂到一个不随 SelectScene 释放的节点（或延迟 QueueFree 到 video.Finished），在 Finished 回调里再切 GameScene 并释放 SelectScene。GameScene 也必须在视频结束后才 AddChild，否则会同时出现。 |
-| 视频 | 640×480, 1.37s, 41 帧；StartGame.dat 数据自带淡入黑尾帧 | N/A | ogv 1.37s, 640×480 | 资源正确。 |
+| 触发 | server case 0x20D → 0x459465：[+0x930]=4，[+0x1160]=0，播 StartGame.wav，加载 StartGame.dat 并播放；结束 → 0x4570A0 (mode=3 进游戏) | StartGame.dat 播放结束后进入 cnsPlay/loading；服务端公告由 ClientGetSendNotice 模态显示，点 OK 发 CM_LOGINNOTICEOK | OnStartGameResult Success → phase 4 / StartGame.ogv；视频完整结束后黑屏显示 F602，点勾才创建 GameScene | 视频结束后保留 SelectScene 等用户确认；F602 是当前占位框，原版是否使用同一资源需继续核对。 |
+| 视频 | 640×480, 1.37s, 41 帧；StartGame.dat 数据自带淡入黑尾帧 | Video.Play(StartGame.dat)，完成后继续 cnsPlay/loading | ogv 1.37s, 640×480，结束后显示公告框 | 视频结束后黑底保留到公告确认。 |
 
 ### S10 错误/取消/返回路径
 
 | 路径 | EI | 旧 C# | Godot | 差异 |
 |---|---|---|---|---|
 | 取消建角 | phase 2 下走 F57/F89 等候选路径返回 phase 0 | CharacterBox.Visible=false; SelectScene.Visible=true | HideCreateCharacterPanel → SetSelectPhase(0) | 已存在。 |
-| 取消开始 | F602 确认框 Cancelled 恢复按钮 | N/A | OnStartConfirmCancelled 恢复 _skinStart/_startBtn | 已实现。 |
+| 取消开始 | 登录公告模态只接受 OK 后发 `CM_LOGINNOTICEOK` | 关闭登录公告窗口 | F602 的 X 会关闭后重新显示；勾选触发进入游戏 | 确认前维持黑底，避免服务端已返回成功后退回选角态。 |
 | 断线/错误 | 0x20A/0x20C/0x20E/DisconnectedEvent | MessageBox | OnDisconnected/错误文字 | 基本路径有，但需要验证按钮状态在断线后正确复位。 |
 
 ## Godot 代码中已确认 bug 清单（实施 TODO）
 
-1. **[高] SelectScene.cs L1351-1372**：StartGame 成功后立即 QueueFree 导致 StartGame.ogv 被销毁。需要改为：(a) video 挂到根 viewport 或独立 CanvasLayer 并在 Finished 回调里再切场景；(b) 或 await Finished 再 QueueFree。保证视频完整播 1.37s。
+1. **[已修复，待实机复验] SelectScene.cs StartGame 过场生命周期**：StartGame 视频现挂到 Root，播放完成后显示黑屏 F602 公告确认框；点勾才创建 GameScene。
 2. **[高] SelectScene.cs L893-906**：Create 按钮点击同时启动 CreateChr 视频和 ShowCreateCharacterPanel，二者叠加。应只在视频 Finished 回调里切到 phase 2 并 ShowCreateCharacterPanel。
 3. **[高] SelectScene.cs L1303-1321**：OnDeletePressed 使用通用 ConfirmationDialog 即时发包。需要改为带 5 秒倒计时按钮的 Legacy 对话框，Yes 默认禁用，5 秒后启用；发送时携带 CheckSum（若 Zircon C.DeleteCharacter 支持）。
 4. **[中] SelectScene.cs L886-888**：三个主按钮用 Index=-1 文本按钮 + 错误坐标 (25/120/215, 382)，但 legacy skin 按钮在 BuildLegacySelectUi 末尾"先摘到 _uiLayer 再设坐标"（L1008-1017），实际位置被改写到 (79,243) 等错误值（代码注释 L576-577 把 p0-2 标成"删除角色"但坐标 (79,243) 对应旧版注释），且使用的是 Interface 库帧而非 Interface1c F51/F53/F55。需要按 primary-static 证据改：LibraryFile.Interface1c, Index 51/53/55，坐标 (440,93)/(?/243 待核)/(259,49)。F53 精确坐标需从 setrect_calls 或 window-control-position-analysis 中提取。

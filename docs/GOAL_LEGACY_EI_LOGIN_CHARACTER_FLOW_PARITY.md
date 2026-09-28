@@ -35,8 +35,8 @@
 - 研究版 EXE 身份与本机 EI 安装包尚未完全闭合；某些“两个槽”等逆向字段不代表可见上限/槽位业务必然已确定。明确写出来源、构建身份与证据级别，冲突留 unresolved，不把旧摘要说成铁律。
 - `CreateChr.dat`、`StartGame.dat`、`ei_Login.dat`、`wemade.dat` 是运行媒体；当前最新文档记载的 `.ogv` 是转码播放产物。视频出现 ≠ 阶段/顺序/循环/输入锁定与 EI 一致。逐段确定是否由实际 EI 构造/分发链触发，检查裁切尺寸、时长、遮罩、播放完回到哪个 phase。
 - 已知当前实现并非空白起点：`SelectScene` 已有洞窟 F50、两个槽位动画、创建/开始 `.ogv` 过场、阶段按钮门控等代码。其注释中的坐标、脚底线、帧组、2 槽、角色帧分组与“原版常驻动画”等多处是推导/假设，须逐项验证，**不能直接信代码注释或自测 PASS**。已审计发现的高风险点包括：旧过场状态映射不完整、`RefreshList()` 选择首项、角色对象的字段/角色动画与页面人物大小及锚点不等价、F50 根坐标/800×600 vs 1024×768、旧 EI WIL 素材与 Zircon 动画控制语义；创建成功后的页面可见性、删除确认/成功/失败路径、StartGame 成功响应后的动画也需真实回放。
-- 补充的源码逐路径检查重点：旧 `Client/Scenes/SelectScene.cs` 删除请求有 5 秒确认延迟并携 checksum（约 L577–610、1251–1286）；Godot `SelectScene.cs` 删除走通用确认框后立即发包（约 L1303–1337），不能因操作结果相同就认为 EI 时序相同。Godot start path 的确认/等待/Delays/Success 分别约 L1240–1392；必须逐条对 EI 原始 handler 回包核。
-- **过场生命周期高风险**：Godot `PlayLegacyTransition()` 在 `_uiLayer` 下创建 `VideoStreamPlayer`，但选角成功后随即切换/释放 `SelectScene`。必须跟踪 `_uiLayer` 所属节点树及 `QueueFree` 时序，实测 StartGame 视频是否能完整播放到尾帧后再入世界；不能仅凭“开始播放”日志判定通过。创建过场也要核它和创建请求/回包的准确先后、失败时清理/返回。
+- 补充的源码逐路径检查重点：旧 `Client/Scenes/SelectScene.cs` 删除请求有 5 秒确认延迟并携 checksum（约 L577–610、1251–1286）；Godot `SelectScene.cs` 删除走通用确认框后立即发包（约 L1303–1337），不能因操作结果相同就认为 EI 时序相同。Godot start path 的等待/Delays/Success 分别约 L1240–1392；Legacy 开始按钮发送 StartGame，成功后播放 StartGame 过场，结束时黑屏显示 F602 公告确认框，点勾后才进入 GameScene。此 F602 是按用户目标复用的占位框，原版资源等价关系尚未闭合。
+- **过场生命周期需实机复验**：StartGame 的 `VideoStreamPlayer` 现挂到 Root，完成回调显示黑屏公告确认框，点勾后才切入 GameScene；需在可交互客户端中确认视频完整播放、弹框显示及确认后切场景，不能只凭“开始播放”日志判定通过。创建过场也要核它和创建请求/回包的准确先后、失败时清理/返回。
 - 必须对照原始证据工件 `char-select-stage-machine-evidence.json`、`char-select-enter-layout-evidence.json`、`char-select-visual-verification-evidence.json`、`interface1c-parent-context.json`，并从 `login-flow-evidence.json`/`login-charselect-flow-evidence.json` 交叉核：EI phase 0–4（不要误用 Godot phase 编号）、服务器消息阶段、视频、音效、5 阶段字段。`UI_COMPLETION_AUDIT.md` 的 Finding 267/F349/F541/F603 索引和审计日志只用于导航，逐字段 trace/原始指令优先。
 - 视频 `.ogv` 运行日志能证明播放器启动，但尚不证明 EI `.dat` 内容转换逐帧相同、30fps/总时长/黑场尾帧/音效/裁剪与阶段门一致；逐文件跑 `ffprobe` 并抽关键帧和运行捕获对照。EI 文件与原版 EXE 的构建身份不能凭文件名推成同版。
 

@@ -34,10 +34,11 @@ public partial class SelectScene : Control
     private DXImageControl _caveShadow0, _caveShadow1;
     private DXLabel _slotName0, _slotName1;
     private DXControl _slotHit0, _slotHit1;
-    // EI 进入游戏前的公告框（F602）。原版流程：选中角色 -> 点进入 -> 服务端下发公告 ->
-    // 玩家确认后才真正进游戏。我方此前公告只在 GameScene 里处理（进游戏之后），
-    // 选角屏完全没有这条链。
-    private NoticeDialog _noticeDialog;
+    // 开始游戏过场结束后显示公告确认窗；公告文字目前允许为空。
+    private CanvasLayer _legacyStartNoticeLayer;
+    private ColorRect _legacyStartNoticeBackdrop;
+    private NoticeDialog _legacyStartNoticeDialog;
+    private string _pendingLegacyStartNotice = string.Empty;
     // EI 选角屏的 5 阶段状态机（证据 login-flow-evidence.json::screens.parent.phase，
     // 阶段表 0x457778 = [0x4575F3, 0x457615, 0x457604, 0x4576FA, 0x45773C]）：
     //   0 = 4 按钮角色列表（创建角色/删除角色/开始游戏/结束）
@@ -186,7 +187,7 @@ public partial class SelectScene : Control
             _unsubscribers.Add(() => _net.Connection.DeleteCharacterResultEvent -= OnDeleteCharacterResult);
             _net.Connection.StartGameResultEvent += OnStartGameResult;
             _unsubscribers.Add(() => _net.Connection.StartGameResultEvent -= OnStartGameResult);
-            // 选角屏也要收公告：原版在进入游戏前用 F602 公告框拦住流程。
+            // 暂存选角期间到达的公告，等 StartGame 过场结束后再显示。
             _net.Connection.ChatEvent += OnSelectChat;
             _unsubscribers.Add(() => _net.Connection.ChatEvent -= OnSelectChat);
         }
@@ -1790,27 +1791,17 @@ public partial class SelectScene : Control
     }
 
     /// <summary>
-    /// 选角屏的公告处理（EI 进入游戏前的 F602 公告框）。
-    /// 证据边界：原版 F602 的**触发源**尚未闭合（审计文档 NOTICE-01 记录
-    /// "当前还把公告聊天消息直接当作打开此窗的触发" 属我方猜测）。
-    /// 此处按用户描述与现有网络链实现：收到 Announcement 类消息即弹 F602，
-    /// 玩家确认后关闭；角色进入游戏仍由服务端的 StartGameResult 驱动。
+    /// 缓存选角期间到达的公告；开始游戏过场结束前不弹窗。
     /// </summary>
     private void OnSelectChat(S.Chat p)
     {
         if (p == null) return;
         if (p.Type != MessageType.Announcement) return;
         if (!AutoLoginArgs.LegacyUi) return;
-        ShowLegacyNotice(p.Text);
-    }
-
-    /// <summary>在选角屏弹出 F602 公告框（EI 进入游戏前的公告环节）。</summary>
-    public void ShowLegacyNotice(string text)
-    {
-        _noticeDialog ??= new NoticeDialog();
-        _noticeDialog.SetNotice(text);
-        WindowManager.Open(_noticeDialog, _uiLayer);
-        GD.Print($"[LegacySelect] 公告框 F602 已弹出: len={text?.Length ?? 0}");
+        _pendingLegacyStartNotice = p.Text ?? string.Empty;
+        if (_legacyStartNoticeDialog != null && IsInstanceValid(_legacyStartNoticeDialog)
+            && _legacyStartNoticeDialog.Visible)
+            _legacyStartNoticeDialog.SetNotice(_pendingLegacyStartNotice);
     }
 
     private void OnStartPressed()
@@ -1822,58 +1813,68 @@ public partial class SelectScene : Control
         _skinStart.Enabled = false;
         _statusLabel.Text = Lang.SelectGameLabel2;
         _lastStartIndex = _characters[idx].CharacterIndex;
-        if (AutoLoginArgs.LegacyUi)
-        {
-            // 原版：点「开始游戏」后弹确认框（F602 公告框），
-            // 用户在框内点勾选（F606）才真正进入。
-            // 按用户指示文字暂时留空（原版内容来自服务端公告链，未接）。
-            ShowStartConfirmDialog();
-            return;
-        }
+        // EI F55 直接发起进入请求；成功回包后先播 StartGame 过场，结束后再显示公告确认。
         _net.Connection?.SendStartGame(_lastStartIndex);
     }
 
-    private NoticeDialog _startConfirmDialog;
-
-    /// <summary>
-    /// Legacy 模式：「开始游戏」(F55) 后弹 F602 确认框，用户点框内勾选才真正发送 StartGame。
-    /// 原版流程（login-flow-evidence.json::screens.parent）：
-    ///   F55 点击 0x459B16 -> msgid 0x67 '%s/%s'(账号/角色名) -> 服务端 case 0x20D -> phase 4
-    ///   -> 0x4570A0 进游戏 + StartGame.dat 过场。
-    /// 本确认框 = 该流程的「用户确认」闸；文字按用户指示暂留空。
-    /// </summary>
-    private void ShowStartConfirmDialog()
+    private void ShowLegacyStartNotice()
     {
-        _startConfirmDialog ??= new NoticeDialog();
-        _startConfirmDialog.SetNotice(string.Empty);
-        _startConfirmDialog.Confirmed += OnStartConfirmConfirmed;
-        _startConfirmDialog.Cancelled += OnStartConfirmCancelled;
-        WindowManager.Open(_startConfirmDialog, _uiLayer);
-        GD.Print("[LegacySelect] 确认框 F602 已弹出（文字暂留空），等待用户点勾选");
+        if (_uiLayer != null) _uiLayer.Visible = false;
+        _legacyStartNoticeLayer ??= new CanvasLayer
+        {
+            Name = "LegacyStartNoticeLayer",
+            Layer = (_uiLayer?.Layer ?? 1) + 1,
+        };
+        if (_legacyStartNoticeLayer.GetParent() == null) AddChild(_legacyStartNoticeLayer);
+        _legacyStartNoticeLayer.Visible = true;
+        UiScaler.UpdateScale(_legacyStartNoticeLayer, GetViewport());
+
+        _legacyStartNoticeBackdrop ??= new ColorRect
+        {
+            Name = "LegacyStartNoticeBlackout",
+            Color = Colors.Black,
+            Position = Vector2.Zero,
+            Size = new Vector2(UiScaler.BaseWidth, UiScaler.BaseHeight),
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        if (_legacyStartNoticeBackdrop.GetParent() == null)
+            _legacyStartNoticeLayer.AddChild(_legacyStartNoticeBackdrop);
+
+        _legacyStartNoticeDialog ??= new NoticeDialog();
+        _legacyStartNoticeDialog.SetNotice(_pendingLegacyStartNotice);
+        _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
+        _legacyStartNoticeDialog.Cancelled += OnLegacyStartNoticeCancelled;
+        WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
+        GD.Print($"[LegacySelect] StartGame 过场结束，黑屏上显示 F602 公告确认框: len={_pendingLegacyStartNotice.Length}");
     }
 
-    private void OnStartConfirmConfirmed()
+    private void OnLegacyStartNoticeConfirmed()
     {
-        if (_startConfirmDialog != null)
-        {
-            _startConfirmDialog.Confirmed -= OnStartConfirmConfirmed;
-            _startConfirmDialog.Cancelled -= OnStartConfirmCancelled;
-        }
-        GD.Print($"[LegacySelect] 确认框勾选 -> SendStartGame charIndex={_lastStartIndex}");
-        _net.Connection?.SendStartGame(_lastStartIndex);
+        DetachLegacyStartNoticeHandlers();
+        GD.Print("[LegacySelect] F602 勾选 -> 进入游戏");
+        EnterGameScene();
     }
 
-    private void OnStartConfirmCancelled()
+    private void OnLegacyStartNoticeCancelled()
     {
-        if (_startConfirmDialog != null)
-        {
-            _startConfirmDialog.Confirmed -= OnStartConfirmConfirmed;
-            _startConfirmDialog.Cancelled -= OnStartConfirmCancelled;
-        }
-        _startBtn.Disabled = false;
-        _skinStart.Enabled = true;
-        _lastStartIndex = -1;
-        GD.Print("[LegacySelect] 确认框被关闭（取消），开始按钮已恢复");
+        DetachLegacyStartNoticeHandlers();
+        GD.Print("[LegacySelect] F602 关闭；保持黑屏并等待勾选确认");
+        CallDeferred(nameof(ReopenLegacyStartNotice));
+    }
+
+    private void DetachLegacyStartNoticeHandlers()
+    {
+        if (_legacyStartNoticeDialog == null) return;
+        _legacyStartNoticeDialog.Confirmed -= OnLegacyStartNoticeConfirmed;
+        _legacyStartNoticeDialog.Cancelled -= OnLegacyStartNoticeCancelled;
+    }
+
+    private void ReopenLegacyStartNotice()
+    {
+        if (_legacyStartNoticeDialog == null || _legacyStartNoticeLayer == null) return;
+        _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
+        _legacyStartNoticeDialog.Cancelled += OnLegacyStartNoticeCancelled;
+        WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
     }
 
     private void OnDeletePressed()
@@ -2091,14 +2092,14 @@ public partial class SelectScene : Control
             {
                 SetSelectPhase(4);
                 // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
-                // 过场期间隐藏选角 UI、禁用输入，视频完整播完 (1.37s / 41 帧)
-                // 再切 GameScene；视频挂到 Root 以免 SelectScene 销毁时被连带释放。
+                // 过场期间隐藏选角 UI；视频完整播完 (1.37s / 41 帧) 后，黑屏显示
+                // F602 公告确认框；勾选后才创建 GameScene。视频挂到 Root。
                 if (_uiLayer != null) _uiLayer.Visible = false;
                 // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
                 // = StartGame.wav -> 进游戏时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyStartGame);
-                GD.Print($"[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后进入游戏 ***");
-                PlayLegacyTransition("StartGame", onFinished: EnterGameScene, attachToRoot: true);
+                GD.Print("[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后显示 F602 公告确认 ***");
+                PlayLegacyTransition("StartGame", onFinished: ShowLegacyStartNotice, attachToRoot: true);
             }
             else
             {

@@ -96,6 +96,20 @@ public partial class SelectScene : Control
     private DXNumberField _skinHairNumber;
     private DXCreatePreviewControl _createPreview;
     private DXLabel _selectedClassLabel, _selectedGenderLabel;
+
+    // ---- EI phase 2「新建人物」原生构图（legacy 专用，见 BuildLegacyCreateLayer） ----
+    private DXControl _legacyCreateLayer;
+    private DXImageControl _legacyCreateStrip;        // Interface1c F82（半透明，alpha 50）
+    private DXImageControl _legacyCreatePlate;        // Interface1c F81（名字牌）
+    private DXImageControl _legacyCreateShadow0, _legacyCreateShadow1;
+    private DXImageControl _legacyCreateBody0, _legacyCreateBody1;
+    private DXControl _legacyCreateHit0, _legacyCreateHit1, _legacyCreatePlateHit;
+    private DXTextInput _legacyCreateName;
+    private int _legacyCreateSelected;                // 原版 [obj+0x1488]，0=男槽 1=女槽
+    private int _legacyCreateClassIndex;              // 0=武士 1=法师 2=道士（两槽共用）
+    private readonly int[] _legacyCreateFrame = new int[2];
+    private readonly double[] _legacyCreateTimer = new double[2];
+    private bool _legacyCreateSlotsReady;
     private MirClass _skinCreateClass = MirClass.Warrior;
     private MirGender _skinCreateGender = MirGender.Male;
     private int _skinHairType = 1;
@@ -229,6 +243,8 @@ public partial class SelectScene : Control
     {
         base._Process(delta);
         TickPhaseBgm(delta);
+        // EI stage 2 两个预览人物的帧推进（variant 4、120ms/帧、选中槽动/未选中槽定格首帧）
+        ProcessLegacyCreatePreview(delta);
         // 洞窟槽位几何同步（阴影帧 = 角色帧 + 20；命中框/标签 = 锚点 + 帧头 offset）
         SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, _slotName0, Slot0AnchorX, Slot0LabelX);
         SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, _slotName1, Slot1AnchorX, Slot1LabelX);
@@ -534,9 +550,23 @@ public partial class SelectScene : Control
         }
         SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, _slotName0, Slot0AnchorX, Slot0LabelX);
         SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, _slotName1, Slot1AnchorX, Slot1LabelX);
+        // **phase 2（新建人物）不画洞窟槽位**：原版 stage 2 的 tick 只画创建界面
+        // （背景换成 F80 + 2 个预览槽 + F82/F81 + 5 按钮），不画列表槽位。
+        if (_legacyCreateLayer is { Visible: true }) SetLegacyCaveSlotsVisible(false);
         GD.Print($"[LegacySelect] 洞窟槽位: 角色数={_characters.Count} "
             + $"锚点 slot0=({Slot0AnchorX},{SlotAnchorY}) slot1=({Slot1AnchorX},{SlotAnchorY}) "
             + $"帧时长={LegacyFrameMs}ms variant={LegacySlotIntroVariant}→{LegacySlotIdleVariant}");
+    }
+
+    /// <summary>洞窟槽位（角色/阴影/命中区/名称标签）整体显隐（legacy 相位切换用）。</summary>
+    private void SetLegacyCaveSlotsVisible(bool visible)
+    {
+        foreach (var ctl in new DXControl[]
+                 {
+                     _characterAnimation, _caveShadow0, _slotHit0, _slotName0,
+                     _characterAnimation2, _caveShadow1, _slotHit1, _slotName1,
+                 })
+            if (ctl != null) ctl.Visible = visible;
     }
 
     /// <summary>
@@ -783,7 +813,14 @@ public partial class SelectScene : Control
         if (_skinExit != null) _skinExit.Visible = p0;
         foreach (var b in new[] { _skinConfirmYes, _skinConfirmNo, _skinClassWarrior, _skinClassWizard, _skinClassTaoist })
             if (b != null) b.Visible = p2;
-        GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏)");
+        // **背景按阶段换帧**：原版 stage 0（列表）用 Interface1c **F50**（0x4577E1 push 0x32），
+        // stage 2（创建）用 **F80**（0x457B09 push 0x50），两者都是 640x480 且像素明显不同
+        // （F50 = 洞窟大厅俯视；F80 = 近景石壁 + 浮雕/石门，见 wilsdk 离线对照）。
+        if (_selectBackground != null) _selectBackground.Index = phase == 2 ? 80 : 50;
+        // EI phase 2 的两个人物预览/名牌/名字框只在创建相位显示。
+        SetLegacyCreateLayerVisible(p2);
+        GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏) "
+            + $"背景F={(phase == 2 ? 80 : 50)}");
     }
 
     /// <summary>
@@ -830,14 +867,45 @@ public partial class SelectScene : Control
     private void HideCreateCharacterPanel()
     {
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = false;
-        if (AutoLoginArgs.LegacyUi) SetSelectPhase(0);
+        if (AutoLoginArgs.LegacyUi)
+        {
+            SetLegacyCreateLayerVisible(false);
+            SetSelectPhase(0);
+            // 恢复洞窟槽位（原版 stage 3 的 tick 把 phase 写回 0 后，stage 0 重新画列表槽位）
+            for (int i = 0; i < 2; i++)
+            {
+                bool has = i < _characters.Count;
+                var anim = i == 0 ? _characterAnimation : _characterAnimation2;
+                var shadow = i == 0 ? _caveShadow0 : _caveShadow1;
+                var label = i == 0 ? _slotName0 : _slotName1;
+                var hit = i == 0 ? _slotHit0 : _slotHit1;
+                if (anim != null) anim.Visible = has;
+                if (shadow != null) shadow.Visible = has;
+                if (label != null) label.Visible = has;
+                if (hit != null) hit.Visible = has;
+            }
+        }
         else if (_skinPanel != null) _skinPanel.Visible = true;
         if (_characterAnimation != null) _characterAnimation.Visible = true;
+        if (_characterAnimation2 != null) _characterAnimation2.Visible = true;
     }
 
     private void ShowCreateCharacterPanel()
     {
-        if (_skinPanel != null) _skinPanel.Visible = !AutoLoginArgs.LegacyUi;
+        if (AutoLoginArgs.LegacyUi)
+        {
+            // **EI 原版新建人物界面没有窗口面板**：F50 洞窟保持可见，
+            // 两只预览人物（+0x10BC 男 / +0x10FC 女，variant 4 段，锚点查 0x458910）、
+            // 半透明条 F82、名字牌 F81 与 5 个图形钮直接摆在 640x480 画布上。
+            // 覆盖整个 260x650 的 Zircon 新建人物对话框（它的职业/性别/发型/染色
+            // 控件与 Program/Equip 合成预览在原版 phase 2 都没有对应物）。
+            if (_skinPanel != null) _skinPanel.Visible = false;
+            SetLegacyCaveSlotsVisible(false);
+            InitLegacyCreateSlots();
+            SetLegacyCreateLayerVisible(true);
+            return;
+        }
+        if (_skinPanel != null) _skinPanel.Visible = true;
         if (_skinCreatePanel != null) _skinCreatePanel.Visible = true;
         if (_characterAnimation != null) _characterAnimation.Visible = false;
     }
@@ -845,6 +913,14 @@ public partial class SelectScene : Control
     private void SelectCreateClass(MirClass value)
     {
         _skinCreateClass = value;
+        if (AutoLoginArgs.LegacyUi)
+        {
+            // 原版 F92/F95/F98 处理器（0x459D1D/0x459E19/0x459EA5）把 class 写进
+            // **两个**槽（0x458440(&+0x10bc, gender, class) 与 (&+0x10fc, gender, class)），
+            // 随后各自 0x458B20(slot,4) 重装 → 从 variant 4 段首帧重播 + 命中框重算。
+            _legacyCreateClassIndex = Mathf.Clamp((int)value, 0, 2);
+            RebuildLegacyCreateSlots();
+        }
         UpdateCreateButtonStates();
         UpdateCreatePreview();
     }
@@ -856,10 +932,14 @@ public partial class SelectScene : Control
         UpdateCreatePreview();
     }
 
+    /// <summary>当前生效的角色名输入框（legacy = EI 原版那个 (288,405) 75x13 的 EDIT）。</summary>
+    private DXTextInput ActiveCreateNameField
+        => AutoLoginArgs.LegacyUi ? _legacyCreateName : _skinCreateName;
+
     private void UpdateCreateButtonStates()
     {
         if (_skinCreateConfirm != null)
-            _skinCreateConfirm.Enabled = !string.IsNullOrWhiteSpace(_skinCreateName?.Text);
+            _skinCreateConfirm.Enabled = !string.IsNullOrWhiteSpace(ActiveCreateNameField?.Text);
 
         // **只保留三职业的帧**（121/126/131 与 120/125/130）。
         // 原为 4 个元素（第 4 对 136/135 是给多余职业预留的），按"原版只有三职业"
@@ -876,13 +956,33 @@ public partial class SelectScene : Control
 
     private void SubmitSkinCharacter()
     {
-        if (_skinCreateName == null || string.IsNullOrWhiteSpace(_skinCreateName.Text)) return;
-        _skinCreateConfirm.Enabled = false;
+        var field = ActiveCreateNameField;
+        string name = field?.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(name)) return;
+
+        // 原版 F86 处理器（0x459F56-0x45A02A，悬停标题 0x47D64C「确认人物创建」）：
+        //   GetWindowTextA(edit) → **先清空输入框** → 空则不动 → 长度 > 14 弹提示框
+        //   → 0x4589B0 名字校验 → 通过则发送 msgid 0x65 '%s/%s/%d/%d/%d'
+        //     (账号/名字/职业/性别/flag)。
+        // 目标 WIL 名限制 14 字符（0x459FBE cmp ecx,0xe）。
+        if (name.Length > 14)
+        {
+            _statusLabel.Text = Lang.SelectCharacterLabel9;
+            GD.Print($"[LegacyCreate] 名字过长({name.Length})，按原版 0x459FBE 上限 14 拒绝");
+            return;
+        }
+        if (field != null) field.Text = string.Empty;
+        if (_skinCreateConfirm != null) _skinCreateConfirm.Enabled = false;
         _statusLabel.Text = Lang.SelectCreateLabel;
         // EI phase 3 = 等待服务器回包；发送建角请求后按钮门控，
-        // 由 OnNewCharacterResult 回到 phase 0（成功）或停留在编辑面板（失败）。
+        // 由 OnNewCharacterResult 回到 phase 0（成功）或回到 phase 2（失败）。
         if (AutoLoginArgs.LegacyUi) SetSelectPhase(3);
-        _net.Connection?.SendNewCharacter(_skinCreateName.Text.Trim(), _skinCreateClass, _skinCreateGender, _skinHairType, _skinHairColour, _skinArmourColour);
+        // 性别：原版取**选中预览槽**的 [+4]/[+5]（0x45A000/0x45A009；槽 0 = 男、槽 1 = 女），
+        // 不是独立性别控件。legacy 下用 _legacyCreateSelected 映射。
+        MirGender gender = AutoLoginArgs.LegacyUi
+            ? (_legacyCreateSelected == 1 ? MirGender.Female : MirGender.Male)
+            : _skinCreateGender;
+        _net.Connection?.SendNewCharacter(name, _skinCreateClass, gender, _skinHairType, _skinHairColour, _skinArmourColour);
     }
 
     private void BuildLegacySelectUi()
@@ -1020,9 +1120,9 @@ public partial class SelectScene : Control
                 SoundPlayback.Play(this, SoundIndex.LegacyCreateChr);
                 PlayLegacyTransition("CreateChr", onFinished: () =>
                 {
-                    // 视频播完，phase 2：显示创建编辑面板
+                    // 视频播完，phase 2：显示创建编辑界面
                     SetSelectPhase(2);
-                    if (_skinPanel != null) _skinPanel.Visible = true;
+                    if (_skinPanel != null) _skinPanel.Visible = !AutoLoginArgs.LegacyUi;
                     ShowCreateCharacterPanel();
                 });
             }
@@ -1096,6 +1196,7 @@ public partial class SelectScene : Control
         UpdateCreatePreview();
         if (AutoLoginArgs.LegacyUi)
         {
+            BuildLegacyCreateLayer();
             ApplyLegacyEiSelectLayout();
             // 验证用：--legacy-phase2 直接进入 phase 2（动画列表 + 5 个图形钮），
             // 便于截图核对 phase 2 的贴图/hover，不需要真走一遍创建流程。
@@ -1113,9 +1214,322 @@ public partial class SelectScene : Control
         GetNode<Control>("VBox").Visible = false;
     }
 
+    // =====================================================================================
+    // EI phase 2「新建人物」原生构图
+    //
+    // 原版 stage 2 的 tick（0x457AB0-0x458130）按顺序画：
+    //   1. 背景 Interface1c **F80**（0x457B09 push 0x50 → 0x466130(+0x14C,0x50) → 0x45FD50，(0,0)）
+    //   2. 2 个预览槽循环（0x457B47-0x457D31，esi 从 +0x10E0 起、步长 0x40、ebp<2）：
+    //        • 帧推进：计时 += delta，超过记录时长（0x78 = 120 ms）→ 帧++、计时清零，
+    //          超过末帧回绕到首帧（0x457B63-0x457BD1）
+    //        • 0x458A70 按**当前帧**重算命中框 [+0x28]
+    //        • 阴影 = 帧+0x14(=20) → 0x460CB0（混合 blit），位置 = 锚点 + 帧头 offset
+    //        • 身体：选中槽（ebp == [owner+0x1488]）= 当前帧 → 0x45FD50（动）；
+    //                未选中槽 = 记录首帧 → 0x4645E0（**静止**）
+    //        • 叠加：选中槽 帧+0x28(=40) → 0x457310（3D 贴图页，**无 2D 等价物，未移植**）
+    //   3. F82 → 0x460CB0（混合 0x32 = 50）于 (201,434)，尺寸取帧头 256x32
+    //   4. F81 → 0x45FD50 于 (247,384)，尺寸取帧头 164x88
+    //   5. 5 个 phase-2 按钮（+0xD38/+0xDEC/+0xEA0/+0xF54/+0x1008）
+    //   6. 名字框底：SetRect(287,404,364,419) + 0x45E570 填色 0x3C5A78（0x4580EF-0x458121）
+    // 名字输入框本身是独立的 Win32 EDIT 子窗口：stage 1 结束时
+    // MoveWindow(edit, win+0x120, win+0x195, 0x4B, 0xD) + ShowWindow(edit, SW_SHOW)
+    // （0x4576A1/0x4576B0）→ 客户区坐标 (288,405)、尺寸 75x13；字符上限 14（EM_SETLIMITTEXT 0xE）。
+    //
+    // 帧段/锚点：
+    //   • 帧段 = variant 4（0x4576F3 / 0x459E56 的 0x458B20(slot, 4)）= 大体型站立待机段
+    //   • 锚点 = 0x458910 表，idx = 性别*3 + 职业，8 字节一项（primary-bytes）
+    // 因此本屏与 phase 0 的列表槽位（variant 1→2、锚点 (250/300,210)）**不是同一套
+    // 坐标/时序**（同属 Interface1c 同一张 30 条帧表，仅 variant 不同），不可混用。
+    // =====================================================================================
+
     /// <summary>
-    /// EI 原版选角屏（`login-flow-evidence.json::screens.parent`，screen obj 0x8A7140，
-    /// ctor 0x456CB0）。**640x480 基准**，背景 F50，控件散点摆放、没有居中面板：
+    /// phase 2 两个预览槽的锚点（primary-bytes：0x458910-0x4589A2，逐项 8 字节）：
+    /// 男武(110,110) 男法(110,120) 男道(110,120) 女武(400,160) 女法(420,115) 女道(425,118)。
+    /// 索引 = 性别*3 + 职业；参数越界时默认 (110,100)。
+    /// （写入位置逐个为 S+0…S+0x2c，其中 entry1.Y/entry2.Y 由 0x45891D/0x458921 在
+    /// `push esi` **之前**写入 S+0xc/S+0x14，故 120 是真实值，不是未初始化。）
+    /// 锚点同时是命中框/阴影的基准（0x458A70 与 0x457C58 都用 [+0x18]/[+0x1C]）。
+    /// </summary>
+    private static readonly Vector2I[] LegacyCreateAnchors =
+    {
+        new(110, 110), new(110, 120), new(110, 120),   // 槽 0 = 男：武 / 法 / 道
+        new(400, 160), new(420, 115), new(425, 118),   // 槽 1 = 女：武 / 法 / 道
+    };
+
+    /// <summary>槽 0 = 男、槽 1 = 女（0x4576E3 给 +0x10FC 传 gender=1，即 0x458440 的 arg2）。</summary>
+    private static MirGender LegacyCreateGender(int slot) => slot == 1 ? MirGender.Female : MirGender.Male;
+
+    private static readonly MirClass[] LegacyCreateClasses =
+        { MirClass.Warrior, MirClass.Wizard, MirClass.Taoist };
+
+    private MirClass LegacyCreateClass => LegacyCreateClasses[Mathf.Clamp(_legacyCreateClassIndex, 0, 2)];
+
+    private static Vector2I LegacyCreateAnchorFor(int slot, int classIndex)
+        => LegacyCreateAnchors[Mathf.Clamp(slot, 0, 1) * 3 + Mathf.Clamp(classIndex, 0, 2)];
+
+    private Vector2I LegacyCreateAnchor(int slot) => LegacyCreateAnchorFor(slot, _legacyCreateClassIndex);
+
+    private (int First, int Last) LegacyCreateBlock(int slot, int variant)
+        => LegacySlotBlock(LegacyCreateClass, LegacyCreateGender(slot), variant);
+
+    /// <summary>
+    /// EI stage 1 → stage 2 的槽初始化（primary-bytes：0x4576B6-0x4576F8）：
+    ///   0x458440(&amp;+0x10BC, gender=0, class=0, level=0, name=NULL) + 0x458B20(0, 4)
+    ///   0x458440(&amp;+0x10FC, gender=1, class=0, level=0, name=NULL) + 0x458B20(1, 4)
+    /// 即：**每次进创建屏都重置为「武士 + 男/女两只」**，并从 variant 4 段首帧重播
+    /// （0x458B20 把记录首帧写 [+0x22]、计时清零）。
+    /// 选中槽 [+0x1488] 不在重置范围内（ctor 0x456C4B 只把它清 0，之后只有点击修改）。
+    /// </summary>
+    private void InitLegacyCreateSlots()
+    {
+        _legacyCreateClassIndex = 0;   // 0x458440 的 class 实参恒为 0（0x4576BA/0x4576DB 前的 push 0）
+        _skinCreateClass = MirClass.Warrior;
+        RebuildLegacyCreateSlots();
+    }
+
+    /// <summary>
+    /// 按当前 [职业] 与固定 [槽0=男 / 槽1=女] 重建两个预览槽。职业按钮（0x459DAE/0x459E19/
+    /// 0x459EA5）走这里：class 变了 → 帧段变、锚点可能变（0x458910 按 性别*3+职业 取值）。
+    /// </summary>
+    private void RebuildLegacyCreateSlots()
+    {
+        if (_legacyCreateBody0 == null) return;   // legacy 图层尚未构建
+        for (int slot = 0; slot < 2; slot++)
+        {
+            var (first, _) = LegacyCreateBlock(slot, 4);
+            _legacyCreateFrame[slot] = first;
+            _legacyCreateTimer[slot] = 0;
+            var body = slot == 0 ? _legacyCreateBody0 : _legacyCreateBody1;
+            var shadow = slot == 0 ? _legacyCreateShadow0 : _legacyCreateShadow1;
+            var hit = slot == 0 ? _legacyCreateHit0 : _legacyCreateHit1;
+            Vector2I anchor = LegacyCreateAnchor(slot);
+            if (body != null) body.Location = anchor;
+            if (shadow != null) shadow.Location = anchor;
+            if (hit != null) hit.Visible = true;
+            SyncLegacyCreateHit(slot);
+        }
+        SyncLegacyCreateFrameIndexes();
+        GD.Print($"[LegacyCreate] 槽重建: class={LegacyCreateClass} variant=4 "
+            + $"锚点 slot0={LegacyCreateAnchorFor(0, _legacyCreateClassIndex)} "
+            + $"slot1={LegacyCreateAnchorFor(1, _legacyCreateClassIndex)} "
+            + $"帧段 slot0={LegacyCreateBlock(0, 4)} slot1={LegacyCreateBlock(1, 4)} "
+            + $"帧时长={LegacyFrameMs}ms 选中槽={_legacyCreateSelected}");
+    }
+
+    /// <summary>
+    /// 按选中槽决定身体显示哪一帧：选中槽显示推进中的当前帧（[+0x22]，0x457C42 分支），
+    /// 未选中槽显示记录首帧（[record+0]，0x457C98 分支）。阴影两槽都跟随推进的帧号
+    /// （0x457BE3 用 [slot+0x22]），原版如此，不做"未选中也静止"的想当然处理。
+    /// </summary>
+    private void SyncLegacyCreateFrameIndexes()
+    {
+        if (_legacyCreateBody0 == null) return;
+        for (int slot = 0; slot < 2; slot++)
+        {
+            var body = slot == 0 ? _legacyCreateBody0 : _legacyCreateBody1;
+            var shadow = slot == 0 ? _legacyCreateShadow0 : _legacyCreateShadow1;
+            if (body == null) continue;
+            var (first, last) = LegacyCreateBlock(slot, 4);
+            int frame = Mathf.Clamp(_legacyCreateFrame[slot], first, last);
+            int shown = _legacyCreateSelected == slot ? frame : first;
+            if (body.Index != shown) body.Index = shown;
+            if (shadow != null)
+            {
+                int shadowIndex = frame + 20;   // 0x457BE3 add eax, 0x14
+                if (shadow.Index != shadowIndex) shadow.Index = shadowIndex;
+            }
+        }
+    }
+
+    /// <summary>命中框 = 锚点 + **当前帧**帧头 offset，尺寸取帧头 w/h（0x458A70）。</summary>
+    private void SyncLegacyCreateHit(int slot)
+    {
+        var hit = slot == 0 ? _legacyCreateHit0 : _legacyCreateHit1;
+        var body = slot == 0 ? _legacyCreateBody0 : _legacyCreateBody1;
+        if (hit == null || body == null) return;
+        int frame = _legacyCreateFrame[slot];
+        Vector2I size = MirSkin.GetSize(LibraryFile.Interface1c, frame);
+        if (size == Vector2I.Zero) return;
+        hit.Location = LegacyCreateAnchor(slot) + MirSkin.GetOffset(LibraryFile.Interface1c, frame);
+        hit.Size = size;
+    }
+
+    /// <summary>
+    /// stage 2 每帧推进（对应 tick 0x457B47-0x457D31 的帧推进段）。
+    /// 计时严格大于 120 ms 才进帧、进帧后计时清零（0x457B6B-0x457BD1）；
+    /// **两个槽都在推进**，只有身体按选中态取帧。
+    /// </summary>
+    private void ProcessLegacyCreatePreview(double delta)
+    {
+        if (_legacyCreateLayer == null || !_legacyCreateLayer.Visible) return;
+        double ms = delta * 1000.0;
+        for (int slot = 0; slot < 2; slot++)
+        {
+            var (first, last) = LegacyCreateBlock(slot, 4);
+            _legacyCreateTimer[slot] += ms;
+            if (_legacyCreateTimer[slot] > LegacyFrameMs)
+            {
+                _legacyCreateTimer[slot] = 0;
+                _legacyCreateFrame[slot]++;
+            }
+            if (_legacyCreateFrame[slot] > last || _legacyCreateFrame[slot] < first)
+                _legacyCreateFrame[slot] = first;
+            SyncLegacyCreateHit(slot);
+        }
+        SyncLegacyCreateFrameIndexes();
+    }
+
+    /// <summary>
+    /// 点击预览人物 = 选择性别（0x459939-0x4599A1 的 stage 2 槽命中循环）：
+    ///   PtInRect([slot+0x28]) 命中 → 已是选中槽则只写选中值；否则 0x458B20(slot, 4)
+    ///   重播该槽 variant 4（帧复位到记录首帧）→ [+0x1488] = slot → 0x4584C0 刷新显示串。
+    /// 槽 0 = 男、槽 1 = 女，故这一步就是性别选择；F86 提交时读 [+0x1488] 槽的 [+5]/[+4]。
+    /// </summary>
+    private void SelectLegacyCreateSlot(int slot)
+    {
+        if (slot < 0 || slot > 1) return;
+        if (_legacyCreateSelected != slot)
+        {
+            var (first, _) = LegacyCreateBlock(slot, 4);
+            _legacyCreateFrame[slot] = first;   // 0x458B20(slot, 4) 把帧复位到记录首帧
+            _legacyCreateTimer[slot] = 0;
+        }
+        _legacyCreateSelected = slot;
+        SyncLegacyCreateFrameIndexes();
+        GD.Print($"[LegacyCreate] 选中预览槽 {slot}（性别 {LegacyCreateGender(slot)}，原版 [+0x1488]），"
+            + $"职业 {LegacyCreateClass}");
+    }
+
+    /// <summary>F89「退出人物创建」：隐藏创建界面回到角色列表（见 MakeSelectIconButton 处注释）。</summary>
+    private void ExitLegacyCreate()
+    {
+        GD.Print("[LegacyCreate] F89 退出人物创建 -> 回 phase 0 列表");
+        HideCreateCharacterPanel();
+    }
+
+    private void SetLegacyCreateLayerVisible(bool visible)
+    {
+        if (_legacyCreateLayer == null) return;
+        _legacyCreateLayer.Visible = visible;
+        if (visible) SyncLegacyCreateFrameIndexes();
+    }
+
+    /// <summary>
+    /// 构建 EI stage 2 的原生图层（挂在 F50/F80 背景之下，与 phase 0 槽位同一 640x480 画布）。
+    /// 坐标/帧号/层级全部来自上面的 primary-bytes 结论；仅 legacy 模式使用。
+    /// 绘制顺序 = 子节点顺序：预览槽（阴影→身体，槽 0 后槽 1）→ F82 → F81 →
+    /// 名字框底 → 输入框（Win32 EDIT 是子窗口，永远在最上层）。
+    /// </summary>
+    private void BuildLegacyCreateLayer()
+    {
+        if (_selectBackground == null) return;
+
+        _legacyCreateLayer = new DXControl
+        {
+            Size = new Vector2I(640, 480),
+            Position = Vector2I.Zero,
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _selectBackground.AddControl(_legacyCreateLayer);
+
+        // 两只预览槽：阴影 + 身体（原版 tick 每槽依次画 阴影 → 身体 → 叠加）
+        for (int slot = 0; slot < 2; slot++)
+        {
+            var shadow = new DXImageControl
+            {
+                LibraryFile = LibraryFile.Interface1c,
+                UseOffSet = true,          // 0x457BF0：锚点 + 帧头 offset，尺寸取帧头
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            var body = new DXImageControl
+            {
+                LibraryFile = LibraryFile.Interface1c,
+                UseOffSet = true,          // 0x457C58：同上（1:1，无缩放）
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            _legacyCreateLayer.AddControl(shadow);
+            _legacyCreateLayer.AddControl(body);
+            var hit = new DXControl { Visible = false };
+            int captured = slot;
+            hit.MouseClick += (o, e) => SelectLegacyCreateSlot(captured);
+            _legacyCreateLayer.AddControl(hit);
+            if (slot == 0) { _legacyCreateShadow0 = shadow; _legacyCreateBody0 = body; _legacyCreateHit0 = hit; }
+            else { _legacyCreateShadow1 = shadow; _legacyCreateBody1 = body; _legacyCreateHit1 = hit; }
+        }
+
+        // F82：混合绘制的暗条，位置 (201,434)，尺寸取帧头 256x32，混合量 0x32/255
+        // （0x457D37-0x457D85 → 0x460CB0）。
+        _legacyCreateStrip = new DXImageControl
+        {
+            LibraryFile = LibraryFile.Interface1c,
+            Index = 82,
+            FixedSize = true,
+            Size = new Vector2I(256, 32),
+            Location = new Vector2I(201, 434),
+            ImageOpacity = 50 / 255f,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _legacyCreateLayer.AddControl(_legacyCreateStrip);
+
+        // F81：石台/名字牌，实心 blit 于 (247,384)，尺寸取帧头 164x88（0x457D8A-0x457DC6）。
+        // 该帧内已烘焙了三个职业图标（与 F91/F94/F97 逐像素吻合：x 完全对齐、y 差 4px），
+        // 实机由三个职业按钮叠在其上 —— 这是原版就有的重叠，照实复现。
+        _legacyCreatePlate = new DXImageControl
+        {
+            LibraryFile = LibraryFile.Interface1c,
+            Index = 81,
+            FixedSize = true,
+            Size = new Vector2I(164, 88),
+            Location = new Vector2I(247, 384),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _legacyCreateLayer.AddControl(_legacyCreatePlate);
+
+        // 点击名字框区域（原版 0x459C8C 命中 SetRect(294,404,371,419)）→
+        // SetFocus(edit) + ShowWindow(edit, SW_SHOW)。加在输入框之前，输入框在自己
+        // 区域内先接管鼠标。
+        _legacyCreatePlateHit = new DXControl
+        {
+            Location = new Vector2I(294, 404),
+            Size = new Vector2I(77, 15),
+        };
+        _legacyCreatePlateHit.MouseClick += (o, e) => _legacyCreateName?.GrabFocus();
+        _legacyCreateLayer.AddControl(_legacyCreatePlateHit);
+
+        // 名字框底：SetRect(287,404,364,419)（77x15）+ 0x45E570 填 0x3C5A78
+        // （0x00BBGGRR → RGB(120,90,60) 青铜色），在 F81 之上、输入框之下。
+        var namePlate = new DXControl
+        {
+            Location = new Vector2I(287, 404),
+            Size = new Vector2I(77, 15),
+            BackColour = new Color(120 / 255f, 90 / 255f, 60 / 255f),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _legacyCreateLayer.AddControl(namePlate);
+
+        // 角色名输入框：原版 Win32 EDIT，客户区坐标 (288,405)、尺寸 75x13，
+        // 字符上限 14（0x4511D0 → EM_SETLIMITTEXT 0xE）。DPTextInput 自带的边框不画：
+        // 原版这里只有上面那块填色底 + 白色文字。
+        _legacyCreateName = new DXTextInput
+        {
+            Location = new Vector2I(288, 405),
+            Size = new Vector2I(75, 13),
+            FontSize = 8,
+            Border = false,
+            MaxLength = 14,
+            Text = string.Empty,
+        };
+        _legacyCreateName.TextChanged += _ => UpdateCreateButtonStates();
+        _legacyCreateName.TextSubmitted += _ => SubmitSkinCharacter();
+        _legacyCreateLayer.AddControl(_legacyCreateName);
+
+        GD.Print("[LegacyCreate] EI 新建人物图层已构建: 2 预览槽(variant 4) + F82@(201,434) "
+            + "+ F81@(247,384) + 名字框底@(287,404,77x15) + 名字框@(288,405,75x13,max14)");
+    }
+
+    /// <summary>EI 原版选角屏（`login-flow-evidence.json::screens.parent`，screen obj 0x8A7140，
+    /// ctor 0x456CB0）。**640x480 基准**，背景按阶段换帧，控件散点摆放、没有居中面板：
     ///
     ///   +0x9E8  F51  @ **(440, 93)**  96x26  「创建角色」 (create)
     ///   +0xA9C  F53  @ **(79, 243)**  96x26  「删除角色」 (evidence 标 unlabeled，实为删除)
@@ -1146,62 +1560,51 @@ public partial class SelectScene : Control
         }
 
         // 主按钮：改成 Interface1c 文字精灵帧（帧内含字）。
-        SkinSelectButton(_skinCreate, 51, 52, new Vector2I(440, 93), new Vector2I(96, 26));
-        SkinSelectButton(_skinDelete, 53, 54, new Vector2I(79, 243), new Vector2I(96, 26));
-        SkinSelectButton(_skinStart, 55, 56, new Vector2I(259, 49), new Vector2I(96, 24));
+        // **帧极性按 ctor 实参**（0x456DA7-0x456E1E）：arg8(+0x20)=常态、arg3(+0x1C)=hover
+        // （绘制 0x417640：状态 0 → [+0x20]；状态 2 → [+0x1C]，逐字节实读）。
+        // 故「创建角色」常态 = **52**、hover = 51（旧的 51/52 正好相反）。
+        SkinSelectButton(_skinCreate, 52, 51, new Vector2I(440, 93), new Vector2I(96, 26));
+        SkinSelectButton(_skinDelete, 54, 53, new Vector2I(79, 243), new Vector2I(96, 26));
+        SkinSelectButton(_skinStart, 56, 55, new Vector2I(259, 49), new Vector2I(96, 24));
 
-        // 「结束」按钮（原实现没有）。
-        _skinExit = new DXButton { LibraryFile = LibraryFile.Interface1c, Index = 57, HoverIndex = 58,
-            PressedIndex = 58, FixedSize = true, Size = new Vector2I(48, 26), Location = new Vector2I(28, 438) };
+        // 「结束」按钮（原实现没有）。常态 58 / hover 57（ctor 0x456E13-0x456E1E）。
+        _skinExit = new DXButton { LibraryFile = LibraryFile.Interface1c, Index = 58, HoverIndex = 57,
+            PressedIndex = 57, FixedSize = true, Size = new Vector2I(48, 26), Location = new Vector2I(28, 438) };
         _skinExit.MouseClick += (o, e) => GetTree().Quit();
         _uiLayer.AddChild(_skinExit);
 
-        // 右下两个圆形确认钮（✔ / ✘）。
-        // phase 2 的 ✔(F86) / ✘(F89)：F89 的证据写入者是 0x459D48 -> phase 3 并
-        // 发 msgid 0x64 '%s/%d'。F86 的门控读 0x459879/0x459A29（phase 相关），
-        // 语义未闭合，暂接"开始游戏"。
-        // **帧 86(F86, 勾选图形) = 「创建角色」提交**，不是「开始游戏」。证据（0x459F30-0x45A02A）：
-        //   命中(PtInRect) -> 取选中槽(+0x1488，须 0..1) -> GetWindowTextA(0x8AA48C) 读输入文本
-        //   -> 文本为空则不动 -> 长度 >14 弹消息框(140,150) -> 否则 call 0x4589B0 校验
-        //   -> 通过则 push 槽的两个字节 + 文本，mov ecx,0x8AB828，call 0x451FE0 **网络发送**
-        // 即「用输入框文本(角色名) + 槽字段(职业/性别) 提交创建请求」，对应我方 SubmitSkinCharacter()。
-        // 此前误接为 OnStartPressed()（开始游戏）—— 开始游戏在 phase 0 的 F55/F56（_skinStart），
-        // 两者是不同按钮、不同阶段，不能混用。
-        _skinConfirmYes = MakeSelectIconButton(86, new Vector2I(450, 444), () => SubmitSkinCharacter());
-        // **帧 89(F89, 叉形) = 取消/退出创建**。证据（0x459D1D-0x459D8A）：
-        //   PtInRect 命中后 -> 播一个 UI 音（0x45B3D0，无参转发，具体音效未定）
-        //   -> phase=3 -> **关相位 BGM 开关（mov dword [esi+0x1160], 0）**
-        //   -> SetFocus(主窗口) -> ShowWindow(输入框, SW_HIDE) -> 网络发送
-        // 我方缺"那个输入框控件"，故 SW_HIDE 与 SetFocus 无对应物；
-        // 「播音效」的具体音效未定（0x45A510 未读），暂不接；
-        // 本轮只实现**确定且有对应物**的一项：关相位 BGM（对应我方 _phaseBgmArmed）。
-        _skinConfirmNo = MakeSelectIconButton(89, new Vector2I(491, 444), () =>
-        {
-            SetSelectPhase(3);
-            // **必须在 SetSelectPhase 之后**：SetSelectPhase 内部会重新武装 BGM 计时
-            // （_phaseBgmArmed = true），若放在前面会被立刻覆盖 —— 首版就是这个问题，
-            // 等于什么都没做。原版此处是 mov dword [esi+0x1160], 0（关开关）。
-            _phaseBgmArmed = false;
-        });
-        // 三枚图形钮。命名依审计文档 PRE-02 对 Interface1c 帧的实测描述：
-        //   F86/F87 = 勾选态图形  -> _skinConfirmYes（名实相符）
-        //   F89/F90 = 叉形图形    -> _skinConfirmNo （名实相符）
-        //   F92/F93 = 斜笔 / 金色圆形底图 -> 原名"武器"错误，改 _skinClassWarrior
-        //   F95/F96 = 环形箭头图        -> 原名"人脸"错误，改 _skinClassWizard
-        //   F98/F99 = 卷页 / 文书图     -> _skinClassTaoist（与证据近似，保留）
-        // （原 _skinIconWeapon/_skinIconFace 是未见证据时的猜测命名，本轮按证据更正。）
-        // **三枚图形钮 = 职业选择**（帧 92 / 95 / 98 -> class 0 / 1 / 2）。
-        // 证据（0x459DAE / 0x459E19 / 0x459EA5 三格级联 + 0x458440 的 ret 0x14 = 5 参数）：
-        //   0x458440(slot, gender, **class**, ?, str) —— 内部 arg3 -> dl -> [slot+4] = class，
-        //   而 [slot+4]/[slot+5] 正是帧号公式 0x458EC0 读取的 class/gender 字段。
-        //   帧 92 传 class=0、帧 95 传 class=1、帧 98 传 class=2（递增）。
-        // 配套：0x4584C0 在每次设置后刷新显示串 —— 它正是组装
-        //   「[男/[女 + 武 士 ]/法 师 ]/道 士 ]」的函数。
-        // 我方 MirClass 枚举 Warrior=0 / Wizard=1 / Taoist=2 —— 与原版 0/1/2 数值一致（已核对 Enum.cs）。
-        // 命名按语义：此前按外观猜的"武器/人脸/卷轴"已废弃。
-        _skinClassWarrior = MakeSelectIconButton(92, new Vector2I(266, 419), () => SelectCreateClass(MirClass.Warrior));
-        _skinClassWizard = MakeSelectIconButton(95, new Vector2I(308, 419), () => SelectCreateClass(MirClass.Wizard));
-        _skinClassTaoist = MakeSelectIconButton(98, new Vector2I(352, 419), () => SelectCreateClass(MirClass.Taoist));
+        // 右下两个圆形钮（✔ / ✘）。**悬停标题是决定性证据**（phase-2 tick 的
+        // 5 按钮 hover 分支：跳表 0x458134 + 字符串表）：
+        //   F86 @0x47D64C = 「确认人物创建」→ 处理链 0x459F31（发送 msgid 0x65 CM_NEWCHR）
+        //   F89 @0x47D638 = 「退出人物创建」→ 处理链 0x459D1D
+        //   F92/F95/F98 @0x47D680/70/60 = 「武士/法师/道士 职业 选择」
+        // 据此把「确认」接 SubmitSkinCharacter、「退出」接 ExitLegacyCreate。
+        //
+        // **帧号按 ctor 实参改正**（0x456E89-0x456EC8）：+0x20 = 常态帧、+0x1C = hover 帧。
+        //   确认钮：常态 **85**、hover 87；退出钮：常态 **88**、hover 90
+        //   （旧代码用 86/89 作常态 —— 那是 +0x18「状态 1」帧，F85≠F86、F88≠F89）。
+        _skinConfirmYes = MakeSelectIconButton(85, 87, 86, new Vector2I(450, 444), () => SubmitSkinCharacter(), "确认人物创建");
+        // F89 = 退出人物创建（0x459D1D-0x459D8A）：
+        //   -> 播 UI 音（0x45B3D0）-> phase=3 -> [+0x1160]=0（关相位 BGM 开关）
+        //   -> SetFocus(主窗口) -> ShowWindow(edit, SW_HIDE) -> 网络发送 msgid 0x64
+        //      '%s/%d'（0x451F90 = CM_QUERYCHR「刷新角色列表」；Zircon 协议无对应包，
+        //      列表本就在内存中，故不发送并记录该差异）。
+        // phase 3 的 tick（0x4576FA）在视频泵返回 0 后立即把 phase 写回 0，
+        // 本移植版没有该过场视频 → 等价于「隐藏创建界面、回到角色列表」。
+        _skinConfirmNo = MakeSelectIconButton(88, 90, 89, new Vector2I(491, 444), () => ExitLegacyCreate(), "退出人物创建");
+
+        // 三枚图形钮 = 职业选择（ctor 0x456E23/0x456E45/0x456E67）：
+        //   武士 常态 **91** / hover 93；法师 常态 **94** / hover 96；道士 常态 **97** / hover 98。
+        // 处理链 0x459D1D(武士 class=0) → 0x459E19(法师 class=1) → 0x459EA5(道士 class=2)，
+        // 每个都调 0x458440(slot, gender, **class**, 0, NULL) + 0x458B20(slot, 4)
+        // **重建两个预览槽**（[slot+4]=class、[slot+5]=gender 正是帧号公式 0x458EC0 的键）。
+        // 我方 MirClass 枚举 Warrior=0 / Wizard=1 / Taoist=2 —— 与原版 0/1/2 数值一致。
+        // 悬停标题（0x47D680/70/60，GBK）＝「武士/法师/道士 职业 选择」，用移植版
+        // tooltip 承载（原版是按钮旁的缩放 sprite + 文字条，渲染方式记为 candidate）。
+        _skinClassWarrior = MakeSelectIconButton(91, 93, 92, new Vector2I(266, 419), () => SelectCreateClass(MirClass.Warrior), "武士 职业 选择");
+        _skinClassWizard = MakeSelectIconButton(94, 96, 95, new Vector2I(308, 419), () => SelectCreateClass(MirClass.Wizard), "法师 职业 选择");
+        _skinClassTaoist = MakeSelectIconButton(97, 98, 98, new Vector2I(352, 419), () => SelectCreateClass(MirClass.Taoist), "道士 职业 选择");
+
 
         // **EI 此屏没有居中面板** —— 原 _skinPanel 是自制列表容器（320x425 带窗口框）。
         // 角色改由洞窟里的 2 个槽位渲染（见 UpdateCaveSlots），面板整块隐藏，
@@ -1210,26 +1613,32 @@ public partial class SelectScene : Control
         GD.Print($"[LegacySelect] 按钮状态: create={_skinCreate?.Location}/{_skinCreate?.Size} vis={_skinCreate?.Visible} "
             + $"parent={_skinCreate?.GetParent()?.GetType().Name} delete={_skinDelete?.Location} start={_skinStart?.Location} "
             + $"panelVis={_skinPanel?.Visible}");
-        GD.Print("[LegacySelect] EI 布局已应用: 背景 F50@(0,0) 640x480; "
+        GD.Print("[LegacySelect] EI 布局已应用: 背景 phase0=F50 / phase2=F80 @(0,0) 640x480; "
             + "创建(440,93) 删除(79,243) 开始(259,49) 结束(28,438) "
-            + "✔(450,444) ✘(491,444) 武器(266,419) 人脸(308,419) 卷轴(352,419)");
+            + "✔(450,444) ✘(491,444) 武士(266,419) 法师(308,419) 道士(352,419)");
     }
 
-    private DXButton MakeSelectIconButton(int frame, Vector2I location, Action action)
+    /// <summary>
+    /// phase 2 的图形钮。帧号**按 ctor 实参逐个传入**（不要用 frame±1 的规则推导）：
+    /// ctor 0x417550 的 `(ebx, +0x18帧, +0x1C帧, X, Y, 0, 1, +0x20帧, 1)`；
+    /// 绘制 0x417640 的选帧是 **状态 0 → [+0x20]（常态）、状态 2 → [+0x1C]（hover）**
+    /// （hover 由 vtable+0xC = 0x4177C0 写状态 2）。9 个按钮的实参见 0x456DA7-0x456EC8。
+    /// </summary>
+    private DXButton MakeSelectIconButton(int normalFrame, int hoverFrame, int pressedFrame,
+        Vector2I location, Action action, string hint = null)
     {
-        var size = MirSkin.GetSize(LibraryFile.Interface1c, frame);
+        var size = MirSkin.GetSize(LibraryFile.Interface1c, normalFrame);
         if (size == Vector2I.Zero) size = new Vector2I(28, 28);
         var button = new DXButton
         {
-            // EI 证据：ctor 实参布局为 (ebx, f1, f2, X, Y, 0, 1, **hover**, 1)。
-            // phase 2 的 hover 帧比 normal **小 1**（frame-1）：
-            //   0x56(86)->hover 0x55(85)；0x59(89)->0x58(88)；
-            //   0x5C(92)->0x5B(91)；0x5F(95)->0x5E(94)；0x62(98)->0x61(97)
-            // 注意 phase 0 的方向相反（hover = normal+1，如 51->52），
-            // 两组来自同一 ctor 但传入值不同，按各自实参照抄，不要统一处理。
-            LibraryFile = LibraryFile.Interface1c, Index = frame,
-            HoverIndex = frame - 1, PressedIndex = frame,
-            FixedSize = true, Size = size, Location = location,
+            LibraryFile = LibraryFile.Interface1c,
+            Index = normalFrame,
+            HoverIndex = hoverFrame,
+            PressedIndex = pressedFrame,
+            FixedSize = true,
+            Size = size,
+            Location = location,
+            TooltipText = hint ?? string.Empty,
         };
         button.MouseClick += (o, e) => action();
         _uiLayer.AddChild(button);

@@ -49,18 +49,30 @@ public partial class SelectScene : Control
     private int _selectPhase;
     private DXButton _skinConfigButton;
     private ConfigDialog _selectConfig;
-    // EI 两个角色槽的屏幕位置（640×480 坐标系）。原版角色是 3D 模型，
-    // 0x4570D0 按屏幕中心 (320,240) 为基准投影（scale 0.196），每个槽的世界
-    // 偏移由服务端驱动，静态证据里没有具体 X/Y 常数 → 以下为按 F50 洞窟构图
-    // 实测取的**推导值**：角色站在亮沙地（y≈300-470 光照区）上，
-    // 脚底统一对齐 SlotFeetY（各职业 WIL 帧脚底线不同：283-333，
-    // 见 CharacterBaseFrame 注释；统一脚底线让所有职业"站"在同一地面上），
-    // 身体中心对准两拱门前（左槽偏左、右槽偏右）。
-    private const int Slot0CenterX = 350;   // 槽 0（左）角色身体中心 X
-    private const int Slot1CenterX = 490;   // 槽 1（右）角色身体中心 X
-    private const int SlotFeetY = 440;      // 两槽角色脚底线 Y
-    private static readonly Vector2I Slot0Anchor = new(Slot0CenterX, SlotFeetY);
-    private static readonly Vector2I Slot1Anchor = new(Slot1CenterX, SlotFeetY);
+    // ---- EI 原版槽位锚点（primary-bytes：msg 0x208 角色列表解析器 0x458FBD）----
+    // 原版**不是**"按居中/脚底摆放"：槽位绘制用 (锚点 + 帧头 offsetX/offsetY)，
+    // 尺寸取帧头 width/height（1:1 原生，无缩放）。见
+    //   0x4578DC-0x4578F5  阴影：x = [slot+0x18] + 帧头 offsetX, y = [slot+0x1C] + offsetY
+    //   0x45791C-0x457945  身体：同一表达式，尺寸取帧头 w/h
+    //   0x458A70          命中框 = 同一表达式算出的 bbox（画到 [slot+0x28] 的 RECT）
+    // 锚点常量（0x458FBD 解析循环）：
+    //   0x459120  mov dword [ebx+0xCD0], 0x12C   ; 300 → 当前槽 X
+    //   0x459149  mov dword [ebp+0xCD0], 0x0FA   ; 250 → 槽 0 X
+    //   0x459158  mov dword [ebp+0xCD4], 0x0D2   ; 210 → 槽 0 Y
+    //   0x45912E  mov dword [ebx+0xCD4], 0x0D2   ; 210 → 当前槽 Y
+    //   0x45916E  mov dword [ebx+0xCD4], 0x0FA   ; 250 → 三号槽 Y（(350,250)，2 槽上限下不可达）
+    // 槽 0 的 X 取值取决于 0x4590F8 读的局部 [esp+0x1C]：该局部在本函数内**先读后写**
+    // （0x459112 才清零），故静态上无法排除 300。若两槽都取 300 则完全重叠
+    // （0x459117 分支对 idx=0/1 都写"当前槽"），故取唯一非退化解 250/210 + 300/210。
+    private const int Slot0AnchorX = 250;
+    private const int Slot1AnchorX = 300;
+    private const int SlotAnchorY = 210;
+    private static readonly Vector2I Slot0Anchor = new(Slot0AnchorX, SlotAnchorY);
+    private static readonly Vector2I Slot1Anchor = new(Slot1AnchorX, SlotAnchorY);
+    // 槽位名称标签的水平中心（**移植版 UI 元素**，非原版坐标）：保持改动前的
+    // 350/490 不变，避免把"锚点修正"扩散成标签布局改动。原版此屏没有逐槽标签。
+    private const int Slot0LabelX = 350;
+    private const int Slot1LabelX = 490;
 
     private DXTextInput _skinName;
     private DXTextInput _skinCreateName;
@@ -217,9 +229,9 @@ public partial class SelectScene : Control
     {
         base._Process(delta);
         TickPhaseBgm(delta);
-        // 洞窟槽位阴影帧同步（阴影帧 = 角色帧 + 20，帧数一致）
-        SyncCaveShadow(_caveShadow0, _characterAnimation, Slot0CenterX);
-        SyncCaveShadow(_caveShadow1, _characterAnimation2, Slot1CenterX);
+        // 洞窟槽位几何同步（阴影帧 = 角色帧 + 20；命中框/标签 = 锚点 + 帧头 offset）
+        SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, _slotName0, Slot0AnchorX, Slot0LabelX);
+        SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, _slotName1, Slot1AnchorX, Slot1LabelX);
         if (_characterAnimation == null || !_characterAnimation.Visible) return;
 
         bool showOverlays = !_characterAnimation.Loop && _characterAnimation.Animated;
@@ -331,6 +343,15 @@ public partial class SelectScene : Control
             _characterAnimation.Visible = false;
             _skinStart.Enabled = false;
             _skinDelete.Enabled = false;
+            if (AutoLoginArgs.LegacyUi) ApplyLegacySlotSelection(-1);
+        }
+        else if (AutoLoginArgs.LegacyUi)
+        {
+            // 原版列表刷新后**不默认选中任何角色**：0x458FCC-0x458FD0 把 [0x1168] 写成
+            // 0xFFFFFFFF，0x458310 见 -1 直接返回（不画详情）。选中只能由槽位点击产生
+            // （0x4598BF 命中槽 → [0x1168]=idx）。此前移植版自动选中槽 0，属偏差。
+            _statusLabel.Text = Lang.SelectCharacterLabel4;
+            ApplyLegacySlotSelection(-1);
         }
         else
         {
@@ -355,21 +376,51 @@ public partial class SelectScene : Control
                 : new Color(.095f, .047f, .047f);
             _skinCharacters[i].Border = i != index;
         }
-        // EI 模式没有列表行，选中态体现在洞窟槽的名称标签上
-        // （原版选中态是槽字段 +0x1168，详情由 0x458150 渲染）。
+        // EI 模式没有列表行，选中态体现在洞窟槽的名称标签上 + 两槽的动画段
+        // （原版选中态是槽字段 +0x1168，命中处理 0x4598BF-0x459902）。
         if (AutoLoginArgs.LegacyUi)
         {
-            var sel = new Color(1f, .92f, .6f);
-            var dim = new Color(.62f, .58f, .48f);
-            if (_slotName0 != null) _slotName0.TextColour = index == 0 ? sel : dim;
-            if (_slotName1 != null) _slotName1.TextColour = index == 1 ? sel : dim;
-            // EI 选角屏：角色常驻洞窟槽位（UpdateCaveSlots 已设 Loop=true 循环动画）。
+            if (_legacySelectedIndex != index)
+            {
+                // 命中槽：0x4598C7 0x458B20(idx,1) → 重播 variant 1 → 播完 loop variant 2
+                StartLegacySlotAnimation(LegacySlotAnim(index), _characters[index],
+                    LegacySlotIntroVariant, LegacySlotIdleVariant, index);
+                int other = index == 0 ? 1 : 0;
+                // 另一个"已占用"的槽：0x4598DF/0x4598EF 0x458B20(other,3)
+                // → 播 variant 3 → 播完 loop variant 0（站立待机）
+                if (other < _characters.Count && LegacySlotAnim(other) != null)
+                    StartLegacySlotAnimation(LegacySlotAnim(other), _characters[other], 3, 0, other);
+            }
+            _legacySelectedIndex = index;
+            ApplyLegacySlotSelection(index);
             // 不调用 UpdateCharacterDisplay —— 那会把 _characterAnimation（= 槽 0）
             // 拽到屏幕中心 (320,240) 且 Loop=false，选中后槽 0 角色就离开洞窟、
-            // 停止动画，与原版"两个小人原地循环动"不符。
+            // 停止动画，与原版"角色常驻槽位"不符。
             return;
         }
         UpdateCharacterDisplay(_characters[index]);
+    }
+
+    private int _legacySelectedIndex = -1;
+
+    /// <summary>槽 idx 的角色动画控件（0 = _characterAnimation，1 = _characterAnimation2）。</summary>
+    private DXAnimatedControl LegacySlotAnim(int slot) => slot == 0 ? _characterAnimation : _characterAnimation2;
+
+    /// <summary>
+    /// 选角槽位选中态（原版 = 槽字段 +0x1168）。列表刷新时初值为 -1（未选中，
+    /// 0x458FCC），选中只能由槽位点击产生（0x4598BF），点击只改选中态与动画段，
+    /// 不触发进游戏/建角/删角。这里把它映射到移植版的两条名称标签颜色 +
+    /// 开始/删除按钮可用性（原版对应 0x458310 的详情块与 F55 的 sel 门）。
+    /// </summary>
+    private void ApplyLegacySlotSelection(int index)
+    {
+        var sel = new Color(1f, .92f, .6f);
+        var dim = new Color(.62f, .58f, .48f);
+        if (_slotName0 != null) _slotName0.TextColour = index == 0 ? sel : dim;
+        if (_slotName1 != null) _slotName1.TextColour = index == 1 ? sel : dim;
+        bool has = index >= 0 && index < _characters.Count;
+        if (_skinStart != null) _skinStart.Enabled = has;
+        if (_skinDelete != null) _skinDelete.Enabled = has;
     }
 
     private string GetLocationName(int index)
@@ -441,25 +492,28 @@ public partial class SelectScene : Control
     }
 
     /// <summary>
-    /// 把已选中的角色列表渲染到洞窟里的 **2 个槽位**（EI 结构）。
-    /// 每槽：地面阴影（WIL 帧 = 角色帧 + 20，帧数一致，_Process 同步帧号）
-    /// + 角色动画（按职业/性别取 Interface1c 角色块，15-18 帧连续循环——
-    ///   legacy WIL 的预渲染块，没有现代客户端的攻击/待机两段式表）
-    /// + 槽位名称标签；槽位命中区不可见（图形由角色本身承担）。
-    /// 摆放：脚底统一对齐 SlotFeetY（各职业 WIL 帧脚底线 283-333 不等，
-    /// 统一脚底线让所有职业站同一地面），身体中心对准 Slot0CenterX/Slot1CenterX
-    /// （**推导值**，见常量注释）。
+    /// 把已选中的角色列表渲染到洞窟里的 **2 个槽位**（EI phase 0 角色列表）。
+    /// 每槽：地面阴影（帧 = 角色帧 + 20）+ 角色动画 + 槽位名称标签 + 命中区。
+    ///
+    /// 帧块 / 时序 / 坐标全部来自 primary-bytes：
+    ///   • 帧块 = 父对象 0x8A7140 +0x932 的 30 条 6 字节记录（0x458BB0..0x458EB8 用
+    ///     0x449C50 逐条写入；0x458EC0 查表）：{firstFrame, lastFrame, frameMs}，
+    ///     frameMs 30 条全为 0x78 = 120；索引 = (gender + class*2)*5 + variant。
+    ///   • phase 0 用 variant 1（解析器 0x459195 → 0x458B20(slot,1)），播完由状态机
+    ///     0x45786F 转 variant 2 并无限循环（0x458B20 会把帧复位到记录首帧）。
+    ///   • 每帧 120ms（记录第 3 字），不是"整段总时长"。
+    ///   • 坐标 = 槽锚点 + 帧头 offsetX/offsetY，尺寸取帧头 w/h（1:1，无缩放）。
     /// </summary>
     private void UpdateCaveSlots()
     {
-        var slots = new (DXAnimatedControl anim, DXImageControl shadow, DXLabel label, DXControl hit, int centerX)[]
+        var slots = new (DXAnimatedControl anim, DXImageControl shadow, DXLabel label, DXControl hit, int anchorX)[]
         {
-            (_characterAnimation,  _caveShadow0, _slotName0, _slotHit0, Slot0CenterX),
-            (_characterAnimation2, _caveShadow1, _slotName1, _slotHit1, Slot1CenterX),
+            (_characterAnimation,  _caveShadow0, _slotName0, _slotHit0, Slot0AnchorX),
+            (_characterAnimation2, _caveShadow1, _slotName1, _slotHit1, Slot1AnchorX),
         };
         for (int i = 0; i < slots.Length; i++)
         {
-            var (anim, shadow, label, hit, centerX) = slots[i];
+            var (anim, shadow, label, hit, anchorX) = slots[i];
             bool has = i < _characters.Count;
             if (anim != null) anim.Visible = has;
             if (shadow != null) shadow.Visible = has;
@@ -468,88 +522,131 @@ public partial class SelectScene : Control
             if (!has) continue;
 
             var c = _characters[i];
-            int baseFrame = CharacterBaseFrame(c.Class, c.Gender);
-            int frames = CharacterFrameCount(baseFrame);
-            Vector2I size = MirSkin.GetSize(LibraryFile.Interface1c, baseFrame);
-
             if (anim != null)
             {
-                // 单一连续循环（legacy WIL 的角色块就是一段完整动画，无攻击/待机分段）。
-                // UseOffSet=false：帧实际左上角 = Location，块内各帧 OffSet 差异
-                // （实测最大 16px）不会让角色游移；身体在帧内位置稳定（实测脚底恒在
-                // 帧底边 ±2px）。Location 解出使：帧中心 X = centerX、底边 = SlotFeetY。
-                anim.BaseIndex = baseFrame;
-                anim.FrameCount = frames;
-                anim.AnimationDelay = TimeSpan.FromMilliseconds(2400); // 一整轮时长，推导值
-                anim.Location = new Vector2I(centerX - size.X / 2, SlotFeetY - size.Y);
-                anim.Loop = true;
-                anim.Restart(true);
-            }
-            if (shadow != null)
-            {
-                int shadowFrame = baseFrame + 20;
-                Vector2I ssize = MirSkin.GetSize(LibraryFile.Interface1c, shadowFrame);
-                // 阴影帧底边 = SlotFeetY（与角色脚对齐），中心 X 对准角色中心。
-                // 各阴影帧宽度有差异（最大 16px），_Process 里按当前帧宽重新居中。
-                shadow.Location = new Vector2I(centerX - ssize.X / 2, SlotFeetY - ssize.Y);
-                shadow.Index = shadowFrame; // 帧号在 _Process 里跟随角色当前帧
+                // 解析器 0x459195 对两个槽都传 variant 1（0x459112 清零后两分支均置 1）
+                StartLegacySlotAnimation(anim, c, LegacySlotIntroVariant, LegacySlotIdleVariant, i);
             }
             if (label != null)
-            {
                 label.Text = $"{c.CharacterName}  Lv{c.Level} {c.Class.Local()}";
-                // 名字画在角色头顶上方（帧顶边 = Location.Y）。
-                label.Location = new Vector2I(centerX - 80, SlotFeetY - size.Y - 18);
-            }
-            if (hit != null)
-            {
-                hit.Location = new Vector2I(centerX - size.X / 2 - 10, SlotFeetY - size.Y - 10);
-                hit.Size = new Vector2I(size.X + 20, size.Y + 26);
-            }
         }
+        SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, _slotName0, Slot0AnchorX, Slot0LabelX);
+        SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, _slotName1, Slot1AnchorX, Slot1LabelX);
         GD.Print($"[LegacySelect] 洞窟槽位: 角色数={_characters.Count} "
-            + $"slot0CenterX={Slot0CenterX} slot1CenterX={Slot1CenterX} feetY={SlotFeetY}");
-    }
-
-    /// <summary>阴影帧跟随角色当前帧（阴影块在 WIL 中与角色块同帧数、帧号 +20），
-    /// 并按当前帧宽重新居中（各阴影帧宽度差最大 16px，固定位置会左右漂移）。</summary>
-    private static void SyncCaveShadow(DXImageControl shadow, DXAnimatedControl anim, int centerX)
-    {
-        if (shadow == null || anim == null || !shadow.Visible || !anim.Visible) return;
-        int idx = anim.Index + 20;
-        if (idx != shadow.Index)
-        {
-            shadow.Index = idx;
-            Vector2I sz = MirSkin.GetSize(LibraryFile.Interface1c, idx);
-            shadow.Location = new Vector2I(centerX - sz.X / 2, shadow.Location.Y);
-        }
+            + $"锚点 slot0=({Slot0AnchorX},{SlotAnchorY}) slot1=({Slot1AnchorX},{SlotAnchorY}) "
+            + $"帧时长={LegacyFrameMs}ms variant={LegacySlotIntroVariant}→{LegacySlotIdleVariant}");
     }
 
     /// <summary>
-    /// EI 角色帧基址：index = 职业*2 + 性别。
-    /// WIL 块按**职业主序**排布：440/740（战士 男/女）、1040/1340（法师 男/女）、
-    /// 1640/1940（道士 男/女）——WIL 逐帧解码独立验证（偶序号块为男性、奇序号块为女性；
-    /// 各块连续有效帧数 18/16/15/17/17/15 与审计表一致）。
-    /// 旧公式 `职业 + 2*性别` 会让战士女/道士男都落到 1040，已修正。
+    /// 逐帧同步槽位的 bbox 派生几何：阴影帧号（= 角色帧 + 20）、命中框、名称标签。
+    /// 阴影/命中框用**同一表达式**：左上 = 锚点 + 帧头 offset，尺寸 = 帧头 w/h
+    /// （原版 0x4578B0-0x4578F5 绘制，0x458A70 命中框 = 同一 bbox 写进 RECT）。
+    /// 旧实现用 UseOffSet=false 并把阴影按帧宽重新居中，会与身体（各自 offset 不同）错位。
+    /// 标签 X 保持改动前的位置常量（labelX）；原版没有逐槽名称标签——选中角色的详情是
+    /// 0x458150 在 0x466800 算出的 rect 上画的三行文本（0x96C8FF/0x96F096/0xAFFFFF），
+    /// 该 rect 坐标本移植版未闭合，故沿用既有标签位置，只让 Y 随当前帧顶边走。
     /// </summary>
-    private static int CharacterBaseFrame(MirClass cls, MirGender gender)
+    private static void SyncLegacySlotGeometry(DXImageControl shadow, DXAnimatedControl anim,
+        DXControl hit, DXLabel label, int anchorX, int labelX)
     {
-        int index = (int)cls * 2 + (int)gender;
-        return index switch
+        if (anim == null || !anim.Visible) return;
+        int idx = anim.Index;
+        Vector2I off = MirSkin.GetOffset(LibraryFile.Interface1c, idx);
+        Vector2I size = MirSkin.GetSize(LibraryFile.Interface1c, idx);
+        if (shadow != null && shadow.Visible)
         {
-            0 => 440,   // 战士男
-            1 => 740,   // 战士女
-            2 => 1040,  // 法师男
-            3 => 1340,  // 法师女
-            4 => 1640,  // 道士男
-            _ => 1940,  // 道士女（刺客本库无对应块，退回道士女帧）
+            int shadowIndex = idx + 20;   // 阴影块 = 角色块 + 20
+            if (shadowIndex != shadow.Index) shadow.Index = shadowIndex;
+        }
+        if (hit != null && hit.Visible)
+        {
+            hit.Location = new Vector2I(anchorX + off.X, SlotAnchorY + off.Y);
+            hit.Size = size;
+        }
+        if (label != null && label.Visible)
+            label.Location = new Vector2I(labelX - 80, SlotAnchorY + off.Y - 18);
+    }
+    /// <summary>
+    /// EI 原版选角帧表（primary-bytes：父对象 +0x932，30 条 6 字节记录，
+    /// 由 0x458BB0..0x458EB8 逐条经 0x449C50 写入）。每项 = (首帧, 末帧)；
+    /// 第 3 字（每帧毫秒）30 条全为 0x78 = 120。
+    /// 索引 = (gender + class*2)*5 + variant（0x458EC0：idx=(arg1+arg2*2)*5+flags，
+    /// 要求 0 ≤ idx &lt; 0x1E）。
+    ///   class  = [slot+4]（0x458310 读 0xCBC 分派 0x47D6A8/B8/C8「职 业   武 士/法 师/道 士」）
+    ///   gender = [slot+5]（0x458F80 解析器写入；phase 2 音效索引 [slot+5]*3+[slot+4] 同日键）
+    /// 逐帧解码独立复核（wilsdk）：30 段首帧 = 200 + 300*group + 60*variant，
+    /// 每段内全部为有效帧、首末帧与表值逐段吻合。
+    /// </summary>
+    private static readonly (int First, int Last)[] LegacySlotFrameTable =
+    {
+        (200, 210), (260, 279), (320, 331), (380, 387), (440, 457),           // 武士男 v0..v4
+        (500, 510), (560, 570), (620, 630), (680, 691), (740, 755),           // 武士女
+        (800, 810), (860, 871), (920, 930), (980, 990), (1040, 1054),         // 法师男
+        (1100, 1110), (1160, 1177), (1220, 1230), (1280, 1288), (1340, 1356), // 法师女
+        (1400, 1410), (1460, 1476), (1520, 1539), (1580, 1591), (1640, 1656), // 道士男
+        (1700, 1710), (1760, 1776), (1820, 1830), (1880, 1889), (1940, 1954), // 道士女
+    };
+    private const int LegacyFrameMs = 120;        // 记录第 3 字（0x78），30 条全同值
+    private const int LegacySlotIntroVariant = 1; // phase 0 解析器传入（0x459195）
+    private const int LegacySlotIdleVariant = 2;  // 状态机 0x45786F 转到的循环段
+
+    /// <summary>组合编号 = class*2 + gender（0..5）。原版只有 3 职业，越界职业退回武士男。</summary>
+    private static int LegacyGroup(MirClass cls, MirGender gender)
+    {
+        int group = (int)cls * 2 + (int)gender;
+        return group is >= 0 and < 6 ? group : 0;
+    }
+
+    private static (int First, int Last) LegacySlotBlock(MirClass cls, MirGender gender, int variant)
+        => LegacySlotFrameTable[LegacyGroup(cls, gender) * 5 + ((variant % 5 + 5) % 5)];
+
+    /// <summary>
+    /// 让某槽按"intro 段播一次 → idle 段无限循环"跑。原版状态机
+    /// （0x457835-0x457891）：帧计数超过记录末帧时，state==1 → 0x458B20(slot,2)，
+    /// state==3 → 0x458B20(slot,0)，两者都会把帧复位到新段的记录首帧、计时清零。
+    /// 槽位点击（0x4598C7/0x4598DF）正是用这个机制把"命中槽"重播 variant 1、
+    /// 把另一个已占用槽切到 variant 3。
+    /// </summary>
+    private static void StartLegacySlotAnimation(DXAnimatedControl anim, SelectInfo c,
+        int introVariant, int idleVariant, int slot)
+    {
+        if (anim == null) return;
+        anim.ClearAnimationHandlers();
+        ApplyLegacySlotVariant(anim, c, introVariant, loop: false);
+        anim.AfterAnimation += (o, e) =>
+        {
+            ApplyLegacySlotVariant(anim, c, idleVariant, loop: true);
+            GD.Print($"[LegacySelect] 槽 {slot} 动画: variant {introVariant} → {idleVariant}（循环）");
         };
     }
 
-    /// <summary>实测连续有效帧数（见审计文档的角色块识别表）。</summary>
-    private static int CharacterFrameCount(int baseFrame) => baseFrame switch
+    /// <summary>
+    /// 把槽位动画设到某个 variant 帧段。AnimationDelay = 帧数 × 120ms
+    /// （DXAnimatedControl 的 AnimationDelay 是**整轮总时长**，见其 _Process 换算）。
+    /// </summary>
+    private static void ApplyLegacySlotVariant(DXAnimatedControl anim, SelectInfo c, int variant, bool loop)
     {
-        440 => 18, 740 => 16, 1040 => 15, 1340 => 17, 1640 => 17, _ => 15,
-    };
+        var (first, last) = LegacySlotBlock(c.Class, c.Gender, variant);
+        anim.BaseIndex = first;
+        anim.FrameCount = last - first + 1;
+        anim.AnimationDelay = TimeSpan.FromMilliseconds((last - first + 1) * (long)LegacyFrameMs);
+        anim.Restart(loop);
+    }
+
+    /// <summary>
+    /// 非 legacy（现代 UI）单角色展示块 = 原版 variant 4（大体型站立待机 250-268px；
+    /// phase 2 创建预览用同一段，见 0x459DB6/0x459E42/0x459ECE 的 0x458B20(slot,4)）。
+    /// </summary>
+    private static int CharacterBaseFrame(MirClass cls, MirGender gender)
+        => LegacySlotBlock(cls, gender, 4).First;
+
+    /// <summary>帧数 = 末帧 - 首帧 + 1（同表）。</summary>
+    private static int CharacterFrameCount(int baseFrame)
+    {
+        foreach (var (first, last) in LegacySlotFrameTable)
+            if (first == baseFrame) return last - first + 1;
+        return 15;
+    }
 
     /// <summary>
     /// 切换选角屏阶段并按阶段显示对应按钮组（EI 是**分阶段换按钮**的，不是全部同时可见）。
@@ -825,13 +922,13 @@ public partial class SelectScene : Control
         // 但独立解码该库确认 **F2800..F2816 与 F2900..F2916 全是空帧**（alpha 全零），
         // 等于在选角屏上叠两个不可见控件。EI 此屏也没有这两个光晕。
 
-        // 洞窟槽位的地面阴影（Z 序在角色之下）：WIL 帧 = 角色帧 + 20，帧数一致。
-        // **UseOffSet=false**：逐帧实测（见审计 2026-09-27 洞窟槽位节），块内各帧
-        // OffSet 差异最大 16px，若启用 OffSet 角色会左右"游移"；原 3D 引擎的
-        // 锚定不经过这套 WIL 偏移（那是导出裁剪元数据），2D 还原用固定顶左锚点。
-        // 位置由 UpdateCaveSlots 设定（脚底对齐 SlotFeetY），帧号在 _Process 里同步。
-        _caveShadow0 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = false, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        _caveShadow1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = false, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        // 洞窟槽位的地面阴影（Z 序在角色之下）：WIL 帧 = 角色帧 + 20。
+        // **UseOffSet=true**：原版阴影绘制（0x4578DC-0x4578F5）与身体同构——
+        // x = [slot+0x18] + 帧头 offsetX，y = [slot+0x1C] + 帧头 offsetY，尺寸取帧头。
+        // 旧实现用 UseOffSet=false 并按帧宽重新居中，会与身体错位（两者 offset 不同）。
+        // 位置固定为槽锚点，帧号在 _Process 里跟随角色当前帧。
+        _caveShadow0 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = Slot0Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        _caveShadow1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = Slot1Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
         background.AddControl(_caveShadow0);
         background.AddControl(_caveShadow1);
 
@@ -840,9 +937,8 @@ public partial class SelectScene : Control
             LibraryFile = LibraryFile.Interface1c,
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
-            UseOffSet = false,
-            // 槽位锚点由 UpdateCaveSlots 设定（身体中心对准 Slot0CenterX、
-            // 脚底对齐 SlotFeetY，推导值）；帧实际左上角 = Location。
+            // 原版身体绘制 = 锚点 + 帧头 offsetX/offsetY（0x45791C-0x457945）。
+            UseOffSet = true,
             Location = Slot0Anchor,
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -853,29 +949,31 @@ public partial class SelectScene : Control
         background.AddControl(_characterOverlay1);
         background.AddControl(_characterOverlay2);
 
-        // 第 2 个角色槽（EI 有 2 槽）。两个槽分列洞窟拱门左右。
+        // 第 2 个角色槽（EI 有 2 槽），锚点 (300,210)。
         _characterAnimation2 = new DXAnimatedControl
         {
             LibraryFile = LibraryFile.Interface1c,
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
-            UseOffSet = false,
+            UseOffSet = true,
             Location = Slot1Anchor,
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
         };
         background.AddControl(_characterAnimation2);
 
-        // 每槽一个不可见命中区 + 一个名称标签（原版把名字画在角色附近）。
-        // 默认隐藏，UpdateCaveSlots 按角色存在与否显示并摆位。
-        _slotHit0 = new DXControl { Size = new Vector2I(120, 200), Location = new Vector2I(Slot0Anchor.X - 60, Slot0Anchor.Y), Visible = false };
-        _slotHit1 = new DXControl { Size = new Vector2I(120, 200), Location = new Vector2I(Slot1Anchor.X - 60, Slot1Anchor.Y), Visible = false };
+        // 每槽一个不可见命中区 + 一个名称标签。原版命中框 = 当前帧 bbox
+        // （0x458A70：锚点 + 帧头 offset 起、帧头 w/h 大），_Process 里逐帧刷新；
+        // 名称标签放在 bbox 上方（原版详情文字由 0x458310/0x458150 单独绘制，
+        // 这里保留移植版的槽位标签以便点击选择，位置随 bbox 走）。
+        _slotHit0 = new DXControl { Size = new Vector2I(120, 200), Location = Slot0Anchor, Visible = false };
+        _slotHit1 = new DXControl { Size = new Vector2I(120, 200), Location = Slot1Anchor, Visible = false };
         _slotHit0.MouseClick += (o, e) => SelectSkinCharacter(0);
         _slotHit1.MouseClick += (o, e) => SelectSkinCharacter(1);
         background.AddControl(_slotHit0);
         background.AddControl(_slotHit1);
-        _slotName0 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot0Anchor.X - 80, Slot0Anchor.Y + 120), IsControl = false };
-        _slotName1 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot1Anchor.X - 80, Slot1Anchor.Y + 120), IsControl = false };
+        _slotName0 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot0Anchor.X - 80, Slot0Anchor.Y), IsControl = false };
+        _slotName1 = new DXLabel { FontSize = 9, TextColour = new Color(1f, .92f, .6f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, Size = new Vector2I(160, 16), Location = new Vector2I(Slot1Anchor.X - 80, Slot1Anchor.Y), IsControl = false };
         background.AddControl(_slotName0);
         background.AddControl(_slotName1);
 

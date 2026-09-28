@@ -1,4 +1,6 @@
 using Godot;
+using System.Collections.Generic;
+using Library;
 
 namespace ZirconClient.Scripts;
 
@@ -69,6 +71,20 @@ public static class AutoLoginArgs
     /// （洞窟槽位角色、创建面板等）。
     /// </summary>
     public static bool StayInSelect => Has("--stay-select");
+
+    /// <summary>
+    /// --legacy-slot-preview：**离线**取景开关。不连服务器、不登录，直接用合成角色
+    /// 列表打开 SelectScene，用于在无服务端可用时对 EI 选角槽位做多时点截图取证
+    /// （只影响渲染路径，不发送任何包、不建/删角色）。
+    /// </summary>
+    public static bool LegacySlotPreview => Has("--legacy-slot-preview");
+
+    /// <summary>--legacy-slot-preview 的合成角色（道士男主槽 + 道女副槽，覆盖两个槽）。</summary>
+    public static List<SelectInfo> PreviewCharacters() => new()
+    {
+        new SelectInfo { CharacterIndex = 0, CharacterName = "TestHero", Level = 255, Class = MirClass.Taoist, Gender = MirGender.Male, Location = 0 },
+        new SelectInfo { CharacterIndex = 1, CharacterName = "PreviewAlt", Level = 40, Class = MirClass.Taoist, Gender = MirGender.Female, Location = 0 },
+    };
     /// <summary>给每个 DXControl 画红色边框 + 四角方块/四边黄条 (临时布局诊断)</summary>
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
     /// <summary>

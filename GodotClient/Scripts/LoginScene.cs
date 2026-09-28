@@ -58,6 +58,16 @@ public partial class LoginScene : Control
         SoundPlayback.Play(this, SoundIndex.LoginScene);
         _net = GetNode<Network.NetworkManager>("/root/NetworkManager");
 
+        // --legacy-slot-preview：离线槽位取景。不登录、不连服务器，直接用合成角色
+        // 列表打开 SelectScene，供无服务端环境下对 EI 选角槽位做多时点截图取证。
+        // 注意 _Ready 期间根节点正忙，add_child 必须延迟到空闲时（用 CallDeferred）。
+        if (AutoLoginArgs.LegacySlotPreview)
+        {
+            GD.Print("[LoginScene] --legacy-slot-preview: 离线打开选角屏(合成角色)");
+            CallDeferred(nameof(OpenLegacySlotPreview));
+            return;
+        }
+
         _emailEdit = GetNode<LineEdit>("VBox/EmailRow/EmailEdit");
         _passwordEdit = GetNode<LineEdit>("VBox/PasswordRow/PasswordEdit");
         _loginBtn = GetNode<Button>("VBox/LoginBtn");
@@ -153,6 +163,16 @@ public partial class LoginScene : Control
         _unsubscribers.Clear();
         base._ExitTree();
         if (ReferenceEquals(_activeInstance, this)) _activeInstance = null;
+    }
+
+    /// <summary>--legacy-slot-preview：延迟到根节点空闲时挂 SelectScene 并释放登录屏。</summary>
+    private void OpenLegacySlotPreview()
+    {
+        var scene = ResourceLoader.Load<PackedScene>("res://Scenes/SelectScene.tscn");
+        var select = scene.Instantiate<SelectScene>();
+        select.SetCharacters(AutoLoginArgs.PreviewCharacters());
+        GetTree().Root.AddChild(select);
+        QueueFree();
     }
 
     private void AddAccountButton(VBoxContainer parent, string text, Action action)

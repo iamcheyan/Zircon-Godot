@@ -805,6 +805,16 @@ public partial class SelectScene : Control
         // 换相位即重新武装 BGM 计时（对应原版进入相位时把 +0x1160 置 1、+0x1164 清 0）
         _phaseBgmArmed = true;
         _phaseBgmAccumMs = 0;
+        // **phase 3 原版不绘制任何控件**（0x4576FA 只泵过场视频后就回 phase 0），
+        // DirectDraw 下屏幕保留上一相位的画面。故此处不改按钮/图层显隐与背景，
+        // 避免出现"控件全消失的空背景"闪帧。
+        // 注意：Zircon 协议下等待回包期间输入未加锁（原版 stage 3 的鼠标派发不动作）；
+        // 主要影响是清空后的名字框使 F86 无效果。见 parity 文档 §11。
+        if (phase == 3)
+        {
+            GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏) 保留上一相位画面");
+            return;
+        }
         bool p0 = phase == 0;
         bool p2 = phase == 2;
         if (_skinCreate != null) _skinCreate.Visible = p0;
@@ -816,7 +826,9 @@ public partial class SelectScene : Control
         // **背景按阶段换帧**：原版 stage 0（列表）用 Interface1c **F50**（0x4577E1 push 0x32），
         // stage 2（创建）用 **F80**（0x457B09 push 0x50），两者都是 640x480 且像素明显不同
         // （F50 = 洞窟大厅俯视；F80 = 近景石壁 + 浮雕/石门，见 wilsdk 离线对照）。
-        if (_selectBackground != null) _selectBackground.Index = phase == 2 ? 80 : 50;
+        // 只在 0/2 切：phase 1/4 由过场视频覆盖。
+        if (_selectBackground != null && (phase == 0 || phase == 2))
+            _selectBackground.Index = phase == 2 ? 80 : 50;
         // EI phase 2 的两个人物预览/名牌/名字框只在创建相位显示。
         SetLegacyCreateLayerVisible(p2);
         GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏) "
@@ -974,9 +986,10 @@ public partial class SelectScene : Control
         if (field != null) field.Text = string.Empty;
         if (_skinCreateConfirm != null) _skinCreateConfirm.Enabled = false;
         _statusLabel.Text = Lang.SelectCreateLabel;
-        // EI phase 3 = 等待服务器回包；发送建角请求后按钮门控，
-        // 由 OnNewCharacterResult 回到 phase 0（成功）或回到 phase 2（失败）。
-        if (AutoLoginArgs.LegacyUi) SetSelectPhase(3);
+        // **原版提交后不改阶段**：F86 处理器（0x459F56-0x45A02A）清空输入框、发
+        // `CM_NEWCHR 0x65` 后直接返回，界面留在 stage 2（清空的输入框本身即防重入）。
+        // 阶段 3 由**服务器回包**写入：0x209(SM_NEWCHR_SUCCESS) → 0x459216 →
+        // SelChr.wav + CreateChr.dat + phase=3。
         // 性别：原版取**选中预览槽**的 [+4]/[+5]（0x45A000/0x45A009；槽 0 = 男、槽 1 = 女），
         // 不是独立性别控件。legacy 下用 _legacyCreateSelected 映射。
         MirGender gender = AutoLoginArgs.LegacyUi
@@ -1729,35 +1742,50 @@ public partial class SelectScene : Control
             GD.Print($"[Select] 建角色成功: {_pendingNewCharInfo?.CharacterName}");
             if (_pendingNewCharInfo != null)
                 _characters.Add(_pendingNewCharInfo);
-            // 建角成功回到 phase 0（4 按钮列表）。EI 原始协议 phase 2 下还要
-            // 走密码提交 + 服务端 0x209/0x64 往返才最终回到列表；Zircon 协议
-            // NewCharacter 一次往返即完成，这里直接复位到 phase 0 列表态。
+            // 建角成功：原版由**服务器回包**驱动（0x209 SM_NEWCHR_SUCCESS → 0x459216）：
+            //   播 SelChr.wav（[+0x1140]）+ 载入并播放 .\Data\CreateChr.dat
+            //   → [0x930]=3 + [+0x1160]=0 + SetFocus(主窗口) + ShowWindow(edit, SW_HIDE)
+            // phase 3 的 tick 泵完该过场视频后才把 phase 写回 0（0x45770F），列表随之刷新
+            // （0x459216 末尾再发 `CM_QUERYCHR 0x64` 让服务器重发角色列表）。
+            // Zircon 协议 NewCharacter 一次往返即完成，故此处用本地列表刷新 + 过场视频等价。
             if (AutoLoginArgs.LegacyUi)
             {
-                HideCreateCharacterPanel();
-                SetSelectPhase(0);
+                SetLegacyCreateLayerVisible(false);
+                SetSelectPhase(3);
+                SoundPlayback.Play(this, SoundIndex.LegacySelChrBgm);
+                PlayLegacyTransition("CreateChr", onFinished: () =>
+                {
+                    SetSelectPhase(0);
+                    AfterCreateSuccess();
+                });
+                _statusLabel.Text = Lang.SelectCharacterLabel10;
+                return;
             }
-            else if (_skinPanel != null)
-            {
-                _skinPanel.Visible = true;
-            }
-            if (_characterAnimation != null) _characterAnimation.Visible = true;
-            RefreshList();
-            _statusLabel.Text = Lang.SelectCharacterLabel10;
-            // headless 自动测试: 建完直接进游戏（--stay-select 时留在选角屏验证）
-            if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect && _characters.Count > 0)
-            {
-                GD.Print("[Select] 自动进入游戏...");
-                CallDeferred(nameof(AutoStartGame));
-            }
+            HideCreateCharacterPanel();
+            SetSelectPhase(0);
+            AfterCreateSuccess();
         }
         else
         {
             GD.Print($"[Select] 建角色失败: {_pendingNewCharResult}");
             _statusLabel.Text = string.Format(Lang.SelectCreateLabel3, _pendingNewCharResult);
-            // 失败回到 phase 2 让用户重试
+            // 失败留在创建界面（原版 0x20A：弹 Mirmg 文案，不改阶段）
             if (AutoLoginArgs.LegacyUi) SetSelectPhase(2);
-            _skinCreateConfirm.Enabled = true;
+            if (_skinCreateConfirm != null) _skinCreateConfirm.Enabled = true;
+        }
+    }
+
+    /// <summary>建角成功后的收尾：恢复洞窟槽位、刷新列表、按需自动进游戏。</summary>
+    private void AfterCreateSuccess()
+    {
+        if (_characterAnimation != null) _characterAnimation.Visible = true;
+        RefreshList();
+        _statusLabel.Text = Lang.SelectCharacterLabel10;
+        // headless 自动测试: 建完直接进游戏（--stay-select 时留在选角屏验证）
+        if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect && _characters.Count > 0)
+        {
+            GD.Print("[Select] 自动进入游戏...");
+            CallDeferred(nameof(AutoStartGame));
         }
     }
 

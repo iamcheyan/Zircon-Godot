@@ -360,7 +360,9 @@ bbox（画布坐标系）。下表三行即入库的三张全屏图：
 | --- | --- |
 | 原版 `Mir3.exe` | **已找到**（524288 B，与反编译目标同构建，见 §1） |
 | 反编译证据 | 已存在并已读完（见 §9 索引） |
-| **原版可运行画面** | **缺失**：该 EXE 是 2002 年 Windows DirectDraw8 + `nProtect` 保护的 32 位 PE；本机为 Linux，无 Windows、无 Wine 运行时，无法启动并走到选角屏 |
+| 原版可运行画面 | **缺失**：该 EXE 是 2002 年 Windows DirectDraw8 + `nProtect` 保护的 32 位 PE（`file`: `PE32 executable for MS Windows 4.00 (GUI), Intel i386, 4 sections`）；本机（Linux）**实测无 Wine**（`which wine wine64 winecfg winetricks dosbox` 全部无结果、`dpkg -l` 中 wine 包计数 0），无法启动 |
+| 原版服务端 | 本机不存在可跑的 Mud3 服务端；选角屏本身也需要服务端下发角色列表，故即使有 Wine 也无法走到该屏 |
+| 现存数据库 | 本机唯一相关的 `Users.db`/`System.db` 是客户端根目录下**开发/测试服务端**的库（本轮只读确认存在，未打开、未写入、未复制） |
 | 研究库里的选角截图 | 只找到 Web 模拟器/AI 风格 mockup（`screenshots/webport/phase1/webport_select_ei.png` 等），**属重建物不是原版画面**，未当作参照 |
 | 已有 Godot 旧截图 | 只证明槽位标签变色，**不是原版参照** |
 

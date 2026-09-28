@@ -396,7 +396,9 @@ bbox（画布坐标系）。下表三行即入库的三张全屏图：
 
 ## 10. 交付与远端 SHA
 
-提交（分支 `goal/ei-character-select-animation-mini-20260928`，基线 `aaf7594a`）：
+提交（分支 `goal/ei-character-select-animation-mini-20260928`，基线 `aaf7594a`；
+下表为三个**内容里程碑**提交，其后另有仅改本文档的补充提交，分支 HEAD 以
+`git ls-remote` 为准）：
 
 | SHA | 内容 |
 | --- | --- |

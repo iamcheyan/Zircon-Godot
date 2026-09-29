@@ -106,6 +106,10 @@ public partial class SelectScene : Control
     private DXImageControl _legacyCreateBody0, _legacyCreateBody1;
     private DXControl _legacyCreateHit0, _legacyCreateHit1, _legacyCreatePlateHit;
     private DXTextInput _legacyCreateName;
+    // EI 原版 DrawNewChr 的人物说明框（(95,15)，宽 430+20，高 = 行数*18+20）。
+    private DXControl _legacyCreateExplainBox;
+    private DXLabel _legacyCreateExplainTitle;
+    private readonly List<DXLabel> _legacyCreateExplainLines = new();
     private int _legacyCreateSelected;                // 原版 [obj+0x1488]，0=男槽 1=女槽
     private int _legacyCreateClassIndex;              // 0=武士 1=法师 2=道士（两槽共用）
     private readonly int[] _legacyCreateFrame = new int[2];
@@ -397,7 +401,8 @@ public partial class SelectScene : Control
             // 原版列表刷新后**不默认选中任何角色**：0x458FCC-0x458FD0 把 [0x1168] 写成
             // 0xFFFFFFFF，0x458310 见 -1 直接返回（不画详情）。选中只能由槽位点击产生
             // （0x4598BF 命中槽 → [0x1168]=idx）。此前移植版自动选中槽 0，属偏差。
-            _statusLabel.Text = Lang.SelectCharacterLabel4;
+            // phase 2（创建）左上角是原版说明框，不放移植版的 phase-0 提示文字。
+            _statusLabel.Text = _selectPhase == 2 ? string.Empty : Lang.SelectCharacterLabel4;
             ApplyLegacySlotSelection(-1);
         }
         else
@@ -864,6 +869,11 @@ public partial class SelectScene : Control
             _selectBackground.Index = phase == 2 ? 80 : 50;
         // EI phase 2 的两个人物预览/名牌/名字框只在创建相位显示。
         SetLegacyCreateLayerVisible(p2);
+        // 原版 phase 2 左上角只有说明框，没有移植版加的 phase-0 提示文字；
+        // 进创建相位时清掉它，避免与说明框 (95,15) 重叠（错误文案保留）。
+        if (p2 && AutoLoginArgs.LegacyUi && _statusLabel != null
+            && _statusLabel.Text == Lang.SelectCharacterLabel4)
+            _statusLabel.Text = string.Empty;
         GD.Print($"[LegacySelect] phase={phase} (0=列表/1=创建中/2=动画列表/3=等待/4=进游戏) "
             + $"背景F={(phase == 2 ? 80 : 50)}");
     }
@@ -1381,6 +1391,8 @@ public partial class SelectScene : Control
             SyncLegacyCreateHit(slot);
         }
         SyncLegacyCreateFrameIndexes();
+        // 原版 SelChrNewJob：职业按钮 → 重建两槽 → SetCharExplain(选中槽, 新职业)。
+        UpdateLegacyCreateExplain();
         GD.Print($"[LegacyCreate] 槽重建: class={LegacyCreateClass} variant=4 "
             + $"锚点 slot0={LegacyCreateAnchorFor(0, _legacyCreateClassIndex)} "
             + $"slot1={LegacyCreateAnchorFor(1, _legacyCreateClassIndex)} "
@@ -1468,8 +1480,75 @@ public partial class SelectScene : Control
         }
         _legacyCreateSelected = slot;
         SyncLegacyCreateFrameIndexes();
+        // 原版 DCreateChrClick：点预览槽 → m_nCreatedChr=slot → SetCharExplain(slot, job)
+        // （gender 用被点槽，job 两槽共用）→ 说明框首行的「[ 男/女 …]」随之切换。
+        UpdateLegacyCreateExplain();
         GD.Print($"[LegacyCreate] 选中预览槽 {slot}（性别 {LegacyCreateGender(slot)}，原版 [+0x1488]），"
             + $"职业 {LegacyCreateClass}");
+    }
+
+    /// <summary>
+    /// 重建说明框内容（原版 DrawNewChr 的 rcShow + SetCharExplain）。
+    /// 首行 = CMsg 211/212 + 213/214/215（如「[ 男 战士 ]」），字号 11、按职业上色；
+    /// 正文 = CMsg 216/217/218，折到 _CHR_EXPLAIN_WIDTH(430)，行距 18。
+    /// 框高 = (正文行数 + 1) * 18 + 20（m_nDividedExplain = 1 + 正文行数）。
+    /// </summary>
+    private void UpdateLegacyCreateExplain()
+    {
+        if (_legacyCreateExplainBox == null || _legacyCreateExplainTitle == null) return;
+        int cls = Mathf.Clamp(_legacyCreateClassIndex, 0, 2);
+        bool female = _legacyCreateSelected == 1;
+
+        _legacyCreateExplainTitle.Text = LegacyEiText.GenderJobTitle(cls, female);
+        // 原版按职业给首行上色：武士 (250,200,150)、法师 (250,170,170)、道士 (150,220,150)。
+        _legacyCreateExplainTitle.TextColour = cls switch
+        {
+            0 => new Color(250 / 255f, 200 / 255f, 150 / 255f),
+            1 => new Color(250 / 255f, 170 / 255f, 170 / 255f),
+            _ => new Color(150 / 255f, 220 / 255f, 150 / 255f),
+        };
+
+        var lines = WrapLegacyEiText(LegacyEiText.JobDescription(cls), 430, 11);
+        while (_legacyCreateExplainLines.Count < lines.Count)
+        {
+            var label = new DXLabel { FontSize = 11, TextColour = new Color(250 / 255f, 250 / 255f, 255 / 255f), IsControl = false };
+            _legacyCreateExplainBox.AddControl(label);
+            _legacyCreateExplainLines.Add(label);
+        }
+        for (int i = 0; i < _legacyCreateExplainLines.Count; i++)
+        {
+            var label = _legacyCreateExplainLines[i];
+            bool used = i < lines.Count;
+            label.Visible = used;
+            if (!used) continue;
+            label.Text = lines[i];
+            // 原版：首行在 Top+10，正文从 Top+35 起、每行 +18。
+            label.Location = new Vector2I(10, 35 + 18 * i);
+        }
+        int divided = lines.Count + 1;
+        _legacyCreateExplainBox.Size = new Vector2I(450, divided * 18 + 20);
+    }
+
+    /// <summary>
+    /// 按像素宽度折行（对应原版 StringDivide(_CHR_EXPLAIN_WIDTH, …)）。
+    /// 用 MirSkin.MeasureText 的**逻辑**宽度与逻辑宽度比较，因此与 UiScaler 缩放无关。
+    /// </summary>
+    private static List<string> WrapLegacyEiText(string text, int maxWidth, int fontSize)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrEmpty(text)) { result.Add(string.Empty); return result; }
+        var line = new System.Text.StringBuilder();
+        foreach (char ch in text)
+        {
+            if (line.Length > 0 && MirSkin.MeasureText(line.ToString() + ch, fontSize).X > maxWidth)
+            {
+                result.Add(line.ToString());
+                line.Clear();
+            }
+            line.Append(ch);
+        }
+        result.Add(line.ToString());
+        return result;
     }
 
     /// <summary>F89「退出人物创建」：隐藏创建界面回到角色列表（见 MakeSelectIconButton 处注释）。</summary>
@@ -1595,6 +1674,32 @@ public partial class SelectScene : Control
         _legacyCreateName.TextChanged += _ => UpdateCreateButtonStates();
         _legacyCreateName.TextSubmitted += _ => SubmitSkinCharacter();
         _legacyCreateLayer.AddControl(_legacyCreateName);
+
+        // ---- 人物说明框（原版 DrawNewChr 的 rcShow）----
+        //   rcShow = (95,15)-(95+430+20, 15+m_nDividedExplain*18+20)
+        //   填充 Draw2DRect(rcShow, $C89664, 80)  → RGB(100,150,200) alpha 80/255
+        //   边框 Draw2DRectLine(rcShow, $FF966432) → RGB(50,100,150)
+        //   首行 = 211/212 + 213/214/215（如「[ 男 战士 ]」），字号 11 粗体、按职业上色
+        //   正文 = 216/217/218（StringDivide 折到 430 宽），颜色 RGB(250,250,255)
+        _legacyCreateExplainBox = new DXControl
+        {
+            Location = new Vector2I(95, 15),
+            Size = new Vector2I(450, 56),
+            BackColour = new Color(100 / 255f, 150 / 255f, 200 / 255f, 80 / 255f),
+            Border = true,
+            BorderColour = new Color(50 / 255f, 100 / 255f, 150 / 255f),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _legacyCreateExplainTitle = new DXLabel
+        {
+            Location = new Vector2I(10, 10),
+            FontSize = 11,
+            TextColour = new Color(250 / 255f, 200 / 255f, 150 / 255f),
+            IsControl = false,
+        };
+        _legacyCreateExplainBox.AddControl(_legacyCreateExplainTitle);
+        _legacyCreateLayer.AddControl(_legacyCreateExplainBox);
+        UpdateLegacyCreateExplain();
 
         GD.Print("[LegacyCreate] EI 新建人物图层已构建: 2 预览槽(variant 4) + F82@(201,434) "
             + "+ F81@(247,384) + 名字框底@(287,404,77x15) + 名字框@(288,405,75x13,max14)");

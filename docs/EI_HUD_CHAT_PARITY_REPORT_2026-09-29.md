@@ -278,7 +278,9 @@ R1 800×600 截图、R2 1024×768 适配、R3 非 legacy 回归、R4–R7 构建
 
 | 顺序 | SHA | 说明 | 远端核对 |
 |---|---|---|---|
-| 1 | `c00b34b0` | A1+A2+B1 聊天修复（Hermes 按用户指示提交，本轮未改写） | ✅ `origin/master` == `c00b34b0` |
-| 2 | 见下 | `docs: EI HUD 聊天与 F350 审计验收报告 + 截图` | push 后回读 `refs/heads/master` 核对 |
+| 1 | `c00b34b0` | A1+A2+B1 聊天修复（Hermes 按用户指示提交，本轮未改写） | ✅ |
+| 2 | `d616a618` | `docs: EI HUD 聊天与 F350 详细聊天窗审计验收报告与截图` | ✅ 回读 `refs/heads/master` = `d616a6183f6f6a8b7e055b1e627a2960a35ffbb6` |
+| 3 | （本行所在提交） | `docs: 报告补记远端 SHA` | ✅ 最终 HEAD 以 `git ls-remote origin refs/heads/master` 回读为准 |
 
-> 本报告提交后会回读远端 `refs/heads/master` 并把最终 SHA 补在此处。
+> 提交 1、2 的 SHA 已回读远端核实。提交 3 自身的 SHA 无法在文件内自证，
+> 推送后已再次回读 `refs/heads/master` 核对（见 Goal 完成记录）。

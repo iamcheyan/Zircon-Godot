@@ -4605,7 +4605,12 @@ public partial class GameScene : Control
 
         _magicBar = new MagicBar(this);
         _uiLayer.AddChild(_magicBar);
-        _magicBar.Visible = true;
+        // 原版那一行 12 槽技能图标默认**不显示**：消费者 0x42A850 在
+        // `[hud+0x6208] == 0` 时 `je 0x42AAA4` 直接跳过整段图标绘制，而该 flag
+        // 的初始化写点 0x42711D 写的是 0（`xor ebx,ebx` 后 `mov [esi+0x6208],ebx`），
+        // 只由 cap2（0x42C241）/ B 键（0x42CE29）翻转。故 legacy 下默认隐藏，
+        // 由 cap2 / B 显示；现代模式保持原行为。
+        _magicBar.Visible = !AutoLoginArgs.LegacyHud;
         // MagicBar 在 _Draw 内按绑定行数改 Size (1 行 46 -> 2 行 97);
         // 尺寸变化后必须重新锚定, 否则 2 行底边会压进主面板顶缘。
         _magicBar.Resized += OnMagicBarResized;
@@ -4793,6 +4798,18 @@ public partial class GameScene : Control
         // 旧版 HUD 左上/两侧的小按钮也保留原版的入口语义。
         _mainPanel.SkillEntryButton.MouseClick += (o, e) =>
         {
+            // EI cap2 = F84/85「技能图鉴(Ctrl+B, B)」：点击只翻转 hud+0x6208 布尔
+            // flag（0x42C241），该 flag 的消费者 0x42A850 在 HUD paint 里画一行
+            // **12 个技能图标**（MIcon 帧 999+槽内 id，64x64 按 ~0.588 缩放、步距
+            // 0x28、每 4 个一组多一个间隔），flag==0 时整段跳过（0x42A861 je）。
+            // 即原版这一行 = 12 槽技能条，默认隐藏、由 cap2 / B 键 toggle。
+            // Godot 的 _magicBar 正是 12 列技能条 → legacy 下 cap2 改为 toggle 它，
+            // 不再打开技能书（技能书是 cap8 / F100-101 的语义，此前 cap2 与之重复）。
+            if (AutoLoginArgs.LegacyHud)
+            {
+                if (_magicBar != null) _magicBar.Visible = !_magicBar.Visible;
+                return;
+            }
             WindowManager.Toggle(_magicDialog, _uiLayer);
             _magicDialog.Refresh();
         };
@@ -10983,6 +11000,15 @@ public partial class GameScene : Control
         if (key.Keycode == Key.S && key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
         {
             ToggleHorseWindow();
+            return;
+        }
+        // EI 的 B 与 Ctrl+B 都 toggle 那一行 12 槽技能图标（hud+0x6208 flag，
+        // 见 SkillEntryButton 的说明）。现代键位表 Key.B=大地图；legacy 下按原版
+        // 改为 toggle 技能条（大地图仍可由小地图上的按钮打开）。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.B
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (_magicBar != null) _magicBar.Visible = !_magicBar.Visible;
             return;
         }
         // EI 的 F 与 Ctrl+F 都切换 id4 行会窗；hud-caption-action-tail-evidence.json

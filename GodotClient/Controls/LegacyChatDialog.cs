@@ -81,6 +81,7 @@ public sealed partial class LegacyChatDialog : DXWindow
             MouseFilter = MouseFilterEnum.Stop,
         };
         _historyClip.MouseWheel += OnHistoryWheel;
+        _historyClip.MouseClick += OnHistoryClick;
         AddControl(_historyClip);
 
         _scrollUp = CreateSpriteButton(380, 381, new Vector2I(539, 25), new Vector2I(19, 14));
@@ -222,11 +223,30 @@ public sealed partial class LegacyChatDialog : DXWindow
     }
 
 
-    public void StartPrivateMessage(string name, Node parent)
+    /// <summary>
+    /// EI F350 的 line_recall（primary-static 0x004142C0）：点击历史行 ->
+    /// 剥前缀、取发送者、sprintf "/%s " 写进编辑框并置焦点。
+    ///
+    /// 事件挂在**裁剪区**而不是每一行上：DXControl 收到鼠标事件必定
+    /// AcceptEvent()（DXControl.cs _GuiInput），若给每行设 MouseFilter.Stop
+    /// 会把滚轮一并吞掉，直接破坏本窗的滚轮滚动。行本身保持 Ignore。
+    /// </summary>
+    private void OnHistoryClick(object sender, EventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(name)) return;
-        WindowManager.Open(this, parent);
-        _input.Text = $"/{name} ";
+        Vector2 local = _historyClip.GetLocalMousePosition();
+        if (local.Y < 0) return;
+        int row = (int)local.Y / LineStep;
+        if (row < 0 || row >= VisibleRows) return;
+
+        int end = Math.Max(0, _messages.Count - _scrollOffset);
+        int start = Math.Max(0, end - VisibleRows);
+        int index = start + row;
+        if (index < 0 || index >= end) return;
+
+        string name = ChatLineRecall.ExtractSenderName(_messages[index].Text);
+        if (string.IsNullOrEmpty(name)) return;
+
+        _input.Text = ChatLineRecall.FormatWhisper(name);
         _input.GrabFocus();
         _input.CaretColumn = _input.Text.Length;
     }

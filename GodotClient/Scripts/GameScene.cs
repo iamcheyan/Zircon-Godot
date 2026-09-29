@@ -383,10 +383,11 @@ public partial class GameScene : Control
 
     public void StartPrivateMessage(string name)
     {
-        if (AutoLoginArgs.LegacyUi && _legacyChatDialog != null)
-            _legacyChatDialog.StartPrivateMessage(name, _uiLayer);
-        else
-            _chatTextBox?.StartPM(name);
+        // EI 点聊天行只把 "/名字 " 写进共享编辑框就结束：primary-static 的
+        // F350 line_recall（0x004142C0）末尾是 sprintf "/%s " + write edit，
+        // secondary-source 的 FState.pas DBottomMouseDown 同样只写 EdChat.Text，
+        // 两者都不开窗。legacy 此前会强行打开 F350，属于多出来的副作用。
+        _chatTextBox?.StartPM(name);
     }
 
     public void OpenExitDialog()
@@ -10857,6 +10858,18 @@ public partial class GameScene : Control
     public override void _Input(InputEvent @event)
     {
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+
+        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
+        // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车
+        // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
+        //
+        // 这个判定必须排在 R 分支**之前**：验收要求「输入焦点时 R 不得切换
+        // 详细聊天窗」，而 R 分支原先跑在它前面，导致在交易数量、公会名等
+        // 非聊天 LineEdit 里输入 R 会开/关 F350。下面的两个聊天输入框
+        // InputHasFocus 判定仍保留，作为 focus owner 不是 LineEdit 时的兜底。
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+            return;
+
         // EI 的字母热键是**裸字母**语义：原版每个字母分支只调 GetKeyState 判
         // 「键是否按下」，不检查 Ctrl（hotkey-label-handler-consistency.json
         // kbd_letter_cases），标题里的 (Ctrl+X, X) 只是提示文案。所以裸 R 与
@@ -10876,13 +10889,6 @@ public partial class GameScene : Control
         }
 
         if (_net?.Connection?.Connected != true) return;
-
-
-        // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
-        // 文本编辑器获得焦点时都必须先把按键留给它；否则聊天框的“空格/回车
-        // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
-        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
-            return;
 
         if (AutoLoginArgs.LegacyUi
             ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true

@@ -123,6 +123,9 @@ public sealed partial class ChatTextBox : DXWindow
     public void StartPM(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return;
+        // HideChatBar 时输入条平时是隐藏的；预填后必须显示，否则点了名字
+        // 像没反应（与 OpenChat 一致）。
+        Visible = true;
         LastPM = $"/{name}";
         _input.Text = LastPM + " ";
         _input.GrabFocus();

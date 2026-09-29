@@ -614,11 +614,11 @@ public partial class ChatLogPanel : Control
         line.MouseFilter = MouseFilterEnum.Stop;
         line.MouseClick += (sender, args) =>
         {
-            int close = line.Text.IndexOf(']');
-            int colon = line.Text.IndexOf(':', close + 1);
-            if (close < 0 || colon <= close + 1) return;
-            string name = line.Text.Substring(close + 1, colon - close - 1).Trim();
-            if (!string.IsNullOrWhiteSpace(name))
+            // 旧解析要求行里必须有 ']'，但渲染出来的行是服务端原文
+            // ("Name: text" / "Name=> text" / "(#)Name: text")，没有 [Type] 头，
+            // close 恒为 -1 直接早退 —— 点发送者从来不会预填私聊。
+            string name = ChatLineRecall.ExtractSenderName(line.Text);
+            if (!string.IsNullOrEmpty(name))
                 GameScene.Game?.StartPrivateMessage(name);
         };
     }

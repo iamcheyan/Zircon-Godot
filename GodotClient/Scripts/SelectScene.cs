@@ -144,7 +144,12 @@ public partial class SelectScene : Control
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
         SoundPlayback.Stop(SoundIndex.LoginScene);
-        SoundPlayback.Play(this, SoundIndex.SelectScene);
+        // **legacy（EI 复古 UI）不播现代 SelectScene 循环 BGM**：那首 SelChr.wav
+        // 与 EI 的 SelChr.mp3（LegacySelChrBgm，28s 同一首曲子的另一份拷贝）
+        // 同时播放 → 两轨同曲错位叠加，就是"背景音乐重复播放/两个音频一起响"。
+        // EI 的相位 BGM 由 TickPhaseBgm 按 phase 0/3=SelChr、phase 2=CreateChr 播放
+        // （原版 0x4577C0 / 0x457AE6 的 PlayBGMEx）。
+        if (!AutoLoginArgs.LegacyUi) SoundPlayback.Play(this, SoundIndex.SelectScene);
         _net = GetNode<Network.NetworkManager>("/root/NetworkManager");
 
         _charList = GetNode<ItemList>("VBox/CharList");
@@ -241,6 +246,8 @@ public partial class SelectScene : Control
         foreach (var unsubscribe in _unsubscribers)
             unsubscribe();
         _unsubscribers.Clear();
+        // 离开选角屏时停掉相位 BGM（原版 CloseScene 的 ClearBGM/SilenceSound）。
+        SoundPlayback.StopBgm();
         base._ExitTree();
         if (ReferenceEquals(_activeInstance, this)) _activeInstance = null;
     }
@@ -820,7 +827,9 @@ public partial class SelectScene : Control
         };
         if (bgm == null) return;
         GD.Print($"[LegacySelect] 相位 BGM: phase={_selectPhase} -> {bgm}");
-        SoundPlayback.Play(this, bgm.Value);
+        // PlayBgm = 单实例（先停上一首，再循环播新曲），镜像原版 PlayBGMEx 的
+        // ClearBGM + BASS_SAMPLE_LOOP。用 Play() 会让 SelChr/CreateChr 两首同时响。
+        SoundPlayback.PlayBgm(this, bgm.Value);
     }
 
     public void SetSelectPhase(int phase)
@@ -1802,7 +1811,10 @@ public partial class SelectScene : Control
             {
                 SetLegacyCreateLayerVisible(false);
                 SetSelectPhase(3);
-                SoundPlayback.Play(this, SoundIndex.LegacySelChrBgm);
+                // 0x459220 读 [+0x1140] = **SelChr.wav 一次性音效**（不是 BGM；
+                // 见 Enum.cs 对三个预加载 wav 的说明）。此前误用 LegacySelChrBgm，
+                // 会让相位 3 的 SelChr BGM 与它叠成两轨。
+                SoundPlayback.Play(this, SoundIndex.LegacySelChr);
                 PlayLegacyTransition("CreateChr", onFinished: () =>
                 {
                     SetSelectPhase(0);

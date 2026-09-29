@@ -52,6 +52,11 @@ public partial class LoginScene : Control
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
         if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
+        // Legacy 会话清屏色 = 原版黑。Godot 默认 default_clear_color 是 0.3 灰
+        // （RGB 76,76,76），EI 原版屏幕表面是纯黑：SCREEN0001.jpg 解码后
+        // y=0..59 / y=421..479 采样均值 0.28/255。不清成黑，视频矩形以外的
+        // 区域（顶部黑带、底部 ID 行背景）会露出灰底。非 Legacy 模式不动。
+        if (AutoLoginArgs.LegacyUi) RenderingServer.SetDefaultClearColor(Colors.Black);
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -455,6 +460,12 @@ public partial class LoginScene : Control
         // 旧代码用的 F20/F23/F22 **在该库中不存在**，viewer 对三帧都返回 blank ——
         // 这正是审计文档 PRE-05 记录的"登录美术帧选择不符合目标素材"。
         // 尺寸按**原生 640x360**绘制在左上，不再拉伸到 1024x768（PRE-04）。
+        //
+        // Legacy EI：这张底图必须和 ei_Login 视频同一矩形 **(0,60)-(640,420)**，
+        // 不能留在 (0,0)。原版 SCREEN0001.jpg 实测屏幕顶部 EI y=0..59 是纯黑
+        // （采样均值 0.28/255），只有 y=60 起才是画面；底图留在 (0,0) 会让顶部
+        // 60px 露出沙漠天空，与原版黑带不符。证据：target-box-evidence.json
+        // "backdrop = Interface1c.wil frame 0 … drawn … at (0,60)"。
         var background = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
@@ -462,7 +473,7 @@ public partial class LoginScene : Control
             FixedSize = true,
             Size = new Vector2I(640, 360),
             MouseFilter = Control.MouseFilterEnum.Ignore,
-            Position = Vector2.Zero,
+            Position = AutoLoginArgs.LegacyUi ? new Vector2(0, 60) : Vector2.Zero,
         };
         _uiLayer.AddChild(background);
         GD.Print($"[LegacyLogin] 背景: Interface1c[0] size={background.Size} "

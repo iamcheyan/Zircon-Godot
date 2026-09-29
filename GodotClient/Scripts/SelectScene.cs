@@ -256,6 +256,14 @@ public partial class SelectScene : Control
         SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, _slotName1, Slot1AnchorX, Slot1LabelX);
         if (_characterAnimation == null || !_characterAnimation.Visible) return;
 
+        // **legacy（EI 复古 UI）不画 +100/+130 叠加层**。
+        // 原版选角屏（IntroScn.pas::TSelectChrScene.PlayScene / DrawNewChr）只画三层：
+        //   阴影 = 帧+20、身体 = 当前帧、叠加 = 帧+**40**（且只有选中槽才画 +40）。
+        // +100/+130 是现代 Zircon 客户端的合成层，在 EI 里没有对应物：
+        // 例如道士男 intro 段 1460-1476 的 +130 = 1590-1606，在 Interface1c.wil 里
+        // 是**别的角色的技能帧**，会以 (450,200) 为基准叠在洞窟上 → 人物"闪现"杂影。
+        if (AutoLoginArgs.LegacyUi) return;
+
         bool showOverlays = !_characterAnimation.Loop && _characterAnimation.Animated;
         Vector2I baseOffset = MirSkin.GetOffset(LibraryFile.Interface1c, _characterAnimation.Index);
         if (_characterOverlay1 != null)

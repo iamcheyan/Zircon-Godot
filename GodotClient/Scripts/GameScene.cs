@@ -5392,6 +5392,13 @@ public partial class GameScene : Control
         Place(_guildDialog, 102, 22);      // window.guild-candidate (GameInter 600, 596x446)
         Place(_tradeDialog, 0, 0);         // window.exchange-candidate (1050, 484x330)
         Place(_storageDialog, 0, 0);       // 商店窗 id2 的 state2(仓库) 面板 (GameInter 1001, 205x205)
+        // window.chat-pop (GameInter 350, 572x388)：layout.json/构造实参给 (114,76)。
+        // 此前**漏了这一项**，LegacyChatDialog 构造期用的是「屏幕居中」
+        // ((800-572)/2,(600-388)/2) = (114,106) —— x 恰好同为 114，
+        // y 差 30：居中值使窗口底边 106+388=494 压进 HUD 顶边 465 约 29px；
+        // 原值 76 时底边 464 正好贴在 HUD 之上。真机截图（verify-r-open）
+        // 量到聊天窗可见框左上 (114,~104)，与居中值一致、与证据不符。
+        Place(_legacyChatDialog, 114, 76);
 
         // 逐窗打印便于对照 layout.json 验收（与 [LegacyChatPanel]/[LegacyCharacter]
         // 等既有审计日志同一风格）。
@@ -5401,7 +5408,8 @@ public partial class GameScene : Control
             + $"cha2={Fmt(_statusPreviewDialog)} "
             + $"mag={Fmt(_magicDialog)} qst={Fmt(_questDialog)} grp={Fmt(_groupDialog)} "
             + $"cfg={Fmt(_configDialog)} hor={Fmt(_horseDialog)} npc={Fmt(_npcDialog)} "
-            + $"gld={Fmt(_guildDialog)} trd={Fmt(_tradeDialog)} sto={Fmt(_storageDialog)}");
+            + $"gld={Fmt(_guildDialog)} trd={Fmt(_tradeDialog)} sto={Fmt(_storageDialog)} "
+            + $"cht={Fmt(_legacyChatDialog)}");
     }
 
     private void AuditLegacyHudIfRequested()

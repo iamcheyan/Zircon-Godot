@@ -1,5 +1,11 @@
 # EI 原版「新建人物」界面 parity 复核（2026-09-28）
 
+> **后续修复（2026-09-29）**：本文 §11 列出的若干 candidate/pending 已在
+> [`EI_CHARACTER_CREATE_TEXT_AUDIO_FIX_2026-09-29.md`](EI_CHARACTER_CREATE_TEXT_AUDIO_FIX_2026-09-29.md)
+> 中闭合或推进：新建人物说明文案（CMsg 211-218）、未选中预览灰阶、名字框外框、
+> 选角屏选中详情框（替代逐槽标签）、删除确认（CMsg 228）、建角上限（2 角色）、
+> 以及 Zircon 叠加层与背景音乐双播的修复。
+
 本文档针对 EI（传奇3.0 复古 UI）**新建人物 / 创建角色界面**（原版 stage 2）做逐项对照，
 并记录本轮按原版证据完成的修复与实机验证。选角列表（原版 stage 0）见
 [`EI_CHARACTER_SELECT_ANIMATION_PARITY_2026-09.md`](EI_CHARACTER_SELECT_ANIMATION_PARITY_2026-09.md)；

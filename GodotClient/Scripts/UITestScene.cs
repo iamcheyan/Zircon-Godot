@@ -323,13 +323,20 @@ public partial class UITestScene : Control
         hud.CharacterButton._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true });
         hud.CharacterButton._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false });
 
-        bool layout = hud.CharacterButton.Position.IsEqualApprox(new Vector2(650, 23))
-            && hud.InventoryButton.Position.IsEqualApprox(new Vector2(689, 23))
-            && hud.SpellButton.Position.IsEqualApprox(new Vector2(728, 23))
-            && hud.MenuButton.Position.IsEqualApprox(new Vector2(923, 23))
-            && hud.CashShopButton.Position.IsEqualApprox(new Vector2(972, 16));
+        // 旧版 HUD 的 16 个 caption 控件使用 EI 反编译证据的屏幕矩形（见
+        // MainPanel ctor 与 hud-label-evidence.json::caption_ctor_table）：
+        // CharacterButton cap13 F110/111 (648,70)、InventoryButton cap14 F112/113 (648,32)、
+        // SpellButton cap8 F100/101 (703,16)、MenuButton cap11 F106/107 (703,85)、
+        // CashShopButton cap15 F114/115 (665,16)。
+        // 旧的 (650,23)/(689,23)/(728,23)/(923,23)/(972,16) 是已废弃的新版横向九键排布，
+        // 自 HUD 切到 EI 基准后必然 FAIL。
+        bool layout = hud.CharacterButton.Position.IsEqualApprox(new Vector2(648, 70))
+            && hud.InventoryButton.Position.IsEqualApprox(new Vector2(648, 32))
+            && hud.SpellButton.Position.IsEqualApprox(new Vector2(703, 16))
+            && hud.MenuButton.Position.IsEqualApprox(new Vector2(703, 85))
+            && hud.CashShopButton.Position.IsEqualApprox(new Vector2(665, 16));
         GD.Print(layout && clicked
-            ? $"[UIHudAudit] PASS panel={hud.Size} buttons=9 click=hit"
+            ? $"[UIHudAudit] PASS panel={hud.Size} buttons=16 click=hit"
             : $"[UIHudAudit] FAIL panel={hud.Size} character={hud.CharacterButton.Position} click={clicked}");
     }
 

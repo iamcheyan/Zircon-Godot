@@ -257,7 +257,10 @@ public partial class QuestDialog : DXWindow
             _legacyDetailText = new DXLabel
             {
                 FontSize = 10,
-                TextColour = Colors.White,
+                // 原版正文色 0x7D0000，按 0x00BBGGRR（本引擎既有约定，见
+                // 技能书 0x0A320A=暗绿 / 0x96C8FA=浅蓝）即 RGB(0,0,125) 深蓝；
+                // 0x00447EF7 / 0x00447F51 / 0x00447F70 三处 push 0x7D0000。
+                TextColour = new Color(0f, 0f, 125f / 255f),
                 Location = new Vector2I(15, 16),
                 Size = new Vector2I(174, 45),
                 AutoSize = false,

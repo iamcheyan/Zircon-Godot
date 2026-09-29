@@ -751,6 +751,41 @@ public partial class LoginScene : Control
             _skinStatus.Size = new Vector2I(620, 16);
         }
 
+        // 6) Interface1c F2 标签条 (328x20)：「ID [框] PASSWORD [框]」——原版此屏唯一的
+        //    输入框装饰（SCREEN0001 里两个框内的 EDIT 本身没有可见边框，故只需这一张贴图）。
+        //
+        //    资源实测（wilsdk 解码 LegacyEI/Data/Interface1c.wil F2，逐列/逐行扫描）：
+        //      ID        x  0..12   y 5..14
+        //      框1       x 27..128  y 0..19   (102x20)
+        //      PASSWORD  x138..209  y 5..14
+        //      框2       x225..326  y 0..19
+        //
+        //    绘制原点** (96, 439) **——layout.json 里没有这条 draw 记录（interface1c-cluster-0x4027
+        //    只枚举了 F11/F13/F15/F17 四个按钮），故用运行期截图反解：把 F2 贴进 640x480 黑底，
+        //    再按 205/640 降采样与 SCREEN0001.jpg 底条 (rows139..152, cols26..141) 做 SSD 拟合，
+        //    BOX/LANCZOS/BILINEAR/HAMMING 四种重采样一致给出 (96,439)（次优 (97,439)；
+        //    全黑基线 SSD 473.7 -> 最优 87.1/30.3）。手算交叉验证：框1 = x123..225 与截图
+        //    左框列 38..71、右框列 102..135 吻合，文字行 443..452 落在截图 142..145 行。
+        //
+        //    框内即账号 (128,440)-(227,454)/密码 (326,440)-(425,454) 输入框，故输入框保持
+        //    Border=false（原版 EDIT 无可见边框，框线全部来自 F2）。
+        if (_loginDialogFrame != null)
+        {
+            var fieldStrip = new DXImageControl
+            {
+                LibraryFile = LibraryFile.Interface1c,
+                Index = 2,
+                FixedSize = true,
+                Size = new Vector2I(328, 20),
+                Position = new Vector2(96, 439),
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+            };
+            _loginDialogFrame.AddChild(fieldStrip);
+            // 必须画在输入框/按钮**之下**：子节点后加入者画在上面，而 F2 的右框线
+            // (x=225) 落在账号输入框矩形 (128..227) 内部，压在上面会盖住输入文字。
+            _loginDialogFrame.MoveChild(fieldStrip, 0);
+        }
+
         GD.Print($"[LegacyLogin] EI 布局: email={_skinEmail?.Location}/{_skinEmail?.Size} vis={_skinEmail?.Visible} "
             + $"pwd={_skinPassword?.Location} login={_skinLogin?.Location}/{_skinLogin?.Size} idx={_skinLogin?.Index} vis={_skinLogin?.Visible} "
             + $"reg={_skinRegister?.Location} chg={_skinChange?.Location} exit={_skinExit?.Location} "

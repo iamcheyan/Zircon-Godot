@@ -56,6 +56,10 @@ public static class LegacyEiText
 
     // ---- 提示 / 错误 ----
     public const string CreateFirst = "首先创建角色，才能开始游戏。";               // 219
+    // 原版 F51「创建角色」handler（0x459A20-0x459AC5）在**两个槽都已被占用**时
+    // 弹 LoadString 802 对话框、不进入建角；Pascal 源（IntroScn.pas::SelChrNewChrClick
+    // 的 else 分支）给出同一句中文文案：
+    public const string TwoCharacterLimit = "您可以为每个单独的帐号建立两个角色。";
     public const string NameTooLong = "文字过多。(韩文最多6个字)";                  // 223
     public const string NameExists = "此角色名已经存在。";                          // 224
     public const string NameInvalid = "此角色名不正确。";                           // 225

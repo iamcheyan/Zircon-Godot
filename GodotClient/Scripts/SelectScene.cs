@@ -1194,7 +1194,19 @@ public partial class SelectScene : Control
         // 1.30s (39 帧) 期间没有任何输入；视频结束回调里才显示编辑面板。
         _skinCreate.MouseClick += (o, e) =>
         {
-            if (_characters.Count >= 4) return;
+            // 原版 F51 handler（0x459A20-0x459AC5）扫描 2 个角色槽（+0xCB8，stride 0x40）：
+            // 有空槽才进入建角；**两槽都被占用则弹 LoadString 802 对话框、不改阶段**。
+            // 移植版此前用 Zircon 的 4 角色上限，与 EI（每账号 2 角色）不符。
+            if (AutoLoginArgs.LegacyUi)
+            {
+                if (_characters.Count >= 2)
+                {
+                    _statusLabel.Text = LegacyEiText.TwoCharacterLimit;
+                    GD.Print("[LegacySelect] F51 建角被拒：原版每账号上限 2 个角色");
+                    return;
+                }
+            }
+            else if (_characters.Count >= 4) return;
             if (_selectPhase == 1) return; // 过场中防重入
             SetSelectPhase(1);
             // 原版 phase 1（0x457615）载入 CreateChr.dat 到 +0x780 并 pump。

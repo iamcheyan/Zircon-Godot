@@ -18,6 +18,12 @@
 | `03-select-info-box.png` | phase 0 | 点选角色后出现原版 (80,110) 详情框「角色名 TestHero / 等级 255 / 职业 道士」；无逐槽标签 |
 | `04-delete-confirm-cmsg228.png` | phase 0 | 点「删除角色」→ CMsg 228 中文确认框（Yes 立即可用，无倒计时） |
 | `05-two-character-limit.png` | phase 0 | 账号已有 2 角色时点「创建角色」→ 顶部显示「您可以为每个单独的帐号建立两个角色。」 |
+| `06-overlay-before-fix.png` | phase 0 | A/B 对照（修复前，临时关闭 guard）：洞窟 (450,200) 处叠出 Zircon `帧+130` 的发光球+剑杂影 |
+| `07-overlay-after-fix.png` | phase 0 | A/B 对照（修复后）：同位置只有岩壁 |
+
+> `06`/`07` 是 (430,200)-(520,290) 区域 4× 放大的离线取景，用于证明 Zircon
+> `帧+100/+130` 叠加层确实会在选角屏上画出与角色无关的杂影（即用户看到的
+> 「Zircon 动画和闪现」）。
 
 ## 复现
 

@@ -618,7 +618,12 @@ public partial class LoginScene : Control
         var vbox = GetNodeOrNull<VBoxContainer>("VBox");
         if (vbox != null)
             vbox.Visible = false;
-        dialog.Position = new Vector2((viewport.X - dialog.Size.X) / 2f, viewport.Y - dialog.Size.Y - 20f);
+        // Legacy EI 模式：ApplyLegacyEiLoginLayout 已把容器移到原点 (0,0) 并放大到
+        // 640x480，子控件 Location 即 EI 屏幕绝对坐标。这里再做一次"居中偏下"会把
+        // 整个表单平移 (80,100)——视频在 _uiLayer 上不受影响，只有表单被推走，
+        // 这正是 2026-09-29 实测截图里 创建账号/连接游戏/状态行 全部右下偏移的原因。
+        if (!AutoLoginArgs.LegacyUi)
+            dialog.Position = new Vector2((viewport.X - dialog.Size.X) / 2f, viewport.Y - dialog.Size.Y - 20f);
     }
 
     /// <summary>

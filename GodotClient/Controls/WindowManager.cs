@@ -17,9 +17,17 @@ public static class WindowManager
     /// <summary>窗口 Z 序起点 (在 UI CanvasLayer 下, 100 起留足余量)</summary>
     public const int BaseZ = 100;
 
+    /// <summary>
+    /// 窗口节点是否仍然有效。已释放/排队释放的窗口不能再读写 Visible/ZIndex/Show（会抛
+    /// ObjectDisposedException）。真实联机复现：按 R 关聊天窗时 OpenWindows 里残留一个
+    /// 已释放窗口，导致 RefreshZOrder 抛异常、整轮 Z 序刷新中断。
+    /// </summary>
+    private static bool IsAlive(DXWindow w)
+        => w != null && GodotObject.IsInstanceValid(w) && !w.IsQueuedForDeletion();
+
     public static void Open(DXWindow w, Node parent)
     {
-        if (w == null || parent == null) return;
+        if (w == null || parent == null || !IsAlive(w)) return;
         if (!OpenWindows.Contains(w)) OpenWindows.Add(w);
         w.ShowWindow(parent);
         RefreshZOrder();
@@ -29,12 +37,15 @@ public static class WindowManager
         if (w == null) return;
         OpenWindows.Remove(w);
         GameScene.Game?.SetHoverItem(null);
-        w.Close();
+        // 窗口可能已被释放（例如一次性对话框由别处 QueueFree 掉），
+        // 此时再调 Close() 会抛 ObjectDisposedException。
+        if (IsAlive(w)) w.Close();
         RefreshZOrder();
     }
 
     public static void Toggle(DXWindow w, Node parent)
     {
+        if (!IsAlive(w)) return;
         if (w.Visible) Close(w);
         else Open(w, parent);
     }
@@ -45,7 +56,7 @@ public static class WindowManager
         for (int i = OpenWindows.Count - 1; i >= 0; i--)
         {
             var w = OpenWindows[i];
-            if (!w.Visible)
+            if (!IsAlive(w) || !w.Visible)
             {
                 OpenWindows.RemoveAt(i);
                 continue;
@@ -59,17 +70,26 @@ public static class WindowManager
     /// <summary>把窗口置顶 (点击/拖动标题栏时调用)</summary>
     public static void BringToFront(DXWindow w)
     {
-        if (!w.Visible) return;
+        if (!IsAlive(w) || !w.Visible) return;
         if (OpenWindows.Remove(w)) OpenWindows.Add(w);
         RefreshZOrder();
     }
 
-    // 可见窗口按打开顺序重排 Z; 顺带清掉已关闭的残留
+    // 可见窗口按打开顺序重排 Z; 顺带清掉已关闭/已释放的残留
     private static void RefreshZOrder()
     {
         for (int i = 0; i < OpenWindows.Count; i++)
         {
             var w = OpenWindows[i];
+            // 先剔除已释放（QueueFree/Dispose）的引用：对失效实例读 Visible
+            // 或写 ZIndex 会抛 ObjectDisposedException，并中断整轮 Z 序刷新。
+            // 真实联机复现：按 R 关聊天窗时 OpenWindows 里有一个已释放窗口。
+            if (!GodotObject.IsInstanceValid(w) || w.IsQueuedForDeletion())
+            {
+                OpenWindows.RemoveAt(i);
+                i--;
+                continue;
+            }
             if (!w.Visible)
             {
                 OpenWindows.RemoveAt(i);

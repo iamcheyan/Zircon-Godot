@@ -188,6 +188,10 @@ public partial class SelectScene : Control
             _unsubscribers.Add(() => _net.Connection.DeleteCharacterResultEvent -= OnDeleteCharacterResult);
             _net.Connection.StartGameResultEvent += OnStartGameResult;
             _unsubscribers.Add(() => _net.Connection.StartGameResultEvent -= OnStartGameResult);
+            // 选角屏此前不订阅断线：服务器掉线后界面毫无反馈，点"开始游戏"会静默
+            // 失败（SendStartGame 打到已关闭的连接上），玩家只看到按钮被禁用。
+            _net.Connection.DisconnectedEvent += OnDisconnected;
+            _unsubscribers.Add(() => _net.Connection.DisconnectedEvent -= OnDisconnected);
             // 暂存选角期间到达的公告，等 StartGame 过场结束后再显示。
             _net.Connection.ChatEvent += OnSelectChat;
             _unsubscribers.Add(() => _net.Connection.ChatEvent -= OnSelectChat);
@@ -1237,6 +1241,32 @@ public partial class SelectScene : Control
             RunSelectButtonSelfTestIfRequested();
         }
         GetNode<Control>("VBox").Visible = false;
+        if (AutoLoginArgs.LegacyUi) RelocateLegacyStatusLabel();
+    }
+
+    /// <summary>
+    /// 把状态文字从被整体隐藏的 VBox 里搬到缩放层。
+    ///
+    /// <c>VBox</c> 在 Legacy 下被置为不可见，而建角失败/删角结果/进游戏等待/
+    /// StartGame 失败/断线等反馈**全部只写进 _statusLabel** —— 藏了就只剩
+    /// GD.Print，玩家在界面上看不到任何提示。
+    ///
+    /// 放到 EI 选角屏左上角 (8,8)：该处是空的暗色岩壁，"开始游戏" (259,49)、
+    /// "创建角色" (440,93) 都在其下方/右侧，不会重叠。Godot Label 默认字体不含
+    /// 中文，需显式挂 MirSkin 的 CJK 字体，否则状态文字渲染成豆腐块。
+    /// </summary>
+    private void RelocateLegacyStatusLabel()
+    {
+        if (_statusLabel == null) return;
+        _statusLabel.GetParent()?.RemoveChild(_statusLabel);
+        _uiLayer.AddChild(_statusLabel);
+        _statusLabel.Position = new Vector2I(8, 8);
+        _statusLabel.Size = new Vector2I(620, 16);
+        _statusLabel.HorizontalAlignment = HorizontalAlignment.Left;
+        var font = MirSkin.GetFont();
+        if (font != null) _statusLabel.AddThemeFontOverride("font", font);
+        _statusLabel.AddThemeFontSizeOverride("font_size", 12);
+        _statusLabel.AddThemeColorOverride("font_color", new Color(1f, 0.92f, 0.6f));
     }
 
     // =====================================================================================
@@ -2165,5 +2195,26 @@ public partial class SelectScene : Control
         int retryIdx = _lastStartIndex >= 0 ? _lastStartIndex : _characters[0].CharacterIndex;
         GD.Print($"[Select] 重试 StartGame: charIndex={retryIdx}");
         _net.Connection?.SendStartGame(retryIdx);
+    }
+
+    private void OnDisconnected()
+    {
+        // 与 LoginScene.OnDisconnected 同构：回包可能来自网络线程/清理阶段，
+        // 延后到场景空闲再改控件。场景已释放就直接丢弃。
+        CallDeferred(nameof(ShowDisconnected));
+    }
+
+    private void ShowDisconnected()
+    {
+        if (!IsInstanceValid(this)) return;
+        GD.Print("[Select] 与服务器断开连接，禁用选角操作");
+        _startRetryTimer?.Stop();
+        _statusLabel.Text = Lang.LoginUi459Label;   // 连接已断开
+        _startBtn.Disabled = true;
+        _createBtn.Disabled = true;
+        _deleteBtn.Disabled = true;
+        if (_skinStart != null) _skinStart.Enabled = false;
+        if (_skinCreate != null) _skinCreate.Enabled = false;
+        if (_skinDelete != null) _skinDelete.Enabled = false;
     }
 }

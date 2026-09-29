@@ -138,7 +138,8 @@ public partial class SelectScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
+        // EI 选角屏（mode 0 / mode 2）屏幕区 640×480；进游戏后由 GameScene 改回 800×600。
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(640, 480);
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -2095,6 +2096,13 @@ public partial class SelectScene : Control
                 // 过场期间隐藏选角 UI；视频完整播完 (1.37s / 41 帧) 后，黑屏显示
                 // F602 公告确认框；勾选后才创建 GameScene。视频挂到 Root。
                 if (_uiLayer != null) _uiLayer.Visible = false;
+                // F602 公告画在 **mode 3 = 800×600**（0x419377 →
+                // 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)），而选角屏是
+                // mode 2 = 640×480。公告按 800×600 设计稿居中，窗口不先切大，
+                // 弹框时视口还是 640×480，会整体偏右下 (80,60)。这里在过场开始
+                // 时就切（过场后段本来就是黑屏，切换不可见），等 1.37s 结束后
+                // Viewport.Size 必然已到位，ShowLegacyStartNotice 直接按 800×600 布局。
+                ClientSettings.ApplyLegacyPregameWindow(800, 600);
                 // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
                 // = StartGame.wav -> 进游戏时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyStartGame);

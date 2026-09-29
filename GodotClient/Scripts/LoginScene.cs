@@ -52,7 +52,8 @@ public partial class LoginScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
+        // EI 登录屏（mode 0）屏幕区是 640×480，不是 800×600。
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(640, 480);
         // Legacy 会话清屏色 = 原版黑。Godot 默认 default_clear_color 是 0.3 灰
         // （RGB 76,76,76），EI 原版屏幕表面是纯黑：SCREEN0001.jpg 解码后
         // y=0..59 / y=421..479 采样均值 0.28/255。不清成黑，视频矩形以外的

@@ -348,22 +348,29 @@ public static class ClientSettings
     }
 
     /// <summary>
-    /// Legacy 会话（登录 / 选角 / 进游戏）窗口固定 800×600 逻辑尺寸，与原版 EI 窗口一致。
+    /// Legacy 会话窗口固定"逻辑尺寸"，与原版 EI 各 mode 的屏幕区一致：
+    /// 登录 / 选角（mode 0、mode 2）= <b>640×480</b>，进游戏（mode 3）= <b>800×600</b>。
+    /// 证据：login-flow-evidence.json mode=2 写入者 0x419BF9 调
+    /// <c>0x45D270(0x8AB7A8, 0x280=640, 0x1E0=480, 0x10, 1|2)</c>；mode=3 走
+    /// 0x419377 的 <c>0x45D270(..., 0x320=800, 0x258=600, 0x10)</c>；
+    /// 运行期截图 SCREEN0001.jpg（登录屏）反解出的像素标定是 640×480
+    /// （视频矩形 (0,60)-(640,420) 恰好铺满整宽），800×600 假设与该图不符。
+    ///
     /// Godot 在 macOS/Windows 上以物理像素为 WindowSetSize 单位，因此需乘以显示
-    /// 缩放因子（Retina 2x → 物理 1600×1200 = 800×600 点；1x → 800×600），
-    /// 使窗口在屏幕上始终呈现"正常"的 800×600 观感，并跟随用户显示比例放大。
-    /// 视口随之放大后 UiScaler 自动计算对应倍率（800/600 设计稿填满窗口）。
+    /// 缩放因子（Retina 2x → 物理 1280×960 = 640×480 点；1x → 640×480），
+    /// 使窗口在屏幕上始终呈现"正常"观感，并跟随用户显示比例放大。
+    /// 视口随之放大后 UiScaler 自动计算对应倍率。
     /// </summary>
-    public static void ApplyLegacyPregameWindow()
+    public static void ApplyLegacyPregameWindow(int width = 800, int height = 600)
     {
         if (DisplayServer.GetName() == "headless") return;
         DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
         int displayScale = (int)Mathf.Max(1f, DisplayServer.ScreenGetScale(0));
-        int w = 800 * displayScale;
-        int h = 600 * displayScale;
+        int w = width * displayScale;
+        int h = height * displayScale;
         DisplayServer.WindowSetSize(new Vector2I(w, h));
-        GD.Print($"[Display] Legacy pre-game window: 800x600 logical (x{displayScale} → {w}x{h} px)");
+        GD.Print($"[Display] Legacy window: {width}x{height} logical (x{displayScale} → {w}x{h} px)");
     }
 
     /// <summary>将原版 Graphics 页的窗口选项映射到 Godot 当前窗口。</summary>

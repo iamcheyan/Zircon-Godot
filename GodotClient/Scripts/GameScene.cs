@@ -1029,10 +1029,11 @@ public partial class GameScene : Control
         // 完成、每个窗口 _Ready（deferred）和 F12 热重载时应用。
         UiOverlay.Load();
         ClientSettings.ApplyDisplaySettings();
-        // legacy 会话（登录/选角/进游戏）全程保持原版 800x600 窗口，
-        // 否则 ApplyDisplaySettings 会把窗口重置为存档 GameSize（1014x658pt 等），
-        // 导致 800x600 legacy HUD 布局被拉伸。与 LoginScene/SelectScene 一致。
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow();
+        // legacy 会话进游戏后是 **mode 3 = 800×600**（0x419377 →
+        // 0x45D270(&0x8AB7A8, 0x320, 0x258, 0x10)），且 ApplyDisplaySettings
+        // 会把窗口重置为存档 GameSize（1014x658pt 等），导致 800x600 legacy
+        // HUD 布局被拉伸。登录/选角屏是 640×480，到这里必须切回 800×600。
+        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(800, 600);
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();

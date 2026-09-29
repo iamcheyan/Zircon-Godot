@@ -2120,10 +2120,8 @@ public partial class SelectScene : Control
     }
 
     private DXControl _legacyDeleteDialog;
-    private DXLabel _legacyDeleteCountdownLabel;
+    private DXLabel _legacyDeleteMessageLabel;
     private DXButton _legacyDeleteYes, _legacyDeleteNo;
-    private Timer _legacyDeleteTimer;
-    private double _legacyDeleteCountdown;
     private SelectInfo _legacyDeleteTarget;
 
     private void ShowLegacyDeleteConfirm(SelectInfo character)
@@ -2134,7 +2132,6 @@ public partial class SelectScene : Control
             _legacyDeleteDialog = null;
         }
         _legacyDeleteTarget = character;
-        _legacyDeleteCountdown = 5.0;
 
         var dlg = new DXControl
         {
@@ -2156,11 +2153,14 @@ public partial class SelectScene : Control
             Location = new Vector2I(0, 10),
             IsControl = false,
         });
-        _legacyDeleteCountdownLabel = new DXLabel
+        // 原版 F53「删除角色」→ SelChrEraseChrClick：
+        //   FrmDlg.DMessageDlg(CMsg.GetMsg(228), [mbYes, mbNo]) → mrYes 才发 SendDelChr。
+        // 即一个普通 Yes/No 确认框，文案取自 CMList 228，**没有倒计时**。
+        // 移植版此前沿用旧 Zircon C# 的「5 秒后启用 Yes」并夹带英文串，非 EI 行为。
+        _legacyDeleteMessageLabel = new DXLabel
         {
-            Text = string.Format(Lang.SelectCharacterLabel12, character.CharacterName)
-                   + $"\nPlease wait {_legacyDeleteCountdown:0.0} seconds before confirming.",
-            FontSize = 9,
+            Text = LegacyEiText.DeleteConfirm,
+            FontSize = 10,
             TextColour = Colors.White,
             DrawOutline = true,
             Align = HorizontalAlignment.Center,
@@ -2168,7 +2168,7 @@ public partial class SelectScene : Control
             Location = new Vector2I(10, 38),
             IsControl = false,
         };
-        dlg.AddControl(_legacyDeleteCountdownLabel);
+        dlg.AddControl(_legacyDeleteMessageLabel);
 
         _legacyDeleteYes = new DXButton
         {
@@ -2178,7 +2178,7 @@ public partial class SelectScene : Control
             Index = -1,
             Location = new Vector2I(90, 108),
             Size = new Vector2I(80, 24),
-            Enabled = false,
+            Enabled = true,
         };
         _legacyDeleteNo = new DXButton
         {
@@ -2203,40 +2203,10 @@ public partial class SelectScene : Control
         _legacyDeleteNo.MouseClick += (o, e) => CloseLegacyDeleteConfirm();
         dlg.AddControl(_legacyDeleteYes);
         dlg.AddControl(_legacyDeleteNo);
-
-        if (_legacyDeleteTimer == null)
-        {
-            _legacyDeleteTimer = new Timer { WaitTime = 0.1, OneShot = false };
-            AddChild(_legacyDeleteTimer);
-            _legacyDeleteTimer.Timeout += TickLegacyDeleteConfirm;
-        }
-        _legacyDeleteTimer.Start();
-    }
-
-    private void TickLegacyDeleteConfirm()
-    {
-        if (_legacyDeleteDialog == null) return;
-        _legacyDeleteCountdown -= 0.1;
-        if (_legacyDeleteCountdown <= 0)
-        {
-            _legacyDeleteCountdown = 0;
-            if (_legacyDeleteYes != null) _legacyDeleteYes.Enabled = true;
-            if (_legacyDeleteCountdownLabel != null)
-                _legacyDeleteCountdownLabel.Text =
-                    $"Are you sure you want to delete the character {_legacyDeleteTarget?.CharacterName}.";
-            _legacyDeleteTimer?.Stop();
-        }
-        else if (_legacyDeleteCountdownLabel != null)
-        {
-            _legacyDeleteCountdownLabel.Text =
-                string.Format(Lang.SelectCharacterLabel12, _legacyDeleteTarget?.CharacterName)
-                + $"\nPlease wait {_legacyDeleteCountdown:0.0} seconds before confirming.";
-        }
     }
 
     private void CloseLegacyDeleteConfirm()
     {
-        _legacyDeleteTimer?.Stop();
         if (_legacyDeleteDialog != null)
         {
             _legacyDeleteDialog.QueueFree();
@@ -2244,7 +2214,7 @@ public partial class SelectScene : Control
         }
         _legacyDeleteYes = null;
         _legacyDeleteNo = null;
-        _legacyDeleteCountdownLabel = null;
+        _legacyDeleteMessageLabel = null;
         _legacyDeleteTarget = null;
     }
 

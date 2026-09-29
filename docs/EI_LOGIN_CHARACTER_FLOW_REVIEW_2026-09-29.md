@@ -103,7 +103,7 @@ Xvfb :100 -screen 0 1024x768 & DISPLAY=:100 openbox &
 
 ---
 
-## 5. 本轮确认的问题与修复（12 次提交，逐项推送核对见 §10）
+## 5. 本轮确认的问题与修复（11 项代码修复，逐项推送核对见 §10）
 
 | # | SHA | 问题 → 根因 | 验证 |
 | --- | --- | --- | --- |
@@ -213,9 +213,11 @@ Xvfb :100 -screen 0 1024x768 & DISPLAY=:100 openbox &
 | 9 | `cf35b08b` | 修复 DXTextArea 正文不显示：入树时同步内部 TextEdit 尺寸 | ✅（与 #10 同批推送，见下） |
 | 10 | `7418e3c8` | 修复 Legacy 预游戏窗口只改到 OS 窗口、视口停在旧尺寸 | ✅（与 #9 同批推送：远端被 `9409f386` 更新需先 rebase） |
 | 11 | `db85cf8c` | Legacy 登录补回 Interface1c F2 标签条（ID/PASSWORD 输入框贴纸） | ✅ |
+| 12 | 见下 | docs: 本报告（`docs/EI_LOGIN_CHARACTER_FLOW_REVIEW_2026-09-29.md`） | ✅ |
 
-**最终状态**：`git rev-parse HEAD` = `db85cf8ce1960df291603294c227d574c7c0be00`，
-`git ls-remote origin refs/heads/master` = `db85cf8ce1960df291603294c227d574c7c0be00`（一致）。
+**最终状态**：11 项代码修复 + 本报告，代码基线 = `db85cf8ce1960df291603294c227d574c7c0be00`。
+本报告自身的提交 SHA 无法内嵌自身，以推送后
+`git ls-remote origin refs/heads/master` 的远端 HEAD 为准（推送即核对，报告写作时远端 HEAD = `db85cf8c`，随后更新为报告提交）。
 全程未 force push、未切换分支、未提交数据库/日志/截图/凭据。
 
 ---

@@ -89,6 +89,10 @@ public sealed partial class DXTextArea : DXControl
     public override void _Ready()
     {
         base._Ready();
+        // Size 通常在对象初始化器里、控件入树之前设置，此时 Godot 不派发
+        // Resized，_edit 会一直停在构造期按默认 Size 算出的小尺寸（实测 8x8），
+        // 表现为「文本框边框在、正文整块不显示」。入树时补一次同步。
+        ResizeEditor();
         if (_focusWhenReady)
         {
             _focusWhenReady = false;

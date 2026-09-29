@@ -272,6 +272,9 @@ public partial class LoginScene : Control
         {
             SetStatus(string.Format(Lang.LoginLoginLabel2, _pendingLoginResult, _pendingLoginMessage));
             if (_loginBtn != null && IsInstanceValid(_loginBtn)) _loginBtn.Disabled = false;
+            // 登录失败必须把 Legacy 的 _skinLogin 一起恢复，否则一次输错密码
+            // 登录屏就再也点不动"连接游戏"。
+            if (_skinLogin != null) _skinLogin.Enabled = true;
         }
     }
 
@@ -323,11 +326,17 @@ public partial class LoginScene : Control
         SetStatus(Lang.LoginUi459Label);
         if (_loginBtn != null && IsInstanceValid(_loginBtn)) _loginBtn.Disabled = true;
         if (_registerBtn != null && IsInstanceValid(_registerBtn)) _registerBtn.Disabled = true;
+        // Legacy 两套按钮同样要停用：断线后"连接游戏"再点只会往已关闭的连接上发包。
+        if (_skinLogin != null) _skinLogin.Enabled = false;
+        if (_skinRegister != null) _skinRegister.Enabled = false;
     }
 
     private void OnLoginPressed()
     {
         if (_loginBtn != null && IsInstanceValid(_loginBtn)) _loginBtn.Disabled = true;
+        // Legacy 的"连接游戏"是 _skinLogin（原生 _loginBtn 在该布局下不可见），
+        // 只禁用原生按钮等于没禁用——回包前可以连点，重复发 Login。
+        if (_skinLogin != null) _skinLogin.Enabled = false;
         SetStatus(Lang.LoginLoginLabel4);
         string email = _skinEmail?.Text ?? _emailEdit.Text;
         string password = _skinPassword?.Text ?? _passwordEdit.Text;

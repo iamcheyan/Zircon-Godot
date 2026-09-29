@@ -1,0 +1,59 @@
+Godot Engine v4.6.3.stable.mono.official.7d41c59c4 - https://godotengine.org
+
+[DataLayer] frame-formulas: 94 表 552 项
+[DataLayer] magic-effects: cast=146 attack=26
+[DataLayer] sounds: 736 / 159 / 118
+[DataLayer] OK dir=/home/tetsuya/development/zircon/ClientData
+[DB] 加载 System.db 从: /home/tetsuya/mir2ei/Data/
+[DB] 加载完成: 物品 1078, 地图 627, 怪物 434, 魔法 174, 货币 5
+[MirSkin] legacy UI WIL source: GameInter -> /home/tetsuya/mir2ei/LegacyEI/Data/GameInter.wil (1103 frames)
+[MirSkin] UI 库 GameInter 在 legacy 目录缺失，回退到 /home/tetsuya/mir2ei/Data/: GameInter.Zl
+[MirSkin] 中文字体加载: /home/tetsuya/development/zircon/GodotClient/Fonts/third_party/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf
+[MirSkin] UI 库 Interface 在 legacy 目录缺失，回退到 /home/tetsuya/mir2ei/Data/: Interface.Zl
+[MirSkin] legacy UI WIL source: ProgUse -> /home/tetsuya/mir2ei/LegacyEI/Data/ProgUse.wil (560 frames)
+[MirSkin] UI 库 ProgUse 在 legacy 目录缺失，回退到 /home/tetsuya/mir2ei/Data/: ProgUse.Zl
+[LegacyCharacterStats] LEVEL=0 | HP=0/0 | MP=0/0 | 经验= | 包袱负重=0/0 | 装备负重=0/0 | 腕力= | 准确=+0% | 敏捷=+0% | 魔法躲避= | 毒物躲避= | 中毒恢复= | 生命恢复= | 魔法恢复=
+[LegacyCharacter] switch view=attribute root=(244, 328) background=F200 offset=(-6, -92) toggle=(176, 264)/(36, 36)
+[LegacyCharacter] view=attribute root=(244, 328) background=GameInter[200] art=(256, 512) offset=(-6, -92) hitRecords=11 paperDoll=(97, 200)
+[LegacyBelt] frame=GameInter[51] art=(248, 46) window=(248, 46) visibleSlots=6 links=10
+[Lang] 语言已加载: CHINESE (autoLogin=null, settings=CHINESE)
+[Lang] 语言已加载: CHINESE (autoLogin=null, settings=CHINESE)
+[LegacyMiniMap] size=(128, 128) loc=(0, 0) legacy=True chrome=False title=False resize=False movable=True bigMapVisible=False
+[LegacyConfirmDialog] legacy 外观: 背景=GameInter[950] size=(360, 190) loc=(220, 151) msg="您确定要执行此操作吗？" buttons=YES(150)@(51,125) NO(153)@(244,125)
+[LegacyF950Input] 输入框已加: size=(354, 16) loc=(3, 100) （原版 MoveWindow 尺寸 0x162x0x10 = 354x16；锚点 (mouse+0xDF, mouse+0x23A) 参照物未闭合）
+[LegacyCharacterStats] LEVEL=0 | HP=0/0 | MP=0/0 | 经验= | 包袱负重=0/0 | 装备负重=0/0 | 腕力= | 准确=+0% | 敏捷=+0% | 魔法躲避= | 毒物躲避= | 中毒恢复= | 生命恢复= | 魔法恢复=
+[LegacyCharacter] switch view=attribute root=(244, 328) background=F200 offset=(-6, -92) toggle=(176, 264)/(36, 36)
+[LegacyCharacter] view=attribute root=(244, 328) background=GameInter[200] art=(256, 512) offset=(-6, -92) hitRecords=11 paperDoll=(97, 200)
+[LegacyCharacterStats] LEVEL=0 | HP=0/0 | MP=0/0 | 经验= | 包袱负重=0/0 | 装备负重=0/0 | 腕力= | 准确=+0% | 敏捷=+0% | 魔法躲避= | 毒物躲避= | 中毒恢复= | 生命恢复= | 魔法恢复=
+[LegacyCharacterStats] LEVEL=0 | HP=0/0 | MP=0/0 | 经验= | 包袱负重=0/0 | 装备负重=0/0 | 腕力= | 准确=+0% | 敏捷=+0% | 魔法躲避= | 毒物躲避= | 中毒恢复= | 生命恢复= | 魔法恢复=
+[LegacyCharacter] switch view=equipment root=(520, 328) background=F201 offset=(-252, -92) toggle=(176, 264)/(36, 36)
+[LegacyCharacterStats] LEVEL=0 | HP=0/0 | MP=0/0 | 经验= | 包袱负重=0/0 | 装备负重=0/0 | 腕力= | 准确=+0% | 敏捷=+0% | 魔法躲避= | 毒物躲避= | 中毒恢复= | 生命恢复= | 魔法恢复=
+[LegacyCharacter] switch view=attribute root=(244, 328) background=F200 offset=(-6, -92) toggle=(176, 264)/(36, 36)
+[LegacyAudit] PASS character=True inventory=True magic=True horse=True npc=True chat=True quest=True trade=True guild=True storage=True config=True notice=True minimap=True lifecycle=True orb=True hud=True roots=True goods=True guildList=True
+[LegacyAudit] goods screen=(0, 184) expected=(0, 184) placed=True | size=(300, 304) frame=1000@(-106, -102) rowHeight=46 list=(4, 40)/(250, 230) buy=(127, 267)/(48, 20)#1012
+[LegacyAudit] character size=(244, 328) background=F200 expanded=True doll=(97, 200) toggle=(176, 264)/(36, 36) visibleSlots=11 slots=True switch=True
+[LegacyAudit] inventory size=(284, 324) background=F250 grid=(6, 6)@(25, 41) close=(249, 288) action=(176, 262)
+[LegacyAudit] magic size=(452, 380) background=F400 categories=8 categoryPositions=True nav=True rows=6 rowsAligned=True page=1/1
+[LegacyAudit] horse size=(296, 332) clip=False background=F850@(-118, -94)/(512, 512) buttons=(28, 244),(74, 244),(133, 244),(192, 244) state=0
+[LegacyAudit] npc size=(552, 176) bg=F1100 text=(150, 40)/(149, 136) close=F161@(7, 141)/(28, 26) up=F52@(290, 145)/(12, 8) down=F54@(306, 136)/(12, 8) legacyScrollHidden=True
+[LegacyAudit] chat size=(296, 424) background=F200 bodyAlpha=1 close=(261, 3)
+[LegacyAudit] quest size=(340, 440) background=F700 contentAlpha=1 scroll=(290, 59)/(28, 58)#723/721 close=(304, 404)
+[LegacyAudit] trade size=(484, 330) frame=1050 bg=(-14, -91) userGrid=(5, 6)@(20, 47) playerGrid=(5, 6)@(252, 47) close=(532, 350) accept=(185, 332)#1061 cancel=(225, 332)
+[LegacyAudit] guild size=(596, 446) frame=600 bg=(-214, -33)/(1024, 512) content=(596, 446)@(0, 0) actions=8 tabsVisible=0
+[LegacyAudit] guildList rows=18/18 first=(35, 60) step=21 pitch=True visible=18 max=25
+[LegacyAudit] storage size=(205, 205) frame=1001 grid=(4, 25)@(21, 42) step=38 firstCell=(22, 43) compact=True
+[LegacyAudit] group size=(256, 244) members=(0, 0)/(256, 244) remove=(80, 197) options=(173, 217) allow=(166, 40) lfg=5 scroll=(210, 268)/5 inviteInput=(17, 197) inviteBtn=(17, 197)
+[LegacyAudit] config size=(248, 264) frame=750 legacyHitRects=8 paintedIndicators=4 volumeSliders=2 pageVisible=False
+[LegacyAudit] notice size=(584, 252) frame=602@(-220, -2) close=(548, 16) action=(496, 27) text=(500, 112)@(23, 94)
+[LegacyAudit] minimap size=(128, 128) loc=(672, 0) area=(0, 0), (128, 128) panel=(128, 128) border=True chrome=False title=False resize=False ctrlMove=True bigMapVisible=False
+[LegacyAudit] lifecycle windows=15 open-close=True stack=0
+[LegacyAudit] orb orb=(49, 13)/(112, 110) visible=True hover=(49, 13)/(112, 126) valuesHidden=True valuePositions=(49, 123)/(105, 123) duplicateIcon=False hiddenAttributeIcon=True states=True/True/True single=True
+[LegacyAudit] hud panel=50/(800, 136) buttons=True legacyStats=True vis(level/class/fp/cp/ac/dc/mac/mc/sc)=True/False/False/False/True/True/False/False/False level=70@(665, 60) ac=AC 0-0@(580, 108) dc=DC 0-0@(680, 108) orb=(49, 13)/(112, 110) visible=True hover=(49, 13)/(112, 126) valuesHidden=True valuePositions=(49, 123)/(105, 123) duplicateIcon=False hiddenAttributeIcon=True states=True/True/True single=True
+[ExpBarDiag] exp=0 max=0 tex=(164, 6) legacy=True visible=True pos=(235, 122) size=(164, 10)
+WARNING: 1528 RIDs of type "CanvasItem" were leaked.
+   at: _free_rids (servers/rendering/renderer_canvas_cull.cpp:2692)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 1 RID allocations of type 'PN13RendererDummy14TextureStorage12DummyTextureE' were leaked at exit.
+ERROR: 38 RID allocations of type 'PN18TextServerAdvanced22ShapedTextDataAdvancedE' were leaked at exit.
+ERROR: 2 RID allocations of type 'PN18TextServerAdvanced12FontAdvancedE' were leaked at exit.

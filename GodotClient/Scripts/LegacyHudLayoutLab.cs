@@ -199,6 +199,15 @@ public partial class LegacyHudLayoutLab : Control
             break;
         }
 
+        // 行会 legacy 列表截图取证：装载假行会并打开窗口（不退出，供 scrot 截图）。
+        foreach (string arg in OS.GetCmdlineUserArgs())
+        {
+            if (arg != "--legacy-guild-sample") continue;
+            WindowManager.Open(_guild, _canvas);
+            _guild.LoadSampleGuildForTest();
+            break;
+        }
+
         bool expandedRequested = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
             expandedRequested |= arg == "--legacy-character-expanded";
@@ -502,8 +511,10 @@ public partial class LegacyHudLayoutLab : Control
         bool hud = _hud.AuditLegacyHud(out string hudDetails);
         // 商店窗 id2 的购买态面板（NPCGoodsPanel）legacy 布局。
         bool goods = _npc.AuditLegacyGoods(out string goodsDetails);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods && group;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods}");
+        // 行会成员列表（legacy）：原版 18 行上限 + (35,60) 原点 + 字体度量行距。
+        bool guildList = _guild.RunLegacyGuildListSelfTest(out string guildListDetails);
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods && group && guildList;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods} guildList={guildList}");
         GD.Print($"[LegacyAudit] goods {goodsDetails}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
@@ -514,6 +525,7 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] quest {questDetails}");
         GD.Print($"[LegacyAudit] trade {tradeDetails}");
         GD.Print($"[LegacyAudit] guild {guildDetails}");
+        GD.Print($"[LegacyAudit] guildList {guildListDetails}");
         GD.Print($"[LegacyAudit] storage {storageDetails}");
         GD.Print($"[LegacyAudit] group {groupDetails}");
         GD.Print($"[LegacyAudit] config {configDetails}");

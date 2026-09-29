@@ -23,6 +23,15 @@ public partial class GuildDialog : DXWindow
     // paint-time SetPosition 真值。legacy 下必须隐藏这 6 个现代页签。
     private bool _legacyEiLayout;
     private int _tab;
+    private bool _refreshing;
+    // EI id4 的 9 个原生控件（关闭 + 8 个动作），图形烘焙在 GameInter F610..F625
+    // 帧对里。见 social-window-render-evidence.json::paint_repositioned_controls
+    // 与 guild-window-paint-evidence.json（paint 0x425040 逐帧 SetPosition 真值）。
+    private readonly List<DXButton> _legacyActionButtons = new();
+    private DXControl _legacyPrompt;
+    private DXLabel _legacyPromptLabel;
+    private DXTextInput _legacyPromptInput;
+    private System.Action<string> _legacyPromptSubmit;
     private readonly ClientUserItem[] _storageItems = new ClientUserItem[1000];
     private DXItemGrid _storageGrid;
     private ClientGuildInfo _guild;
@@ -108,36 +117,288 @@ public partial class GuildDialog : DXWindow
         // 会落在窗口中腰，与截图矛盾，故不采用。
         _closeButton.Location = new Vector2I(556, 409);
         _closeButton.Size = new Vector2I(28, 26);
-        _content.Location = new Vector2I(18, 80);
-        _content.Size = new Vector2I(410, 415);
+        // 原版 F600 没有独立的列表裁剪框：成员名直接画在窗口坐标里
+        // （0x4253E6：x = window.x+0x23, y = window.y+0x3C+(row-scroll)*step）。
+        // 故 legacy 下 _content 铺满窗口，行坐标直接用 EI 值。
+        _content.Location = Vector2I.Zero;
+        _content.Size = Size;
         // 原版滚动条 0x4179B0@+0x76C，位置 (x+0x224, y+0xD0) = (548,208)
         // （guild-window-paint-evidence.json；落在 596x446 内，可直接作窗口相对坐标）。
         // 原值 (428,80) 无证据支撑 —— 截图里表现为窗口中部一条突兀的竖直黑条。
         _scroll.Location = new Vector2I(548, 208);
         _scroll.Size = new Vector2I(16, 415);
+        BuildLegacyActionButtons();
         UpdateClientAreaForLegacySkin();
         // 原版 F600 无页签；此处显式再执行一次，避免构造期先设成可见后无人回收。
         UpdateTabVisibility();
     }
 
+    /// <summary>
+    /// EI id4 的 8 个动作控件（paint-time SetPosition 真值）+ 关闭键：
+    ///   会员升职 F610/611 (34,376)、成员踢出 F612/613 (34,402)、盟主转让 F614/615 (121,402)、
+    ///   邀请入会 F616/617 (309,376)、行会公告 F618/619 (397,376)、退出行会 F620/621 (484,376)、
+    ///   行会解散 F622/623 (309,402)、关闭窗口 F624/625 (397,402)。
+    /// 原版点击语义见 social-window-render-evidence.json::closed_notes（0x4258F0 分派）。
+    /// 原版把会员升职/成员踢出/盟主转让的输入送到共享输入框 0x8AB828；本移植用窗口内的
+    /// 一个提示输入行代替，属于实现方式差异（已记录）。
+    /// </summary>
+    private void BuildLegacyActionButtons()
+    {
+        if (_legacyActionButtons.Count > 0) return;
+        (int normal, int pressed, int x, int y, string tip, System.Action action)[] specs =
+        {
+            (610, 611, 34, 376, "会员升职", () => ShowLegacyPrompt("会员升职", PromoteLegacyMember)),
+            (612, 613, 34, 402, "成员踢出", () => ShowLegacyPrompt("成员踢出", KickLegacyMember)),
+            (614, 615, 121, 402, "盟主转让", () => ShowLegacyPrompt("盟主转让", TransferLegacyMember)),
+            (616, 617, 309, 376, "邀请入会", () => ShowLegacyPrompt("邀请入会", InviteLegacyMember)),
+            (618, 619, 397, 376, "行会公告", () => ShowLegacyPrompt("行会公告", EditLegacyNotice)),
+            (620, 621, 484, 376, "退出行会", LeaveLegacyGuild),
+            (622, 623, 309, 402, "行会解散", DisbandLegacyGuild),
+            (624, 625, 397, 402, "关闭窗口", Close),
+        };
+        foreach (var spec in specs)
+        {
+            var button = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = spec.normal,
+                HoverIndex = spec.pressed,
+                PressedIndex = spec.pressed,
+                FixedSize = true,
+                Size = MirSkin.GetSize(LibraryFile.GameInter, spec.normal),
+                Location = new Vector2I(spec.x, spec.y),
+                TooltipText = spec.tip,
+            };
+            var action = spec.action;
+            button.MouseClick += (_, _) => action();
+            AddControl(button);
+            _legacyActionButtons.Add(button);
+        }
+    }
+
+    private void ShowLegacyPrompt(string prompt, System.Action<string> submit)
+    {
+        if (_legacyPrompt == null)
+        {
+            _legacyPrompt = new DXControl
+            {
+                Location = new Vector2I(34, 320),
+                Size = new Vector2I(320, 44),
+                BackColour = new Color(0.04f, .025f, .02f, .98f),
+                Border = true,
+                BorderColour = new Color(1f, .75f, .25f),
+            };
+            _legacyPromptLabel = new DXLabel { FontSize = 9, TextColour = Colors.White, Location = new Vector2I(6, 4), Size = new Vector2I(308, 14), IsControl = false };
+            _legacyPrompt.AddControl(_legacyPromptLabel);
+            _legacyPromptInput = new DXTextInput { Location = new Vector2I(6, 19), Size = new Vector2I(220, 18) };
+            _legacyPromptInput.TextSubmitted += text => { _legacyPromptSubmit?.Invoke(text); HideLegacyPrompt(); };
+            _legacyPrompt.AddControl(_legacyPromptInput);
+            var ok = new DXButton { Text = "确定", FontSize = 9, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(232, 18), Size = new Vector2I(40, 20) };
+            ok.MouseClick += (_, _) => { _legacyPromptSubmit?.Invoke(_legacyPromptInput.Text); HideLegacyPrompt(); };
+            _legacyPrompt.AddControl(ok);
+            var cancel = new DXButton { Text = "取消", FontSize = 9, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(276, 18), Size = new Vector2I(40, 20) };
+            cancel.MouseClick += (_, _) => HideLegacyPrompt();
+            _legacyPrompt.AddControl(cancel);
+            AddControl(_legacyPrompt);
+        }
+        _legacyPromptLabel.Text = prompt + "（输入角色名后回车）";
+        _legacyPromptInput.Text = string.Empty;
+        _legacyPromptSubmit = submit;
+        _legacyPrompt.Visible = true;
+        _legacyPromptInput.GrabFocus();
+    }
+
+    private void HideLegacyPrompt()
+    {
+        if (_legacyPrompt != null) _legacyPrompt.Visible = false;
+        _legacyPromptSubmit = null;
+    }
+
+    private ClientGuildMemberInfo FindLegacyMember(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        string trimmed = name.Trim();
+        return _guild?.Members?.FirstOrDefault(m => string.Equals(m.Name, trimmed, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void PromoteLegacyMember(string name)
+    {
+        var member = FindLegacyMember(name);
+        if (member == null) return;
+        GameScene.Game?.OpenGuildMemberDialog(member.Index, member.Name, member.Rank, member.Permission);
+    }
+
+    private void KickLegacyMember(string name)
+    {
+        var member = FindLegacyMember(name);
+        if (member != null) GameScene.Game?.SendGuildKickMember(member.Index);
+    }
+
+    private void TransferLegacyMember(string name)
+    {
+        var member = FindLegacyMember(name);
+        if (member != null) GameScene.Game?.SendGuildTransferLeader(member.Index);
+    }
+
+    private void InviteLegacyMember(string name)
+    {
+        if (!string.IsNullOrWhiteSpace(name)) GameScene.Game?.SendGuildInviteMember(name.Trim());
+    }
+
+    private void EditLegacyNotice(string notice)
+    {
+        if (notice != null) GameScene.Game?.SendGuildEditNotice(notice);
+    }
+
+    private void LeaveLegacyGuild()
+    {
+        var confirm = new ConfirmDialog("确定要退出行会吗？", Lang.GuildOkLabel, () => GameScene.Game?.SendGuildLeave());
+        WindowManager.Open(confirm, GameScene.Game?.UILayer ?? GetParent());
+    }
+
+    /// <summary>
+    /// 原版「行会解散」走掌门守卫 + 对话框 601 的双确认链；Zircon 客户端/服务端
+    /// 目前没有对应的 disband 包，故这里不发送任何请求，只保留原版控件与其位置。
+    /// 记录为未闭合项（见审计报告）。
+    /// </summary>
+    private void DisbandLegacyGuild()
+    {
+        var confirm = new ConfirmDialog("原版行会解散需要掌门双确认；当前服务端未提供该操作。", Lang.GuildOkLabel, null);
+        WindowManager.Open(confirm, GameScene.Game?.UILayer ?? GetParent());
+    }
+
+    /// <summary>原版 state0/1/other 列表的可见行上限 0x12 = 18（0x004252BD）。</summary>
+    private const int LegacyVisibleRows = 18;
+
+    /// <summary>原版行距 = 字体度量高 + 5（0x004252C5 `add eax,5`，度量来自 0x45E0C0）。</summary>
+    private static int LegacyRowStep
+    {
+        get
+        {
+            Vector2 measured = MirSkin.MeasureText("测", 9);
+            return Math.Max(12, Mathf.RoundToInt(measured.Y) + 5);
+        }
+    }
+
+    /// <summary>
+    /// EI id4 的成员列表（paint 0x00425280 state0 / 0x00425440 state1 / 0x00425590 other）：
+    ///   x = window.x + 0x23 = 35（0x00425409）
+    ///   y = window.y + 0x3C + (row - scroll_start) * step = 60 + …（0x004253FB）
+    ///   scroll_start = this+0x9C；可见行 = min(count - scroll, 0x12)
+    ///   命中 [行会公告]/[敌对行会]/[联盟行会] 前缀的行用 0x96FF，其余 0xFFFFFF
+    /// 原版一行只画一个名字文本（linked_entry+0x04），没有图标/等级/在线列。
+    /// </summary>
+    private void BuildLegacyPage()
+    {
+        if (_refreshing) return;
+        _refreshing = true;
+        try
+        {
+            var members = _guild?.Members ?? new List<ClientGuildMemberInfo>();
+            int step = LegacyRowStep;
+            _scroll.Change = 1;
+            _scroll.VisibleSize = LegacyVisibleRows;
+            _scroll.MinValue = 0;
+            _scroll.MaxValue = Math.Max(LegacyVisibleRows, members.Count);
+            int scroll = Math.Max(0, Math.Min(_scroll.Value, Math.Max(0, members.Count - LegacyVisibleRows)));
+            for (int i = scroll; i < members.Count && i < scroll + LegacyVisibleRows; i++)
+            {
+                var member = members[i];
+                var row = new GuildMemberRow(this)
+                {
+                    Location = new Vector2I(35, 60 + (i - scroll) * step),
+                    Size = new Vector2I(410, step - 1),
+                    IsControl = true,
+                };
+                string text = member.Name ?? string.Empty;
+                bool marker = text.StartsWith("[行会公告]", StringComparison.Ordinal)
+                    || text.StartsWith("[敌对行会]", StringComparison.Ordinal)
+                    || text.StartsWith("[联盟行会]", StringComparison.Ordinal)
+                    || text.StartsWith("[行会成员]", StringComparison.Ordinal);
+                row.AddControl(new DXLabel
+                {
+                    Text = text,
+                    FontSize = 9,
+                    TextColour = marker ? new Color(0x96 / 255f, 0xFF / 255f, 0x00 / 255f) : Colors.White,
+                    Location = Vector2I.Zero,
+                    IsControl = false,
+                });
+                row.Member = member;
+                _content.AddControl(row);
+            }
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// legacy 成员列表的真实运行自检：构造 25 人假行会 -> ApplyGuild -> 检查
+    /// 可见行数（原版上限 18）、首行坐标 (35,60)、行距与滚动字段。
+    /// </summary>
+    /// <summary>测试场用：装载一个假行会，供 legacy 列表自检与截图取证。</summary>
+    public void LoadSampleGuildForTest(int memberCount = 25)
+    {
+        var members = new List<ClientGuildMemberInfo>();
+        for (int i = 0; i < memberCount; i++)
+            members.Add(new ClientGuildMemberInfo { Index = i, Name = $"成员{i + 1:00}", Rank = "Member", Online = TimeSpan.MinValue });
+        if (members.Count > 3) members[3].Name = "[行会公告]公告行";
+        ApplyGuild(new ClientGuildInfo
+        {
+            GuildName = "SelfTest",
+            Notice = "n",
+            MemberLimit = 40,
+            StorageLimit = 20,
+            Members = members,
+        });
+    }
+
+    public bool RunLegacyGuildListSelfTest(out string details)
+    {
+        LoadSampleGuildForTest();
+        var members = _guild.Members;
+        var rows = _content.GetChildren().OfType<GuildMemberRow>().OrderBy(r => r.Location.Y).ToList();
+        int step = LegacyRowStep;
+        bool count = rows.Count == LegacyVisibleRows;
+        bool first = rows.Count > 0 && rows[0].Location == new Vector2I(35, 60);
+        bool pitch = rows.Count > 1 && rows[1].Location == new Vector2I(35, 60 + step);
+        bool scroll = _scroll.VisibleSize == LegacyVisibleRows && _scroll.MaxValue == members.Count;
+        details = $"rows={rows.Count}/{LegacyVisibleRows} first={(rows.Count > 0 ? rows[0].Location.ToString() : "none")} "
+            + $"step={step} pitch={pitch} visible={_scroll.VisibleSize} max={_scroll.MaxValue}";
+        return count && first && pitch && scroll;
+    }
+
     public bool AuditLegacyEiLayout(out string details)
     {
+        // EI id4 的 9 个原生控件 paint-time SetPosition（primary-static）：
+        // 关闭 (556,409)、会员升职 (34,376)、成员踢出 (34,402)、盟主转让 (121,402)、
+        // 邀请入会 (309,376)、行会公告 (397,376)、退出行会 (484,376)、行会解散 (309,402)、
+        // 关闭窗口 (397,402)。
+        (int frame, int x, int y)[] expected =
+        {
+            (610, 34, 376), (612, 34, 402), (614, 121, 402), (616, 309, 376),
+            (618, 397, 376), (620, 484, 376), (622, 309, 402), (624, 397, 402),
+        };
+        bool actions = _legacyActionButtons.Count == expected.Length;
+        for (int i = 0; i < expected.Length && i < _legacyActionButtons.Count; i++)
+            actions &= _legacyActionButtons[i].Index == expected[i].frame
+                && _legacyActionButtons[i].Location == new Vector2I(expected[i].x, expected[i].y);
         bool ok = Size == new Vector2I(596, 446)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600
-            && _content.Location == new Vector2(18, 80)
-            && _content.Size == new Vector2(410, 415)
+            // 原版成员名直接画在窗口坐标里（0x4253E6），故 _content 铺满窗口。
+            && _content.Location == Vector2I.Zero
+            && _content.Size == Size
+            && actions
             // 原版滚动条位置 (548,208)（guild-window-paint-evidence.json）。
             && _scroll.Location == new Vector2(548, 208)
             // 原版关闭键 (556,409)（social-window-render-evidence.json 的 paint-time 真值）。
             && _closeButton.Location == new Vector2(556, 409)
-            // 背景锚点 = alpha 可见区原点 -(214,33)（素材实测 F600 bbox (214,33)-(807,477)）；
-            // 有行会且非首 tab 时在原锚点基础上整体下移 62px。
-            && _background.Location == (_guild == null && _tab == 0
-                ? new Vector2I(-214, -33)
-                : new Vector2I(-214, -33 + 62))
+            // legacy：原版 id4 只有一张 F600，锚点恒为 alpha 可见区原点 -(214,33)。
+            && _background.Location == new Vector2I(-214, -33)
             // 原版 F600 无页签（见 _legacyEiLayout 说明）。
             && _tabButtons.All(x => !x.Visible);
-        details = $"size={Size} frame={_background.Index} bg={_background.Location} content={_content.Size}@{_content.Location} tabsVisible={_tabButtons.Count(x => x.Visible)}";
+        details = $"size={Size} frame={_background.Index} bg={_background.Location}/{_background.Size} content={_content.Size}@{_content.Location} actions={_legacyActionButtons.Count} tabsVisible={_tabButtons.Count(x => x.Visible)}";
         return ok;
     }
 
@@ -163,6 +424,11 @@ public partial class GuildDialog : DXWindow
         }
         _rows.Clear();
         _storageGrid = null;
+        if (_legacyEiLayout)
+        {
+            BuildLegacyPage();
+            return;
+        }
         // 成员页按像素滚动；仓库页按网格行滚动。两者不能共用同一个
         // VisibleSize，否则行会仓库的 MaxValue 会被错误地压成负值。
         _scroll.VisibleSize = _tab == 2 ? 10 : 415;
@@ -481,11 +747,21 @@ public partial class GuildDialog : DXWindow
         _storageGrid?.RefreshGrid();
     }
 
+    /// <summary>
+    /// 背景帧选择：legacy EI id4 只有**一张** GameInter F600（没有现代 260/261/262… 页签背景），
+    /// 所以 legacy 下任何现代帧号都必须被忽略，否则 ApplyGuild/SelectTab 会把 F600 换成
+    /// GameInter 的别的帧（表现为窗口背景整块消失）。
+    /// </summary>
+    private void SetBackgroundFrame(int modernFrame)
+    {
+        _background.Index = _legacyEiLayout ? 600 : modernFrame;
+    }
+
     public void ApplyGuild(ClientGuildInfo guild)
     {
         _guild = guild;
         UpdateTabVisibility();
-        _background.Index = _guild == null ? 260 : 261;
+        SetBackgroundFrame(_guild == null ? 260 : 261);
         ResizeForBackground();
         Array.Clear(_storageItems, 0, _storageItems.Length);
         foreach (var item in guild?.Storage ?? new List<ClientUserItem>())
@@ -497,10 +773,20 @@ public partial class GuildDialog : DXWindow
     {
         // 原版根窗口保留 456x556；261~266 只是页签背景子图，
         // 不能把 CastlePanel (y=500) 裁掉。
-        _content.Size = new Vector2I(410, 415);
-        _scroll.Location = new Vector2I(424, 68);
+        _content.Size = _legacyEiLayout ? Size : new Vector2I(410, 415);
+        if (_legacyEiLayout)
+        {
+            // legacy：成员名直接画在窗口坐标里（0x4253E6），列表区铺满窗口；
+            // 滚动条用原版 paint 位置 (x+0x224,y+0xD0) = (548,208)。
+            _content.Location = Vector2I.Zero;
+            _scroll.Location = new Vector2I(548, 208);
+        }
+        else
+        {
+            _scroll.Location = new Vector2I(424, 68);
+        }
         _scroll.Size = new Vector2I(16, 415);
-        _scroll.VisibleSize = 415;
+        _scroll.VisibleSize = _legacyEiLayout ? LegacyVisibleRows : 415;
         _inviteName.Location = new Vector2I(18, 468);
         _inviteButton.Location = new Vector2I(190, 468);
         _increaseMemberButton.Location = new Vector2I(18, 500);
@@ -511,8 +797,10 @@ public partial class GuildDialog : DXWindow
         //            有行会且非首 tab 时在原锚点基础上整体下移 62px。
         //  现代  —— 沿用原有的 (0,0)/(0,62)，不受 legacy 锚点影响。
         // （本方法被 ApplyGuild/SelectTab 调用，现代路径也会走到，故必须分支。）
+        // legacy：原版 id4 只有一张 F600，alpha 可见区原点固定 -(214,33)（素材实测
+        // F600 bbox (214,33)-(807,477)）；现代 62px 页签下移只属于多帧页签背景。
         _background.Location = _legacyEiLayout
-            ? (_guild == null && _tab == 0 ? new Vector2I(-214, -33) : new Vector2I(-214, -33 + 62))
+            ? new Vector2I(-214, -33)
             : (_guild == null && _tab == 0 ? Vector2I.Zero : new Vector2I(0, 62));
         // 原版无页签，立即生效（否则要等下一次行会数据刷新才隐藏）。
         UpdateTabVisibility();
@@ -547,7 +835,7 @@ public partial class GuildDialog : DXWindow
     {
         if (_guild == null && page > 0) return;
         _tab = Math.Clamp(page, 0, 5);
-        _background.Index = _tab switch { 1 => 262, 2 => 263, 3 => 264, 4 => 265, 5 => 266, _ => _guild == null ? 260 : 261 };
+        SetBackgroundFrame(_tab switch { 1 => 262, 2 => 263, 3 => 264, 4 => 265, 5 => 266, _ => _guild == null ? 260 : 261 });
         ResizeForBackground();
         RefreshRows();
     }
@@ -623,7 +911,7 @@ public partial class GuildDialog : DXWindow
         {
             _guild = new ClientGuildInfo();
             UpdateTabVisibility();
-            _background.Index = 261;
+            SetBackgroundFrame(261);
             ResizeForBackground();
         }
         _guild.MemberLimit = packet.MemberLimit;

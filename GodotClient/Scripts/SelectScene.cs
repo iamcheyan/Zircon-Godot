@@ -1415,8 +1415,16 @@ public partial class SelectScene : Control
             if (body == null) continue;
             var (first, last) = LegacyCreateBlock(slot, 4);
             int frame = Mathf.Clamp(_legacyCreateFrame[slot], first, last);
-            int shown = _legacyCreateSelected == slot ? frame : first;
+            bool selected = _legacyCreateSelected == slot;
+            int shown = selected ? frame : first;
             if (body.Index != shown) body.Index = shown;
+            // 原版 DrawNewChr：选中槽用 MSurface.Draw(..., TRUE) 彩色绘制，
+            // 未选中槽用 Blend_GrayScale 画成灰阶（0x4645E0 路径）。
+            if (body.GrayScale == selected)
+            {
+                body.GrayScale = !selected;
+                body.QueueRedraw();
+            }
             if (shadow != null)
             {
                 int shadowIndex = frame + 20;   // 0x457BE3 add eax, 0x14
@@ -1650,11 +1658,15 @@ public partial class SelectScene : Control
 
         // 名字框底：SetRect(287,404,364,419)（77x15）+ 0x45E570 填 0x3C5A78
         // （0x00BBGGRR → RGB(120,90,60) 青铜色），在 F81 之上、输入框之下。
+        // 外框：原版 DrawNewChr 末尾对 EdChrName 矩形画 Draw2DRectLine($FF966432)
+        // → RGB(50,100,150) 1px 边（rc2 = edit 客户区矩形）。
         var namePlate = new DXControl
         {
             Location = new Vector2I(287, 404),
             Size = new Vector2I(77, 15),
             BackColour = new Color(120 / 255f, 90 / 255f, 60 / 255f),
+            Border = true,
+            BorderColour = new Color(50 / 255f, 100 / 255f, 150 / 255f),
             MouseFilter = MouseFilterEnum.Ignore,
         };
         _legacyCreateLayer.AddControl(namePlate);

@@ -369,6 +369,13 @@ public static class ClientSettings
         int displayScale = (int)Mathf.Max(1f, DisplayServer.ScreenGetScale(0));
         int w = width * displayScale;
         int h = height * displayScale;
+        // 只调 DisplayServer.WindowSetSize 的话，X11 窗口会改，但 Godot 的
+        // Window 节点与根视口可能停在旧尺寸：实测选角屏 StartGame 成功后
+        // ds=(800,600) 而 win=(640,480)、vp=(640,480)，结果内容只画在左上
+        // 640×480、右侧与下方整片黑（F602 公告窗右半被切掉）。
+        // Window.Size 走 Godot 自己的入口，节点尺寸、视口尺寸、OS 窗口一起更新。
+        var root = (Engine.GetMainLoop() as SceneTree)?.Root;
+        if (root != null) root.Size = new Vector2I(w, h);
         DisplayServer.WindowSetSize(new Vector2I(w, h));
         GD.Print($"[Display] Legacy window: {width}x{height} logical (x{displayScale} → {w}x{h} px)");
     }

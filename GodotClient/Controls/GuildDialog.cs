@@ -131,6 +131,11 @@ public partial class GuildDialog : DXWindow
         UpdateClientAreaForLegacySkin();
         // 原版 F600 无页签；此处显式再执行一次，避免构造期先设成可见后无人回收。
         UpdateTabVisibility();
+        // 构造期的 RefreshRows() 跑在 _legacyEiLayout = true **之前**，会把现代
+        // 「创建行会」页（步骤 1..4 / 加入新手行会 / 创建行会）留在 _content 里；
+        // 之后若没有行会数据到达就不会再刷新 → 真实联机运行里 legacy 行会窗显示的
+        // 是现代建会页（2026-09-30 真机截图实证）。这里显式重建一次。
+        RefreshRows();
     }
 
     /// <summary>

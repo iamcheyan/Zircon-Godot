@@ -10977,6 +10977,14 @@ public partial class GameScene : Control
             ToggleHorseWindow();
             return;
         }
+        // EI 的 F 与 Ctrl+F 都切换 id4 行会窗；hud-caption-action-tail-evidence.json
+        // cap6 = 行会(Ctrl+F, F)。现代 Key.F=BlockList/FilterDrop，legacy 下覆盖。
+        if (AutoLoginArgs.LegacyUi && key.Keycode == Key.F
+            && !key.AltPressed && !key.ShiftPressed)
+        {
+            OpenGuildDialog();
+            return;
+        }
 
         // Alt 是地面掉落物名称的显示开关。只处理单独按下 Alt，
         // 不影响 Alt+左键的采集/钓鱼/驯马操作。

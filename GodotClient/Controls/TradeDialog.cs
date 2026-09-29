@@ -12,6 +12,8 @@ public partial class TradeDialog : DXWindow
 {
     private readonly DXImageControl _background;
     private readonly DXButton _closeButton;
+    /// <summary>legacy（EI F1050）布局已应用；用于关闭热区等「原版不做事」的行为分支。</summary>
+    private bool _legacyEiLayout;
     private readonly DXItemGrid _playerGrid;
     private readonly DXItemGrid _userGrid;
     private readonly ClientUserItem[] _playerItems = new ClientUserItem[10];
@@ -27,7 +29,13 @@ public partial class TradeDialog : DXWindow
         AddControl(_background);
         _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
         _closeButton.Location = new Vector2I((int)Size.X - (int)_closeButton.Size.X - 3, 3);
-        _closeButton.MouseClick += (o, e) => CloseTrade(); AddControl(_closeButton);
+        // 原版该热区命中后「只播音 + 消费点击」，窗口不关
+        // （trade-window-render-evidence.json::buttons.close.behavior）。
+        // 且其窗口相对坐标 (532,350) 在 484 宽的窗口矩形之外，原版窗口命中测试
+        //  0x42AAB0 按窗口 rect 分派 → 该热区实际不可达。
+        // legacy 下按原版：不关窗（Esc / WindowManager.CloseTop 仍是关闭入口）。
+        _closeButton.MouseClick += (o, e) => { if (_legacyEiLayout) return; CloseTrade(); };
+        AddControl(_closeButton);
         AddControl(new DXLabel { Text = Lang.TradeUi349Label, FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(428, 18), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogUserLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(15, 38), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogPlayerLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(226, 38), IsControl = false });
@@ -114,6 +122,7 @@ public partial class TradeDialog : DXWindow
     /// <summary>旧版 EI F1050：484×330，双方各 5×6 格。</summary>
     public void ApplyLegacyEiLayout()
     {
+        _legacyEiLayout = true;
         Size = new Vector2I(484, 330);
         _background.LibraryFile = LibraryFile.GameInter;
         _background.Index = 1050;
@@ -138,9 +147,9 @@ public partial class TradeDialog : DXWindow
         //   \"buttons are never drawn\"（button render 0x417640 零直接 xref）。
         // 即：按钮图形在贴图里，代码只放热区。故此处按证据值放热区，不画按钮。
         //
-        // 一处**有意保留的偏差**：原版 close 命中后\"sound only\"、不关窗
-        // （buttons.close.behavior）。我方保留关窗行为 —— 否则交易窗在 UI 上
-        // 没有可用关闭入口，属功能性倒退。已在审计文档记录该偏差。
+        // 原版 close 命中后「只播音 + 消费点击」、窗口不关（buttons.close.behavior），
+        // 且该热区在窗口矩形之外不可达。2026-09-30 起 legacy 下按原版**不关窗**
+        // （见构造函数里的守卫）；关闭入口保留 Esc / WindowManager.CloseTop。
         _closeButton.Location = new Vector2I(532, 350);
         _closeButton.Size = new Vector2I(28, 26);
         // 证据给的是**首格**左上角（trade-window-render-evidence.json：

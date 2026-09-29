@@ -27,6 +27,7 @@ public partial class LoginScene : Control
     private DXLabel _skinStatus;
     // EI 登录页：640x480 基准，视频背景 + 4 个文字按钮，没有居中对话框。
     private DXImageControl _loginDialogFrame;
+    private DXLabel _loginTitle;
     private VideoStreamPlayer _loginVideo;
     private RankingDialog _loginRanking;
     private ConfigDialog _loginConfig;
@@ -515,14 +516,15 @@ public partial class LoginScene : Control
         dialog.Position = new Vector2((viewport.X - dialogSize.X) / 2f, viewport.Y - dialogSize.Y - 20f);
 
         // 标题提示文字
-        dialog.AddControl(new DXLabel
+        _loginTitle = new DXLabel
         {
             Text = Lang.LoginPasswordLabel14,
             TextColour = new Color(214f / 255f, 190f / 255f, 148f / 255f),
             Location = new Vector2I(280, 38),
             Size = new Vector2I(220, 18),
             IsControl = false,
-        });
+        };
+        dialog.AddControl(_loginTitle);
 
         // 邮箱和密码输入框 (精准放置在金属框插槽内)
         _skinEmail = new DXTextInput
@@ -728,6 +730,10 @@ public partial class LoginScene : Control
         // 5) EI 此屏没有的现代入口：隐藏（保留接线，避免影响其它路径）。
         foreach (var extra in new Control[] { _skinRanking, _skinOptions, _skinForgot, _skinRemember, _skinActivation })
             if (extra != null) extra.Visible = false;
+        // 「请输入邮箱和密码」标题也不存在于原版：SCREEN0001.jpg 解码后
+        // EI y=0..59 全黑（该区最大采样 0），没有任何文字；这条 Label 落在
+        // (280,38)，正好在黑带里。非 Legacy 路径保留。
+        if (_loginTitle != null) _loginTitle.Visible = false;
         // 状态文字保留（登录失败/连接状态要显示），移到屏幕左下空白处。
         if (_skinStatus != null)
         {

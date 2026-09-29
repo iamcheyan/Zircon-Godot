@@ -273,6 +273,8 @@ public partial class SelectScene : Control
     private int _autoCharIndex = -1;
     private bool _gameTransitionStarted;
     private int _lastStartIndex = -1;
+    /// <summary>StartGame 冷却重试定时器（全程只有一个；见 ShowStartGameResult.Delayed）。</summary>
+    private Timer _startRetryTimer;
 
     private void AutoCreateCharacter()
     {
@@ -280,7 +282,15 @@ public partial class SelectScene : Control
     }
     private void AutoStartGame()
     {
-        int idx = _autoCharIndex >= 0 && _autoCharIndex < _characters.Count
+        if (_characters.Count == 0)
+        {
+            GD.PrintErr("[Select] AutoStartGame: 角色列表为空，放弃自动进游戏");
+            return;
+        }
+        // **_autoCharIndex 存的是 CharacterIndex（服务器角色标识），不是列表下标**。
+        // 之前拿它和 _characters.Count 比大小：CharacterIndex 远大于列表长度时条件
+        // 恒假，--char 指定非首位角色会静默回退进错号。这里按 CharacterIndex 查表。
+        int idx = _autoCharIndex >= 0 && _characters.Exists(c => c.CharacterIndex == _autoCharIndex)
             ? _autoCharIndex
             : _characters[0].CharacterIndex;
         _lastStartIndex = idx;
@@ -2121,24 +2131,39 @@ public partial class SelectScene : Control
             if (AutoLoginArgs.LegacyUi) SetSelectPhase(3);
             GD.Print("[Select] StartGame 冷却中, 3秒后重试...");
             _statusLabel.Text = Lang.SelectUi540Label;
-            var timer = new Timer();
-            timer.WaitTime = 3.0;
-            timer.OneShot = true;
-            AddChild(timer);
-            timer.Timeout += () =>
+            // **只保留一个重试定时器**：此前每次 Delayed 都 new Timer 并 AddChild，
+            // 多次回包会叠加成 N 路并发重发（每次重发又可能再回一个 Delayed）。
+            // 复用同一个 one-shot 定时器，Start() 重新计时即可。
+            if (_startRetryTimer == null)
             {
-                GD.Print("[Select] 重试 StartGame");
-                int retryIdx = _lastStartIndex >= 0 ? _lastStartIndex : _characters[0].CharacterIndex;
-                GD.Print($"[Select] AutoStartGame: 发送 StartGame, charIndex={retryIdx}");
-                _net.Connection?.SendStartGame(retryIdx);
-            };
-            timer.Start();
+                _startRetryTimer = new Timer { WaitTime = 3.0, OneShot = true };
+                _startRetryTimer.Timeout += OnStartGameRetry;
+                AddChild(_startRetryTimer);
+            }
+            _startRetryTimer.Start();
         }
         else
         {
             _statusLabel.Text = string.Format(Lang.SelectGameLabel3, _pendingStartResult);
             GD.Print($"[Select] StartGame 失败: {_pendingStartResult}");
             _startBtn.Disabled = false;
+            _startRetryTimer?.Stop();
+            // 失败后必须恢复**真正可点的那个按钮**：Legacy 的"开始游戏"是
+            // _skinStart，原生 _startBtn 在 Legacy 下是隐藏的 —— 此前只恢复
+            // _startBtn，一次失败后选角屏再也进不去。
+            bool selected = AutoLoginArgs.LegacyUi
+                ? _legacySelectedIndex >= 0 && _legacySelectedIndex < _characters.Count
+                : _charList.GetSelectedItems().Length > 0;
+            if (_skinStart != null) _skinStart.Enabled = selected;
         }
+    }
+
+    private void OnStartGameRetry()
+    {
+        if (_gameTransitionStarted) return;
+        if (_characters.Count == 0) return;
+        int retryIdx = _lastStartIndex >= 0 ? _lastStartIndex : _characters[0].CharacterIndex;
+        GD.Print($"[Select] 重试 StartGame: charIndex={retryIdx}");
+        _net.Connection?.SendStartGame(retryIdx);
     }
 }

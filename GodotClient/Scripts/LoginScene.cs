@@ -682,6 +682,12 @@ public partial class LoginScene : Control
             };
             _uiLayer.AddChild(_loginVideo);
             _loginVideo.Play();
+            // **绘制次序**：ei_Login 视频是背景，必须画在登录表单之下。BuildLegacyLoginUi
+            // 先 AddChild(dialog) 再走到这里，Godot 后加入的兄弟节点画在上面 —— 表单里
+            // 落在视频矩形 (0,60)-(640,420) 内的控件（创建账号/修改密码/结束 三个按钮
+            // @ y=379）会被视频整个盖住。把容器提到最后即可。
+            if (_loginDialogFrame != null && _loginDialogFrame.GetParent() == _uiLayer)
+                _uiLayer.MoveChild(_loginDialogFrame, _uiLayer.GetChildCount() - 1);
             GD.Print($"[LegacyLogin] 背景视频 ei_Login.ogv @ (0,60) 640x360 已播放");
         }
         else

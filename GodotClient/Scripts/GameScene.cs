@@ -9207,6 +9207,14 @@ public partial class GameScene : Control
                     ob.TargetOutlineColour = outline;
                     ob.QueueRedraw();
                 }
+                // 原版目标名字牌（0x40B850）只对当前目标画；目标状态来自
+                // CombatController.TargetObject（= 原版 MapObject.TargetObject）。
+                bool isTarget = ReferenceEquals(ob, _combatController.TargetObject);
+                if (ob.IsTarget != isTarget)
+                {
+                    ob.IsTarget = isTarget;
+                    ob.QueueRedraw();
+                }
             }
 
             uint hoveredPlayerId = _combatController.MouseObject?.Type == ObjectRenderer.Kind.Player
@@ -9238,6 +9246,13 @@ public partial class GameScene : Control
                 {
                     player.TargetHighlighted = highlighted;
                     player.TargetOutlineColour = outline;
+                    player.QueueRedraw();
+                }
+                // 原版目标名字牌（0x40B850）对当前目标持续显示（含玩家）。
+                bool playerIsTarget = ReferenceEquals(player, _combatController.TargetObject);
+                if (player.IsTarget != playerIsTarget)
+                {
+                    player.IsTarget = playerIsTarget;
                     player.QueueRedraw();
                 }
             }

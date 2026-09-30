@@ -44,6 +44,14 @@ public partial class ObjectRenderer : MapObjectNode
     public Vector2 GroundItemLabelOffset;
     public bool TargetHighlighted;
     public Color TargetOutlineColour = Colors.Transparent;
+    /// <summary>
+    /// 当前攻击/选中目标（= 原版 [ROOT+0x364444] 的当前目标）。
+    /// 原版对它额外画「名字牌」：0x0040B850 把 obj+8 的名字在同一矩形里
+    /// 画 3 次（rect ±1 偏移）形成 1px 描边，颜色都是 0xA0A0A；
+    /// 矩形 = (anchor_x+(48-w)/2, anchor_y-0x1E) .. (anchor_x+(w+48)/2, anchor_y-0xF)
+    /// （anchor = 瓦片左边缘 = Godot 节点原点，故等价于中心 x=24、y 带 -30..-15）。
+    /// </summary>
+    public bool IsTarget;
     public int Light;
     public string ChatText;
     public Action<SoundIndex> SoundCue;
@@ -572,6 +580,10 @@ public partial class ObjectRenderer : MapObjectNode
 
     private void DrawName()
     {
+        // 原版目标名字牌（0x0040B850，仅对 [ROOT+0x364444] 当前目标）：
+        // 与 hover 名字相互独立 —— 目标即便鼠标移开也持续显示。放在早期 return 之前。
+        if (IsTarget && !string.IsNullOrWhiteSpace(DisplayName) && Type != Kind.Item)
+            DrawTargetNamePlate();
         bool groundItemVisible = Type == Kind.Item && ClientSettings.ShowGroundItemNames;
         if (!NameHovered && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
@@ -607,6 +619,16 @@ public partial class ObjectRenderer : MapObjectNode
         if (!string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
             RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, y - 18f), Colors.White, 9f);
     }
+
+    /// <summary>
+    /// 原版目标名字牌（0x0040B850）：把名字在**同一矩形**里画 3 次（rect ±1 偏移）
+    /// 形成 1px 描边，三次颜色都是 0xA0A0A（0x00BBGGRR → RGB(10,10,10)）。
+    /// 矩形（窗口相对）= (anchor_x+(48-w)/2, anchor_y-0x1E) .. (anchor_x+(w+48)/2, anchor_y-0xF)，
+    /// 即宽 w+48、高 15px、水平中心 = anchor_x+24、位于 anchor_y 上方 15~30px。
+    /// Godot 节点原点 == 原版 anchor（瓦片左边缘，见 DrawName 里 +24 的用法），
+    /// 故这里以 x=24 居中、y 带 -30..-15、文本垂直居中于该带。
+    /// </summary>
+    private void DrawTargetNamePlate() => RenderPrimitives.DrawTargetNamePlate(this, DisplayName);
 
     /// <summary>判断鼠标是否落在地面物品的可见名称标签上。</summary>
     public bool IsGroundItemLabelHit(Vector2 localPoint)

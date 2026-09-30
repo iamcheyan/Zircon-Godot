@@ -182,6 +182,31 @@ internal static class RenderPrimitives
     }
 
     /// <summary>
+    /// 原版目标名字牌（0x0040B850，仅对当前目标）：把名字在**同一矩形**里画 3 次
+    /// （rect ±1 偏移）形成 1px 描边，三次颜色都是 0xA0A0A（0x00BBGGRR → RGB(10,10,10)）。
+    /// 矩形（窗口相对）= (anchor_x+(48-w)/2, anchor_y-0x1E) .. (anchor_x+(w+48)/2, anchor_y-0xF)：
+    /// 宽 w+48、高 15px、水平中心 = anchor_x+24、位于 anchor_y 上方 15~30px。
+    /// Godot 节点原点 == 原版 anchor（瓦片左边缘），故以 x=24 居中、y 带 -30..-15。
+    /// 与 hover 名字是两个独立组件（hover 名字在更下方，见 OriginalNameBaseline）。
+    /// </summary>
+    public static void DrawTargetNamePlate(CanvasItem canvas, string text, float size = 9f)
+    {
+        if (canvas == null || string.IsNullOrWhiteSpace(text)) return;
+        Font font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+        if (font == null) return;
+        int drawSize = MirSkin.ScaledSize((int)size);
+        float ascent = font.GetAscent(drawSize);
+        float descent = font.GetDescent(drawSize);
+        // 文本垂直居中于 -30..-15 的带（中心 -22.5）
+        float baselineY = -22.5f + (ascent - descent) * 0.5f;
+        var colour = new Color(10f / 255f, 10f / 255f, 10f / 255f);
+        var centre = new Vector2(24f, baselineY);
+        DrawLabel(canvas, text, centre + new Vector2(-1f, -1f), colour, size);
+        DrawLabel(canvas, text, centre + new Vector2(1f, 1f), colour, size);
+        DrawLabel(canvas, text, centre, colour, size);
+    }
+
+    /// <summary>
     /// 地图对象名称统一放在头顶血条上方。血条背景的旧版锚点是 y=-55，
     /// 名称基线放在其上方并为公会名/宠物归属名预留两行。
     /// </summary>

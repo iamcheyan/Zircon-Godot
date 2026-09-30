@@ -50,6 +50,8 @@ public partial class PlayerRenderer : Node2D
     public bool TargetHighlighted;
     public bool NameHovered;
     public Color TargetOutlineColour = Colors.Transparent;
+    /// <summary>当前攻击/选中目标（原版对当前目标额外画 0x0040B850 名字牌）。</summary>
+    public bool IsTarget;
     public int Light;
     public string ChatText;
     private double _chatUntil;
@@ -957,6 +959,9 @@ public partial class PlayerRenderer : Node2D
         DrawPlayerAt(0, 0);
         DrawExteriorEffects(false);
         float nameY = RenderPrimitives.NameAboveHealthBarBaseline(9f);
+        // 原版目标名字牌（0x40B850）对当前目标持续显示，与 hover 名字独立。
+        if (IsTarget && !string.IsNullOrWhiteSpace(DisplayName))
+            RenderPrimitives.DrawTargetNamePlate(this, DisplayName);
         if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(DisplayName))
             RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, nameY), NameColour, 9f);
         if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))

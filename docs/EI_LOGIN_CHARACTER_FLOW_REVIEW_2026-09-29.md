@@ -190,6 +190,9 @@ Xvfb :100 -screen 0 1024x768 & DISPLAY=:100 openbox &
 - `not tested`：删除确认流、断线恢复、名字 >14 拒绝、重名/非法名、服务器拒绝创建、≥3 角色列表、重复点击/取消返回矩阵、非 Legacy（`--zircon-ui`）回归**未做全量回归**（本轮改动全部在 Legacy 分支，但仍属未测）。
 - `pending-evidence`：Interface1c F2 的**绘制调用点**（VA/参数）仍缺静态记录，(96,439) 属截图拟合的 `derived` 级；若后续在 `0x404700/0x4182A0` 绘制路径找到该帧的 blit，应以静态值覆盖。
 - `unresolved`：`AutoLoginArgs.StayInSelect`（`--stay-select`）是**无引用死标志**，建议删除或接线。
+  > **⚠️ 更正（2026-09-30，`EI_LOGIN_CHARACTER_FLOW_REVIEW_2026-09-30.md` §5 F3）**：本条**不成立**。
+  > 该标志在**本条报告自身基线 `db85cf8c` 即有 3 处引用**（`SelectScene.cs` L207/L227/L1827；
+  > 当前 L217/L237/L2006），且 `--stay-select` 回放实际生效。原文系事实性错误，作废。
 - `evidence-conflict`：无（本轮未出现互相矛盾的原版证据；差异均已归入 §8 或 §9）。
 
 ---

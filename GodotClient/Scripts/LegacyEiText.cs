@@ -67,6 +67,9 @@ public static class LegacyEiText
     public const string DeleteFailed = "删除角色发生错误。";                        // 227
     public const string DeleteConfirm =
         "删除的角色无法还原，一定时间内不能创建同名角色，还要删除吗？";             // 228
+    public const string CannotGetCharacters = "无法得到角色资料。";                 // 220
+    public const string CannotStartGame = "无法开始游戏。";                         // 221
+    public const string ConnectionLost = "与服务器的连接被断开。";                 // 222
 
     /// <summary>说明框首行：「[ 男 战士 ]」（对应 SetCharExplain 里 211/212 + 213/214/215 的拼接）。</summary>
     public static string GenderJobTitle(int classIndex, bool female)

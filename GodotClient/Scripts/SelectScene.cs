@@ -42,7 +42,7 @@ public partial class SelectScene : Control
     // 开始游戏过场结束后显示公告确认窗；公告文字目前允许为空。
     private CanvasLayer _legacyStartNoticeLayer;
     private ColorRect _legacyStartNoticeBackdrop;
-    private NoticeDialog _legacyStartNoticeDialog;
+    private LegacyEiNoticeDialog _legacyStartNoticeDialog;
     private string _pendingLegacyStartNotice = string.Empty;
     // EI 选角屏的 5 阶段状态机（证据 login-flow-evidence.json::screens.parent.phase，
     // 阶段表 0x457778 = [0x4575F3, 0x457615, 0x457604, 0x4576FA, 0x45773C]）：
@@ -1038,8 +1038,11 @@ public partial class SelectScene : Control
         // 目标 WIL 名限制 14 字符（0x459FBE cmp ecx,0xe）。
         if (name.Length > 14)
         {
-            _statusLabel.Text = Lang.SelectCharacterLabel9;
             GD.Print($"[LegacyCreate] 名字过长({name.Length})，按原版 0x459FBE 上限 14 拒绝");
+            if (AutoLoginArgs.LegacyUi)
+                ShowLegacyEiDialog(LegacyEiText.NameTooLong, LegacyEiDialog.ButtonSet.Check, null);
+            else
+                _statusLabel.Text = Lang.SelectCharacterLabel9;
             return;
         }
         if (field != null) field.Text = string.Empty;
@@ -1201,8 +1204,9 @@ public partial class SelectScene : Control
             {
                 if (_characters.Count >= 2)
                 {
-                    _statusLabel.Text = LegacyEiText.TwoCharacterLimit;
                     GD.Print("[LegacySelect] F51 建角被拒：原版每账号上限 2 个角色");
+                    // 原版 F51 handler 两槽都占用时弹 LoadString 802 对话框、不改阶段。
+                    ShowLegacyEiDialog(LegacyEiText.TwoCharacterLimit, LegacyEiDialog.ButtonSet.Check, null);
                     return;
                 }
             }
@@ -1559,7 +1563,7 @@ public partial class SelectScene : Control
             _ => new Color(150 / 255f, 220 / 255f, 150 / 255f),
         };
 
-        var lines = WrapLegacyEiText(LegacyEiText.JobDescription(cls), 430, 11);
+        var lines = LegacyEiDialogText.Wrap(LegacyEiText.JobDescription(cls), 430, 11);
         while (_legacyCreateExplainLines.Count < lines.Count)
         {
             var label = new DXLabel { FontSize = 11, TextColour = new Color(250 / 255f, 250 / 255f, 255 / 255f), IsControl = false };
@@ -1578,28 +1582,6 @@ public partial class SelectScene : Control
         }
         int divided = lines.Count + 1;
         _legacyCreateExplainBox.Size = new Vector2I(450, divided * 18 + 20);
-    }
-
-    /// <summary>
-    /// 按像素宽度折行（对应原版 StringDivide(_CHR_EXPLAIN_WIDTH, …)）。
-    /// 用 MirSkin.MeasureText 的**逻辑**宽度与逻辑宽度比较，因此与 UiScaler 缩放无关。
-    /// </summary>
-    private static List<string> WrapLegacyEiText(string text, int maxWidth, int fontSize)
-    {
-        var result = new List<string>();
-        if (string.IsNullOrEmpty(text)) { result.Add(string.Empty); return result; }
-        var line = new System.Text.StringBuilder();
-        foreach (char ch in text)
-        {
-            if (line.Length > 0 && MirSkin.MeasureText(line.ToString() + ch, fontSize).X > maxWidth)
-            {
-                result.Add(line.ToString());
-                line.Clear();
-            }
-            line.Append(ch);
-        }
-        result.Add(line.ToString());
-        return result;
     }
 
     /// <summary>F89「退出人物创建」：隐藏创建界面回到角色列表（见 MakeSelectIconButton 处注释）。</summary>
@@ -1990,12 +1972,29 @@ public partial class SelectScene : Control
         else
         {
             GD.Print($"[Select] 建角色失败: {_pendingNewCharResult}");
-            _statusLabel.Text = string.Format(Lang.SelectCreateLabel3, _pendingNewCharResult);
-            // 失败留在创建界面（原版 0x20A：弹 Mirmg 文案，不改阶段）
-            if (AutoLoginArgs.LegacyUi) SetSelectPhase(2);
+            // 原版 0x20A：错误弹框（LoadString 800/802/9000），**不改阶段**，留在创建界面。
+            if (AutoLoginArgs.LegacyUi)
+            {
+                SetSelectPhase(2);
+                ShowLegacyEiDialog(LegacyCreateFailureText(_pendingNewCharResult),
+                    LegacyEiDialog.ButtonSet.Check, null);
+            }
+            else
+            {
+                _statusLabel.Text = string.Format(Lang.SelectCreateLabel3, _pendingNewCharResult);
+            }
             if (_skinCreateConfirm != null) _skinCreateConfirm.Enabled = true;
         }
     }
+
+    /// <summary>建角失败码 → 原版文案（CMsg 224/225/226，其余退回移植版文案）。</summary>
+    private static string LegacyCreateFailureText(NewCharacterResult result) => result switch
+    {
+        NewCharacterResult.BadCharacterName => LegacyEiText.NameInvalid,       // CMsg 225
+        NewCharacterResult.AlreadyExists => LegacyEiText.NameExists,           // CMsg 224
+        NewCharacterResult.MaxCharacters => LegacyEiText.TooManyCharacters,    // CMsg 226
+        _ => string.Format(Lang.SelectCreateLabel3, result),
+    };
 
     /// <summary>建角成功后的收尾：恢复洞窟槽位、刷新列表、按需自动进游戏。</summary>
     private void AfterCreateSuccess()
@@ -2061,41 +2060,25 @@ public partial class SelectScene : Control
         if (_legacyStartNoticeBackdrop.GetParent() == null)
             _legacyStartNoticeLayer.AddChild(_legacyStartNoticeBackdrop);
 
-        _legacyStartNoticeDialog ??= new NoticeDialog();
+        // 原版「公告 / 欢迎」框 = GameInter **F0**（324×462 公告板，底部中央对勾）。
+        _legacyStartNoticeDialog ??= new LegacyEiNoticeDialog();
         _legacyStartNoticeDialog.SetNotice(_pendingLegacyStartNotice);
         _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
-        _legacyStartNoticeDialog.Cancelled += OnLegacyStartNoticeCancelled;
         WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
-        GD.Print($"[LegacySelect] StartGame 过场结束，黑屏上显示 F602 公告确认框: len={_pendingLegacyStartNotice.Length}");
+        GD.Print($"[LegacySelect] StartGame 过场结束，黑屏上显示 GameInter F0 公告框: len={_pendingLegacyStartNotice.Length}");
     }
 
     private void OnLegacyStartNoticeConfirmed()
     {
         DetachLegacyStartNoticeHandlers();
-        GD.Print("[LegacySelect] F602 勾选 -> 进入游戏");
+        GD.Print("[LegacySelect] 公告框底部对勾 -> 进入游戏");
         EnterGameScene();
-    }
-
-    private void OnLegacyStartNoticeCancelled()
-    {
-        DetachLegacyStartNoticeHandlers();
-        GD.Print("[LegacySelect] F602 关闭；保持黑屏并等待勾选确认");
-        CallDeferred(nameof(ReopenLegacyStartNotice));
     }
 
     private void DetachLegacyStartNoticeHandlers()
     {
         if (_legacyStartNoticeDialog == null) return;
         _legacyStartNoticeDialog.Confirmed -= OnLegacyStartNoticeConfirmed;
-        _legacyStartNoticeDialog.Cancelled -= OnLegacyStartNoticeCancelled;
-    }
-
-    private void ReopenLegacyStartNotice()
-    {
-        if (_legacyStartNoticeDialog == null || _legacyStartNoticeLayer == null) return;
-        _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
-        _legacyStartNoticeDialog.Cancelled += OnLegacyStartNoticeCancelled;
-        WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
     }
 
     private void OnDeletePressed()
@@ -2131,102 +2114,50 @@ public partial class SelectScene : Control
         }
     }
 
-    private DXControl _legacyDeleteDialog;
-    private DXLabel _legacyDeleteMessageLabel;
-    private DXButton _legacyDeleteYes, _legacyDeleteNo;
+    private LegacyEiDialog _legacyEiDialog;
     private SelectInfo _legacyDeleteTarget;
 
+    /// <summary>
+    /// 删除确认（原版 F53「删除角色」→ `SelChrEraseChrClick`：
+    /// `DMessageDlg(CMsg 228, [mbYes, mbNo])` → mrYes 才发 `SendDelChr`）。
+    /// 用 EI 原版确认框（GameInter F950 + YES/NO 按钮 150-155）。
+    /// </summary>
     private void ShowLegacyDeleteConfirm(SelectInfo character)
     {
-        if (_legacyDeleteDialog != null)
-        {
-            _legacyDeleteDialog.QueueFree();
-            _legacyDeleteDialog = null;
-        }
         _legacyDeleteTarget = character;
-
-        var dlg = new DXControl
-        {
-            Size = new Vector2I(360, 140),
-            Position = new Vector2((UiScaler.BaseWidth - 360) / 2f, (UiScaler.BaseHeight - 140) / 2f),
-        };
-        _uiLayer.AddChild(dlg);
-        _legacyDeleteDialog = dlg;
-
-        dlg.AddControl(new LegacyWindowFrame { Size = new Vector2I(360, 140), HasTitle = true, HasFooter = false });
-        dlg.AddControl(new DXLabel
-        {
-            Text = Lang.SelectCharacterLabel,
-            FontSize = 12,
-            TextColour = new Color(1f, .85f, .35f),
-            DrawOutline = true,
-            Align = HorizontalAlignment.Center,
-            Size = new Vector2I(360, 28),
-            Location = new Vector2I(0, 10),
-            IsControl = false,
-        });
-        // 原版 F53「删除角色」→ SelChrEraseChrClick：
-        //   FrmDlg.DMessageDlg(CMsg.GetMsg(228), [mbYes, mbNo]) → mrYes 才发 SendDelChr。
-        // 即一个普通 Yes/No 确认框，文案取自 CMList 228，**没有倒计时**。
-        // 移植版此前沿用旧 Zircon C# 的「5 秒后启用 Yes」并夹带英文串，非 EI 行为。
-        _legacyDeleteMessageLabel = new DXLabel
-        {
-            Text = LegacyEiText.DeleteConfirm,
-            FontSize = 10,
-            TextColour = Colors.White,
-            DrawOutline = true,
-            Align = HorizontalAlignment.Center,
-            Size = new Vector2I(340, 60),
-            Location = new Vector2I(10, 38),
-            IsControl = false,
-        };
-        dlg.AddControl(_legacyDeleteMessageLabel);
-
-        _legacyDeleteYes = new DXButton
-        {
-            Text = "Yes",
-            FontSize = 10,
-            LibraryFile = LibraryFile.Interface,
-            Index = -1,
-            Location = new Vector2I(90, 108),
-            Size = new Vector2I(80, 24),
-            Enabled = true,
-        };
-        _legacyDeleteNo = new DXButton
-        {
-            Text = "No",
-            FontSize = 10,
-            LibraryFile = LibraryFile.Interface,
-            Index = -1,
-            Location = new Vector2I(190, 108),
-            Size = new Vector2I(80, 24),
-        };
-        _legacyDeleteYes.MouseClick += (o, e) =>
+        ShowLegacyEiDialog(LegacyEiText.DeleteConfirm, LegacyEiDialog.ButtonSet.YesNo, () =>
         {
             _deleteBtn.Disabled = true;
             _skinDelete.Enabled = false;
             _statusLabel.Text = Lang.SelectDeleteLabel;
-            // 旧 C# 带 CheckSum=CEnvir.C；Zircon 的 SendDeleteCharacter 目前
-            // 只发 CharacterIndex。CheckSum 是 EI 协议校验字段，Zircon 协议
-            // 无需此字段；此处保留普通删除调用，证据标 source-confirmed 注释。
+            // Zircon 的 SendDeleteCharacter 只发 CharacterIndex（EI 的 CheckSum 字段
+            // 在 Zircon 协议里不存在）。
             _net.Connection?.SendDeleteCharacter(character.CharacterIndex);
-            CloseLegacyDeleteConfirm();
-        };
-        _legacyDeleteNo.MouseClick += (o, e) => CloseLegacyDeleteConfirm();
-        dlg.AddControl(_legacyDeleteYes);
-        dlg.AddControl(_legacyDeleteNo);
+        });
     }
 
-    private void CloseLegacyDeleteConfirm()
+    /// <summary>
+    /// 弹出 EI 原版确认框（`GameInter` F950，见 <see cref="LegacyEiDialog"/>）。
+    /// 原版预游戏的所有提示/错误/确认都走这一个类（0x459352/0x4594f9/0x4597e4/0x45a074）。
+    /// </summary>
+    private void ShowLegacyEiDialog(string message, LegacyEiDialog.ButtonSet buttons,
+        System.Action onConfirm, System.Action onCancel = null)
     {
-        if (_legacyDeleteDialog != null)
+        CloseLegacyEiDialog();
+        var dlg = new LegacyEiDialog(message, buttons, LegacyEiDialog.DefaultLocation);
+        dlg.Confirmed += () => { CloseLegacyEiDialog(); onConfirm?.Invoke(); };
+        dlg.Cancelled += () => { CloseLegacyEiDialog(); onCancel?.Invoke(); };
+        _uiLayer.AddChild(dlg);
+        _legacyEiDialog = dlg;
+    }
+
+    private void CloseLegacyEiDialog()
+    {
+        if (_legacyEiDialog != null)
         {
-            _legacyDeleteDialog.QueueFree();
-            _legacyDeleteDialog = null;
+            _legacyEiDialog.QueueFree();
+            _legacyEiDialog = null;
         }
-        _legacyDeleteYes = null;
-        _legacyDeleteNo = null;
-        _legacyDeleteMessageLabel = null;
         _legacyDeleteTarget = null;
     }
 
@@ -2324,8 +2255,13 @@ public partial class SelectScene : Control
         }
         else
         {
-            _statusLabel.Text = string.Format(Lang.SelectGameLabel3, _pendingStartResult);
             GD.Print($"[Select] StartGame 失败: {_pendingStartResult}");
+            // 原版 0x20E / 0x20F 都是弹框（'게임을 시작할 수 없습니다.' /
+            // '服务器认证已不可用,请重新登录.'），用 EI 确认框承载。
+            if (AutoLoginArgs.LegacyUi)
+                ShowLegacyEiDialog(LegacyEiText.CannotStartGame, LegacyEiDialog.ButtonSet.Check, null);
+            else
+                _statusLabel.Text = string.Format(Lang.SelectGameLabel3, _pendingStartResult);
             _startBtn.Disabled = false;
             _startRetryTimer?.Stop();
             // 失败后必须恢复**真正可点的那个按钮**：Legacy 的"开始游戏"是
@@ -2360,6 +2296,9 @@ public partial class SelectScene : Control
         GD.Print("[Select] 与服务器断开连接，禁用选角操作");
         _startRetryTimer?.Stop();
         _statusLabel.Text = Lang.LoginUi459Label;   // 连接已断开
+        // 原版 case 0x210 也是弹框（'서버와의 접속이 끊겼습니다.'，CMsg 222 同义）。
+        if (AutoLoginArgs.LegacyUi)
+            ShowLegacyEiDialog(LegacyEiText.ConnectionLost, LegacyEiDialog.ButtonSet.Check, null);
         _startBtn.Disabled = true;
         _createBtn.Disabled = true;
         _deleteBtn.Disabled = true;

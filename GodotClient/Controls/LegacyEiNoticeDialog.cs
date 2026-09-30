@@ -48,6 +48,14 @@ public partial class LegacyEiNoticeDialog : DXWindow
         HasTitle = false;
         HasFooter = false;
         Movable = false;
+        // **不提供 Zircon 的关闭 ✕**：该按钮由 DXWindow 用现代 Interface[15] 帧绘制，
+        // 是移植版外壳控件，EI 原版预游戏对话框族没有它 ——
+        //   • 本框素材 GameInter F0 只有底部中央一个「对勾」（本文件头注释 / 用户素材定位）；
+        //   • 同族确认框 0x418030（GameInter F950）的绘制 0x4182A0 也只画背景+标题+自身按钮，
+        //     无标题栏关闭控件（RESEARCH_LOG Finding 82 / Round 5756）。
+        // 关闭 ✕ 只会把对话框隐藏而无人接手 → `_uiLayer` 仍隐藏，客户端永久黑屏、无法进入
+        // 游戏（复核报告 F1）。去掉它即恢复「只能点对勾确认」的原版语义。
+        ShowCloseButton = false;
         Size = new Vector2I(FrameWidth, FrameHeight);
         Location = DefaultLocation;
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Library;
+using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
@@ -16,8 +17,19 @@ public partial class LegacyEiNoticeDialog : DXWindow
 {
     public const int FrameWidth = 324;
     public const int FrameHeight = 462;
-    /// <summary>640×480 预游戏画布上的居中位置。</summary>
-    public static readonly Vector2I DefaultLocation = new((640 - FrameWidth) / 2, (480 - FrameHeight) / 2);
+    /// <summary>
+    /// 在**逻辑画布**（UiScaler.BaseWidth×BaseHeight = 800×600，即原版 mode 3 屏幕区）内居中。
+    ///
+    /// 证据：原版模态提示框在构造时**居中**（`source-vs-reverse/client.md` §6.2
+    /// 「DMessageDlg 按 DialogSize 选背景帧……并居中」）；UiScaler 会把整块逻辑画布
+    /// 缩放+居中到真实视口，因此本框只需按逻辑画布居中，任意缩放下都落在屏幕中心。
+    ///
+    /// 修正：此前按 640×480 算得 (158,9)，而本框在 `ApplyLegacyPregameWindow(800,600)`
+    /// **之后**才显示，画布已是 800×600，于是整体偏左上 (80,60)（见复核报告 F2）。
+    /// </summary>
+    public static readonly Vector2I DefaultLocation = new(
+        (int)((UiScaler.BaseWidth - FrameWidth) / 2),
+        (int)((UiScaler.BaseHeight - FrameHeight) / 2));
 
     /// <summary>深色文本区（实测约 (25,40)-(300,425)）。</summary>
     public static readonly Vector2I TextOrigin = new(30, 50);

@@ -33,9 +33,9 @@
 
 | 分类 | 项 |
 | --- | --- |
-| **verified**（本轮真机回放） | 登录屏（logo 视频 / ID·PASSWORD / 连接游戏）；**登录成功**；**登录失败 `WrongPassword` → 状态行 → 重试成功**；F50 洞窟选角屏与槽位选中详情框；创建入口 phase0→1→2；**创建成功 → phase3 → CreateChr 过场 → 回列表**；**创建失败弹框：`BadCharacterName` / `AlreadyExists`**（且留在 phase 2）；**每账号 2 角色上限弹框**；删除确认 Yes/No 框 + **NO 取消**；**YES → 服务端删除成功 → 列表刷新**；开始游戏 → phase4 → StartGame 过场 → **GameInter F0 公告框** → 确认进入游戏（800×600）；**断线弹框 + 按钮禁用** |
+| **verified**（本轮真机回放） | 登录屏（logo 视频 / ID·PASSWORD / 连接游戏）；**登录成功**；**登录失败 `WrongPassword` → 状态行 → 重试成功**；F50 洞窟选角屏与槽位选中详情框；创建入口 phase0→1→2；**创建成功 → phase3 → CreateChr 过场 → 回列表**；**创建失败弹框：`BadCharacterName` / `AlreadyExists`**（且留在 phase 2）；**每账号 2 角色上限弹框**；删除确认 Yes/No 框 + **NO 取消**；**YES → 服务端删除成功 → 列表刷新**；开始游戏 → phase4 → StartGame 过场 → **GameInter F0 公告框** → 确认进入游戏（800×600）；**StartGame 被拒 `Disabled` → 「无法开始游戏。」弹框**；**StartGame `Delayed` → phase3「冷却中, 3秒后重试」循环**；**断线弹框 + 按钮禁用** |
 | **confirmed defect** | **公告框右上 ✕ 关闭后永久黑屏**（无法进入游戏）——见 §5 F1；公告框在 800×600 下**未居中**（偏 -80,-60）——§5 F2 |
-| **not tested** | `CannotStartGame`（0x20E/0x20F）弹框运行期触发（需服务端注入失败）；名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归 |
+| **not tested** | 名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归 |
 | **blocked** | 原版运行画面同视口 A/B（本机无 Windows/Wine，沿用既有结论）；对他人 WIP 文件的直接修复（受文件边界约束，见 §9） |
 | **evidence-conflict** | 无 |
 | **对上一轮报告的更正** | 上一轮 §9「`--stay-select` 是无引用死标志」**错误**：该标志在报告自身基线 `db85cf8c` 即有 3 处引用（见 §5 F3） |
@@ -122,7 +122,9 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | 10 | StartGame/过场/公告 | 0x20D → phase4 → StartGame.dat | `ShowStartGameResult`（`SelectScene.cs:2203-2232`）+ `LegacyEiNoticeDialog` | primary | 截图 13；日志 `phase=4 → ogv → GameInter F0 len=19` | verified（公告资源等价见 §7） |
 | 11 | 进游戏身份/视口 | mode3 800×600 | `EnterGameScene`/`GameScene` | primary | 截图 15；日志 `[Game] 玩家: TestHero, 位置:(199,338), 地图:8`；窗口 800×600 | verified |
 | 12 | 断线 | 0x210 弹框 | `ShowDisconnected`（`SelectScene.cs:2293-2308`） | primary | 截图 16；日志 `与服务器断开连接，禁用选角操作` | verified |
-| 13 | 取消/返回/重试 | phase2 ✘ 回列表；StartGame Delayed 重试 | `ExitLegacyCreate`/`OnStartGameRetry` | impl | ✘ 退出建角实测回列表；重试未单独触发 | 部分 not tested |
+| 13 | 取消/返回/重试 | phase2 ✘ 回列表；StartGame Delayed 重试 | `ExitLegacyCreate`/`OnStartGameRetry` | impl | ✘ 退出建角实测回列表；`Delayed` → `phase=3` + 3s 重试循环（截图 18） | verified |
+| 14 | StartGame 被拒 | 0x20E 弹框 | `ShowStartGameResult` else 分支（`SelectScene.cs:2256-2274`） | runtime | 隔离库置 `AllowStartGame=False` → `Result=Disabled` → 弹框「无法开始游戏。」（截图 17） | verified |
+| 15 | StartGame 冷却 | 0x209 等待语义 | `ShowStartGameResult` Delayed 分支（`SelectScene.cs:2238-2255`） | runtime | 隔离库 `RelogDelay=5min` → 连续 `Result=Delayed`，`phase=3` 保留上一相位画面 + 3s 单一定时器重试（截图 18） | verified |
 
 ---
 
@@ -200,11 +202,13 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | 删除取消 | Yes/No 框点 **NO** → 框关闭、选中保持、**未发** `DeleteCharacter` 包（`grep -c DeleteCharacter = 0`） |
 | 删除成功 | 点 **YES** → `入队: DeleteCharacter` → 服务端 `[Character Deleted]` → `角色数=2→1`，状态「删除成功」 |
 | StartGame→进游戏 | `StartGame Success` → `phase=4` → `StartGame.ogv 播放完毕` → `GameInter F0 公告框 len=19` → 点对勾 → `[Game] 进入游戏! 玩家: TestHero, 位置:(199,338), 地图:8`，窗口 800×600 |
+| StartGame 被拒 | 隔离库 `AllowStartGame=False` → `S.StartGame Result=Disabled` → 弹框「无法开始游戏。」，留在选角屏 |
+| StartGame 冷却 | 隔离库 `RelogDelay=5min` → `Result=Delayed` → `phase=3 保留上一相位画面` + 状态「冷却中, 3秒后重试...」→ 3s 后重发 `StartGame`，仍 Delayed（单一 `_startRetryTimer`，无定时器堆积） |
 | 断线 | kill 隔离服务端 → `与服务器断开连接，禁用选角操作` + 弹框「与服务器的连接被断开。」；创建/删除/开始禁用，结束保留 |
 | 数据安全 | 仓库 `Debug/ServerCore/Database/Users.db` md5 前后均 `138ac3549426fae0682a93af0afbed2d`；全部建/删只写 `/tmp/ei-flow-review/Database/Users.db` |
 | 工作区 | `git status --short` 与开工时一致（仅他人 5 文件）；`git diff --check` 无输出；Mir3-Research 未改动 |
 
-### 截图索引（仓库内 `docs/screenshots/ei-login-flow-review-2026-09-30/`，均为客户端窗口完整 viewport）
+### 截图索引（仓库内 `docs/screenshots/ei-login-flow-review-2026-09-30/`，均为客户端窗口完整 viewport，共 18 张）
 
 | 文件 | 内容 |
 | --- | --- |
@@ -224,6 +228,8 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | `14-notice-close-x-stuck-black.png` | **点公告框 ✕ 后永久黑屏（F1 证据）** |
 | `15-ingame-800x600.png` | 进入游戏世界（地图 8，800×600 HUD） |
 | `16-select-disconnected.png` | 断线弹框 + 按钮禁用 |
+| `17-startgame-disabled-cannotstart.png` | StartGame 被拒「无法开始游戏。」弹框 |
+| `18-startgame-delayed-phase3.png` | StartGame 冷却：phase 3 保留选角画面 + 「冷却中, 3秒后重试...」 |
 
 原始日志在 `/tmp/ei-flow-review/*.log`（不入库；含账号等运行字段）。
 
@@ -231,9 +237,9 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 
 ## 7. 未验证 / 阻塞 / 冲突
 
-- `not tested`：`CannotStartGame`（0x20E/0x20F）弹框——`ShowStartGameResult` 非 Success 分支
-  （`SelectScene.cs:2256-2274`）代码在位，但**运行期无法在无服务端注入的情况下触发**（需服务端拒绝
-  StartGame）；`--zircon-ui` 非 Legacy 全量回归未做；StartGame `Delayed` 3s 重试未单独触发。
+- `not tested`：名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归未做。
+- 另记（minor，未修）：`ShowStartGameResult` 成功分支日志仍写「显示 F602 公告确认」（`SelectScene.cs:2230`），
+  与实际使用的 GameInter F0 不一致（同一文件 2068 行已改为 F0 文案）。
 - `pending-evidence`：**GameInter F0 公告框**相对 StartGame 阶段的资源等价与屏幕坐标仍缺 primary
   （既有 S8/S9 结论未闭合）；F2 的居中结论依赖该点，故标 `suspected deviation`。
 - `blocked`：原版运行画面同视口对照（本机无 Windows/Wine，沿用既有 blocked）；**对 F1/F2 所在文件的
@@ -252,6 +258,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | --- | --- | --- | --- |
 | 1 | 见下 | `docs(ei复核): 独立复核报告 + 公告框 ✕ 死锁取证截图` | ✅ |
 | 2 | 见下 | `docs(ei复核): 更正上一轮报告 --stay-select 死标志结论` | ✅ |
+| 3 | 见下 | `docs(ei复核): 补 StartGame 被拒/冷却两条失败路径取证与截图` | ✅ |
 
 代码基线未变（本轮未修改任何 `GodotClient/` 源码）。报告自身的提交 SHA 无法内嵌，
 以推送后 `git ls-remote origin refs/heads/master` 的远端 HEAD 为准。全程未 force push、未切分支、
@@ -264,6 +271,6 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 - **未修改**：`GodotClient/Scripts/SelectScene.cs`、`GodotClient/Scripts/LegacyEiText.cs`、
   `GodotClient/Controls/LegacyEiDialog.cs`、`GodotClient/Controls/LegacyEiDialogText.cs`、
   `GodotClient/Controls/LegacyEiNoticeDialog.cs`（开工 md5 见 §0，收工一致）。
-- **本轮提交内容仅限**：本报告、`docs/screenshots/ei-login-flow-review-2026-09-30/` 16 张截图、
+- **本轮提交内容仅限**：本报告、`docs/screenshots/ei-login-flow-review-2026-09-30/` 18 张截图、
   以及上一轮报告 §9 的一行更正注记。
 - F1/F2 的修复方案已写明，但落在受保护文件内，故**交由该文件的 owner / 用户决策后落地**。

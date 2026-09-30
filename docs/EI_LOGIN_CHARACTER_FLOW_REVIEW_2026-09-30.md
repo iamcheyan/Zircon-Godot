@@ -205,6 +205,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | StartGame 被拒 | 隔离库 `AllowStartGame=False` → `S.StartGame Result=Disabled` → 弹框「无法开始游戏。」，留在选角屏 |
 | StartGame 冷却 | 隔离库 `RelogDelay=5min` → `Result=Delayed` → `phase=3 保留上一相位画面` + 状态「冷却中, 3秒后重试...」→ 3s 后重发 `StartGame`，仍 Delayed（单一 `_startRetryTimer`，无定时器堆积） |
 | 断线 | kill 隔离服务端 → `与服务器断开连接，禁用选角操作` + 弹框「与服务器的连接被断开。」；创建/删除/开始禁用，结束保留 |
+| 重复点击 | 登录屏连点「连接游戏」两次 → `入队: Login` 计数 **= 1**（首次点击即禁用按钮），无双发 |
 | 数据安全 | 仓库 `Debug/ServerCore/Database/Users.db` md5 前后均 `138ac3549426fae0682a93af0afbed2d`；全部建/删只写 `/tmp/ei-flow-review/Database/Users.db` |
 | 工作区 | `git status --short` 与开工时一致（仅他人 5 文件）；`git diff --check` 无输出；Mir3-Research 未改动 |
 
@@ -259,6 +260,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | 1 | 见下 | `docs(ei复核): 独立复核报告 + 公告框 ✕ 死锁取证截图` | ✅ |
 | 2 | 见下 | `docs(ei复核): 更正上一轮报告 --stay-select 死标志结论` | ✅ |
 | 3 | 见下 | `docs(ei复核): 补 StartGame 被拒/冷却两条失败路径取证与截图` | ✅ |
+| 4 | 见下 | `docs(ei复核): 补重复点击防重入实测记录` | ✅ |
 
 代码基线未变（本轮未修改任何 `GodotClient/` 源码）。报告自身的提交 SHA 无法内嵌，
 以推送后 `git ls-remote origin refs/heads/master` 的远端 HEAD 为准。全程未 force push、未切分支、

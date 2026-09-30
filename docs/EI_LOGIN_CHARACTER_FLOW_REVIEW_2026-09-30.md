@@ -25,7 +25,8 @@
 | `GodotClient/Controls/LegacyEiNoticeDialog.cs` | `8bfbb251614bc9633b82690953da65f1` |
 
 > 本轮复核**验证了这批 WIP 的运行行为**（它们已被运行时采纳），并在其中发现两处缺陷（§5 F1/F2）。
-> 依用户边界要求，**未修改这些文件**，只给出可最小落地的修复方案。
+> 第一阶段严格未改动这些文件（见 §9）；owner 随后将它们提交（`bcb4adce`/`032e74a7`）并授权继续，
+> 第二阶段只在 `LegacyEiNoticeDialog.cs` 上做最小增量修复。
 
 ---
 
@@ -34,9 +35,11 @@
 | 分类 | 项 |
 | --- | --- |
 | **verified**（本轮真机回放） | 登录屏（logo 视频 / ID·PASSWORD / 连接游戏）；**登录成功**；**登录失败 `WrongPassword` → 状态行 → 重试成功**；F50 洞窟选角屏与槽位选中详情框；创建入口 phase0→1→2；**创建成功 → phase3 → CreateChr 过场 → 回列表**；**创建失败弹框：`BadCharacterName` / `AlreadyExists`**（且留在 phase 2）；**每账号 2 角色上限弹框**；删除确认 Yes/No 框 + **NO 取消**；**YES → 服务端删除成功 → 列表刷新**；开始游戏 → phase4 → StartGame 过场 → **GameInter F0 公告框** → 确认进入游戏（800×600）；**StartGame 被拒 `Disabled` → 「无法开始游戏。」弹框**；**StartGame `Delayed` → phase3「冷却中, 3秒后重试」循环**；**断线弹框 + 按钮禁用** |
-| **confirmed defect** | **公告框右上 ✕ 关闭后永久黑屏**（无法进入游戏）——见 §5 F1；公告框在 800×600 下**未居中**（偏 -80,-60）——§5 F2 |
+| **fixed & verified**（本轮修复） | **F1** 公告框 ✕ 关闭后永久黑屏 → 去掉 Zircon 关闭钮（`7b876c33`）；**F2** 公告框 800×600 未居中（偏 -80,-60）→ 按 800×600 逻辑画布居中（`a787ac85`）。两处均实机复验（截图 19/20） |
+| **confirmed defect（已修）** | 见上；修复前证据保留在截图 13/14 |
 | **not tested** | 名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归 |
-| **blocked** | 原版运行画面同视口 A/B（本机无 Windows/Wine，沿用既有结论）；对他人 WIP 文件的直接修复（受文件边界约束，见 §9） |
+| **blocked** | 原版运行画面同视口 A/B（本机无 Windows/Wine，沿用既有结论） |
+| **pending-evidence** | 公告框资源身份：本轮按 WIP 既有的 **GameInter F0** 修复 F1/F2；原版登录公告 UI 究竟用 F0 / F950 族 / `DMessageDlg` 帧 1240/1248/1250 尚未由逆向闭合（见 §5 F2 与 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`） |
 | **evidence-conflict** | 无 |
 | **对上一轮报告的更正** | 上一轮 §9「`--stay-select` 是无引用死标志」**错误**：该标志在报告自身基线 `db85cf8c` 即有 3 处引用（见 §5 F3） |
 
@@ -130,33 +133,44 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 
 ## 5. 本轮发现（含证据与文件行号）
 
-### F1【confirmed defect，高】进游戏公告框右上 ✕ → 永久黑屏，无法进入游戏
+### F1【confirmed defect，高 → **已修复** `7b876c33`】进游戏公告框右上 ✕ → 永久黑屏，无法进入游戏
 
 - **现象**：StartGame 过场结束后出现 GameInter F0 公告框；点击其**右上角 ✕**（Zircon `WindowManager`
   给 `DXWindow` 加的关闭钮），对话框消失、`_uiLayer` 仍隐藏，客户端**永久停在 800×600 黑屏**，
   没有任何“进入游戏”路径可走。
-- **复现**：截图 `14-notice-close-x-stuck-black.png`；日志 `notice-x.log` 在 `显示 GameInter F0 公告框`
-  之后**再无任何**相位/进入日志；等待 12s 仍黑屏。
-- **根因（代码）**：WIP 把原 `ShowLegacyStartNotice` 的取消处理删除了——
-  `SelectScene.cs:2040-2082` 只剩 `Confirmed` 接线，`OnLegacyStartNoticeCancelled` /
-  `ReopenLegacyStartNotice` 被删；而 `LegacyEiNoticeDialog`（`GodotClient/Controls/LegacyEiNoticeDialog.cs`）
-  **只声明 `Confirmed`，没有 `Cancelled`**，`WindowManager` 的关闭钮不触发任何回调。
-  （对照：被删除的实现见本文件所在工作区未提交 diff；上一轮实现里 ✕ 会关闭后重新显示。）
-- **最小修复方案（建议，未落地）**：二选一
-  1. `LegacyEiNoticeDialog` 增加 `Cancelled` 事件，并在 `DXWindow` 关闭路径触发；`SelectScene` 恢复
-     “关闭即重开”或“关闭视为已读 = 进入游戏”；或
-  2. `ShowLegacyStartNotice` 里禁止该框被关闭（不显示 ✕ / 关闭调用 no-op），只允许底部对勾。
-- **说明**：原版此框是模态 `DMessageDlg`（仅 OK 钮），本就不存在可关闭的 ✕——方案 2 更贴近原版语义。
+- **复现（修复前）**：截图 `14-notice-close-x-stuck-black.png`；日志 `notice-x.log` 在
+  `显示 GameInter F0 公告框` 之后**再无任何**相位/进入日志；等待 12s 仍黑屏。
+- **根因**：`DXWindow` 为 `DrawChrome` 窗口生成关闭钮（`GodotClient/Controls/DXWindow.cs:27,90-113`，
+  用现代 `Interface[15]` 帧），点它调用 `WindowManager.Close(this)` 只隐藏窗口；
+  而 `LegacyEiNoticeDialog` 无 `Cancelled`、`SelectScene.ShowLegacyStartNotice`
+  （`SelectScene.cs:2040-2082`）亦无关闭处理 → 无人接管，`_uiLayer` 保持隐藏。
+- **原版语义核实**：该 ✕ 是**移植版外壳控件，原版没有**：
+  • 本框素材 `GameInter` **F0** 只有底部中央一个「对勾」（本文件头注释 / 用户素材定位）；
+  • 同族预游戏确认框 `0x418030`（`GameInter` F950）的绘制 `0x4182A0` 只画背景 + 标题 +
+  自身 3 个按钮，**无标题栏关闭控件**（`RESEARCH_LOG` Finding 82 / Round 5756）；
+  • 原版登录公告是**模态阻塞框**（`source-vs-reverse/client.md` §6.2 `DMessageDlg` 主线程阻塞循环），
+  只由自身按钮退出 —— 不产生「外壳 ✕ 隐藏窗口而调用方仍等待」的路径。
+  → 结论：这不是「✕ 应继续/取消/禁止关闭」的选择，而是**该 ✕ 本就不属于此框**，应移除。
+- **修复**：`LegacyEiNoticeDialog` 构造设 `ShowCloseButton = false`（`GodotClient/Controls/LegacyEiNoticeDialog.cs`）。
+  仅去掉移植版外壳控件，不新增调用方状态、不改 `SelectScene` 确认路径。
+- **实机验证（修复后）**：公告框**无 ✕**；点击旧 ✕ 位置（客户区 461,22）后画面**逐字节不变**
+  （两次 `scrot` md5 均 `e13b25b5…`）；点底部对勾仍正常 `进入游戏世界`（截图 19/20）。
 
-### F2【suspected deviation，中】公告框在 800×600 下未居中（偏 -80,-60）
+### F2【suspected deviation，中 → **已修复** `a787ac85`】公告框在 800×600 下未居中（偏 -80,-60）
 
 - **现象**：公告框 F0（324×462）实测绘制在客户区 **(158,9)**（截图 `13-startgame-notice-f0.png`），
   而 800×600 下的居中位置应为 **((800-324)/2,(600-462)/2)=(238,69)**，差 **(80,60)**。
-- **根因**：`LegacyEiNoticeDialog.cs:20` 的 `DefaultLocation` 用 **640×480** 计算
+- **根因**：`LegacyEiNoticeDialog.DefaultLocation` 用 **640×480** 计算
   `((640-324)/2,(480-462)/2)=(158,9)`；但该框在 `ClientSettings.ApplyLegacyPregameWindow(800,600)`
-  （`SelectScene.cs:2226`）**之后**显示，画布已是 800×600，且此处未得到任何居中补偿。
-- **判定**：`pending-evidence`——F0 的原版屏幕坐标缺 primary 记录；但“名为居中常量却用在异尺寸画布”
-  属内部不自洽，建议按 800×600 居中。
+  （`SelectScene.cs:2226`）**之后**显示，画布已是 800×600，且未得到任何居中补偿。
+- **证据**：原版模态提示框构造时**居中**（`source-vs-reverse/client.md` §6.2
+  「DMessageDlg 按 DialogSize 选背景帧……并居中」）；`UiScaler.BaseWidth/Height = 800×600`
+  （`GodotClient/Scripts/UiScaler.cs:40-41`，即原版 mode 3 屏幕区），层 Transform 会把该逻辑画布
+  整体缩放+居中到视口 → 按逻辑画布居中即屏幕居中（任意缩放）。
+- **修复**：`DefaultLocation` 改为 `((UiScaler.BaseWidth-324)/2,(UiScaler.BaseHeight-462)/2)=(238,69)`。
+- **实机验证（修复后）**：截图 19 中公告板左上 = 客户区 **(238,69)**（800×600 中心）。
+- **遗留 pending-evidence**：F0 是否为原版登录公告的正确资源仍未由逆向闭合（另见
+  `DMessageDlg` 帧 1240/1248/1250 候选）——已记入 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
 
 ### F3【docs 更正】`--stay-select` 并非无引用死标志
 
@@ -206,10 +220,11 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | StartGame 冷却 | 隔离库 `RelogDelay=5min` → `Result=Delayed` → `phase=3 保留上一相位画面` + 状态「冷却中, 3秒后重试...」→ 3s 后重发 `StartGame`，仍 Delayed（单一 `_startRetryTimer`，无定时器堆积） |
 | 断线 | kill 隔离服务端 → `与服务器断开连接，禁用选角操作` + 弹框「与服务器的连接被断开。」；创建/删除/开始禁用，结束保留 |
 | 重复点击 | 登录屏连点「连接游戏」两次 → `入队: Login` 计数 **= 1**（首次点击即禁用按钮），无双发 |
+| **F1/F2 修复后复验** | 公告框无 ✕；点旧 ✕ 位置（461,22）前后截图 **md5 相同** `e13b25b5…`（无副作用）；公告板左上 = 客户区 **(238,69)**；点对勾 → `进入游戏世界`、`[Game] 玩家: TestHero, 地图: 8`（截图 19/20） |
 | 数据安全 | 仓库 `Debug/ServerCore/Database/Users.db` md5 前后均 `138ac3549426fae0682a93af0afbed2d`；全部建/删只写 `/tmp/ei-flow-review/Database/Users.db` |
-| 工作区 | `git status --short` 与开工时一致（仅他人 5 文件）；`git diff --check` 无输出；Mir3-Research 未改动 |
+| 工作区 | 开工时保留他人 5 文件未动（md5 逐一相同）；其由 owner 以 `bcb4adce`/`032e74a7` 提交后，本轮在其上修复；`git diff --check` 无输出；Mir3-Research 未改动 |
 
-### 截图索引（仓库内 `docs/screenshots/ei-login-flow-review-2026-09-30/`，均为客户端窗口完整 viewport，共 18 张）
+### 截图索引（仓库内 `docs/screenshots/ei-login-flow-review-2026-09-30/`，均为客户端窗口完整 viewport，共 20 张）
 
 | 文件 | 内容 |
 | --- | --- |
@@ -231,6 +246,8 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | `16-select-disconnected.png` | 断线弹框 + 按钮禁用 |
 | `17-startgame-disabled-cannotstart.png` | StartGame 被拒「无法开始游戏。」弹框 |
 | `18-startgame-delayed-phase3.png` | StartGame 冷却：phase 3 保留选角画面 + 「冷却中, 3秒后重试...」 |
+| `19-notice-fixed-centered-noclose.png` | **修复后**：公告框无 ✕ 且左上 = 客户区 (238,69)（F1/F2 修复证据） |
+| `20-notice-fixed-confirm-ingame.png` | 修复后点对勾正常进入游戏（800×600） |
 
 原始日志在 `/tmp/ei-flow-review/*.log`（不入库；含账号等运行字段）。
 
@@ -241,10 +258,11 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 - `not tested`：名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归未做。
 - 另记（minor，未修）：`ShowStartGameResult` 成功分支日志仍写「显示 F602 公告确认」（`SelectScene.cs:2230`），
   与实际使用的 GameInter F0 不一致（同一文件 2068 行已改为 F0 文案）。
-- `pending-evidence`：**GameInter F0 公告框**相对 StartGame 阶段的资源等价与屏幕坐标仍缺 primary
-  （既有 S8/S9 结论未闭合）；F2 的居中结论依赖该点，故标 `suspected deviation`。
-- `blocked`：原版运行画面同视口对照（本机无 Windows/Wine，沿用既有 blocked）；**对 F1/F2 所在文件的
-  直接修复**——这些文件属他人未提交资产，用户明确要求不覆盖/暂存/提交（见 §9），已给出最小修复方案。
+- `pending-evidence`：**GameInter F0 公告框**的资源身份与屏幕坐标仍缺 primary —— F1/F2 已按
+  「原版模态框居中 + 预游戏对话框族无标题栏关闭钮」的证据修复（`a787ac85`/`7b876c33`），
+  但 F0 是否为原版登录公告的正确资源（对比 `DMessageDlg` 帧 1240/1248/1250）未闭合；
+  需用户提供 F0 归属的原始依据或授权继续逆向。已记入 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
+- `blocked`：原版运行画面同视口对照（本机无 Windows/Wine，沿用既有 blocked）。
 - `evidence-conflict`：无（F3 是对上一轮报告的文字更正，非原版证据冲突）。
 - F6（phase0 左上提示文字）为 `candidate`，需否定性 primary 证据方能定论。
 
@@ -257,22 +275,29 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 
 | # | SHA | 说明 | 远端核对 |
 | --- | --- | --- | --- |
-| 1 | 见下 | `docs(ei复核): 独立复核报告 + 公告框 ✕ 死锁取证截图` | ✅ |
-| 2 | 见下 | `docs(ei复核): 更正上一轮报告 --stay-select 死标志结论` | ✅ |
-| 3 | 见下 | `docs(ei复核): 补 StartGame 被拒/冷却两条失败路径取证与截图` | ✅ |
-| 4 | 见下 | `docs(ei复核): 补重复点击防重入实测记录` | ✅ |
+| 1 | `8191bf9c` | `docs(ei复核): 独立复核报告 + 公告框 ✕ 死锁取证截图` | ✅ |
+| 2 | `199a7725` | `docs(ei复核): 更正上一轮报告 --stay-select 死标志结论` | ✅ |
+| 3 | `7c64f7a1` | `docs(ei复核): 补 StartGame 被拒/冷却两条失败路径取证与截图` | ✅ |
+| 4 | `9a58a80b` | `docs(ei复核): 补重复点击防重入实测记录` | ✅ |
+| — | `bcb4adce` / `032e74a7` | **owner 提交的既有 WIP**（新对话框控件 + SelectScene 接入，非本 Goal 提交） | ✅ |
+| 5 | `a787ac85` | `fix(ei复核): 公告框按 800×600 逻辑画布居中，修正 (80,60) 偏位`（F2） | ✅ |
+| 6 | `7b876c33` | `fix(ei复核): 公告框去掉 Zircon 关闭 ✕，消除关闭后永久黑屏`（F1） | ✅ |
+| 7 | 见下 | `docs(ei复核): 记录 F1/F2 修复与复验` + 截图 19/20 | ✅ |
+| 8 | 见下 | `docs: EI 登录流程阻塞事项`（`EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`，仅该文件） | ✅ |
 
-代码基线未变（本轮未修改任何 `GodotClient/` 源码）。报告自身的提交 SHA 无法内嵌，
+代码改动仅限 `GodotClient/Controls/LegacyEiNoticeDialog.cs`（F1/F2 两处）。报告自身的提交 SHA 无法内嵌，
 以推送后 `git ls-remote origin refs/heads/master` 的远端 HEAD 为准。全程未 force push、未切分支、
-未提交数据库/日志/凭据/他人 WIP。
+未提交数据库/日志/凭据。
 
 ---
 
-## 9. 文件边界声明（本轮严格遵守）
+## 9. 文件边界与修复落地
 
-- **未修改**：`GodotClient/Scripts/SelectScene.cs`、`GodotClient/Scripts/LegacyEiText.cs`、
-  `GodotClient/Controls/LegacyEiDialog.cs`、`GodotClient/Controls/LegacyEiDialogText.cs`、
-  `GodotClient/Controls/LegacyEiNoticeDialog.cs`（开工 md5 见 §0，收工一致）。
-- **本轮提交内容仅限**：本报告、`docs/screenshots/ei-login-flow-review-2026-09-30/` 18 张截图、
-  以及上一轮报告 §9 的一行更正注记。
-- F1/F2 的修复方案已写明，但落在受保护文件内，故**交由该文件的 owner / 用户决策后落地**。
+- **第一阶段（复核）**：`GodotClient/Scripts/SelectScene.cs`、`LegacyEiText.cs`、
+  `LegacyEiDialog.cs`、`LegacyEiDialogText.cs`、`LegacyEiNoticeDialog.cs` 这 5 个文件当时属他人未提交
+  资产，本轮**未覆盖/未回滚/未暂存/未提交**（开工与收工 md5 一致）。
+- **第二阶段（修复）**：owner 已把上述文件分两批提交（`bcb4adce` / `032e74a7`）并明确授权继续修改；
+  此后本轮在其上做最小增量修复——仅 `GodotClient/Controls/LegacyEiNoticeDialog.cs` 两处
+  （F2 居中常量 `a787ac85`、F1 关闭钮 `7b876c33`），未改动 `SelectScene.cs` 与其它对话框控件。
+- **本轮 docs 提交只含**：本报告、`docs/screenshots/ei-login-flow-review-2026-09-30/` 20 张截图、
+  上一轮报告 §9 一行更正、以及 `docs/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。

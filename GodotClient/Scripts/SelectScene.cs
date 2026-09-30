@@ -2215,19 +2215,18 @@ public partial class SelectScene : Control
                 SetSelectPhase(4);
                 // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
                 // 过场期间隐藏选角 UI；视频完整播完 (1.37s / 41 帧) 后，黑屏显示
-                // F602 公告确认框；勾选后才创建 GameScene。视频挂到 Root。
+                // GameInter F0 公告框；勾选后才创建 GameScene。视频挂到 Root。
                 if (_uiLayer != null) _uiLayer.Visible = false;
-                // F602 公告画在 **mode 3 = 800×600**（0x419377 →
+                // 公告框按 **mode 3 = 800×600** 屏幕区布局（0x419377 →
                 // 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)），而选角屏是
-                // mode 2 = 640×480。公告按 800×600 设计稿居中，窗口不先切大，
-                // 弹框时视口还是 640×480，会整体偏右下 (80,60)。这里在过场开始
-                // 时就切（过场后段本来就是黑屏，切换不可见），等 1.37s 结束后
-                // Viewport.Size 必然已到位，ShowLegacyStartNotice 直接按 800×600 布局。
+                // mode 2 = 640×480。这里在过场开始时就把窗口切到 800×600
+                // （过场后段本来就是黑屏，切换不可见）；LegacyEiNoticeDialog 按
+                // UiScaler 逻辑画布 (800×600) 居中，故 1.37s 后弹框正好居中。
                 ClientSettings.ApplyLegacyPregameWindow(800, 600);
                 // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
                 // = StartGame.wav -> 进游戏时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyStartGame);
-                GD.Print("[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后显示 F602 公告确认 ***");
+                GD.Print("[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后显示 GameInter F0 公告框 ***");
                 PlayLegacyTransition("StartGame", onFinished: ShowLegacyStartNotice, attachToRoot: true);
             }
             else

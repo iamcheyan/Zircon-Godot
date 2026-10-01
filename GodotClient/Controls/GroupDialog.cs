@@ -149,8 +149,10 @@ public partial class GroupDialog : DXWindow
         _legacyPermissionButton ??= new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = 920,
-            HoverIndex = 921,
+            // 原版 arg8=-1、arg9=0（普通/悬停都不画帧）；F920 已烘焙进 F900
+            // （模板搜索命中窗口(9,52)+背景偏移(0,-6) = 帧(9,58)，diff 29.7）→ 只保留按下 arg3=921。
+            Index = -1,
+            HoverIndex = -1,
             PressedIndex = 921,
             Location = new Vector2I(9, 52),
             Size = new Vector2I(28, 26),

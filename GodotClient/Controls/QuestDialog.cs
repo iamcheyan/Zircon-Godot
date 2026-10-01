@@ -122,12 +122,15 @@ public partial class QuestDialog : DXWindow
         _scroll.Location = new Vector2I(290, 59);
         _scroll.Size = new Vector2I(28, 58);
         _scroll.UpButton.LibraryFile = LibraryFile.GameInter;
-        _scroll.UpButton.Index = 723;
-        _scroll.UpButton.HoverIndex = 724;
+        // 原版滚动钮 arg8=-1、arg9=0、arg2/arg3=723/724（上）与 721/722（下）：
+        // 普通/悬停都不画帧（美术已烘焙进 F700：模板搜索 F723→帧(376,93)、F721→(376,124)，
+        // 与端口窗口(290,59)+背景偏移(-86,-36) 换算位置一致），只有按下画 arg3。
+        _scroll.UpButton.Index = -1;
+        _scroll.UpButton.HoverIndex = -1;
         _scroll.UpButton.PressedIndex = 724;
         _scroll.DownButton.LibraryFile = LibraryFile.GameInter;
-        _scroll.DownButton.Index = 721;
-        _scroll.DownButton.HoverIndex = 722;
+        _scroll.DownButton.Index = -1;
+        _scroll.DownButton.HoverIndex = -1;
         _scroll.DownButton.PressedIndex = 722;
         _scroll.PositionBar.Visible = false;
         foreach (var tab in _tabs)
@@ -324,7 +327,12 @@ public partial class QuestDialog : DXWindow
             // （window-control-position-analysis.json；素材实测四帧均为 28x28）。
             && _scroll.Location == new Vector2I(290, 59)
             && _scroll.Size == new Vector2I(28, 58)
-            && _scroll.UpButton.Index == 723 && _scroll.DownButton.Index == 721
+            // 2026-10-01：滚动钮原版 arg8=-1（美术已烘焙进 F700）→ 不叠画普通/悬停帧，
+            // 只保留按下态 arg3（上=724、下=722）。原断言编码的是叠画行为。
+            && _scroll.UpButton.Index == -1 && _scroll.UpButton.HoverIndex == -1
+            && _scroll.UpButton.PressedIndex == 724
+            && _scroll.DownButton.Index == -1 && _scroll.DownButton.HoverIndex == -1
+            && _scroll.DownButton.PressedIndex == 722
             && _closeButton.Location == new Vector2I(304, 404);
         details = $"size={Size} background=F{_background.Index} contentAlpha={_content.Modulate.A:0.##} scroll={_scroll.Location}/{_scroll.Size}#{_scroll.UpButton.Index}/{_scroll.DownButton.Index} close={_closeButton.Location}";
         return ok;

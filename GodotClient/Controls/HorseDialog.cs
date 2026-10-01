@@ -46,11 +46,13 @@ public partial class HorseDialog : DXWindow
         _hide = Action(864, 865, new Vector2I(133, 244), new Vector2I(60, 20), "@收马");
         _show = Action(866, 867, new Vector2I(192, 244), new Vector2I(56, 20), "@遛马");
 
+        // 原版 ctor 实参 (arg2,arg3,arg8) = (161,162,-1)：arg8=-1 → 普通态不画，
+        // arg9=0 → 悬停态也不画帧（只画文字）；✕ 美术已烘焙进 F850。
         var close = new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = 161,
-            HoverIndex = 162,
+            Index = -1,
+            HoverIndex = -1,
             PressedIndex = 162,
             Location = new Vector2I(252, 293),
             Size = new Vector2I(28, 26),
@@ -63,11 +65,14 @@ public partial class HorseDialog : DXWindow
     private DXButton Action(int normal, int hover, Vector2I location, Vector2I size, string command,
         Func<bool> allowed = null)
     {
+        // 原版四个动作钮的 ctor 实参均为 arg8=-1、arg9=0：
+        //   普通态不画（美术已烘焙进 F850，见报告的像素比对）、悬停不画帧（只画文字）、
+        //   按下画 arg3 = hover（本函数第二参）。
         var button = new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = normal,
-            HoverIndex = hover,
+            Index = -1,
+            HoverIndex = -1,
             PressedIndex = hover,
             Location = location,
             Size = size,

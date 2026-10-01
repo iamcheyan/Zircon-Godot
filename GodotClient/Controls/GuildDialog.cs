@@ -392,9 +392,13 @@ public partial class GuildDialog : DXWindow
             (610, 34, 376), (612, 34, 402), (614, 121, 402), (616, 309, 376),
             (618, 397, 376), (620, 484, 376), (622, 309, 402), (624, 397, 402),
         };
+        // 2026-10-01：原版 8 钮实参 arg8=-1（美术已烘焙进 F600，模板搜索 diff 7.6-12.0）
+        // → 端口不叠画普通/悬停帧，只保留按下态 arg3（= arg2+1，即 frame+1）。
         bool actions = _legacyActionButtons.Count == expected.Length;
         for (int i = 0; i < expected.Length && i < _legacyActionButtons.Count; i++)
-            actions &= _legacyActionButtons[i].Index == expected[i].frame
+            actions &= _legacyActionButtons[i].Index == -1
+                && _legacyActionButtons[i].HoverIndex == -1
+                && _legacyActionButtons[i].PressedIndex == expected[i].frame + 1
                 && _legacyActionButtons[i].Location == new Vector2I(expected[i].x, expected[i].y);
         bool ok = Size == new Vector2I(596, 446)
             && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 600

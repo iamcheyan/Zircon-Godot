@@ -274,7 +274,10 @@ public partial class NPCDialog : DXWindow
             && _headerBackground.Location == new Vector2I(-64, -59)
             && _textArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
             && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
-            && _closeButton.Index == 161 && _closeButton.Location == new Vector2I(7, 141)
+            // 2026-10-01：关闭钮原版 arg8=-1（✕ 已烘焙进 F1100）→ 不叠画帧，只保留按下态 162。
+            && _closeButton.Index == -1 && _closeButton.HoverIndex == -1
+            && _closeButton.PressedIndex == 162
+            && _closeButton.Location == new Vector2I(7, 141)
             && _closeButton.Size == new Vector2I(28, 26)
             && _scrollUp.Index == 52 && _scrollUp.Location == new Vector2I(290, 145)
             && _scrollUp.Size == new Vector2I(12, 8)

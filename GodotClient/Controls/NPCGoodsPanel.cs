@@ -153,8 +153,10 @@ public partial class NPCGoodsPanel : DXControl
         _buy.Location = new Vector2I(127, 267);
         _buy.Size = new Vector2I(48, 20);
         _buy.LibraryFile = LibraryFile.GameInter;
-        _buy.Index = 1012;
-        _buy.HoverIndex = 1013;
+        // 原版 arg8=-1、arg9=0 -> 普通/悬停都不画帧；F1012 已烘焙进 F1000
+        // （模板搜索：F1012 在 F1000 内 diff 6.4 @ (233,371)），只有按下画 arg3=1013。
+        _buy.Index = -1;
+        _buy.HoverIndex = -1;
         _buy.PressedIndex = 1013;
         _guildFunds.Visible = false;
     }
@@ -171,7 +173,9 @@ public partial class NPCGoodsPanel : DXControl
             && _list.Location == new Vector2I(4, 40)
             && _buy.Location == new Vector2I(127, 267)
             && _buy.Size == new Vector2I(48, 20)
-            && _buy.Index == 1012;
+            // 2026-10-01：原版 arg8=-1（换 F1012 美术已烘焙进 F1000）-> 端口不叠画，
+            // 只保留按下态 1013。判据随之更正（原断言 _buy.Index==1012 编码的是叠画行为）。
+            && _buy.Index == -1 && _buy.HoverIndex == -1 && _buy.PressedIndex == 1013;
         details = $"size={Size} frame={_legacyBackground.Index}@{_legacyBackground.Location} rowHeight={_rowHeight} list={_list.Location}/{_list.Size} buy={_buy.Location}/{_buy.Size}#{_buy.Index}";
         return ok;
     }

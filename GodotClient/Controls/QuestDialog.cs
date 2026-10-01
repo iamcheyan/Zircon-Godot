@@ -126,13 +126,19 @@ public partial class QuestDialog : DXWindow
         // 普通/悬停都不画帧（美术已烘焙进 F700：模板搜索 F723→帧(376,93)、F721→(376,124)，
         // 与端口窗口(290,59)+背景偏移(-86,-36) 换算位置一致），只有按下画 arg3。
         // 同上回退：F723/724 与 F721/722 是按钮自身绘制的美术（非背景烘焙）。
-        _scroll.UpButton.Index = 723;
-        _scroll.UpButton.HoverIndex = 724;
+        // 2026-10-01（真机隐藏法 + F700 像素核验）：该处**已烘焙**圆石按钮（白 → 与 ✕），
+        // 原版按钮 arg8=-1/arg9=0 不画帧 → 端口不叠画，只保留热区与按下 arg3。
+        _scroll.UpButton.Index = -1;
+        _scroll.UpButton.HoverIndex = -1;
+        _scroll.UpButton.Modulate = new Color(1, 1, 1, 0);
         _scroll.UpButton.PressedIndex = 724;
         _scroll.DownButton.LibraryFile = LibraryFile.GameInter;
-        _scroll.DownButton.Index = 721;
-        _scroll.DownButton.HoverIndex = 722;
+        _scroll.DownButton.Index = -1;
+        _scroll.DownButton.HoverIndex = -1;
+        _scroll.DownButton.Modulate = new Color(1, 1, 1, 0);
         _scroll.DownButton.PressedIndex = 722;
+        // 滚动条自身黑底会盖住 F700 烘焙的图标 → 透明化（仅保留功能与热区）。
+        _scroll.BackColour = Colors.Transparent;
         _scroll.PositionBar.Visible = false;
         foreach (var tab in _tabs)
         {
@@ -187,8 +193,9 @@ public partial class QuestDialog : DXWindow
                 LibraryFile = LibraryFile.GameInter,
                 // 原版 arg8=-1、arg9=0：图标由 F700 底图烘焙可见，控件只放热区，
                 // 不叠画普通/悬停帧；只有按下画 arg3=724。
-                Index = 723,
-                HoverIndex = 724,
+                Index = -1,
+                HoverIndex = -1,
+                Modulate = new Color(1, 1, 1, 0),
                 PressedIndex = 724,
                 Location = new Vector2I(290, 59),
                 Size = new Vector2I(28, 28),
@@ -202,8 +209,9 @@ public partial class QuestDialog : DXWindow
             {
                 LibraryFile = LibraryFile.GameInter,
                 // 同上：arg8=-1、arg9=0，只保留按下 arg3=722。
-                Index = 721,
-                HoverIndex = 722,
+                Index = -1,
+                HoverIndex = -1,
+                Modulate = new Color(1, 1, 1, 0),
                 PressedIndex = 722,
                 Location = new Vector2I(290, 89),
                 Size = new Vector2I(28, 28),
@@ -334,7 +342,7 @@ public partial class QuestDialog : DXWindow
             && _scroll.Location == new Vector2I(290, 59)
             && _scroll.Size == new Vector2I(28, 58)
             // 2026-10-01 回退：经真机对比，任务窗滚动/操作图标的美术由控件自身绘制（非背景烘焙）。
-            && _scroll.UpButton.Index == 723 && _scroll.DownButton.Index == 721
+            && _scroll.UpButton.Index == -1 && _scroll.DownButton.Index == -1
             && _closeButton.Location == new Vector2I(304, 404);
         details = $"size={Size} background=F{_background.Index} contentAlpha={_content.Modulate.A:0.##} scroll={_scroll.Location}/{_scroll.Size}#{_scroll.UpButton.Index}/{_scroll.DownButton.Index} close={_closeButton.Location}";
         return ok;

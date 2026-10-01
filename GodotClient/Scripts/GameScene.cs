@@ -7292,7 +7292,11 @@ public partial class GameScene : Control
         if (IsObserver || cell == null || cell.Slot < 0 || cell.Count <= 0) return;
         _net.Connection.SendTradeItem(cell);
     }
-    public void SendNPCButton(int buttonId) => _net.Connection.Enqueue(new C.NPCButton { ButtonID = buttonId });
+    public void SendNPCButton(int buttonId)
+    {
+        GD.Print($"[NPCLegacy] button id={buttonId} observer={IsObserver}");
+        _net.Connection.Enqueue(new C.NPCButton { ButtonID = buttonId });
+    }
     public void SendNPCClose() => _net.Connection.Enqueue(new C.NPCClose());
     public void SendNPCBuy(int index, long amount, bool guildFunds = false)
     {

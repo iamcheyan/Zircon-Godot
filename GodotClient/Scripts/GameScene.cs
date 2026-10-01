@@ -7331,12 +7331,18 @@ public partial class GameScene : Control
     /// </summary>
     private void RunLegacyNpcResponseSelfTest()
     {
-        var page = Globals.NPCPageList?.Binding?.FirstOrDefault(x => x?.Say != null);
+        // 优先取**带商品的 BuySell 页**，使自检同时覆盖商店面板（goods）的 legacy 布局；
+        // 找不到才退回任意有 Say 的页（只验证对话窗本体）。
+        var pages = Globals.NPCPageList?.Binding;
+        var page = pages?.FirstOrDefault(x => x?.DialogType == NPCDialogType.BuySell
+                && x.Goods != null && x.Goods.Count > 0)
+            ?? pages?.FirstOrDefault(x => x?.Say != null);
         if (page == null)
         {
             GD.PrintErr("[LegacyNpcResponseSelfTest] FAIL no bound NPCPage");
             return;
         }
+        GD.Print($"[LegacyNpcResponseSelfTest] page={page.Index} type={page.DialogType} goods={page.Goods?.Count ?? 0}");
 
         page.Say = string.Join("\n", new[]
         {

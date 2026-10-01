@@ -11110,6 +11110,7 @@ public partial class GameScene : Control
         {
             UiOverlay.ReloadAll();
             DumpVisibleWindowRects();
+            DumpHitTestProbe();
             var img = GetViewport().GetTexture().GetImage();
             img.SavePng("/tmp/game_screenshot.png");
             GD.Print("[Game] F12: overlay 热重载 + 截图 /tmp/game_screenshot.png + 窗口矩形 /tmp/ui_window_rects.json");
@@ -11263,6 +11264,29 @@ public partial class GameScene : Control
         {
             GD.PushWarning($"[Game] 窗口矩形导出失败: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// 命中探针（Ctrl+F12 附带）：打印鼠标当前逻辑坐标、该点最上层 DXControl、
+    /// 以及它所属窗口。用于判定「点了没反应」到底是坐标算错、控件不可见，
+    /// 还是被其它控件挡住。
+    /// </summary>
+    private void DumpHitTestProbe()
+    {
+        Vector2 logical = GetGlobalMousePosition() / Mathf.Max(UiScale, 0.0001f);
+        var hit = DXControl.MouseControl;
+        string owner = "none";
+        if (hit != null && GodotObject.IsInstanceValid(hit))
+        {
+            for (Node n = hit; n != null; n = n.GetParent())
+            {
+                if (n is DXWindow w) { owner = w.GetType().Name; break; }
+            }
+        }
+        GD.Print($"[HitProbe] mouseLogical=({(int)logical.X},{(int)logical.Y}) "
+            + $"top={hit?.GetType().Name ?? "null"} owner={owner} "
+            + $"rect={(hit == null ? "-" : $"{hit.Location}/{hit.Size}")} "
+            + $"enabled={hit?.IsEnabled.ToString() ?? "-"} vis={hit?.Visible.ToString() ?? "-"}");
     }
 
     // 地图交互放在未处理输入阶段，确保背包/窗口控件先消费点击，

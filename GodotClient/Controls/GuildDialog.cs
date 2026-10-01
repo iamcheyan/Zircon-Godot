@@ -127,6 +127,11 @@ public partial class GuildDialog : DXWindow
         // 故 legacy 下 _content 铺满窗口，行坐标直接用 EI 值。
         _content.Location = Vector2I.Zero;
         _content.Size = Size;
+        // legacy 下 _content 被铺满整个窗口（Location=0 / Size=Size），而它在
+        // 构造期**后于** _closeButton 添加，于是盖在关闭钮 (556,409) 之上；
+        // 命中探针实测 top=DXControl(_content) —— 关闭钮点不到（真机复现：
+        // 点 (672,444) 无反应，探针 top 是 _content 而非按钮）。关闭钮须在最上层。
+        _closeButton.BringToFront();
         // 原版滚动条 0x4179B0@+0x76C，位置 (x+0x224, y+0xD0) = (548,208)
         // （guild-window-paint-evidence.json；落在 596x446 内，可直接作窗口相对坐标）。
         // 原值 (428,80) 无证据支撑 —— 截图里表现为窗口中部一条突兀的竖直黑条。

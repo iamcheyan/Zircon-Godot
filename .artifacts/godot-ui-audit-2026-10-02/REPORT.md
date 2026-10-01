@@ -66,6 +66,28 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
   - **敏感性已验证**：临时移除两处守卫后自检立刻 `FAIL trade=1->2 marriage=3->4`，恢复守卫后 `PASS`，证明该自检能捕获此缺陷；
   - `dotnet build GodotClient/ZirconClient.csproj`：0 error。
 
+### ISSUE-5 行会窗关闭钮点不到（被内容层盖住）— 已修复
+
+- **复现**：按 `F` 打开行会窗 → 点右下关闭 ✕（逻辑 672,444）→ 窗口**不关**；`Esc` 能关。
+- **根因**（命中探针实测，非推断）：`GuildDialog` 构造期先 `AddControl(_closeButton)`（`:72`），
+  再 `AddControl(_content)`（`:76`）；legacy 布局把 `_content` 改成铺满整窗
+  （`Location=Zero` / `Size=Size`，`:128-129`）。Godot 后添加的兄弟节点在**上层**，
+  于是 `_content` 盖住关闭钮并吃掉点击。
+  探针证据：`[HitProbe] mouseLogical=(672,444) top=DXControl owner=GuildDialog rect=(0,0)/(596,446)`
+  —— top 是 `_content` 而不是 `DXButton`。
+- **修复**：legacy 布局末尾对 `_closeButton` 调 `BringToFront()`。
+- **验证**：真机 `F` 开 → 点 (672,444) → 探针无 `GuildDialog`；连续 3 轮「开→点关闭钮」全部 CLOSED。
+  截图 `evidence/20-guild-open-with-close-visible.png` / `evidence/21-guild-closed-via-close-btn.png`。
+
+### 附：坐标基准缺陷（审计工具本身，已修正，非产品缺陷）
+
+首轮「关闭钮点不到」的结论里有一部分是**测量工具错误**：openbox 会 reparent 客户端窗口，
+`xdotool getwindowgeometry` 返回的是**外框**位置，比客户区绝对原点偏移 `(1,24)`。
+用外框原点点击会整体偏低 24px，表现为「点了没反应」。
+改用 `xwininfo` 的 `Absolute upper-left` 作客户区原点后，同一批点击全部命中
+（例：点 (222,11) 时命中探针回报 `mouseLogical=(222,11)`，此前为 `(223,35)`）。
+`harness.sh` 与探针脚本已按此修正，后续结论均基于修正后的基准。
+
 ## 2. 热键/窗口生命周期矩阵（修复后复跑）
 
 方法：每个键 `按一次 → 探针 → 再按一次 → 探针 → Esc → 探针`。判定「开」= 探针出现该窗口；「关」= 消失。

@@ -175,9 +175,13 @@ public partial class CharacterDialog : DXWindow
         _legacyViewToggle = new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = 171,
-            HoverIndex = 172,
-            PressedIndex = 172,
+            // 原版切换钮属控件类 0x417880（实参 168/169/-1）：字段 +0x18=arg1(悬停)、
+            // +0x1C=arg2(按下)、+0x20=arg3(**普通态，-1 → 不画**)；真机隐藏法确认背景 F200
+            // 已烘焙白色箭头 → 端口不叠画（此前画 171/172 的绿色箭头）。
+            Index = -1,
+            HoverIndex = -1,
+            PressedIndex = 169,
+            Modulate = new Color(1, 1, 1, 0),
             Location = new Vector2I(176, 264),
             Size = new Vector2I(36, 36),
         };
@@ -686,7 +690,6 @@ public partial class CharacterDialog : DXWindow
         _legacyEquipmentView = equipmentView;
         _legacyViewToggle.Index = equipmentView ? 168 : 171;
         _legacyViewToggle.HoverIndex = equipmentView ? 169 : 172;
-        _legacyViewToggle.PressedIndex = equipmentView ? 169 : 172;
         foreach (var entry in _legacyAttributeLabels)
         {
             entry.Label.Visible = equipmentView;

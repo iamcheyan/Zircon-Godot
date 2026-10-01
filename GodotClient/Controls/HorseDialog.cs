@@ -54,6 +54,7 @@ public partial class HorseDialog : DXWindow
             Index = -1,
             HoverIndex = -1,
             PressedIndex = 162,
+            Modulate = new Color(1, 1, 1, 0),  // 不绘制（含 fallback 底色框）
             Location = new Vector2I(252, 293),
             Size = new Vector2I(28, 26),
         };

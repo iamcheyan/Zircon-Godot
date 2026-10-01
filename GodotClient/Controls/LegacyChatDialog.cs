@@ -137,6 +137,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         _close.Index = -1;
         _close.HoverIndex = -1;
         _close.PressedIndex = 162;
+        _close.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         _close.Size = new Vector2I(28, 26);
         _close.TooltipText = Lang.CommonControlClose;
         _close.MouseClick += (_, _) => CloseChat();

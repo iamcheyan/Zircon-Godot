@@ -164,6 +164,7 @@ public partial class ConfigDialog : DXWindow
         _closeButton.Index = -1;
         _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
+        _closeButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         _closeButton.Location = new Vector2I(218, 238);
         _closeButton.Size = new Vector2I(28, 26);
         CreateLegacyOptionButtons();

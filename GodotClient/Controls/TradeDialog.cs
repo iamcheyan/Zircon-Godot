@@ -140,6 +140,7 @@ public partial class TradeDialog : DXWindow
         _closeButton.Index = -1;
         _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
+        _closeButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         // 原版关闭键是**不可见热区**，位置 (x+0x214, y+0x15E) = (532,350)
         // （trade-window-render-evidence.json::buttons.close.args：
         //   0x417550(0, 161, 162, 532, 350, 0, 1, -1, 0) @ 0x415A4D-0x415A6D）。

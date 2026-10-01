@@ -108,8 +108,10 @@ public partial class GuildDialog : DXWindow
                 // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
         // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
         // 只有按下态画 arg3=162。
-        _closeButton.Index = -1;
-        _closeButton.HoverIndex = -1;
+        // 2026-10-01 回退：行会窗关闭钮美术**并未烘焙进 F600**（真机前后对比：改 -1 后 ✕ 消失），
+        // 仍由按钮自身绘制 F161/162。
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
         // 原版关闭键：social-window-render-evidence.json 的 paint-time SetPosition 真值
         // (x+556, y+409)（该文件明确 ctor 值只有前 4 个可用、其余是寄存器垃圾）。

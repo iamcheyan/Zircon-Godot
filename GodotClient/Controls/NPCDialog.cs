@@ -158,8 +158,9 @@ public partial class NPCDialog : DXWindow
                 // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
         // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
         // 只有按下态画 arg3=162。
-        _closeButton.Index = -1;
-        _closeButton.HoverIndex = -1;
+        // 2026-10-01 回退：该窗关闭钮美术**并未烘焙**（精确位置比对 diff 46-61）→ 仍由按钮绘制 F161/162。
+        _closeButton.Index = 161;
+        _closeButton.HoverIndex = 162;
         _closeButton.PressedIndex = 162;
         _closeButton.Location = new Vector2I(7, 141);
         _closeButton.Size = new Vector2I(28, 26);
@@ -274,9 +275,7 @@ public partial class NPCDialog : DXWindow
             && _headerBackground.Location == new Vector2I(-64, -59)
             && _textArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
             && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
-            // 2026-10-01：关闭钮原版 arg8=-1（✕ 已烘焙进 F1100）→ 不叠画帧，只保留按下态 162。
-            && _closeButton.Index == -1 && _closeButton.HoverIndex == -1
-            && _closeButton.PressedIndex == 162
+            && _closeButton.Index == 161
             && _closeButton.Location == new Vector2I(7, 141)
             && _closeButton.Size == new Vector2I(28, 26)
             && _scrollUp.Index == 52 && _scrollUp.Location == new Vector2I(290, 145)

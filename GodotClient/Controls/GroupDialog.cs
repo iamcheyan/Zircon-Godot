@@ -154,6 +154,7 @@ public partial class GroupDialog : DXWindow
             Index = -1,
             HoverIndex = -1,
             PressedIndex = 921,
+            Modulate = new Color(1, 1, 1, 0),  // 不绘制（含 fallback 底色框）
             Location = new Vector2I(9, 52),
             Size = new Vector2I(28, 26),
         };
@@ -206,6 +207,7 @@ public partial class GroupDialog : DXWindow
         _closeButton.Index = -1;
         _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
+        _closeButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         // P3 证据为 (226,214) 28x26（social-window-render-evidence.json
         // child_controls[0]，并与 F900 底图烘焙 X 的模板匹配一致），不是 (224,212)。
         _closeButton.Location = new Vector2I(226, 214);

@@ -337,6 +337,7 @@ public partial class InventoryDialog : DXWindow
         CloseButton.Index = -1;
         CloseButton.HoverIndex = -1;
         CloseButton.PressedIndex = 162;
+        CloseButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         CloseButton.Location = new Vector2I(249, 288);
         CloseButton.Size = new Vector2I(28, 26);
 

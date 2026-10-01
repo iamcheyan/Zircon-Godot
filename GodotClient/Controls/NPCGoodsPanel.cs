@@ -158,6 +158,7 @@ public partial class NPCGoodsPanel : DXControl
         _buy.Index = -1;
         _buy.HoverIndex = -1;
         _buy.PressedIndex = 1013;
+        _buy.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         _guildFunds.Visible = false;
     }
 

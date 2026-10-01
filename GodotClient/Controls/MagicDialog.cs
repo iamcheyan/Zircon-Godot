@@ -196,6 +196,7 @@ public partial class MagicDialog : DXWindow
         _closeButton.Index = -1;
         _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
+        _closeButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         _closeButton.Location = new Vector2I(418, 348);
         _closeButton.Size = new Vector2I(28, 26);
         // SKL-04 证据的 11 个控件里**没有 161/162**；可点击的三个帧控件是

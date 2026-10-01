@@ -225,3 +225,56 @@ SSH 转发 127.0.0.1:7001 → 192.168.3.82:7000
    是否合并/推送由用户决定。
 4. 本机 `Zircon` 里 2026-09-25 的旧 stash（7 个 GodotClient 文件，与当前 master 冲突）
    已按"保全优先"推到归档分支，见仓库分支列表。
+
+---
+
+## 9. 交接时的工作区状态（已推送、已干净）
+
+### 9.1 本机 Zircon（`/Users/tetsuya/Development/Zircon`）
+
+```
+* master  c336fb6b  [origin/master]  ← 已推送，工作区干净
+  archive/codex-sync-2026-09-25  ee113ff7  ← 已推送
+```
+
+- `c336fb6b` = 本交接文档（`docs/pending/EI_SKILLBOOK_TAB_HIGHLIGHT_HANDOFF_2026-10-01.md`）。
+- 2026-09-25 的旧 stash（7 个 GodotClient 文件：ChatTextBox / CombatController / GameScene /
+  MapObjectNode / MirEffectNode / PlayerRenderer / RenderOrder）**内容未丢**，
+  已转成 `archive/codex-sync-2026-09-25` 分支并推送；stash 列表已清空。
+  该分支与当前 master 有冲突（`--3way` 也不干净），**仅供取证**，不要直接 merge。
+- ⚠️ GitHub 提示该仓库已改名：`iamcheyan/Zircon` → **`iamcheyan/Zircon-Godot`**
+  （旧地址仍可推送，remote 暂未改）。
+
+### 9.2 本机 Mir3-Research（`/Users/tetsuya/Development/Mir3-Research`）
+
+```
+* ei-ui-audit-2026-09-24  65fb20b2  [origin/...]  ← 工作区干净
+  archive/mirror-2026-10-01    a2cd0d26  ← 已推送
+  archive/mac-local-2026-09-27 2222a19e  ← 已推送
+  master                      3ae3c60b
+```
+
+- `archive/mirror-2026-10-01`：交接前本机镜像里 D(82) 工作树的未提交改动
+  （`Tools/NpcMover/write_alignment_reports.py`、`Tools/SystemDbProbe/Program.cs`、
+  `Tools/maps/mapedit/map_links_v2.json`、两份 NPC 对齐报告/证据、
+  `docs/research/map-editor-unknown-entities/UnknownEntityPlacements.json`）。
+  **D 上仍是未提交状态**，本机为干净镜像；`login_game.sh remote` 会重新同步过来。
+- `archive/mac-local-2026-09-27`：本机独有的 `Tools/common/pe_dis.py` `find_xref` 修复
+  （修掉"一次性 disasm 遇首个坏字节即停"的漏扫 bug）+ 未跟踪的 `Tools/CharCreator/`
+  （走游戏协议建角色/列角色/删角色的独立小工具）。
+- 本机 `.fresh/`（Fresh 编辑器窗口状态）仍被 `git clean -e .fresh` 保留，非仓库内容。
+
+### 9.3 服务器 82 接续步骤
+
+```bash
+# 82 上
+cd /home/tetsuya/development/zircon && git fetch origin && git merge --ff-only origin/master
+# 或直接拉改名后的地址：git remote set-url origin https://github.com/iamcheyan/Zircon-Godot.git
+```
+
+然后按 §5 修 `MagicDialog.cs`，`dotnet build ServerCore/ServerCore.csproj -o Debug/ServerCore`
+（82 侧服务端）与 `dotnet build GodotClient/ZirconClient.csproj`（客户端，仓库根执行），
+再按 §5.3 真机验收。
+
+> 注：本机 remote 模式已实测可用（§7.3），所以也可以在 82 上只改代码、由本机
+> `bash login_game.sh remote 192.168.3.82 legacy test` 拉起客户端做对比截图。

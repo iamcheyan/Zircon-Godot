@@ -60,6 +60,33 @@ public partial class NPCDialog : DXWindow
     private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
     private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
+    // 原版 0x440AA0 扫描器（npc-window-render-evidence.json::dialogue_text_layout_contract）：
+    //   mode(this+0x582)=1  ⇔ 文本含 `{NPCIMG`（0x469400 与字面量 0x47C568 比较通过）
+    //   overflow(this+0x58C)=1 ⇔ 未截断段数 (raw_segment_count − 6) > 16
+    //   line spacing(this+0x594) = 14 仅当 mode==1 && overflow==1，否则 21
+    private const int LegacyLinePitchCompact = 14;
+    private const int LegacyScannerHeaderSegments = 6;
+    private const int LegacyScannerOverflowLimit = 16;
+
+    /// <summary>
+    /// legacy 行距：按原版扫描器规则从正文推导（21 为默认，14 为「有 NPCIMG 且段数溢出」）。
+    /// "raw segment" 对应原文的裸行数（换行符切分，未计自动换行后的行）——与原版扫描器的
+    /// raw_segment_count 语义一致。
+    /// </summary>
+    private static int ComputeLegacyLinePitch(string raw)
+    {
+        if (string.IsNullOrEmpty(raw) || raw.IndexOf("{NPCIMG", System.StringComparison.Ordinal) < 0)
+            return LegacyLinePitch;
+        int segments = 1;
+        foreach (char c in raw)
+            if (c == '\n' || c == '\r') segments++;
+        return (segments - LegacyScannerHeaderSegments) > LegacyScannerOverflowLimit
+            ? LegacyLinePitchCompact
+            : LegacyLinePitch;
+    }
+
+    /// <summary>当前 legacy 行距（21 或 14），随正文刷新。</summary>
+    private int _legacyPitch = LegacyLinePitch;
 
 
 
@@ -79,7 +106,8 @@ public partial class NPCDialog : DXWindow
         // 所以第二列渲染的是同一段文本向上偏移 6 行（6*21 = 126）后的窗口。
         _textColumn2Area = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true, Visible = false };
         AddControl(_textColumn2Area);
-        _textColumn2 = new NPCTextControl { Size = new Vector2I(340, 1000), Location = new Vector2I(0, -6 * 21) };
+        // 列偏移在正文刷新时按当前行距重算（见 _legacyPitch）。
+        _textColumn2 = new NPCTextControl { Size = new Vector2I(340, 1000), Location = new Vector2I(0, -6 * LegacyLinePitch) };
         _textColumn2Area.AddControl(_textColumn2);
         _scroll = new DXVScrollBar { Location = new Vector2I(350, 45), Size = new Vector2I(14, 95), VisibleSize = 95, Change = 1, HideWhenNoScroll = false, BackColour = Colors.Transparent, Border = false };
         _scroll.UpButton.LibraryFile = LibraryFile.GameInter; _scroll.UpButton.Index = 387;
@@ -179,14 +207,14 @@ public partial class NPCDialog : DXWindow
         if (!_legacyLayout) return;
         int maxScroll = GetLegacyMaxScroll();
         _scrollLine = Mathf.Clamp(_scrollLine + delta, 0, maxScroll);
-        _text.Position = new Vector2(0, -_scrollLine * LegacyLinePitch);
+        _text.Position = new Vector2(0, -_scrollLine * _legacyPitch);
         SyncStripLayerPosition();
         UpdateLegacyScrollEnabled();
     }
 
     private int GetLegacyMaxScroll()
     {
-        int visibleLines = LegacyTextHeight / LegacyLinePitch;
+        int visibleLines = LegacyTextHeight / _legacyPitch;
         return Math.Max(0, _text.LineCount - visibleLines);
     }
 
@@ -301,10 +329,13 @@ public partial class NPCDialog : DXWindow
         // 控件绘制宽度放宽到菜单条宽度（383），否则会被换行宽度 149 裁掉。
         _text.LegacyMenuStrips = false;   // 改由 _legacyStripLayer 在外层绘制（见下）
         _text.DrawWidth = _legacyLayout ? 383 : 0;
+        // 原版行距由扫描器决定（见 ComputeLegacyLinePitch）；列偏移/滚动/列切换共用它。
+        _legacyPitch = _legacyLayout ? ComputeLegacyLinePitch(raw) : 18;
+        _textColumn2.Location = new Vector2I(0, -6 * _legacyPitch);
         _text.SetContent(raw,
             _legacyLayout ? LegacyTextWidth : 340,
             _legacyLayout ? LegacyFontSize : 10,
-            _legacyLayout ? LegacyLinePitch : 18);
+            _legacyPitch);
         // 菜单条层必须挂在 _textArea **之外**：_textArea 只有 350 宽（且 Clip=true），
         // 而菜单条宽 383。挂在里面实测只剩约 200 逻辑像素可见。
         // 这里复用一个只画条的 NPCTextControl 实例，作为本窗口的直接子控件。
@@ -314,7 +345,7 @@ public partial class NPCDialog : DXWindow
             _legacyStripLayer.LegacyMenuStrips = true;
             _legacyStripLayer.StripsOnly = true;
             _legacyStripLayer.DrawWidth = 383;
-                _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+                _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, _legacyPitch);
             ApplyLegacyNpcFace();
             // 与文本列同起点（_textArea 位置 15,45 + _text 相对 0,0），并跟随滚动。
             SyncStripLayerPosition();
@@ -329,12 +360,12 @@ public partial class NPCDialog : DXWindow
         // N5 两列：每列 136/21 = 6 行，行数超过 6 才启用第二列。
         if (_legacyLayout)
         {
-            bool twoColumn = _text.LineCount > LegacyTextHeight / LegacyLinePitch;
+            bool twoColumn = _text.LineCount > LegacyTextHeight / _legacyPitch;
             _textColumn2Area.Visible = twoColumn;
             if (twoColumn)
             {
                 _textColumn2.LegacyMenuStrips = true;
-                _textColumn2.SetContent(raw, LegacyTextWidth, LegacyFontSize, LegacyLinePitch);
+                _textColumn2.SetContent(raw, LegacyTextWidth, LegacyFontSize, _legacyPitch);
             }
         }
         else
@@ -343,7 +374,7 @@ public partial class NPCDialog : DXWindow
         }
         if (_legacyLayout)
         {
-            GD.Print($"[LegacyNPC] lines={_text.LineCount} twoColumn={_textColumn2Area.Visible} "
+            GD.Print($"[LegacyNPC] lines={_text.LineCount} pitch={_legacyPitch} twoColumn={_textColumn2Area.Visible} "
                 + $"col1={_textArea.Location}/{_textArea.Size} col2={_textColumn2Area.Location}/{_textColumn2Area.Size}");
         }
         int pageTextHeight = _text.ContentHeight;

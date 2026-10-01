@@ -107,6 +107,16 @@ public sealed partial class LegacyChatDialog : DXWindow
             int index = i;
             var button = CreateSpriteButton(channelFrames[i].Item1, channelFrames[i].Item2,
                 new Vector2I(25 + 40 * i, 332));
+            // 原版频道键三态（ctor 实参 + 绘制状态机 0x417640 / 鼠标 0x417780-0x4177F0）：
+            //   arg8 = -1  -> 普通态**不画**（灰白图标由背景 F350 烘焙；实测 F350 在
+            //                  窗口相对 (25+40k, 332) 处就是那 6 个图标）
+            //   arg2 = 360+2k -> "屏蔽/激活"绿态（该键 arg9/+0x30 = 0，悬停态不画帧，只画文字）
+            //   arg3 = 361+2k -> 按下金态
+            // 故此处不常显绿帧：普通态画空、悬停不画帧（提示文字走 Tooltip）、按下画 arg3。
+            button.Size = MirSkin.GetSize(LibraryFile.GameInter, channelFrames[i].Item1);
+            button.Index = -1;
+            button.HoverIndex = -1;
+            button.PressedIndex = channelFrames[i].Item2;
             button.TooltipText = tips[i];
             button.MouseClick += (_, _) => InsertChannelTemplate(channelText[index]);
             AddControl(button);

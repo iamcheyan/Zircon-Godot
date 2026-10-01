@@ -166,11 +166,15 @@ public partial class GuildDialog : DXWindow
         };
         foreach (var spec in specs)
         {
+            // 原版 8 个动作钮实参均为 arg8=-1、arg9=0（0x424EE7 起）：
+            //   普通/悬停都不画帧，只有按下画 arg3；按钮美术已烘焙进 F600
+            //   （模板搜索：F610/612/614/616/618/620/622/624 在 F600 内 diff 仅 7.6-12.0，
+            //    位置与规格表两行 y=409/435 一致）。
             var button = new DXButton
             {
                 LibraryFile = LibraryFile.GameInter,
-                Index = spec.normal,
-                HoverIndex = spec.pressed,
+                Index = -1,
+                HoverIndex = -1,
                 PressedIndex = spec.pressed,
                 FixedSize = true,
                 Size = MirSkin.GetSize(LibraryFile.GameInter, spec.normal),

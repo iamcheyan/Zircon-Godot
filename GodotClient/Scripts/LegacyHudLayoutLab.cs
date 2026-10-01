@@ -262,6 +262,60 @@ public partial class LegacyHudLayoutLab : Control
 
         // 技能书右页（Magic.exp 段落）实机验收：打开窗口 -> 选中首行技能 ->
         // 右页应取到该技能 id 的段落。段落内容由 [LegacyMagicDetail] 日志输出。
+        bool questRowsSelfTest = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            questRowsSelfTest |= arg == "--legacy-quest-rows-selftest";
+        if (questRowsSelfTest)
+        {
+            // Q-2：用**真实** System.db 的 QuestInfo（独立 new QuestInfo 会触碰 MirDB
+            // 集合而在 DBObject.OnChanged 抛 NRE），断言 legacy 列表行的原版几何/配色。
+            // ClientUserQuest.IsComplete 会解引用 Tasks / Quest.Tasks（Globals.cs:1035），
+            // 故只取 Tasks 非空的任务，并给合成实例填空 Tasks。
+            var all = (Globals.QuestInfoList?.Binding ?? Enumerable.Empty<QuestInfo>())
+                .Where(q => q?.Tasks != null)
+                .ToList();
+            if (all.Count == 0)
+            {
+                GD.Print("[LegacyQuestRowsSelfTest] SKIP 客户端 DB 无任务数据");
+            }
+            else
+            {
+                var samples = all.Take(3)
+                    .Select((q, i) => new ClientUserQuest
+                    {
+                        Index = i,
+                        Quest = q,
+                        Track = i == 1,
+                        Tasks = new List<ClientUserQuestTask>(),
+                    })
+                    .ToList();
+                _quest.SetQuestsForTest(samples);
+                var rows = _quest.LegacyListRowsForTest;
+                var selected = new Color(25 / 255f, 25 / 255f, 200 / 255f);
+                var normal = new Color(25 / 255f, 25 / 255f, 125 / 255f);
+                bool ok = rows.Count == samples.Count;
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    var wantPos = new Vector2I(65, 90 + 15 * i);
+                    bool posOk = rows[i].Position == wantPos;
+                    bool colOk = Mathf.Abs(rows[i].Colour.R - normal.R) < 0.01f
+                        && Mathf.Abs(rows[i].Colour.G - normal.G) < 0.01f
+                        && Mathf.Abs(rows[i].Colour.B - normal.B) < 0.01f;
+                    GD.Print($"[LegacyQuestRowsSelfTest] normal row{i} pos={rows[i].Position} want={wantPos} "
+                        + $"posOk={posOk} colour={rows[i].Colour} colOk={colOk} text='{rows[i].Text}'");
+                    ok &= posOk && colOk;
+                }
+                _quest.SelectFirstQuestForTest();
+                var selRows = _quest.LegacyListRowsForTest;
+                bool selOk = selRows.Count > 0
+                    && Mathf.Abs(selRows[0].Colour.B - selected.B) < 0.01f
+                    && Mathf.Abs(selRows[0].Colour.R - selected.R) < 0.01f;
+                GD.Print($"[LegacyQuestRowsSelfTest] selected row0 pos={selRows[0].Position} colour={selRows[0].Colour} "
+                    + $"want={selected} selOk={selOk}");
+                GD.Print($"[LegacyQuestRowsSelfTest] {(ok && selOk ? "PASS" : "FAIL")} rows={rows.Count} data={all.Count}");
+            }
+        }
+
         bool magicSelfTest = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
             magicSelfTest |= arg == "--legacy-magic-selftest";

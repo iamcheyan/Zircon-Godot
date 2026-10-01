@@ -426,6 +426,21 @@ public partial class QuestDialog : DXWindow
     /// <summary>可接任务/里程碑提醒由 SetQuests 和里程碑变化时刷新。</summary>
     public void RefreshAlerts() => UpdateAlertIcons();
 
+    // ---- Q-2：原版 F700 任务列表行几何/配色（primary-bytes）----
+    // x = win.x + 0x41 = 65（0x0044761F add ecx,0x41）
+    // y = win.y + 0x5A + 15*line = 90 + 15*line
+    //     （0x00447618 lea eax,[ecx+ecx*2+0x12] = line*3+0x12；0x00447622 lea eax,[eax+eax*4] = ×5；
+    //      0x00447625 add eax,edx = +win.y）
+    // 可见行上限 19（0x004475DE cmp ecx,0x13）；行宽测量阈值 200px（0x0044754D cmp edx,0xC8）
+    // 配色 0x00BBGGRR：选中 0x1919C8 = RGB(25,25,200)，普通 0x19197D = RGB(25,25,125)
+    // （0x004475F7 and al,0x51 / add eax,0x1919C8；0x00447604 and al,0xCE / add eax,0x19197D）
+    private const int LegacyListRowX = 65;
+    private const int LegacyListRowY = 90;
+    private const int LegacyListRowPitch = 15;
+    private const int LegacyListRowCap = 19;
+    private static readonly Color LegacyListRowSelected = new(25 / 255f, 25 / 255f, 200 / 255f);
+    private static readonly Color LegacyListRowNormal = new(25 / 255f, 25 / 255f, 125 / 255f);
+
     private void RefreshPage()
     {
         foreach (var line in _lines)
@@ -517,6 +532,79 @@ public partial class QuestDialog : DXWindow
             }
         }
 
+        // Q-2：legacy 模式下原版是**扁平行列表**（无分组标题、无行下任务描述），
+        // 行几何/配色见上方常量；现代路径保持不变。
+        if (_legacyEiLayout)
+        {
+            int lx = LegacyListRowX - _content.Location.X;
+            int ly = LegacyListRowY - _content.Location.Y;
+            int row = 0;
+            if (_page == 1)
+            {
+                foreach (var info in _available)
+                {
+                    var quest = info;
+                    var line = AddLine(string.Format(Lang.QuestAcceptLabel, quest.QuestType, quest.QuestName),
+                        12, LegacyListRowNormal, lx, ly + LegacyListRowPitch * row);
+                    line.MouseFilter = Control.MouseFilterEnum.Stop;
+                    line.GuiInput += e =>
+                    {
+                        if (e is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
+                        {
+                            _selectedAvailable = quest;
+                            RefreshDetail();
+                        }
+                    };
+                    row++;
+                }
+            }
+            else
+            {
+                foreach (var userQuest in query)
+                {
+                    var quest = userQuest;
+                    bool complete = quest.IsComplete;
+                    bool selected = ReferenceEquals(quest, _selectedQuest);
+                    var line = AddLine($"[{quest.Quest.QuestType}] {quest.Quest.QuestName}"
+                        + (complete ? Lang.QuestUi156Label : Lang.QuestUi157Label),
+                        12, selected ? LegacyListRowSelected : LegacyListRowNormal,
+                        lx, ly + LegacyListRowPitch * row);
+                    line.MouseFilter = Control.MouseFilterEnum.Stop;
+                    int questIndex = quest.Quest.Index;
+                    line.GuiInput += e =>
+                    {
+                        if (e is not InputEventMouseButton mb || !mb.Pressed) return;
+                        if (mb.ButtonIndex == MouseButton.Left)
+                        {
+                            _selectedQuest = quest;
+                            RefreshDetail();
+                            if (complete)
+                            {
+                                if (GameScene.Game?.IsObserver == true) return;
+                                var choices = quest.Quest.Rewards?.Where(r => r?.Choice == true);
+                                if (choices != null && choices.Any())
+                                {
+                                    _choiceDialog ??= new QuestRewardChoiceDialog();
+                                    _choiceDialog.Open(quest.Quest, choices);
+                                }
+                                else GameScene.Game?.SendQuestComplete(questIndex);
+                            }
+                            else GameScene.Game?.SendQuestTrack(questIndex, true);
+                        }
+                        else if (mb.ButtonIndex == MouseButton.Right && !complete)
+                            ConfirmAbandon(questIndex);
+                    };
+                    row++;
+                }
+            }
+            _scroll.Value = 0;
+            _scroll.MaxValue = Mathf.Max(_scroll.VisibleSize, ly + LegacyListRowPitch * Mathf.Max(1, row) + 8);
+            RepositionLines();
+            RefreshDetail();
+            _detailPanel.MoveToFront();
+            return;
+        }
+
         int y = 5;
         if (_page != 1)
         foreach (var group in query
@@ -576,6 +664,24 @@ public partial class QuestDialog : DXWindow
         RefreshDetail();
         _detailPanel.MoveToFront();
     }
+
+    /// <summary>
+    /// 自检用：legacy 列表当前渲染的行（**窗口相对**坐标 + 颜色 + 文本）。
+    /// 用于把 Q-2 的原版几何/配色（x=65、y=90+15·line、0x1919C8/0x19197D）变成可断言的输出。
+    /// </summary>
+    public IReadOnlyList<(string Text, Vector2I Position, Color Colour)> LegacyListRowsForTest
+        => _lines.Select(l => (l.Text, l.Location + _content.Location, l.TextColour)).ToList();
+
+    /// <summary>自检用：把首行标记为选中，用于验证选中态配色（0x1919C8）。</summary>
+    public void SelectFirstQuestForTest()
+    {
+        _selectedQuest = _quests.FirstOrDefault();
+        _selectedAvailable = _available.FirstOrDefault();
+        RefreshPage();
+    }
+
+    /// <summary>自检用：把合成任务注入列表（仅测试场使用，不连服务器）。</summary>
+    public void SetQuestsForTest(IEnumerable<ClientUserQuest> quests) => SetQuests(quests);
 
     private DXLabel AddLine(string text, int fontSize, Color colour, int x, int y)
     {

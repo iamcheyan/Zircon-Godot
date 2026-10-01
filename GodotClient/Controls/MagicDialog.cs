@@ -175,11 +175,11 @@ public partial class MagicDialog : DXWindow
             _legacyAuxControl = new DXButton
             {
                 LibraryFile = LibraryFile.GameInter,
-                // 同上：arg8=-1、arg9=0，只保留按下 arg3=441。
-                Index = -1,
-                HoverIndex = -1,
+                // arg8=-1、arg9=0 不是「不要画」：0x00417640 在 [esi+0x24]==1 且 [esi+0x25]==0 时
+                // 读 [esi+0x20]（=arg2=440）→ 普通帧必须保留帧号，只把按下态留给 arg3=441。
+                Index = 440,
+                HoverIndex = 441,
                 PressedIndex = 441,
-                Modulate = new Color(1, 1, 1, 0),
                 FixedSize = true,
                 Size = MirSkin.GetSize(LibraryFile.GameInter, 440),
                 Location = new Vector2I(399, 340),
@@ -219,12 +219,8 @@ public partial class MagicDialog : DXWindow
         _tabPrevious.LibraryFile = LibraryFile.GameInter;
         _tabPrevious.Index = 410;
         _tabPrevious.HoverIndex = 411;
-        // 原版 arg8=-1、arg9=0、arg2/arg3=410/411（0x4392A5 一带）→ 普通/悬停不画帧；
-        // 真机隐藏法验证：隐藏后该处仍显示**背景烘焙的箭头**（另一种样式）→ 端口叠画多余。
-        // 故置 Index/Hover=-1 并加 Modulate 抑制 fallback 底色框，只保留按下 arg3。
-        _tabPrevious.Index = -1;
-        _tabPrevious.HoverIndex = -1;
-        _tabPrevious.Modulate = new Color(1, 1, 1, 0);
+        // 原版 arg8=-1、arg9=0、arg2/arg3=410/411（0x4392A5 一带）。arg8/arg9 不是「不要画」：
+        // 0x00417640 只在 [esi+0x20]（=arg2）为 -1 时才走 fallback，普通帧必须保留。
         _tabPrevious.PressedIndex = 411;
         _tabPrevious.Text = string.Empty;
         _tabPrevious.Location = new Vector2I(61, 303);
@@ -236,10 +232,6 @@ public partial class MagicDialog : DXWindow
         _tabNext.LibraryFile = LibraryFile.GameInter;
         _tabNext.Index = 412;
         _tabNext.HoverIndex = 413;
-        _tabNext.Modulate = new Color(1, 1, 1, 0);
-        _tabNext.Index = -1;
-        _tabNext.HoverIndex = -1;
-        _tabNext.Modulate = new Color(1, 1, 1, 0);
         _tabNext.PressedIndex = 413;
         _tabNext.Text = string.Empty;
         _tabNext.Location = new Vector2I(366, 303);
@@ -382,10 +374,10 @@ public partial class MagicDialog : DXWindow
             button.MouseClick += (_, _) => SelectSchool(school);
             AddControl(button);
             // 原版 8 个页签实参同为 arg8=-1、arg9=0（0x4392A5/0x4392D4 一带）；
-            // 真机隐藏法验证：隐藏后页签**完全一致**（美术已烘焙进 F400）→ 端口不叠画。
-            button.Index = -1;
-            button.HoverIndex = -1;
-            button.Modulate = new Color(1, 1, 1, 0);
+            // 但 0x00439667 的 `mov ebx,8 / call [edx+4]` 循环证明原版每次 paint 都重绘这 8 个
+            // 控件，且 GameInter F450..465 解码后**全部是红色美术**（无蓝帧）→ Index 必须保持
+            // 帧号；置 -1 + Modulate=alpha0 会让红色整层消失（fd81d6a7 的「真机隐藏法」判定
+            // 无法区分「烘焙美术与控件帧同源」和「两份不同美术叠加」，已废止）。
             _schoolButtons[school] = button;
         }
     }
@@ -444,17 +436,18 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Phantom, new(1, 231), 462),
             (MagicSchool.Physical, new(2, 266), 464),
         };
-        // 2026-10-01：页签美术已烘焙进 F400（真机隐藏法验证）→ 端口不叠画（Index/Hover=-1），
-        // 但**尺寸仍按原版帧头**、位置不变；判据随之更正（原断言 Index==x.frame 编码叠画行为）。
+        // 判据依据：GameInter F450..465 解码后全部为红色美术（无蓝帧），且原版 paint
+        // （0x00439667 `mov ebx,8 / call [edx+4]`）每帧都重绘这 8 个控件 → Index 必须是帧号。
+        // 蓝页签是 F400 的烘焙基础态，红页签是控件帧绘制的当前态；置 -1 会让红色整层消失。
         bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
             && button.Location == x.location
-            && button.Index == -1 && button.HoverIndex == -1
+            && button.Index == x.frame && button.HoverIndex == x.frame + 1
             && button.Size == MirSkin.GetSize(LibraryFile.GameInter, x.frame));
-        // 同上：导航钮 arg8=-1，美术已烘焙（真机隐藏法验证）→ Index/Hover=-1。
+        // 同源证据：F410..413 为金色箭头美术（另一套），原版同样逐帧重绘 → 保留帧号。
         bool navigationMatch = _tabPrevious.Location == new Vector2I(61, 303)
-            && _tabPrevious.Index == -1 && _tabPrevious.HoverIndex == -1
+            && _tabPrevious.Index == 410 && _tabPrevious.HoverIndex == 411
             && _tabNext.Location == new Vector2I(366, 303)
-            && _tabNext.Index == -1 && _tabNext.HoverIndex == -1;
+            && _tabNext.Index == 412 && _tabNext.HoverIndex == 413;
         bool rowsMatch = _legacySkillRows.Count == LegacyPageSize
             && _legacySkillRows.Select((row, i) => row.Location == new Vector2I(55, LegacySkillRowY[i])
                 && row.Size == new Vector2I(145, 36)).All(x => x);
@@ -462,7 +455,7 @@ public partial class MagicDialog : DXWindow
             && _header.Index == 400
             && _legacyAuxControl != null
             && _legacyAuxControl.Location == new Vector2I(399, 340)
-            && _legacyAuxControl.Index == -1 && _legacyAuxControl.HoverIndex == -1
+            && _legacyAuxControl.Index == 440 && _legacyAuxControl.HoverIndex == 441
             && _legacySkillRows.Count == LegacyPageSize
             && rowsMatch
             && _schoolButtons.Count == LegacySchoolOrder.Length

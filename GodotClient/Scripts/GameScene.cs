@@ -410,12 +410,19 @@ public partial class GameScene : Control
 
     public void OpenHelpDialog()
     {
-        if (_helpDialog != null) WindowManager.Open(_helpDialog, _uiLayer);
+        // 原版键位/菜单钮都是 toggle（旧 Client/Scenes/GameScene.cs:1343
+        // `HelpBox.Visible = !HelpBox.Visible`；MenuDialog:127 同）。此前只有
+        // Open，导致打开后无法用同一入口关闭。
+        if (_helpDialog != null) WindowManager.Toggle(_helpDialog, _uiLayer);
     }
 
     public void OpenConfigDialog()
     {
-        if (_configDialog != null) WindowManager.Open(_configDialog, _uiLayer);
+        // 原版键位/菜单钮/HUD cap11 都是 toggle（旧 Client/Scenes/GameScene.cs:1348
+        // `ConfigBox.Visible = !ConfigBox.Visible`；MenuDialog:116 同）。此前只有
+        // Open，导致按 N / HUD cap11 打开后**再按无法关闭**（真机复现：
+        // after-open 有 ConfigDialog，after-repress 仍为打开）。
+        if (_configDialog != null) WindowManager.Toggle(_configDialog, _uiLayer);
     }
 
     public void SetDrawWeather(bool enabled)
@@ -454,7 +461,15 @@ public partial class GameScene : Control
     public void SaveChatTabs() => _chatLog?.SaveTabs();
     public void LoadChatTabs() => _chatLog?.LoadTabs();
 
-    public void OpenGuildDialog() { if (_guildDialog != null) WindowManager.Open(_guildDialog, _uiLayer); }
+    // 原版键位/HUD cap6/菜单钮都是 toggle（旧 Client/Scenes/GameScene.cs:1403
+    // `GuildBox.Visible = !GuildBox.Visible`；MenuDialog:138 同）。此前只有 Open，
+    // 导致按 F / HUD 行会钮打开后**再按无法关闭**（真机复现：after-open 有
+    // GuildDialog，after-repress 仍为打开）。
+    // 例外：服务端行会邀请包 `OnGuildInvite` 走本方法，需要「确保可见」，
+    // 因此该调用点改用下面的 EnsureGuildDialogOpen。
+    public void OpenGuildDialog() { if (_guildDialog != null) WindowManager.Toggle(_guildDialog, _uiLayer); }
+    /// <summary>行会邀请等**服务端驱动**路径使用：只开不关。</summary>
+    public void EnsureGuildDialogOpen() { if (_guildDialog != null) WindowManager.Open(_guildDialog, _uiLayer); }
     public bool HasGuild => _guildDialog?.HasGuild == true;
     public long GuildFunds => _guildDialog?.GuildFunds ?? 0;
     public int GuildFlag => _guildDialog?.GuildFlag ?? -1;
@@ -466,7 +481,21 @@ public partial class GameScene : Control
         _guildMemberDialog.OpenMember(index, name, rank, permission);
         WindowManager.Open(_guildMemberDialog, _uiLayer);
     }
-    public void OpenRankingDialog() { if (_rankingDialog != null) { WindowManager.Open(_rankingDialog, _uiLayer); RequestRankings(0, false); } }
+    // 原版键位/菜单钮是 toggle（旧 Client/Scenes/GameScene.cs:1352
+    // `RankingBox.Visible = !RankingBox.Visible`；MenuDialog:160 同）。此前只有
+    // Open，导致打开后无法用同一入口关闭。刷新请求仅在**打开**时发送，
+    // 避免关窗时白发一次 C.RankRequest。
+    public void OpenRankingDialog()
+    {
+        if (_rankingDialog == null) return;
+        if (_rankingDialog.Visible)
+        {
+            WindowManager.Close(_rankingDialog);
+            return;
+        }
+        WindowManager.Open(_rankingDialog, _uiLayer);
+        RequestRankings(0, false);
+    }
     public void RequestRankings(int startIndex, bool onlineOnly, RequiredClass classFilter = RequiredClass.None)
         => _net?.Connection?.Enqueue(new C.RankRequest { Class = classFilter, OnlineOnly = onlineOnly, StartIndex = startIndex });
     public static bool CanSendQuestOperation(bool observer, int index)
@@ -702,11 +731,20 @@ public partial class GameScene : Control
         if (_guildDialog?.Visible == true && _guildDialog.TryRouteItem(source)) return true;
         return false;
     }
-    public void OpenCommunicationDialog() { if (_communicationDialog != null) WindowManager.Open(_communicationDialog, _uiLayer); }
+    // 原版是 toggle（旧 Client/Scenes/GameScene.cs:1356 BlockListWindow /
+    // MailSendWindow 都是 `CommunicationBox.Visible = !CommunicationBox.Visible`）。
+    // 此前只有 Open，导致菜单/邮件钮打开后无法用同一入口关闭。
+    public void OpenCommunicationDialog() { if (_communicationDialog != null) WindowManager.Toggle(_communicationDialog, _uiLayer); }
     public void OpenGroupDialog()
     {
         if (_groupDialog == null) return;
         // EI 组队窗不订阅现代 LFG 广播；legacy 只切换原版窗口。
+        // 原版是 toggle（旧 Client/Scenes/GameScene.cs:1388 `GroupBox.Visible = !…`）。
+        if (_groupDialog.Visible)
+        {
+            WindowManager.Close(_groupDialog);
+            return;
+        }
         if (!AutoLoginArgs.LegacyUi) _net?.Connection?.SendGroupNotify(true);
         WindowManager.Open(_groupDialog, _uiLayer);
     }
@@ -2847,7 +2885,8 @@ public partial class GameScene : Control
     private void OnGuildInvite(S.GuildInvite packet)
     {
         if (packet == null) return;
-        OpenGuildDialog();
+        // 服务端邀请包必须「确保可见」，不能用 toggle 把已开的窗口关掉。
+        EnsureGuildDialogOpen();
         _guildDialog?.ShowInvite(packet.Name, packet.GuildName);
     }
     private void OnCompanionRetrieve(S.CompanionRetrieve packet)

@@ -129,6 +129,13 @@ public sealed partial class LegacyChatDialog : DXWindow
             MaxLength = Globals.MaxChatLength,
         };
         _input.TextSubmitted += Submit;
+        // Escape 取消：原版 ChatTextBox 的输入框 KeyPress Escape 分支
+        // （旧 Client/Scenes/Views/ChatTextBox.cs:302-309）清空文本、解绑链接物品、
+        // 并隐藏聊天条。DXTextInput 已有 Canceled 事件但**此前无人订阅**，
+        // 且 LineEdit 会消费 Escape，导致「聊天框打开后 Esc 无法关闭」
+        // （真机复现：R 开聊天窗后按 Esc 无任何变化，其它热键同样被
+        // GameScene._Input 的 LineEdit 焦点早退吞掉）。
+        _input.Canceled += CancelChatInput;
         AddControl(_input);
 
         // 原版关闭钮 arg8=-1、arg9=0（普通/悬停都不画帧）；F161(✕) 已烘焙进 F350
@@ -261,10 +268,22 @@ public sealed partial class LegacyChatDialog : DXWindow
 
         string name = ChatLineRecall.ExtractSenderName(_messages[index].Text);
         if (string.IsNullOrEmpty(name)) return;
-
         _input.Text = ChatLineRecall.FormatWhisper(name);
         _input.GrabFocus();
         _input.CaretColumn = _input.Text.Length;
+    }
+
+    /// <summary>
+    /// 输入框 Escape：原版 ChatTextBox.TextBox_KeyPress 的 Escape 分支
+    /// （旧 Client/Scenes/Views/ChatTextBox.cs:302-309）——丢弃未提交文本、
+    /// 清链接物品、关闭聊天条。用 CloseChat 走 WindowManager，保证 Z 序
+    /// 与 OpenWindows 列表同步（否则会留下「不可见但仍在列表」的残留）。
+    /// </summary>
+    private void CancelChatInput()
+    {
+        _linkedItems.Clear();
+        _input.Text = string.Empty;
+        CloseChat();
     }
 
     private void Submit(string text)

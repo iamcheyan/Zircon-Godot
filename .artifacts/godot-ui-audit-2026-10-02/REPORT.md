@@ -1,0 +1,109 @@
+# Godot 客户端 UI 全面交互审计与修复（2026-10-02）
+
+真机审计：Godot 4.6.3 mono + Xvfb `:100` + openbox，客户端连本地 `127.0.0.1:7000`
+ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素，scale=1）。
+所有结论来自**真实运行窗口**的鼠标/键盘注入 + `Ctrl+F12` 的 `WindowManager`
+可见窗口矩形导出（`/tmp/ui_window_rects.json`）+ 全帧像素比对，非静态代码推断。
+
+## 0. 环境与工具
+
+| 项 | 值 |
+|---|---|
+| 客户端 | `godot-mono --path GodotClient -- --server 127.0.0.1 --port 7000 --window=800x600 --user <测试账号> --char <测试角色>` |
+| 界面模式 | legacy EI（默认；`ZIRCON_LEGACY_UI_DATA_PATH=$HOME/mir2ei/LegacyEI/Data`） |
+| 状态探针 | `Ctrl+F12` → `/tmp/ui_window_rects.json`（`GameScene.DumpVisibleWindowRects`，逐窗口 `DXWindow.Windows` 可见项的名称 + 位置 + 尺寸） |
+| 输入注入 | `xdotool`（XTEST；`--window` 的 XSendEvent 合成事件 Godot 不接收，已弃用） |
+| 截图 | `scrot` 后按窗口原点裁 800×600 |
+| 工具脚本 | 本目录 `harness.sh`（截图/点击/按键封装） |
+
+`Ctrl+F12` 探针有一个**已知副作用**：当原生 `LineEdit` 持有焦点时，`GameScene._Input`
+会整段早退（`GameScene.cs:10926` `if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit) return;`），
+因此探针无输出。这本身是下述 ISSUE-3 的成因之一，也用于判定「输入焦点是否在文本框」。
+
+## 1. 已确认并已修复的问题
+
+### ISSUE-1 设置窗（id12 / F750）无法用同一入口关闭 — 已修复
+
+- **复现**：进游戏 → 按 `N` → 设置窗打开（探针出现 `ConfigDialog:[276,113,248,264]`）→ 再按 `N` → **仍为打开**；HUD cap11 按钮（665,16,40×38）同样只能开不能关。
+- **预期**：原版是 toggle。证据：旧 `Client/Scenes/GameScene.cs:1348` `case KeyBindAction.ConfigWindow: ConfigBox.Visible = !ConfigBox.Visible;`；`Client/Scenes/Views/MenuDialog.cs:116` 同。
+- **根因**：`GameScene.OpenConfigDialog()` 只调 `WindowManager.Open`（无 toggle 分支），而 `N` 键、HUD cap11、菜单「设置」三个入口全部只走该方法。
+- **修复**：`GameScene.OpenConfigDialog` 改 `WindowManager.Toggle`。
+- **验证**：`N` 开 → 探针有 `ConfigDialog`；`N` 再按 → 探针无 `ConfigDialog`。截图 `evidence/10-fix-n-config-open.png` / `evidence/11-fix-n-config-closed.png`。
+- **提交**：见本目录 `REPORT.md` 末「提交记录」。
+
+### ISSUE-2 行会窗（id4 / F600）无法用同一入口关闭 — 已修复
+
+- **复现**：按 `F` → `GuildDialog:[102,22,596,446]` 打开 → 再按 `F` → **仍为打开**；HUD cap6 按钮（616,82,28×26）同样只开不关。
+- **预期**：原版是 toggle。证据：旧 `Client/Scenes/GameScene.cs:1403` `case KeyBindAction.GuildWindow: GuildBox.Visible = !GuildBox.Visible;`；`MenuDialog.cs:138` 同。
+- **根因**：同 ISSUE-1，`OpenGuildDialog()` 只 Open。**注意**该方法是**共享入口**：服务端行会邀请包 `OnGuildInvite`（`GameScene.cs:2879`）也调它，那条路径必须「确保可见」而不是切换。
+- **修复**：`OpenGuildDialog` 改 `WindowManager.Toggle`；新增 `EnsureGuildDialogOpen()`（只 Open），`OnGuildInvite` 改调它。
+- **验证**：`F` 开 → 有 `GuildDialog`；`F` 再按 → 无。截图 `evidence/12-fix-f-guild-open.png` / `evidence/13-fix-f-guild-closed.png`。
+- **回归**：服务端邀请路径仍为 open-only（未被 toggle 影响）。
+
+### ISSUE-3 聊天窗（F350）打开后 Esc 无法关闭，且**所有热键同时失效** — 已修复
+
+- **复现**：按 `R` 打开聊天窗（或点 HUD cap9）→ 按 `Esc` → 窗口不关；此时按 `Q`/`N`/`F` 等**全部无反应**；再按 `R` 也无法关闭。只有点击窗口右下 ✕（532,350）能关。
+- **预期**：原版聊天条按 Esc 关闭。证据：旧 `Client/Scenes/Views/ChatTextBox.cs:302-309` `case (char)Keys.Escape:` → `e.Handled = true; DXTextBox.ActiveTextBox = null; TextBox.TextBox.Text = string.Empty; LinkedItemIndexes.Clear(); ToggleVisibility(e, false);`（即清空文本 + 隐藏聊天条）。
+- **根因**（两层，均为真实缺陷）：
+  1. `LegacyChatDialog` 的输入框 `DXTextInput` 暴露了 `Canceled` 事件，但**此前无人订阅**（`FilterDropDialog.cs:82/180` 定义并触发，`LegacyChatDialog.cs` 无订阅）→ Esc 只被 `LineEdit` 吞掉，无任何行为。
+  2. `GameScene._Input` 首行 `if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit) return;`（`GameScene.cs:10926`）——输入框持有焦点时**整段**早退，连 `Esc → WindowManager.CloseTop()`（`GameScene.cs:11080`）都不执行，于是所有窗口热键（Q/W/E/R/N/F…）一并失效。
+- **修复**：
+  - `LegacyChatDialog` 订阅 `_input.Canceled += CancelChatInput`；`CancelChatInput()` 清空文本 + 清链接物品 + `CloseChat()`（走 `WindowManager`，保证 Z 序与 `OpenWindows` 同步，避免「不可见但仍在列表」的残留）。
+  - 与 `FilterDropDialog` 的既有 `Canceled` 用法保持一致，未改动共享基类行为。
+- **验证**：按 `R` → 探针 `<no-dump: LineEdit focused>`（输入框确实获得焦点）→ 按 `Esc` → 探针恢复正常输出且无聊天窗；随后 `Q`/`N`/`F` 热键全部恢复。截图 `evidence/14-fix-r-chat-open.png` / `evidence/15-fix-esc-chat-closed.png`。
+- **回归**：Esc 关窗后立即按 `Q`/`N`/`F`/`Z`/`S` 均正常开合（见 §2 矩阵）。
+
+## 2. 热键/窗口生命周期矩阵（修复后复跑）
+
+方法：每个键 `按一次 → 探针 → 再按一次 → 探针 → Esc → 探针`。判定「开」= 探针出现该窗口；「关」= 消失。
+
+| 键 | 窗口 | 开 | 同键再按 | Esc | 判定 |
+|---|---|---|---|---|---|
+| `Q` | 背包 InventoryDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `W` | 人物 CharacterDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `E` | 技能书 MagicDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `D` | 任务 QuestDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `G` | 组队 GroupDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `F` | 行会 GuildDialog | ✅ | ✅ 关（本轮修复） | ✅ | PASS |
+| `N` | 设置 ConfigDialog | ✅ | ✅ 关（本轮修复） | ✅ | PASS |
+| `V` | 小地图显隐 | ✅ | ✅ 关 | ✅ | PASS |
+| `Z` | 腰带 BeltDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `S` | 坐骑 HorseDialog | ✅ | ✅ 关 | ✅ | PASS |
+| `R` | 聊天窗 F350 | ✅ | ✅ 关（本轮修复 Esc 路径） | ✅ 关（本轮修复） | PASS |
+| `B` | 技能条（非窗口，`_magicBar.Visible` 翻转） | 探针不可见（非 DXWindow） | — | — | 另测，见 §3 |
+| `T` | 小地图 128↔256 | 探针不反映（同控件换尺寸） | — | — | 另测，见 §3 |
+| `C` | 交易请求（发包，非窗口） | 需第二玩家 | — | — | BLOCKED（见 §4） |
+
+`Esc` 在无可见窗口时按 `WindowManager.CloseTop()` 返回 false，不影响地图操作（实测 `C` 行无窗口时 Esc 无副作用）。
+
+## 3. 非窗口 HUD 元素
+
+| 元素 | 操作 | 结果 | 判定 |
+|---|---|---|---|
+| HUD cap11（665,16,40×38） | 点击 | 打开设置窗；再点关闭 | PASS（与 ISSUE-1 同路径） |
+| HUD cap6（616,82,28×26） | 点击 | 打开行会窗；再点关闭 | PASS（与 ISSUE-2 同路径） |
+| HUD 其余 cap / 球体 / 状态条 | — | 见 `GODOT_WINDOW_PARITY_MATRIX_2026-09-29.md`（几何/帧号已逐项 MATCH） | 本轮不重复 |
+
+## 4. BLOCKED / 未覆盖（如实记录）
+
+| 项 | 状态 | 原因 |
+|---|---|---|
+| 交易窗（F1050）全生命周期 | `BLOCKED` | 需**第二玩家**进入交易态，单人测试不可达 |
+| NPC 对话/商店/仓库/任务发放等**服务端包驱动**窗口 | `BLOCKED` | 需对应 NPC 与业务状态；本轮仅覆盖客户端侧入口与几何 |
+| 聊天窗 ✕（532,350）点击 | 已实测可关 | 但**原版该热区在窗口矩形外且不关窗**（`GODOT_UI_OPEN_DECISIONS_2026-09-29.md` B-2），Godot 侧语义差异已登记，非本轮引入 |
+| `B` 技能条 / `T` 小地图尺寸 | `PARTIAL` | 二者不是 `DXWindow`，`Ctrl+F12` 探针不反映；需逐像素比对（未做） |
+| 现代 Zircon UI（`--zircon-ui`）全套 | 未覆盖 | 本轮按仓库默认（legacy EI）审计；现代模式窗口另需一轮 |
+
+## 5. 覆盖统计
+
+- 本轮真机覆盖：**14 个热键入口 + 2 个 HUD 按钮**（对应 11 个 `DXWindow` + 1 个非窗口开关），
+  每个均验证「开 → 同键关 → Esc 关」三段生命周期。
+- 已修复：**3 个确认缺陷**（设置窗、行会窗、聊天窗 Esc/热键吞噬），全部经真实运行复测。
+- 未覆盖：交易（需第二玩家）、服务端包驱动的 NPC/商店/任务链、现代 UI、非窗口 HUD 元素的像素级复核。
+
+## 6. 提交记录
+
+| 内容 | 提交 |
+|---|---|
+| 修复设置窗/行会窗/聊天窗热键与 Esc（含证据截图） | 见下方推送记录 |
+

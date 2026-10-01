@@ -51,7 +51,8 @@ public partial class SelectScene : Control
     //   2 = 动画角色列表 + **5 底部按钮 F92/F95/F98/F86/F89** + 密码框
     //   3 = 等待（F89 0x459D48 与服务端 case 0x209 写入）
     //   4 = 进游戏（服务端 case 0x20D 写入）
-    // **按钮是分阶段显示的**：phase 0 显示那 4 个、phase 2 显示 F92/95/98/86/89。
+    // **按钮是分阶段显示的**：phase 0 显示那 4 个、phase 2 显示 F91/94/97/85/88（普通态 Index）。
+    // 注：原版按钮三帧为 (normal=+0x20, hover=+0x18, pressed=+0x1C)；职业钮对应 91/92/93、94/95/96、97/98/98。
     private int _selectPhase;
     private DXButton _skinConfigButton;
     private ConfigDialog _selectConfig;
@@ -754,19 +755,23 @@ public partial class SelectScene : Control
 
         var expect = new (string name, DXButton btn, int idx, int hov, int x, int y, int w, int h, bool vis)[]
         {
-            ("p0-1 创建角色", _skinCreate, 51, 52, 440, 93, 96, 26, true),
-            ("p0-2 删除角色", _skinDelete, 53, 54, 79, 243, 96, 26, true),
-            ("p0-3 开始游戏", _skinStart, 55, 56, 259, 49, 96, 24, true),
-            ("p0-4 结束",     _skinExit,   57, 58, 28, 438, 48, 26, true),
-            ("p2-1",          _skinClassWarrior, 92, 91, 266, 419, 40, 38, false),
-            ("p2-2",          _skinClassWizard,   95, 94, 308, 419, 40, 38, false),
-            ("p2-3",          _skinClassTaoist, 98, 97, 352, 419, 40, 38, false),
+            ("p0-1 创建角色", _skinCreate, 52, 51, 440, 93, 96, 26, true),
+            ("p0-2 删除角色", _skinDelete, 54, 53, 79, 243, 96, 26, true),
+            ("p0-3 开始游戏", _skinStart, 56, 55, 259, 49, 96, 24, true),
+            ("p0-4 结束",     _skinExit,   58, 57, 28, 438, 48, 26, true),
+            ("p2-1",          _skinClassWarrior, 91, 92, 266, 419, 40, 38, false),
+            ("p2-2",          _skinClassWizard,   94, 95, 308, 419, 40, 38, false),
+            ("p2-3",          _skinClassTaoist, 97, 98, 352, 419, 40, 38, false),
             // p2-4/p2-5 的帧 0x56(86)/0x59(89) 实测是 28x28（圆钮），
             // 而 p2-1/p2-2/p2-3 的 0x5C/0x5F/0x62 是 40x38。尺寸随帧走，不是统一值。
-            ("p2-4",          _skinConfirmYes, 86, 85, 450, 444, 28, 28, false),
-            ("p2-5",          _skinConfirmNo,  89, 88, 491, 444, 28, 28, false),
+            ("p2-4",          _skinConfirmYes, 85, 86, 450, 444, 28, 28, false),
+            ("p2-5",          _skinConfirmNo,  88, 89, 491, 444, 28, 28, false),
         };
 
+        // 判据（2026-10-01 由原版绘制状态机 0x417640 定性）：
+        //   +0x25==0（释放/普通）画 +0x20=arg8；==1（悬停 0x417780）画 +0x18=arg2；
+        //   ==2（按下 0x4177C0）画 +0x1C=arg3 → 故 (idx,hov) = (arg8, arg2)，
+        //   此前该表按 (arg2, arg8) 写反，会与实现一起把悬停/按下帧互换。
         bool ok = true;
         var bad = new System.Collections.Generic.List<string>();
         foreach (var e in expect)
@@ -784,20 +789,20 @@ public partial class SelectScene : Control
                         + $"loc=({e.x},{e.y}) size=({e.w},{e.h})");
             }
         }
-        // --- 职业三钮的行为断言（帧 92/95/98 -> class Warrior/Wizard/Taoist）---
+        // --- 职业三钮的行为断言（普通态帧 91/94/97 -> class Warrior/Wizard/Taoist）---
         // 依据：0x459DAE/0x459E19/0x459EA5 三格级联 + 0x458440(slot,gender,class,?,str)
         //       的 arg3 依次为 0/1/2；0x4584C0 随后刷新显示串。
         // 说明：三钮的实际动作通过 lambda 绑在 DXButton.MouseClick 上，事件无法从外部触发，
         //       故此处断言**动作的目标方法行为**（SelectCreateClass）与**帧号对应关系**，
         //       而不是断言 lambda 本身。这是本轮能做到的最强断言，如实标注。
-        // arg3 是 **0/1/2**，而帧号是 **92/95/98** —— 两者**没有 frame-92 这种关系**
-        // （95-92=3≠1、98-92=6≠2）。故此处用**显式表**记录 帧->class->arg3 的对应，
+        // arg3 是 **0/1/2**，而普通态帧号是 **91/94/97** —— 两者**没有 frame-91 这种关系**
+        // （94-91=3≠1、97-91=6≠2）。故此处用**显式表**记录 帧->class->arg3 的对应，
         // 不写公式。（首版我写成 frame-92，被本自检当场判 FAIL —— 断言的价值正在于此。）
         var classMap = new (string name, DXButton btn, int frame, MirClass cls, int arg3)[]
         {
-            ("帧 92 -> 武士", _skinClassWarrior, 92, MirClass.Warrior, 0),
-            ("帧 95 -> 法师", _skinClassWizard,  95, MirClass.Wizard,  1),
-            ("帧 98 -> 道士", _skinClassTaoist,  98, MirClass.Taoist,  2),
+            ("帧 91 -> 武士", _skinClassWarrior, 91, MirClass.Warrior, 0),
+            ("帧 94 -> 法师", _skinClassWizard,  94, MirClass.Wizard,  1),
+            ("帧 97 -> 道士", _skinClassTaoist,  97, MirClass.Taoist,  2),
         };
         foreach (var (name, btn, frame, cls, arg3) in classMap)
         {
@@ -820,7 +825,7 @@ public partial class SelectScene : Control
 
         string details = ok
             ? "9 个按钮的 Index/HoverIndex/Location/Size 全部匹配 EI ctor 实参；"
-              + "职业三钮(帧92/95/98->Warrior/Wizard/Taoist)的帧号与 MirClass 数值均匹配"
+              + "职业三钮(普通态帧91/94/97->Warrior/Wizard/Taoist)的帧号与 MirClass 数值均匹配"
             : string.Join(" ; ", bad);
         GD.Print($"[LegacySelectButtonSelfTest] {(ok ? "PASS" : "FAIL")} {details}");
         GetTree().Quit(ok ? 0 : 1);
@@ -1797,7 +1802,7 @@ public partial class SelectScene : Control
         // **帧号按 ctor 实参改正**（0x456E89-0x456EC8）：+0x20 = 常态帧、+0x1C = hover 帧。
         //   确认钮：常态 **85**、hover 87；退出钮：常态 **88**、hover 90
         //   （旧代码用 86/89 作常态 —— 那是 +0x18「状态 1」帧，F85≠F86、F88≠F89）。
-        _skinConfirmYes = MakeSelectIconButton(85, 87, 86, new Vector2I(450, 444), () => SubmitSkinCharacter(), "确认人物创建");
+        _skinConfirmYes = MakeSelectIconButton(85, 86, 87, new Vector2I(450, 444), () => SubmitSkinCharacter(), "确认人物创建");
         // F89 = 退出人物创建（0x459D1D-0x459D8A）：
         //   -> 播 UI 音（0x45B3D0）-> phase=3 -> [+0x1160]=0（关相位 BGM 开关）
         //   -> SetFocus(主窗口) -> ShowWindow(edit, SW_HIDE) -> 网络发送 msgid 0x64
@@ -1805,7 +1810,7 @@ public partial class SelectScene : Control
         //      列表本就在内存中，故不发送并记录该差异）。
         // phase 3 的 tick（0x4576FA）在视频泵返回 0 后立即把 phase 写回 0，
         // 本移植版没有该过场视频 → 等价于「隐藏创建界面、回到角色列表」。
-        _skinConfirmNo = MakeSelectIconButton(88, 90, 89, new Vector2I(491, 444), () => ExitLegacyCreate(), "退出人物创建");
+        _skinConfirmNo = MakeSelectIconButton(88, 89, 90, new Vector2I(491, 444), () => ExitLegacyCreate(), "退出人物创建");
 
         // 三枚图形钮 = 职业选择（ctor 0x456E23/0x456E45/0x456E67）：
         //   武士 常态 **91** / hover 93；法师 常态 **94** / hover 96；道士 常态 **97** / hover 98。
@@ -1815,8 +1820,8 @@ public partial class SelectScene : Control
         // 我方 MirClass 枚举 Warrior=0 / Wizard=1 / Taoist=2 —— 与原版 0/1/2 数值一致。
         // 悬停标题（0x47D680/70/60，GBK）＝「武士/法师/道士 职业 选择」，用移植版
         // tooltip 承载（原版是按钮旁的缩放 sprite + 文字条，渲染方式记为 candidate）。
-        _skinClassWarrior = MakeSelectIconButton(91, 93, 92, new Vector2I(266, 419), () => SelectCreateClass(MirClass.Warrior), "武士 职业 选择");
-        _skinClassWizard = MakeSelectIconButton(94, 96, 95, new Vector2I(308, 419), () => SelectCreateClass(MirClass.Wizard), "法师 职业 选择");
+        _skinClassWarrior = MakeSelectIconButton(91, 92, 93, new Vector2I(266, 419), () => SelectCreateClass(MirClass.Warrior), "武士 职业 选择");
+        _skinClassWizard = MakeSelectIconButton(94, 95, 96, new Vector2I(308, 419), () => SelectCreateClass(MirClass.Wizard), "法师 职业 选择");
         _skinClassTaoist = MakeSelectIconButton(97, 98, 98, new Vector2I(352, 419), () => SelectCreateClass(MirClass.Taoist), "道士 职业 选择");
 
 

@@ -175,9 +175,11 @@ public partial class MagicDialog : DXWindow
             _legacyAuxControl = new DXButton
             {
                 LibraryFile = LibraryFile.GameInter,
-                Index = 440,
-                HoverIndex = 441,
+                // 同上：arg8=-1、arg9=0，只保留按下 arg3=441。
+                Index = -1,
+                HoverIndex = -1,
                 PressedIndex = 441,
+                Modulate = new Color(1, 1, 1, 0),
                 FixedSize = true,
                 Size = MirSkin.GetSize(LibraryFile.GameInter, 440),
                 Location = new Vector2I(399, 340),
@@ -217,6 +219,12 @@ public partial class MagicDialog : DXWindow
         _tabPrevious.LibraryFile = LibraryFile.GameInter;
         _tabPrevious.Index = 410;
         _tabPrevious.HoverIndex = 411;
+        // 原版 arg8=-1、arg9=0、arg2/arg3=410/411（0x4392A5 一带）→ 普通/悬停不画帧；
+        // 真机隐藏法验证：隐藏后该处仍显示**背景烘焙的箭头**（另一种样式）→ 端口叠画多余。
+        // 故置 Index/Hover=-1 并加 Modulate 抑制 fallback 底色框，只保留按下 arg3。
+        _tabPrevious.Index = -1;
+        _tabPrevious.HoverIndex = -1;
+        _tabPrevious.Modulate = new Color(1, 1, 1, 0);
         _tabPrevious.PressedIndex = 411;
         _tabPrevious.Text = string.Empty;
         _tabPrevious.Location = new Vector2I(61, 303);
@@ -228,6 +236,10 @@ public partial class MagicDialog : DXWindow
         _tabNext.LibraryFile = LibraryFile.GameInter;
         _tabNext.Index = 412;
         _tabNext.HoverIndex = 413;
+        _tabNext.Modulate = new Color(1, 1, 1, 0);
+        _tabNext.Index = -1;
+        _tabNext.HoverIndex = -1;
+        _tabNext.Modulate = new Color(1, 1, 1, 0);
         _tabNext.PressedIndex = 413;
         _tabNext.Text = string.Empty;
         _tabNext.Location = new Vector2I(366, 303);
@@ -363,9 +375,17 @@ public partial class MagicDialog : DXWindow
                 PressedIndex = entry.frame + 1,
                 Location = entry.location,
                 Size = MirSkin.GetSize(LibraryFile.GameInter, entry.frame),
+                // Index 置 -1 后不再按帧重算尺寸（DXImageControl.Index setter 在 !FixedSize 时会覆盖 Size），
+                // 否则点击区会退化成 0。
+                FixedSize = true,
             };
             button.MouseClick += (_, _) => SelectSchool(school);
             AddControl(button);
+            // 原版 8 个页签实参同为 arg8=-1、arg9=0（0x4392A5/0x4392D4 一带）；
+            // 真机隐藏法验证：隐藏后页签**完全一致**（美术已烘焙进 F400）→ 端口不叠画。
+            button.Index = -1;
+            button.HoverIndex = -1;
+            button.Modulate = new Color(1, 1, 1, 0);
             _schoolButtons[school] = button;
         }
     }
@@ -420,14 +440,17 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Phantom, new(1, 231), 462),
             (MagicSchool.Physical, new(2, 266), 464),
         };
+        // 2026-10-01：页签美术已烘焙进 F400（真机隐藏法验证）→ 端口不叠画（Index/Hover=-1），
+        // 但**尺寸仍按原版帧头**、位置不变；判据随之更正（原断言 Index==x.frame 编码叠画行为）。
         bool tabsMatch = expectedTabs.All(x => _schoolButtons.TryGetValue(x.school, out var button)
             && button.Location == x.location
-            && button.Index == x.frame
+            && button.Index == -1 && button.HoverIndex == -1
             && button.Size == MirSkin.GetSize(LibraryFile.GameInter, x.frame));
+        // 同上：导航钮 arg8=-1，美术已烘焙（真机隐藏法验证）→ Index/Hover=-1。
         bool navigationMatch = _tabPrevious.Location == new Vector2I(61, 303)
-            && _tabPrevious.Index == 410
+            && _tabPrevious.Index == -1 && _tabPrevious.HoverIndex == -1
             && _tabNext.Location == new Vector2I(366, 303)
-            && _tabNext.Index == 412;
+            && _tabNext.Index == -1 && _tabNext.HoverIndex == -1;
         bool rowsMatch = _legacySkillRows.Count == LegacyPageSize
             && _legacySkillRows.Select((row, i) => row.Location == new Vector2I(55, LegacySkillRowY[i])
                 && row.Size == new Vector2I(145, 36)).All(x => x);
@@ -435,7 +458,7 @@ public partial class MagicDialog : DXWindow
             && _header.Index == 400
             && _legacyAuxControl != null
             && _legacyAuxControl.Location == new Vector2I(399, 340)
-            && _legacyAuxControl.Index == 440
+            && _legacyAuxControl.Index == -1 && _legacyAuxControl.HoverIndex == -1
             && _legacySkillRows.Count == LegacyPageSize
             && rowsMatch
             && _schoolButtons.Count == LegacySchoolOrder.Length
@@ -443,7 +466,8 @@ public partial class MagicDialog : DXWindow
             && navigationMatch
             && !_list.Visible
             && !_scrollBar.Visible;
-        details = $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} " +
+        details = $"tabIdx=[{string.Join(",", _schoolButtons.Values.Select(b => b.Index))}] tabSize=[{string.Join(",", _schoolButtons.Values.Select(b => b.Size.X))}] " +
+            $"size={Size} background=F{_header.Index} categories={_schoolButtons.Count} " +
             $"categoryPositions={tabsMatch} nav={navigationMatch} rows={_legacySkillRows.Count} rowsAligned={rowsMatch} " +
             $"page={_legacyPage + 1}/{Math.Max(1, LegacyPageCount())}";
         return ok;

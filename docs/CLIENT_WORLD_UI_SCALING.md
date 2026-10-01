@@ -9,10 +9,10 @@
 另一个容易混淆的问题是客户端运行在哪份源码上。开发机 `/home/tetsuya/development/zircon` 和 Mac `/Users/tetsuya/Development/Zircon` 是不同工作树。执行
 
 ```bash
-/Users/tetsuya/mir2ei/LegacyEI/login_game.sh remote 192.168.3.82 legacy
+/Users/tetsuya/Development/Zircon/login_game.sh remote 192.168.3.82 legacy
 ```
 
-时，`remote` 让远程机器负责构建/启动服务端；Godot 客户端仍在 Mac 本地工作树构建并运行。`legacy` 选择 EI 旧版 HUD 资源，不会切换到原版 EI 可执行程序。因此只改开发机工作树、未同步到 Mac，Mac 截图不会包含这些客户端改动。
+时，`remote` 会先将远程开发机最新已提交代码快进同步到本机工作树，再由远程机器构建/启动服务端、本机构建/运行 Godot 客户端。`legacy` 选择 EI 旧版 HUD 资源，不会切换到原版 EI 可执行程序。
 
 ## 缩放模型
 

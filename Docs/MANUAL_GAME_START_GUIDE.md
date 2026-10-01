@@ -59,7 +59,7 @@ macOS 的路径与 82 不同，且不能直接照抄 82 的环境变量（会让
 请用包装器（它已显式设好 `ZIRCON_UI_DATA_PATH` 与 `ZIRCON_LEGACY_UI_DATA_PATH`）：
 
 ```bash
-/Users/tetsuya/mir2ei/LegacyEI/login_game.sh remote 192.168.3.82 legacy
+/Users/tetsuya/Development/Zircon/login_game.sh remote 192.168.3.82 legacy
 ```
 
 - EI 旧版素材根：`/Users/tetsuya/mir2ei/LegacyEI/Data`

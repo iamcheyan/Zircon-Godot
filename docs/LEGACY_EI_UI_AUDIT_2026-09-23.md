@@ -1354,7 +1354,7 @@ figure window; **both have figures (id1 character figure, id7 preview)**」。
 对照基线：`Mir3-Research/docs/research/ei-ui-layout/`（`layout.json` 58 条几何记录、
 `ui-coverage-matrix.json` 32 个窗口、各窗口逐帧证据 JSON）+ 用 `wilsdk.py` 直接解码
 `/Users/tetsuya/mir2ei/LegacyEI/Data/GameInter.wil` 做像素级交叉验证。
-验收路径统一为 `/Users/tetsuya/mir2ei/LegacyEI/login_game.sh legacy`。
+验收路径统一为 `/Users/tetsuya/Development/Zircon/login_game.sh legacy`。
 
 ## 已修正并推送（27 个 commit）
 

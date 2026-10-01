@@ -2,12 +2,12 @@
 # Zircon 游戏一键登录脚本
 # 功能：1) 杀游戏进程 2) 构建 3) 启动服务器 4) 启动客户端登录
 # 用法：
-#   ./LegacyEI/login_game.sh              # 默认：启动 Legacy 界面，不自动登录
-#   ./LegacyEI/login_game.sh test         # Legacy 界面 + 自动登录测试账号
-#   ./LegacyEI/login_game.sh zircon       # 现代 Zircon 界面，不自动登录
-#   ./LegacyEI/login_game.sh test zircon  # 现代 Zircon 界面 + 自动登录测试账号
-#   ./LegacyEI/login_game.sh all test     # 重启服务器并自动登录测试账号
-#   ./LegacyEI/login_game.sh remote 192.168.3.82 test # 远程服务端 + 自动登录
+#   ./login_game.sh              # 默认：启动 Legacy 界面，不自动登录
+#   ./login_game.sh test         # Legacy 界面 + 自动登录测试账号
+#   ./login_game.sh zircon       # 现代 Zircon 界面，不自动登录
+#   ./login_game.sh test zircon  # 现代 Zircon 界面 + 自动登录测试账号
+#   ./login_game.sh all test     # 重启服务器并自动登录测试账号
+#   ./login_game.sh remote 192.168.3.82 test # 同步 D 机器代码，远程服务端 + 本机客户端
 #
 # 环境变量：
 #   ZIRCON_EI_ROOT   EI 素材/运行目录；默认 $MIR3_EI_ROOT/LegacyEI 或 $HOME/mir2ei/LegacyEI
@@ -15,7 +15,15 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -f "$SCRIPT_DIR/GodotClient/ZirconClient.csproj" ]; then
+    ROOT="$SCRIPT_DIR"
+else
+    ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+if [ ! -f "$ROOT/GodotClient/ZirconClient.csproj" ]; then
+    echo "无法定位 Zircon 仓库根目录（缺少 GodotClient/ZirconClient.csproj）。" >&2
+    exit 1
+fi
 EI_BASE="${MIR3_EI_ROOT:-${HOME}/mir2ei}"
 EI_ROOT="${ZIRCON_EI_ROOT:-$EI_BASE/LegacyEI}"
 
@@ -50,6 +58,13 @@ LEGACY_HUD=1
 AUTO_LOGIN=0
 REMOTE_SERVER_IP=""
 REMOTE_SSH_TARGET="${ZIRCON_REMOTE_SSH_TARGET:-debian}"
+REMOTE_REPO_PATH="${ZIRCON_REMOTE_REPO:-/home/tetsuya/development/zircon}"
+REMOTE_BRANCH="${ZIRCON_REMOTE_BRANCH:-master}"
+REMOTE_RESEARCH_PATH="${ZIRCON_REMOTE_RESEARCH_REPO:-/home/tetsuya/development/Mir3-Research}"
+LOCAL_RESEARCH_PATH="${MIR3_RESEARCH_ROOT:-$ROOT/../Mir3-Research}"
+REMOTE_RESEARCH_BRANCH="${ZIRCON_REMOTE_RESEARCH_BRANCH:-ei-ui-audit-2026-09-24}"
+REMOTE_SYNC_DEVICE_ID="${ZIRCON_REMOTE_SYNCTHING_DEVICE_ID:-A43UXGE-Q2NW3JR-AWKZZNG-LAKZGYW-VGBLPA2-TYB6MIA-S5WHR75-VSKTKAK}"
+SYNCTHING_CONFIG_DIR="${ZIRCON_SYNCTHING_CONFIG_DIR:-$HOME/.local/state/syncthing}"
 REMOTE_TUNNEL_SOCKET=""
 CLIENT_PORT="${ZIRCON_CLIENT_PORT:-}"
 ARGS=("$@")
@@ -95,7 +110,29 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
             exit 2
         fi
     done
-    REMOTE_PORT=$(ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" 'cat "${ZIRCON_REMOTE_REPO:-$HOME/development/zircon}/Debug/ServerCore/Server.ini"' | iconv -f UTF-16 -t UTF-8 | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\\r]/, "", $2); print $2; exit}') || {
+
+    # Pull committed source from D before building anything locally. Fast-forward only:
+    # a local divergence or overlapping edit stops startup instead of overwriting it.
+    REMOTE_GIT_URL="ssh://${REMOTE_SSH_TARGET}${REMOTE_REPO_PATH}/.git"
+    echo "同步远程代码：${REMOTE_SSH_TARGET}:${REMOTE_REPO_PATH} (${REMOTE_BRANCH})..."
+    if ! git -C "$ROOT" fetch "$REMOTE_GIT_URL" "$REMOTE_BRANCH"; then
+        echo "无法从远程开发仓库获取代码。" >&2
+        exit 1
+    fi
+    if git -C "$ROOT" merge-base --is-ancestor HEAD FETCH_HEAD; then
+        if ! git -C "$ROOT" merge --ff-only FETCH_HEAD; then
+            echo "远程代码无法安全快进到本地；请先处理本地改动或分支差异。" >&2
+            exit 1
+        fi
+        echo "本机代码已快进到远程最新提交。"
+    elif git -C "$ROOT" merge-base --is-ancestor FETCH_HEAD HEAD; then
+        echo "本机提交已包含远程代码，无需更新。"
+    else
+        echo "本地与远程代码已经分叉；为避免覆盖改动，停止启动。" >&2
+        exit 1
+    fi
+
+    REMOTE_PORT=$(ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" "cat '$REMOTE_REPO_PATH/Debug/ServerCore/Server.ini'" | iconv -f UTF-16 -t UTF-8 | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\\r]/, "", $2); print $2; exit}') || {
         echo "无法通过 SSH 读取远程 Server.ini。" >&2
         exit 1
     }
@@ -106,6 +143,111 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
     PORT="$REMOTE_PORT"
     CLIENT_PORT="$PORT"
 fi
+
+sync_remote_research_and_assets() {
+    if [ ! -d "$LOCAL_RESEARCH_PATH/.git" ]; then
+        echo "本机 Mir3-Research 仓库不存在：$LOCAL_RESEARCH_PATH" >&2
+        return 1
+    fi
+    if ! command -v rsync >/dev/null 2>&1; then
+        echo "remote 模式同步研究资料和客户端资源需要 rsync。" >&2
+        return 1
+    fi
+
+    echo "同步 Mir3-Research（包含 D 工作树中的未提交文档）..."
+    RESEARCH_GIT_URL="ssh://${REMOTE_SSH_TARGET}${REMOTE_RESEARCH_PATH}/.git"
+    if ! GIT_SSH_COMMAND='ssh -o BatchMode=yes' git -C "$LOCAL_RESEARCH_PATH" fetch "$RESEARCH_GIT_URL" "$REMOTE_RESEARCH_BRANCH"; then
+        echo "无法获取 D 机器的 Mir3-Research 提交。" >&2
+        return 1
+    fi
+    # 本地 Mir3-Research 是 D 的只读镜像；每次先对齐提交，再复制 D 的工作树状态。
+    if ! git -C "$LOCAL_RESEARCH_PATH" reset --hard FETCH_HEAD; then
+        echo "无法将本机 Mir3-Research 对齐到 D 机器。" >&2
+        return 1
+    fi
+    if ! rsync -a --delete --info=stats2 -e 'ssh -o BatchMode=yes' \
+        --exclude='/.git/' \
+        --exclude='/Tools/dbeditor/venv/' \
+        --exclude='/Tools/uieditor/venv/' \
+        --exclude='/Mir3 Preview Version.rar' \
+        "$REMOTE_SSH_TARGET:$REMOTE_RESEARCH_PATH/" "$LOCAL_RESEARCH_PATH/"; then
+        echo "同步 Mir3-Research 工作树失败。" >&2
+        return 1
+    fi
+
+    # Runtime game resources are in mir2ei-client. WebData is mirrored in the
+    # background too, but its many files are not needed to launch the game.
+    echo "确认 Syncthing 的游戏客户端资源已同步..."
+    if ! python3 - "$SYNCTHING_CONFIG_DIR/config.xml" "$REMOTE_SYNC_DEVICE_ID" <<'PY'
+import json
+import sys
+import time
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+
+config_path, peer_id = sys.argv[1:]
+try:
+    root = ET.parse(config_path).getroot()
+    api_key = root.findtext("./gui/apikey")
+    if not api_key:
+        raise RuntimeError("Syncthing API key is missing")
+except Exception as exc:
+    print(f"Syncthing 配置不可用：{exc}", file=sys.stderr)
+    sys.exit(1)
+
+base = "http://127.0.0.1:8384"
+headers = {"X-API-Key": api_key}
+folders = ("mir2ei-client",)
+
+def get(path):
+    request = urllib.request.Request(base + path, headers=headers)
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return json.load(response)
+
+deadline = time.monotonic() + 3600
+last_report = 0
+while time.monotonic() < deadline:
+    try:
+        connected = get("/rest/system/connections")["connections"].get(peer_id, {}).get("connected", False)
+        statuses = []
+        for folder in folders:
+            status = get("/rest/db/status?" + urllib.parse.urlencode({"folder": folder}))
+            if status.get("errors", 0):
+                raise RuntimeError(f"{folder} reports {status['errors']} errors")
+            statuses.append((folder, status))
+        pending_files = sum(s.get("needFiles", 0) + s.get("needDirs", 0) for _, s in statuses)
+        pending_bytes = sum(s.get("needBytes", 0) for _, s in statuses)
+        settled = all(
+            s.get("state") == "idle"
+            and s.get("needFiles", 0) == 0
+            and s.get("needDirs", 0) == 0
+            and s.get("needDeletes", 0) == 0
+            and s.get("needBytes", 0) == 0
+            for _, s in statuses
+        )
+        if connected and settled:
+            print("Syncthing 已连接 D；mir2ei-client 游戏资源已同步。")
+            sys.exit(0)
+        now = time.monotonic()
+        if now - last_report >= 30:
+            state = ", ".join(f"{name}={s.get('state')}" for name, s in statuses)
+            print(f"Syncthing 等待中：connected={connected}, files={pending_files}, bytes={pending_bytes}, {state}")
+            last_report = now
+    except Exception as exc:
+        print(f"等待 Syncthing 同步时出错：{exc}", file=sys.stderr)
+        sys.exit(1)
+    time.sleep(3)
+
+print("Syncthing 一小时内未完成游戏客户端资源同步，停止启动。", file=sys.stderr)
+sys.exit(1)
+PY
+    then
+        echo "Syncthing 资源未同步完成，停止启动。" >&2
+        return 1
+    fi
+    echo "Mir3-Research 已同步；客户端资源由 Syncthing 持续镜像。"
+}
 
 # 只清理由本次脚本启动的服务端；外部已运行的服务端不接管、不关闭。
 SERVER_PID=""
@@ -158,7 +300,7 @@ else
     echo "  登录: 手动登录"
 fi
 if [ -n "$REMOTE_SERVER_IP" ]; then
-    echo "  服务端: SSH $REMOTE_SSH_TARGET 工作树（$REMOTE_SERVER_IP:${PORT}，经本地隧道连接）"
+    echo "  服务端: $REMOTE_SERVER_IP (${REMOTE_SSH_TARGET} SSH；经本地隧道连接)"
 fi
 echo "══════════════════════════════════════"
 
@@ -209,6 +351,15 @@ if [ -n "$REMAIN" ]; then
 fi
 echo "  ✓ 进程清理完成"
 
+if [ -n "$REMOTE_SERVER_IP" ]; then
+    echo ""
+    echo "[1.5/4] 同步研究文档和客户端资源..."
+    if ! sync_remote_research_and_assets; then
+        echo "同步失败，停止启动以避免使用旧资源。" >&2
+        exit 1
+    fi
+fi
+
 # ---------- 2. 构建服务端与客户端 ----------
 echo ""
 if [ -z "$REMOTE_SERVER_IP" ]; then
@@ -241,10 +392,10 @@ echo ""
 echo "[3/4] 启动服务器..."
 
 if [ -n "$REMOTE_SERVER_IP" ]; then
-    ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" bash -s -- "$PORT" <<'REMOTE_SCRIPT'
+    ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" bash -s -- "$PORT" "$REMOTE_REPO_PATH" <<'REMOTE_SCRIPT'
 set -euo pipefail
 PORT="$1"
-REPO="${ZIRCON_REMOTE_REPO:-$HOME/development/zircon}"
+REPO="$2"
 SERVER_DIR="$REPO/Debug/ServerCore"
 BUILD_LOG=/tmp/zircon_remote_server_build.log
 if [ ! -f "$REPO/ServerCore/ServerCore.csproj" ] || [ ! -d "$SERVER_DIR" ]; then

@@ -7,17 +7,17 @@
 仓库现在只保留一个启动脚本：
 
 ```text
-LegacyEI/login_game.sh
+login_game.sh
 ```
 
 这个脚本是仓库推荐的一键入口。**Godot 客户端代码也默认启用 EI 复古 UI**；现代 Zircon UI 需要显式传 `--zircon-ui`。脚本会按选择组装对应参数，并将 EI 素材指向 `LegacyEI/Data`；启动时会结束同一工作树的 Godot 客户端，若目标端口没有服务端还会启动本地服务端，因此不要在用户客户端运行时贸然启动。
 
 ```bash
-./LegacyEI/login_game.sh              # Legacy 界面，手动登录
-./LegacyEI/login_game.sh test         # Legacy 界面，自动登录测试账号
-./LegacyEI/login_game.sh zircon       # 现代 Zircon 界面，手动登录
-./LegacyEI/login_game.sh test zircon  # 现代界面，自动登录
-./LegacyEI/login_game.sh test 2x      # Legacy + 自动登录 + 2 倍缩放
+./login_game.sh              # Legacy 界面，手动登录
+./login_game.sh test         # Legacy 界面，自动登录测试账号
+./login_game.sh zircon       # 现代 Zircon 界面，手动登录
+./login_game.sh test zircon  # 现代界面，自动登录
+./login_game.sh test 2x      # Legacy + 自动登录 + 2 倍缩放
 ```
 
 ## 路径和环境变量
@@ -56,7 +56,7 @@ export ZIRCON_STAY_SELECT=1     # 与 test 自动登录一起使用，登录后�
 
 动画逻辑在客户端 `GodotClient/Scripts/LoginScene.cs` 和 `SelectScene.cs` 中，但视频文件是运行时资源，不在 Zircon Git 仓库内。
 
-Legacy 登录启动时，`LegacyEI/login_game.sh` 添加 `--legacy-ui --legacy-hud`；`LoginScene._Ready()` 检测到 `AutoLoginArgs.LegacyUi` 后：
+Legacy 登录启动时，`login_game.sh` 添加 `--legacy-ui --legacy-hud`；`LoginScene._Ready()` 检测到 `AutoLoginArgs.LegacyUi` 后：
 
 1. `PlayLegacyBootLogo()` 从 `MirSkin.UiDataPath/wemade.ogv` 播放约 4.97 秒的 WeMade 开场 Logo，播放结束后移除播放器。
 2. `ApplyLegacyEiLoginLayout()` 从同一资源目录播放循环背景 `ei_Login.ogv`。
@@ -92,7 +92,7 @@ StartGame.ogv 503c1184f1879804d36c57b50b224295b685b5439ca31adfef6f3eb6c63d8cdd
 
 ```bash
 export ZIRCON_EI_ROOT=/home/tetsuya/mir2ei/LegacyEI
-./LegacyEI/login_game.sh
+./login_game.sh
 ```
 
 如果日志出现 `缺少开场 logo 视频` 或 `缺少背景视频`，优先检查 `ZIRCON_EI_ROOT` 和上述四个文件，而不是重新修改动画代码。

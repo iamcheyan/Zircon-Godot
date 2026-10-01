@@ -531,20 +531,35 @@ bash login_game.sh remote 192.168.3.82 legacy
 
 1. 通过 SSH（默认别名 `debian`）读取 82 工作树构建目录中的 `Server.ini` 端口；
    若 SSH 别名不同，可设置 `ZIRCON_REMOTE_SSH_TARGET=82` 等已配置的别名。
-2. 本机只构建 Godot 客户端；服务端使用 82 当前 checkout 的源码，在
+2. 从 82 的 Zircon 仓库获取 `master` 最新提交并快进更新本机工作树；若本机分叉或
+   有冲突改动，脚本停止而不覆盖。随后本机用更新后的源码构建 Godot 客户端；服务端使用
+   82 当前 checkout 的源码，在
    `/home/tetsuya/development/zircon/Debug/ServerCore` 输出目录编译。
-3. 仅停止工作目录正好是上述 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 测试进程，
+3. 清理本机 Godot 客户端后，同步 D 的 `Mir3-Research` 提交和工作树内容；本机研究仓库
+   按只读镜像处理。EI 客户端和 WebData 由本机 Syncthing 后台持续接收 D 的更新，启动脚本
+   只等待游戏运行资源目录 `mir2ei-client` 就绪；WebData 文件很多，不阻塞客户端启动。
+4. 仅停止工作目录正好是上述 `Debug/ServerCore` 的 `dotnet ServerCore.dll` 测试进程，
    然后从同一目录启动新服务端。启动日志位于 82 的 `/tmp/servercore_login_remote.log`。
-4. 建立本机 loopback SSH 转发，让 Godot 客户端连接 `127.0.0.1:<本地转发端口>`，
+5. 建立本机 loopback SSH 转发，让 Godot 客户端连接 `127.0.0.1:<本地转发端口>`，
    流量通过 SSH 到达 82 的 `127.0.0.1:<Server.ini Port>`。因此无需把远程游戏端口
    改绑到外部网卡或开放防火墙端口。
-5. Godot 客户端退出后自动关闭 SSH 转发；远程测试服务端继续运行，下一次运行此命令时会重建并重启。
+6. Godot 客户端退出后自动关闭 SSH 转发；远程测试服务端继续运行，下一次运行此命令时会重建并重启。
 
-`remote` 模式不执行 Git pull、复制源码、清理或覆盖 82 的工作树；远程未提交源码也会参与构建。
+`remote` 模式同步 Zircon 已提交代码，也会同步 D 上 Mir3-Research 的未提交工作树内容。
+Mir3-Research 本机仓库会重置到 D 的分支提交，再覆盖为 D 的工作树状态；请不要在本机研究仓库保存独有改动。
+研究仓库的本地 `.git`、工具虚拟环境和 `Mir3 Preview Version.rar` 会保留。
+
+D 的 Syncthing 将 `/home/tetsuya/mir2ei` 和 `/home/tetsuya/mir2ei-webdata` 配置为 send-only；
+本机 NixOS Syncthing 以 receive-only 接收两个目录。它在后台持续增量同步，不会在每次启动时
+重新完整复制。`remote` 启动只等 `mir2ei-client` 没有待接收文件，WebData 继续后台同步，
+避免数万份 WebData 文件拖慢游戏启动。Syncthing 离线或客户端资源仍有待同步时，启动会等待
+（最长一小时）并在同步失败时停止，避免客户端使用未更新的运行资源。同步不会复制 D 上的
+`Database/`、工具目录或原版 EXE。
+
 它不操作 `/home/tetsuya/development/Debug/ServerCore` 下由 `zircon-server.service` 管理的正式服务端。
 如果 82 的手动测试服务端是从其它工作目录启动的，脚本不会结束它；新进程可能因端口占用而无法启动，
 需先确认并停止目标测试实例。运行账号需要 SSH 免交互登录、远程 .NET SDK、`nc`，并对服务端
-构建输出目录有写权限；本机也需要 `ssh` 和 `nc`。
+构建输出目录有写权限；本机也需要 `ssh`、`rsync`、`nc` 和正在运行的 Syncthing。
 
 不需要 legacy HUD 时去掉末尾的 `legacy`：
 
@@ -558,7 +573,7 @@ macOS 的目录结构与 82 不同，且不能直接照抄 82 的环境变量（
 显式设置。已验证可用的入口：
 
 ```bash
-/Users/tetsuya/mir2ei/LegacyEI/login_game.sh remote 192.168.3.82 legacy
+/Users/tetsuya/Development/Zircon/login_game.sh remote 192.168.3.82 legacy
 ```
 
 #### 平台路径对照
@@ -569,7 +584,7 @@ macOS 的目录结构与 82 不同，且不能直接照抄 82 的环境变量（
 | 现代客户端资源（`.Zl`） | `<repo>/Debug/Client/Data` | `<repo>/Debug/Client/Data`（软链到 `/Users/tetsuya/mir2ei`） |
 | 旧版 EI 素材（`.wil`/`.wix`） | `/home/tetsuya/mir2ei/Data` | `/Users/tetsuya/mir2ei/LegacyEI/Data` |
 | EI 原版客户端（含 exe/dll） | `/home/tetsuya/mir2ei` | 未复制，只取 `Data` |
-| 启动包装器 | `/home/tetsuya/mir2ei/login_game.sh` | `/Users/tetsuya/mir2ei/LegacyEI/login_game.sh` |
+| 启动包装器 | `/home/tetsuya/mir2ei/login_game.sh` | `/Users/tetsuya/Development/Zircon/login_game.sh` |
 
 #### 环境变量契约
 
@@ -611,20 +626,12 @@ macOS 的目录结构与 82 不同，且不能直接照抄 82 的环境变量（
 另外 `[MirSkin] legacy UI WIL source: GameInter -> <EI 根>/Data/GameInter.wil (1103 frames)`
 出现即表示旧版 WIL 素材路由正确。
 
-#### 前置条件：本机客户端构建需要 82 的未提交改动
+#### 代码同步说明
 
-`ui/legacy-layout-lab` 的**已提交状态编译不过**：`GameScene.cs` 调用的
-`NPCTextControl.ButtonAreas` 只存在于 82 工作树**未提交**的 `NPCTextControl.cs` 中，
-构建会报 `CS1061: 'NPCTextControl' に 'ButtonAreas' の定義が含まれておらず`。
-因此本机客户端必须先同步 82 的未提交改动：
-
-```bash
-cd <repo>
-git checkout -- . && ssh debian 'cd /home/tetsuya/development/zircon && git diff' | git apply -
-```
-
-> ⚠️ `git checkout -- .` 会丢弃本机该 worktree 的未提交改动，执行前确认没有自己的内容。
-> 82 改动后重新同步时重复这条命令即可。
+`remote` 启动会先把 82 工作树的 `master` 最新提交快进到本机，再构建和运行本机 Godot 客户端。
+这让客户端和远程服务端都使用 D 机器的最新**已提交**源码。D 上未提交的改动只参与远程服务端构建；
+需要同步这类改动时，先在 D 机器提交，再运行本机启动命令。若本机分支已分叉，或快进会覆盖有冲突的本地文件，
+脚本会停止并提示处理分支/文件状态，不会执行覆盖式 checkout。
 
 #### bash 陷阱：`$VAR` 紧跟全角标点
 
@@ -635,4 +642,3 @@ git checkout -- . && ssh debian 'cd /home/tetsuya/development/zircon && git diff
 
 复现范围：bash 5.3 在默认 locale 即复现；bash 3.2 仅在 UTF-8 locale 复现。
 **写含中文的 shell 脚本时，全角标点不要紧贴变量名。**
-

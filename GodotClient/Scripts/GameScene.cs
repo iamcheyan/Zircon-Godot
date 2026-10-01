@@ -2116,6 +2116,7 @@ public partial class GameScene : Control
                 break;
             case KeyBindAction.BeltWindow:
                 WindowManager.Toggle(_beltDialog, _uiLayer);
+                GD.Print($"[LegacyBelt] toggle -> visible={_beltDialog?.Visible} loc={_beltDialog?.Location} size={_beltDialog?.Size}");
                 break;
             case KeyBindAction.AutoPotionWindow:
                 WindowManager.Toggle(AutoPotionBox, _uiLayer);

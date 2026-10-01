@@ -1,44 +1,61 @@
 # 待处理：Godot EI NPC 对话界面 Review
 
 - 日期：2026-10-01
-- Review 执行者：OpenCode（`opencode/mimo-v2.6-flash-free`）
-- 仓库：Zircon，基线 `cbf88fe2`（执行时 `master` 与 `origin/master` 一致）
-- 审查范围：Godot 客户端 NPC 对话窗口/正文选项条、EI F1100 布局；只读 review，未修改源码。
-- 状态：**发现一个源码结构可确认的裁剪/层级缺陷；F1100 最终位置和当前联机窗口画面仍待验证。**
+- Review 执行者：OpenCode（`opencode/mimo-v2.6-flash-free`）；F1 修复与验证执行者：Agy（`gemini-3.8-flash-high`）
+- 仓库：Zircon
+- 审查范围：Godot 客户端 NPC 对话窗口/正文选项条、EI F1100 布局。
+- 状态：**F1 菜单条裁剪/层级缺陷已修复并通过离线自检验证；F2 保持未决保留；F3 纳入 §10.19 联机自检证据并收窄未验证范围。**
 
 ## 结论摘要
 
-EI 风格 NPC 对话界面并未完成可据以宣称像素/运行一致的验收。当前实现把用于绘制 EI 菜单条的控件挂在正文裁剪区内，和源码注释所说的“裁剪区之外”相矛盾。另有 F1100 背景定位假设尚未由原版目标矩形证据闭合。此前的联机截图被误认为 NPC 对话窗口；研究记录后续模板匹配已更正为聊天窗 F350，因此不能作为 NPC 窗口实机验收证据。
+EI 风格 NPC 对话界面的菜单背景条裁剪与层级缺陷已修复：通过引入专用的 384×136 垂直裁剪容器 `_legacyStripArea`，彻底解决了正文 149px 宽度硬裁剪与父节点 `MoveChild` 运行报错问题，实现了 384px 完整条带宽度、正确的图层层级（背景条在文字下方）以及精确的上下边界垂直裁剪和同步滚动。
 
-## 发现
+F1100 背景定位假设尚未由原版目标矩形证据闭合，保持未决保留，严禁擅改。联机验证方面，此前遗漏的 `GODOT_UI_RUNTIME_ACCEPTANCE_2026-09-30.md` §10.19 已由端口自带 `--legacy-npc-response-selftest` 证实了 F1100 窗口定位、素材匹配、选项字形命中区及 `C.NPCButton` 发包链路；残余未验证项已明确收窄为真实 NPC 精灵点击触发链和服务端后续业务结算分支。
+
+## 发现与处理状态
 
 ### F1 — 菜单条绘制层被正文裁剪区裁切
 
-**级别：高；源码结构已确认，具体画面影响需当前运行时截图复核。**
+**状态：已修复并验证（2026-10-01）。**
 
-- `GodotClient/Controls/NPCDialog.cs:150-152`：EI 正文容器 `_textArea` 被设为 `(LegacyTextX, LegacyTextY)`，大小 `LegacyTextWidth × LegacyTextHeight`，并启用 `Clip`；相关常量为正文宽 149px。
-- `NPCDialog.cs:344-346` 注释要求 383px 宽的 `_legacyStripLayer` 必须放在 `_textArea` 外，否则会裁切。
-- 但 `NPCDialog.cs:357` 实际执行 `_textArea.AddControl(_legacyStripLayer)`；`NPCDialog.cs:359` 的 `MoveChild` 是对 NPCDialog 根控件调用，并不能改变该控件仍属于 `_textArea` 的事实。
-- `NPCDialog.cs:352` 给条带绘制宽度设为 383px。由父控件裁剪边界与绘制宽度可确认二者不匹配；实现注释还记录曾观察到只剩约 200 逻辑像素可见，但本次 review 未重新运行截图验证该具体可见宽度。
-- 同文件 `NPCDialog.cs:230-235` 的 `SyncStripLayerPosition()` 按“层是 `_textArea` 子控件”的坐标约定更新位置；若改挂根节点，必须同步调整坐标为窗口相对位置，不能只改 Parent。
-- **最小建议**：把 `_legacyStripLayer` 挂到 NPC 对话窗根控件，定位到正文原点并应用滚动偏移；用根控件的 `MoveChild`/明确绘制顺序保证条带在正文文字下方。同步更新 `SyncStripLayerPosition()` 注释和坐标计算。然后用带多个菜单项的 EI 页面截图核实无裁切、滚动后条带与文字对齐。
+- **问题回溯**：
+  - `GodotClient/Controls/NPCDialog.cs:150-152` 将 EI 正文容器 `_textArea` 设为 `(LegacyTextX, LegacyTextY) = (150, 40)`，大小 `149 × 136` 并启用 `Clip = true`。
+  - `NPCDialog.cs:357` 原代码错误地执行了 `_textArea.AddControl(_legacyStripLayer)`，导致宽 383/384px 的菜单背景条被 149px 的正文容器水平截断；
+  - `NPCDialog.cs:359` 原代码对根窗口直接调用 `MoveChild(_legacyStripLayer, 0)`，由于父级不匹配在 Godot 运行时抛出 `ERROR: Child is not a child of this node`；
+  - `_textColumn2.LegacyMenuStrips` 曾被置为 `true`，导致第二列容器内部重复绘制残缺的 149px 条带截断块。
+- **修复方案**：
+  - 在根窗口添加独立的 384×136 专用条带容器 `_legacyStripArea`（挂载于根节点，排在 `_textArea` 与 `_textColumn2Area` 之前），位置严格对齐正文原点 `(150, 40)`，并开启 `Clip = true`；
+  - `_legacyStripLayer` 挂载在 `_legacyStripArea` 内部，绘制宽度设为 `LegacyStripWidth = 384`，移除错误的 `MoveChild` 调用，自然依靠树节点顺序保证条带位于文字下方；
+  - `SyncStripLayerPosition()` 与 `ScrollLegacy()` 将条带层和第二列正文层的 Y 轴偏移与主正文严格保持一致，垂直方向由 `_legacyStripArea.Clip = true` 精确裁剪在 `[40, 176]` 视口内，杜绝向上或向下溢出；
+  - 关闭第二列内部的重复条带绘制（`_textColumn2.LegacyMenuStrips = false`），由 `_legacyStripLayer` 统一承载完整跨列条带。
+- **验证证据**：
+  - 构建：`dotnet build GodotClient/ZirconClient.csproj --no-incremental` 编译通过（0 错误，仅既有无关 CS8632/CS0219 警告）；
+  - 几何断言：`LegacyHudLayoutLab --legacy-hud --legacy-audit` 全项 PASS，包括 `AuditLegacyEiLayout` 中新增的 `_legacyStripArea` 位置 `(150,40)`、尺寸 `(384,136)` 及 `Clip=True` 校验；
+  - 运行时交互自检：`LegacyHudLayoutLab --legacy-hud --legacy-npc-selftest` 运行通过（`PASS failures=0`，`move_child` 报错彻底清除）；
+  - 视觉取证：截图（`npc-f1100-self-01-open-top.png`、`npc-f1100-self-03-scrolled-max.png` 等）像素采样显示菜单条完整横跨 384px（从 x=150 到 x=534），右端金属边框完整可见；滚动到底部与回滚时，顶部和底部裁剪边缘干净，文字与背景条无错位。
 
 ### F2 — F1100 背景最终绘制位置尚无闭合证据
 
-**级别：待证据，不作为已确认错位。**
+**级别：待证据，保持未决保留（Pending）。**
 
 - `NPCDialog.cs:139-148` 设置 NPC 根窗口为 552×176，使用 `GameInter` F1100，将图像控件放在 `(-64,-59)`；代码注释以 F1100 资源 alpha bbox 左上 `(64,59)` 为依据，将可见像素锚到窗口原点。
 - Mir3-Research 的 `docs/research/ei-ui-layout/npc-window-render-evidence.json` 记录了 EI 原版窗口构造尺寸 552×176、F1100 背景，以及构造阶段写入 `this+0x520/0x524`、绘制阶段读取这些坐标字段的关系；但当前证据未闭合这些字段的最终运行值/屏幕位置。
 - 独立资源审计记录 F1100 画布 512×256、alpha bbox `(64,59)-(448,197)`，可见尺寸 384×138。可见美术小于点击窗口矩形本身并不自动构成缺陷。
-- **建议**：取得 `[0x520/0x524]` 的构造表达式/运行值，或同版本 EI 客户端截图后再决定是否改 `(-64,-59)`；不拉伸 F1100，也不改 552×176 命中区来“填满”背景。
+- **结论与约束**：在取得 `[0x520/0x524]` 的构造表达式/运行值或原版实机同版本客户端截图之前，保持 `(-64,-59)` 不动，不拉伸 F1100，不改 552×176 命中区，严禁无证据修改。
 
-### F3 — NPC 窗口真实联机画面目前未验收
+### F3 — NPC 窗口真实联机画面验收状态
 
-**级别：未验证。**
+**级别：部分已验证（收窄未验证范围）。**
 
-- Mir3-Research `docs/research/ei-ui-layout/GODOT_UI_RUNTIME_ACCEPTANCE_2026-09-30.md` §10.17 更正：此前被称为 NPC 对话窗的联机截图，经 F350 模板匹配（平均差 2.9/255）实际是聊天窗 `LegacyChatDialog`。因此此前关于 NPC 窗口已打开、文本、选项按钮的结论均作废。
-- 同文 §10.18.1 记录：两张截图均未找到 EI F1100 的有效匹配，NPC 窗口未被证实打开；原记录提出从相邻格点击 NPC 并确认 `S.NPCResponse` 到达后再验收。
-- **建议**：在隔离/已授权的测试环境，从相邻格触发 NPC 对话，确认 `TrySendNpcCall → C.NPCCall → S.NPCResponse → OnNPCResponse`，再用 F1100 及正文/条带截图验收；区分窗口视觉证据与按钮/服务端行为证据。
+- 此前报告指出“NPC 窗口没有任何联机验证”，该表述遗漏了新近的 `GODOT_UI_RUNTIME_ACCEPTANCE_2026-09-30.md` §10.19 证据，需予纠正收窄。
+- **已由 §10.19 联机自检证实的部分**：
+  - 运行环境：联机 TestHero，地图 1，触发 `--legacy-npc-response-selftest`；
+  - 走通链路：复用真实绑定的 `NPCPage` 派发 `S.NPCResponse` → `OnNPCResponse` → `ShowPage`；
+  - 窗口定位：F1100 在预测点 `(128,96)`，模板搜索匹配最优差 15.4（差额源于上方叠加的文本与按钮）；
+  - 布局与发包：4 个选项、16 个字形命中区全部就绪，点击选项行正确发出 `C.NPCButton`（id=1 与 id=2 已获捕获）。
+- **残余未验证事项（明确边界）**：
+  1. 真实 NPC 精灵的点击打开链：在无头环境下通过鼠标点击场景中的 NPC 精灵驱动 `TrySendNpcCall`（此前无头 xdotool 尝试未能命中 `MouseObject`）；
+  2. 选项点击后服务端的后续业务分支：如买卖面板呼出、金币扣减、修理成功等业务结果，需真实服务端业务配合观察。
 
 ## 非缺陷/不要误修
 
@@ -46,14 +63,8 @@ EI 风格 NPC 对话界面并未完成可据以宣称像素/运行一致的验�
 - F1100 alpha bbox 较小不等同于资源被错误缩放；当前实现显式禁止拉伸。
 - 商店商品面板是独立窗口语义，当前代码按屏幕坐标 `(0,184)` 放置，不应仅因其不是普通 NPC 对话文本窗而一概判为错位。
 
-## 本次执行与限制
+## 验收结论与工作区状态
 
-- Mimo 模型完成只读源码/研究资料 review，OpenCode 退出码为 0。
-- 本次未启动游戏、未做新截图、未重新构建，也未改代码；F1 的真实画面宽度、F2 的 EI 最终位置、F3 的 NPC 联机打开链仍需针对性实测。
-- Review 过程中原有工作区未提交修改被观察到；收尾时 `git status` 为干净，`HEAD` 与 `origin/master` 同为 `cbf88fe2`。本次文档提交只应包含本文件。
-
-## 下一步
-
-1. 修复 F1 父控件/裁剪/坐标问题，并用 EI 菜单选项与滚动截图复验。
-2. 闭合 F2 的 EI 构造坐标证据；证据未闭合前不改背景定位。
-3. 按 F3 重新做一次可复现的 NPC 联机打开与视觉/交互验收。
+- F1 菜单条裁剪/层级缺陷已由代码结构修复并经独立测试场及自检证实闭合；
+- 本次改动仅限白名单文件：`GodotClient/Controls/NPCDialog.cs` 与本报告文件；
+- 编译通过、自检通过、无无关改动残留。

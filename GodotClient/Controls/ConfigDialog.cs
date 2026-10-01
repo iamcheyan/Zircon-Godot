@@ -53,6 +53,9 @@ public partial class ConfigDialog : DXWindow
         }
         _page = new DXControl { Location = new Vector2I(8, 62), Size = new Vector2I(348, 340), Clip = true };
         AddControl(_page);
+        // 鼠标滚轮在内容区任意位置都能滚动（不只限于滚动条本身）。
+        // 绑定一次具名 handler，避免每次 SelectTab() 追加匿名 lambda（BUG-10）。
+        _page.MouseWheel += OnPageMouseWheel;
         SelectTab(0);
     }
 
@@ -133,9 +136,14 @@ public partial class ConfigDialog : DXWindow
             _scroll.ValueChanged += (s, e) => _content.Location = new Vector2I(0, -_scroll.Value);
             _page.AddControl(_scroll);
         }
-        // 鼠标滚轮在内容区任意位置都能滚动（不只限于滚动条本身）
-        _page.MouseWheel += (s, e) => { if (_scroll != null) _scroll.DoMouseWheel(s, e); };
     }
+
+    /// <summary>内容区滚轮代理到当前页滚动条（若存在）。构造时订阅一次，不随页签切换重复累加。</summary>
+    private void OnPageMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_scroll != null) _scroll.DoMouseWheel(sender, e);
+    }
+
 
     /// <summary>旧版 EI 选项窗口：GameInter F750，根 248×264。</summary>
     public void ApplyLegacyEiLayout()

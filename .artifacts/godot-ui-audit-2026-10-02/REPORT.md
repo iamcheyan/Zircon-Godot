@@ -53,6 +53,19 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
 - **验证**：按 `R` → 探针 `<no-dump: LineEdit focused>`（输入框确实获得焦点）→ 按 `Esc` → 探针恢复正常输出且无聊天窗；随后 `Q`/`N`/`F` 热键全部恢复。截图 `evidence/14-fix-r-chat-open.png` / `evidence/15-fix-esc-chat-closed.png`。
 - **回归**：Esc 关窗后立即按 `Q`/`N`/`F`/`Z`/`S` 均正常开合（见 §2 矩阵）。
 
+### ISSUE-4 服务端可重复投递的确认/邀请面板会**叠加重复**（用户报告的「重复弹出/重复出现」）— 已修复
+
+- **复现**（headless 自检，可重跑）：`godot-mono --path GodotClient res://Scenes/UITestScene.tscn -- --popup-dedup-audit`
+  - 修复前：`FAIL trade=1->2 ... marriage=3->4` —— `S.TradeRequest` / `S.MarriageInvite` 每到达一次就 `new` 一块面板并 `AddControl`，**第二块叠在第一块同一坐标上**。
+  - 修复后：`PASS trade=1->1 group=3->3 guild=2->2 marriage=3->3`（重复投递不再增长）。
+- **对照**：`GroupDialog.ShowInvite`（`:252`）与 `GuildDialog.ShowInvite`（`:586`）**已有** `if (_invitePanel != null) { RemoveControl; QueueFree; }` 守卫，行为正确（`3->3` / `2->2` 稳定）；缺守卫的是 `TradeDialog.ShowRequest` 与 `GuildDialog.ShowMarriageInvite`。
+- **根因**：这两个方法每次调用都 `new DXControl` 面板 + `AddControl`，无旧面板摘除。
+- **修复**：两处各加 `_requestPanel` / `_marriageInvitePanel` 字段守卫（先 `RemoveControl` + `QueueFree` 旧面板），并在 accept/decline 回调里把字段置 `null`（与同文件既有 `_invitePanel` 写法一致）。
+- **验证**：
+  - 新增自检 `--popup-dedup-audit`（`UITestScene.AuditPopupDedup`），断言「重复投递不增长」这一不变量；
+  - **敏感性已验证**：临时移除两处守卫后自检立刻 `FAIL trade=1->2 marriage=3->4`，恢复守卫后 `PASS`，证明该自检能捕获此缺陷；
+  - `dotnet build GodotClient/ZirconClient.csproj`：0 error。
+
 ## 2. 热键/窗口生命周期矩阵（修复后复跑）
 
 方法：每个键 `按一次 → 探针 → 再按一次 → 探针 → Esc → 探针`。判定「开」= 探针出现该窗口；「关」= 消失。
@@ -98,7 +111,8 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
 
 - 本轮真机覆盖：**14 个热键入口 + 2 个 HUD 按钮**（对应 11 个 `DXWindow` + 1 个非窗口开关），
   每个均验证「开 → 同键关 → Esc 关」三段生命周期。
-- 已修复：**3 个确认缺陷**（设置窗、行会窗、聊天窗 Esc/热键吞噬），全部经真实运行复测。
+- 已修复：**4 个确认缺陷**（设置窗、行会窗、聊天窗 Esc/热键吞噬、邀请/确认面板重复叠加），
+  全部经真实运行或可重跑自检复测，其中重复叠加缺陷的检测敏感性已验证。
 - 未覆盖：交易（需第二玩家）、服务端包驱动的 NPC/商店/任务链、现代 UI、非窗口 HUD 元素的像素级复核。
 
 ## 6. 提交记录

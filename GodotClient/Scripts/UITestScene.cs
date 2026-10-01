@@ -47,6 +47,7 @@ public partial class UITestScene : Control
     private bool _configAudit;
     private bool _keyBindAudit;
     private bool _windowChromeAudit;
+    private bool _popupDedupAudit;
     private bool _legacyWilAudit;
     private CanvasLayer _uiLayer;
 
@@ -86,6 +87,7 @@ public partial class UITestScene : Control
         _configAudit = OS.GetCmdlineUserArgs().Contains("--config-audit");
         _keyBindAudit = OS.GetCmdlineUserArgs().Contains("--keybind-audit");
         _windowChromeAudit = OS.GetCmdlineUserArgs().Contains("--window-chrome-audit");
+        _popupDedupAudit = OS.GetCmdlineUserArgs().Contains("--popup-dedup-audit");
         _legacyWilAudit = OS.GetCmdlineUserArgs().Contains("--legacy-wil-audit");
         if (_legacyWilAudit) AuditLegacyWilFallback();
         if (_uiAudit)
@@ -227,6 +229,7 @@ public partial class UITestScene : Control
         if (_configAudit) AuditConfig();
         if (_keyBindAudit) AuditKeyBind();
         if (_windowChromeAudit) AuditWindowChrome();
+        if (_popupDedupAudit) AuditPopupDedup();
         if (OS.GetCmdlineUserArgs().Contains("--store-dump")) DumpStore();
 
         // 等 10 帧后截图一次 (供我分析), 然后挂起等用户按键
@@ -1201,6 +1204,72 @@ public partial class UITestScene : Control
 
         foreach (var window in new DXWindow[] { standard, milestone, floating, belt, chat, monster, miniMap, tracker })
             window.QueueFree();
+    }
+    /// <summary>
+    /// --popup-dedup-audit：服务端可重复到达的「确认/邀请面板」必须去重。
+    /// 每个 Show* 调两次，面板只允许存在一块（否则同位置叠出多个确认框，
+    /// 即用户报告的「重复弹出/重复出现」）。四块面板均由包驱动：
+    ///   S.TradeRequest   → TradeDialog.ShowRequest
+    ///   S.GroupInvite    → GroupDialog.ShowInvite
+    ///   S.GuildInvite    → GuildDialog.ShowInvite
+    ///   S.MarriageInvite → GuildDialog.ShowMarriageInvite
+    /// </summary>
+    private void AuditPopupDedup()
+    {
+        var tradeDialog = new TradeDialog();
+        tradeDialog.ShowWindow(this);
+        tradeDialog.ShowRequest("A");
+        int tradeOnce = CountPanels(tradeDialog);
+        tradeDialog.ShowRequest("B");
+        int tradeTwice = CountPanels(tradeDialog);
+
+        var groupDialog = new GroupDialog();
+        groupDialog.ShowWindow(this);
+        groupDialog.ShowInvite("A");
+        int groupOnce = CountPanels(groupDialog);
+        groupDialog.ShowInvite("B");
+        int groupTwice = CountPanels(groupDialog);
+
+        var guildDialog = new GuildDialog();
+        guildDialog.ShowWindow(this);
+        guildDialog.ShowInvite("A", "G1");
+        int guildOnce = CountPanels(guildDialog);
+        guildDialog.ShowInvite("B", "G2");
+        int guildTwice = CountPanels(guildDialog);
+
+        guildDialog.ShowMarriageInvite("A");
+        int marriageOnce = CountPanels(guildDialog);
+        guildDialog.ShowMarriageInvite("B");
+        int marriageTwice = CountPanels(guildDialog);
+
+        // 断言的是**去重不变量**：重复投递不得让面板数量增长。
+        // 绝对值不做硬编码 —— 各窗口本来就有若干裸 DXControl 子控件
+        // （GroupDialog 的邀请框+输入行等），硬编码会把正确实现判为失败。
+        bool valid = tradeOnce == tradeTwice && tradeOnce >= 1
+            && groupOnce == groupTwice && groupOnce >= 1
+            && guildOnce == guildTwice && guildOnce >= 1
+            && marriageOnce == marriageTwice && marriageOnce > guildTwice;
+        GD.Print(valid
+            ? $"[UIPopupDedupAudit] PASS trade={tradeOnce}->{tradeTwice} group={groupOnce}->{groupTwice} guild={guildOnce}->{guildTwice} marriage={marriageOnce}->{marriageTwice}"
+            : $"[UIPopupDedupAudit] FAIL trade={tradeOnce}->{tradeTwice} group={groupOnce}->{groupTwice} guild={guildOnce}->{guildTwice} marriage={marriageOnce}->{marriageTwice}");
+
+        tradeDialog.QueueFree();
+        groupDialog.QueueFree();
+        guildDialog.QueueFree();
+    }
+
+    /// <summary>
+    /// 统计窗口内**裸 DXControl**（邀请/确认框）的数量。这些面板都是
+    /// `new DXControl { BackColour, Border }` 直接 AddControl 的，类型精确匹配
+    /// DXControl 即可把面板与其它派生控件（按钮/标签/格子）区分开。
+    /// </summary>
+    private static int CountPanels(DXWindow window)
+    {
+        int count = 0;
+        foreach (var control in window.Controls)
+            if (control != null && control.GetType() == typeof(DXControl))
+                count++;
+        return count;
     }
 
     private void SelfCheck(DXWindow win, DXButton btn1, DXButton btn2)

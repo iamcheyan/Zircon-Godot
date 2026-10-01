@@ -912,14 +912,26 @@ public partial class GuildDialog : DXWindow
         _content.AddControl(repairGuards);
     }
     public void SetGuildNotice(string notice) { if (_guild != null) _guild.Notice = notice; RefreshRows(); }
+    /// <summary>
+    /// 求婚确认面板。与组队/行会邀请同理必须去重：服务端可重复发
+    /// S.MarriageInvite，每次 new 一块面板会在同一位置叠加多个确认框
+    /// （用户报告的「重复弹出/重复出现」）。旧面板先摘除再建新的。
+    /// </summary>
+    private DXControl _marriageInvitePanel;
     public void ShowMarriageInvite(string name)
     {
+        if (_marriageInvitePanel != null)
+        {
+            RemoveControl(_marriageInvitePanel);
+            _marriageInvitePanel.QueueFree();
+        }
         var panel = new DXControl { Location = new Vector2I(45, 185), Size = new Vector2I(350, 70), BackColour = new Color(0.04f, .025f, .02f, .98f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
+        _marriageInvitePanel = panel;
         panel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 向你求婚", FontSize = 10, Location = new Vector2I(8, 7), Size = new Vector2I(334, 22), IsControl = false });
         var yes = new DXButton { Text = Lang.GroupAcceptLabel, Size = new Vector2I(70, 24), Location = new Vector2I(80, 38), Index = -1 };
-        yes.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(true); RemoveControl(panel); panel.QueueFree(); };
+        yes.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(true); RemoveControl(panel); panel.QueueFree(); _marriageInvitePanel = null; };
         var no = new DXButton { Text = Lang.GroupDeclineLabel, Size = new Vector2I(70, 24), Location = new Vector2I(190, 38), Index = -1 };
-        no.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(false); RemoveControl(panel); panel.QueueFree(); };
+        no.MouseClick += (o, e) => { GameScene.Game?.SendMarriageResponse(false); RemoveControl(panel); panel.QueueFree(); _marriageInvitePanel = null; };
         panel.AddControl(yes); panel.AddControl(no); AddControl(panel);
     }
     public void ApplyGuildUpdate(S.GuildUpdate packet)

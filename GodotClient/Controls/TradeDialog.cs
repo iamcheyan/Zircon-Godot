@@ -83,14 +83,26 @@ public partial class TradeDialog : DXWindow
         var label = new DXLabel { Text = text, FontSize = 10, TextColour = Colors.White, DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Right, AutoSize = false, Size = new Vector2I(130, 16), Location = new Vector2I(x, y), IsControl = false }; AddControl(label); return label;
     }
     public void OpenTrade(string name) { Text = name; _confirm.Enabled = true; WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent()); }
+    /// <summary>
+    /// 对方请求交易时的确认面板。同组队/行会邀请一样必须去重：服务端可重复发
+    /// S.TradeRequest（对方反复点交易），每次 new 一块面板会让**多个确认框叠在
+    /// 同一位置**（用户报告的「重复弹出/重复出现」）。旧面板先摘除再建新的。
+    /// </summary>
+    private DXControl _requestPanel;
     public void ShowRequest(string name)
     {
+        if (_requestPanel != null)
+        {
+            RemoveControl(_requestPanel);
+            _requestPanel.QueueFree();
+        }
         var panel = new DXControl { Location = new Vector2I(12, 36), Size = new Vector2I(300, 72), BackColour = new Color(.05f, .03f, .02f, .98f), Border = true, BorderColour = new Color(1f, .75f, .25f) };
+        _requestPanel = panel;
         panel.AddControl(new DXLabel { Text = $"{name ?? Lang.GroupUnknownLabel} 请求交易", Location = new Vector2I(8, 7), Size = new Vector2I(280, 20), IsControl = false });
         var yes = new DXButton { Text = Lang.GroupAcceptLabel, Location = new Vector2I(60, 38), Size = new Vector2I(70, 24), Index = -1 };
-        yes.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(true); RemoveControl(panel); panel.QueueFree(); };
+        yes.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(true); RemoveControl(panel); panel.QueueFree(); _requestPanel = null; };
         var no = new DXButton { Text = Lang.GroupDeclineLabel, Location = new Vector2I(170, 38), Size = new Vector2I(70, 24), Index = -1 };
-        no.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(false); RemoveControl(panel); panel.QueueFree(); };
+        no.MouseClick += (o, e) => { GameScene.Game?.SendTradeRequestResponse(false); RemoveControl(panel); panel.QueueFree(); _requestPanel = null; };
         panel.AddControl(yes); panel.AddControl(no); AddControl(panel);
     }
     public void SetOtherItem(ClientUserItem item)

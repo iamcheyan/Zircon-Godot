@@ -134,8 +134,11 @@ public partial class TradeDialog : DXWindow
         // 素材实测 F1050 画布 512x512、alpha bbox (14,91)-(497,421)，故取 -(14,91)。
         _background.Location = new Vector2I(-14, -91);
         _closeButton.LibraryFile = LibraryFile.GameInter;
-        _closeButton.Index = 161;
-        _closeButton.HoverIndex = 162;
+                // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
+        // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
+        // 只有按下态画 arg3=162。
+        _closeButton.Index = -1;
+        _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
         // 原版关闭键是**不可见热区**，位置 (x+0x214, y+0x15E) = (532,350)
         // （trade-window-render-evidence.json::buttons.close.args：

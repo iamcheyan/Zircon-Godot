@@ -198,8 +198,11 @@ public partial class GroupDialog : DXWindow
         foreach (var row in _lfgRows) row.Visible = false;
 
         _closeButton.LibraryFile = LibraryFile.GameInter;
-        _closeButton.Index = 161;
-        _closeButton.HoverIndex = 162;
+                // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
+        // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
+        // 只有按下态画 arg3=162。
+        _closeButton.Index = -1;
+        _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = 162;
         // P3 证据为 (226,214) 28x26（social-window-render-evidence.json
         // child_controls[0]，并与 F900 底图烘焙 X 的模板匹配一致），不是 (224,212)。

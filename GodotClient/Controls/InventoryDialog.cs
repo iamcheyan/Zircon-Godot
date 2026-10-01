@@ -331,8 +331,11 @@ public partial class InventoryDialog : DXWindow
         _legacyActionButton.Location = new Vector2I(176, 262);
         _legacyActionButton.Size = new Vector2I(64, 20);
         CloseButton.LibraryFile = LibraryFile.GameInter;
-        CloseButton.Index = 161;
-        CloseButton.HoverIndex = 162;
+                // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
+        // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
+        // 只有按下态画 arg3=162。
+        CloseButton.Index = -1;
+        CloseButton.HoverIndex = -1;
         CloseButton.PressedIndex = 162;
         CloseButton.Location = new Vector2I(249, 288);
         CloseButton.Size = new Vector2I(28, 26);

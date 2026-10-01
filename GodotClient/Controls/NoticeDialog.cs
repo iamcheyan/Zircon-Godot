@@ -50,9 +50,12 @@ public partial class NoticeDialog : DXWindow
 
         _closeButton = new DXButton
         {
-            LibraryFile = LibraryFile.GameInter,
-            Index = 161,
-            HoverIndex = 162,
+            LibraryFile = LibraryFile.GameInter,        // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
+        // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
+        // 只有按下态画 arg3=162。
+
+            Index = -1,
+            HoverIndex = -1,
             PressedIndex = 162,
             Location = new Vector2I(548, 16),
             Size = new Vector2I(28, 26),

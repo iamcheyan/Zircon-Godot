@@ -33,6 +33,21 @@ public partial class MapObjectNode : Node2D
     public bool ShowHealthBar;
     public bool Dead;
 
+    /// <summary>
+    /// 悬停名字保留截止时刻（ms）。原版：<c>0x0040BA60</c> 每次设置悬停名字都会
+    /// 重置 <c>HUD+0x6209C</c> 计时器，<c>0x0040BB00</c> 每帧累加帧间隔，超过 3000ms
+    /// 就清空名字缓冲 → 鼠标移开后名字最多再保留 3 秒。见
+    /// <see cref="RenderPrimitives.HoverNameHoldMs"/>。
+    /// </summary>
+    protected double NameHoldUntilMs;
+
+    /// <summary>鼠标仍在该对象上时每帧调用（等价原版每帧重设名字并重置计时器）。</summary>
+    public void RefreshNameHold() =>
+        NameHoldUntilMs = Godot.Time.GetTicksMsec() + RenderPrimitives.HoverNameHoldMs;
+
+    /// <summary>名字当前是否可见：正在悬停，或处于 3000ms 保留窗口内。</summary>
+    public bool NameHoldActive => Godot.Time.GetTicksMsec() < NameHoldUntilMs;
+
     // ---- M7: 动作队列 (原版 ActionQueue) ----
     public readonly Queue<MirAnimation> ActionQueue = new();
 
@@ -186,6 +201,13 @@ public partial class MapObjectNode : Node2D
     public override void _Process(double delta)
     {
         double nowMs = Godot.Time.GetTicksMsec();
+
+        // 原版悬停名字的保留门（0x40BB00 + 0x40BA60）：停止刷新 3000ms 后清空名字。
+        if (NameHoldUntilMs != 0 && nowMs >= NameHoldUntilMs)
+        {
+            NameHoldUntilMs = 0;
+            QueueRedraw();
+        }
 
         // 网络对象可能在刚创建、替换外观或资源异步加载期间尚未拿到动画帧。
         // 这种对象仍然要保留在场景树中等待下一帧，不能让渲染循环因空帧崩溃。

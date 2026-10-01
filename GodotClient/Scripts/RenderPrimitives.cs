@@ -207,6 +207,16 @@ internal static class RenderPrimitives
     }
 
     /// <summary>
+    /// 原版悬停名字的保留时长（ms）。`0x0040BA60`（设置悬停名字，`sprintf` 写
+    /// <c>HUD+0x621A4…</c> 的 9 个 0x104 缓冲）在结尾执行
+    /// <c>mov dword ptr [esi+0x6209C], 0</c> 重置计时器；`0x0040BB00` 每帧把帧间隔
+    /// 累加到 <c>HUD+0x6209C</c>，超过 <c>0xBB8</c>(3000) 就清空名字缓冲
+    /// （`memset(HUD+0x620A0, 0, 0x104)` + `memset(HUD+0x621A4, 0, 0x820)`）。
+    /// 语义：悬停期间持续刷新，停止刷新（鼠标移开）后名字最多再保留 3000ms。
+    /// </summary>
+    public const double HoverNameHoldMs = 3000d;
+
+    /// <summary>
     /// 地图对象名称统一放在头顶血条上方。血条背景的旧版锚点是 y=-55，
     /// 名称基线放在其上方并为公会名/宠物归属名预留两行。
     /// </summary>

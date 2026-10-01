@@ -585,7 +585,9 @@ public partial class ObjectRenderer : MapObjectNode
         if (IsTarget && !string.IsNullOrWhiteSpace(DisplayName) && Type != Kind.Item)
             DrawTargetNamePlate();
         bool groundItemVisible = Type == Kind.Item && ClientSettings.ShowGroundItemNames;
-        if (!NameHovered && !groundItemVisible) return;
+        // 原版 0x40BB00：名字在停止刷新后仍保留 3000ms（0x40BA60 每次刷新会重置计时器）。
+        bool hoverVisible = NameHovered || NameHoldActive;
+        if (!hoverVisible && !groundItemVisible) return;
         if (Type == Kind.Item && !ClientSettings.ShowItemNames) return;
         if (Type == Kind.Monster && !ClientSettings.ShowMonsterNames) return;
         if (Type == Kind.Item)

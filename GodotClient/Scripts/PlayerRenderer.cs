@@ -50,6 +50,21 @@ public partial class PlayerRenderer : Node2D
     public bool TargetHighlighted;
     public bool NameHovered;
     public Color TargetOutlineColour = Colors.Transparent;
+
+    /// <summary>
+    /// 悬停名字保留截止时刻（ms）。原版 0x0040BA60 每次设置悬停名字都重置
+    /// <c>HUD+0x6209C</c> 计时器，0x0040BB00 每帧累加帧间隔、超过 3000ms 清空名字缓冲
+    /// → 鼠标移开后名字最多再保留 3 秒（见 <see cref="RenderPrimitives.HoverNameHoldMs"/>）。
+    /// PlayerRenderer 不继承 MapObjectNode，此处单独保存同一状态。
+    /// </summary>
+    private double _nameHoldUntilMs;
+
+    /// <summary>鼠标仍在该玩家上时每帧调用（等价原版每帧重设名字并重置计时器）。</summary>
+    public void RefreshNameHold() =>
+        _nameHoldUntilMs = Godot.Time.GetTicksMsec() + RenderPrimitives.HoverNameHoldMs;
+
+    /// <summary>名字当前是否可见：正在悬停，或处于 3000ms 保留窗口内。</summary>
+    private bool NameHoldActive => Godot.Time.GetTicksMsec() < _nameHoldUntilMs;
     /// <summary>当前攻击/选中目标（原版对当前目标额外画 0x0040B850 名字牌）。</summary>
     public bool IsTarget;
     public int Light;
@@ -737,6 +752,12 @@ public partial class PlayerRenderer : Node2D
 
     public override void _Process(double delta)
     {
+        // 原版悬停名字保留门：超过 3000ms 未刷新则清掉名字并重绘。
+        if (_nameHoldUntilMs != 0 && Godot.Time.GetTicksMsec() >= _nameHoldUntilMs)
+        {
+            _nameHoldUntilMs = 0;
+            QueueRedraw();
+        }
         double nowMs = Godot.Time.GetTicksMsec();
         int frame = GetFrameIndex(nowMs, _oneShotAnim == MirAnimation.Standing);
         if (frame != FrameIndex)
@@ -962,11 +983,13 @@ public partial class PlayerRenderer : Node2D
         // 原版目标名字牌（0x40B850）对当前目标持续显示，与 hover 名字独立。
         if (IsTarget && !string.IsNullOrWhiteSpace(DisplayName))
             RenderPrimitives.DrawTargetNamePlate(this, DisplayName);
-        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(DisplayName))
+        // 原版 0x40BB00：悬停停止刷新后名字（含公会/聊天行）仍保留 3000ms。
+        bool nameVisible = (NameHovered || NameHoldActive) && ClientSettings.ShowPlayerNames;
+        if (nameVisible && !string.IsNullOrWhiteSpace(DisplayName))
             RenderPrimitives.DrawLabel(this, DisplayName, new Vector2(24f, nameY), NameColour, 9f);
-        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(GuildName))
+        if (nameVisible && !string.IsNullOrWhiteSpace(GuildName))
             RenderPrimitives.DrawLabel(this, GuildName, new Vector2(24f, nameY - 11f), new Color(0.8f, 0.8f, 0.4f), 8f);
-        if (NameHovered && ClientSettings.ShowPlayerNames && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
+        if (nameVisible && !string.IsNullOrWhiteSpace(ChatText) && Godot.Time.GetTicksMsec() < _chatUntil)
             RenderPrimitives.DrawLabel(this, ChatText, new Vector2(24f, nameY - 22f), Colors.White, 9f);
 
         // 玩家头顶血条 (受击显示 5 秒)

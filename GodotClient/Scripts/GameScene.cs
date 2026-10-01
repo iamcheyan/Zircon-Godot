@@ -6066,6 +6066,7 @@ public partial class GameScene : Control
     }
 
     // 拿起物品跟随鼠标 + 悬浮提示
+
     private void UpdateMouseItem()
     {
         if (_mouseItemLabel == null || _hoverLabel == null) return;
@@ -9194,6 +9195,8 @@ public partial class GameScene : Control
                     ob.NameHovered = nameHovered;
                     ob.QueueRedraw();
                 }
+                // 原版 0x40BA60 每帧重设悬停名字并重置 3000ms 计时器（0x40BB00 消费）。
+                if (nameHovered) ob.RefreshNameHold();
 
                 bool highlighted = ClientSettings.ShowTargetOutline
                     && ob == _combatController.MouseObject
@@ -9222,6 +9225,7 @@ public partial class GameScene : Control
             bool localPlayerNameHovered = _player != null
                 && _combatController.MouseCell() == _playerLocation
                 && _combatController.MouseObject == null;
+            if (_player != null && localPlayerNameHovered) _player.RefreshNameHold();
             if (_player != null && _player.NameHovered != localPlayerNameHovered)
             {
                 _player.NameHovered = localPlayerNameHovered;
@@ -9237,6 +9241,7 @@ public partial class GameScene : Control
                     : Colors.Transparent;
                 var player = pair.Value;
                 bool nameHovered = pair.Key == hoveredPlayerId;
+                if (nameHovered) player.RefreshNameHold();
                 if (player.NameHovered != nameHovered)
                 {
                     player.NameHovered = nameHovered;

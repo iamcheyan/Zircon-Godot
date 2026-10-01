@@ -116,11 +116,16 @@ public partial class LogoutConfirmDialog : DXWindow
     /// <summary>
     /// 输入型调用点的文本框（原版 3 个：转账金额 / 丢金币 / 建行会名称）。
     /// 原版复用**聊天输入框的 HWND** `[0x8AA48C]`：
-    ///   MoveWindow([0x8AA48C], mouse_x+0xDF, mouse_y+0x23A, 0x162, 0x10, 1)
+    ///   MoveWindow([0x8AA48C], [0x8AB7F0]+0xDF, [0x8AB7F4]+0x23A, 0x162, 0x10, 1)
     ///   GetWindowTextA([0x8AA48C], this+0x130, 0x104) 取回文本
-    /// 尺寸 **0x162×0x10 = 354×16** 明确；但锚点 (mouse+0xDF, mouse+0x23A) 的
-    /// 参照物（窗口原点还是屏幕）在现有材料里**未闭合** —— 354 宽与 360 宽的对话框
-    /// 只差 6px，故此处按"框内水平居中、按钮上方"摆放，并把该推导标注为未证实。
+    /// 尺寸 **0x162×0x10 = 354×16** 明确。
+    /// **2026-10-01 更正**：旧注写的 "mouse_x/mouse_y" 是误读 —— `[0x8AB7F0]/[0x8AB7F4]`
+    /// 是一个 **RECT** 的 left/top（同一对地址在 0x4118E0/0x411E2C 处配合 GetCursorPos
+    /// + PtInRect 做命中测试，IAT 0x476240=GetCursorPos、0x4762B4=PtInRect）。
+    /// 三个调用点（转账金额 0x418568、丢金币 0x41866D、建行会 0x42761C/0x42B191）
+    /// **用完全相同的常量 (0xDF, 0x23A)** → 位置与具体对话框无关，不是"框内居中"。
+    /// rect 身份（应为 UI 对象的客户端区 rect）与最终屏幕坐标仍未闭合，
+    /// 故此处暂留"框内水平居中、按钮上方"的近似摆放，并标注为未证实。
     /// </summary>
     private void AddLegacyInputBox()
     {
@@ -139,7 +144,7 @@ public partial class LogoutConfirmDialog : DXWindow
         AddControl(_input);
         _input.GrabFocus();
         GD.Print($"[LegacyF950Input] 输入框已加: size={_input.Size} loc={_input.Location} "
-            + "（原版 MoveWindow 尺寸 0x162x0x10 = 354x16；锚点 (mouse+0xDF, mouse+0x23A) 参照物未闭合）");
+            + "（原版 MoveWindow 尺寸 0x162x0x10 = 354x16；锚点 [0x8AB7F0]+0xDF/[0x8AB7F4]+0x23A，" + "rect 身份未闭合）");
     }
 
     /// <summary>

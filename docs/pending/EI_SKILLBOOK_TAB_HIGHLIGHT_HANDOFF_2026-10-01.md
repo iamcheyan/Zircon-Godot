@@ -194,7 +194,8 @@ F400 在页签位置（F400 坐标 x≈32、y≈84 起，步长 35）烘焙的�
 
 ### 7.2 服务器 82（`debian`，192.168.3.82）
 
-- Zircon 工作树 `/home/tetsuya/development/zircon`：已 `git fetch` + `ff` 到 `e4dcd484`。
+- Zircon 工作树 `/home/tetsuya/development/zircon`：已 `git fetch` + `ff` 到 **`d0b3007a`**
+  （= 本交接文档所在提交，工作区干净）。此前落后 1 个提交（`51f07847`），已一并补上。
 - Syncthing（`systemctl --user`，配置 `~/.local/state/syncthing`）已加入本机设备 ID，
   并加入 `mir2ei-client` / `mir2ei-webdata` 两个文件夹；已 restart，与本机连接正常（LAN 192.168.3.82:22000）。
 - 原版 EXE 路径：`/home/tetsuya/mir2ei.before-path-fix-20260927-2330/Mir3.exe`。
@@ -278,3 +279,19 @@ cd /home/tetsuya/development/zircon && git fetch origin && git merge --ff-only o
 
 > 注：本机 remote 模式已实测可用（§7.3），所以也可以在 82 上只改代码、由本机
 > `bash login_game.sh remote 192.168.3.82 legacy test` 拉起客户端做对比截图。
+
+### 9.4 交接完成时的最终状态（2026-10-01 23:2x 复核）
+
+| 位置 | 分支 | HEAD | 工作区 |
+|---|---|---|---|
+| 本机 Zircon | `master` | `d0b3007a` | 干净，与 origin 同步 |
+| 本机 Mir3-Research | `ei-ui-audit-2026-09-24` | `65fb20b2` | 干净，与 origin 同步 |
+| 82 Zircon | `master` | `d0b3007a` | 干净，与 origin 同步 |
+| 82 Mir3-Research | `ei-ui-audit-2026-09-24` | `65fb20b2` | **6 项未提交（属 D 上其他 goal，故意保留）** |
+
+本机 Syncthing（`sh.brew.syncthing`）运行中，`mir2ei-client` 与 `mir2ei-webdata`
+两个文件夹均 `idle`、`needFiles=0`、`errors=0`（首次全量同步已完成）。
+
+**注意**：不要在 82 的 `Mir3-Research` 工作树上执行 `git reset --hard` / `git clean`
+——那 6 项改动是 D 侧其它 goal 的在制品，本机镜像通过
+`archive/mirror-2026-10-01` 保过一份。

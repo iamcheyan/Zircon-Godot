@@ -3815,6 +3815,9 @@ public partial class GameScene : Control
         else
             player.Finished += player.QueueFree;
         player.Play();
+        // 与 SoundPlayback.Play 同格式的日志：动作音效（含 legacy 按钮点击音）此前不可断言，
+        // 补此一行使「点击 → 播放哪个 SoundIndex」可被日志验收。
+        GD.Print($"[Sound] 播放 {sound} ({entry.FileName}, loop={entry.Loop})");
     }
 
     public void StopSound(SoundIndex sound)

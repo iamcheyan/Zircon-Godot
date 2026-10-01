@@ -31,6 +31,13 @@ public partial class InventoryDialog : DXWindow
     private CurrencyInfo _primaryCurrency;
     private DXImageControl _background;
     private DXButton _legacyActionButton;
+    // 原版背包的三个子控件（关闭钮 F161/162、动作钮 F264/265、模式位 F267/268）
+    // 都属共享按钮类（类构造 0x404690，release 处理 0x4177F0），点击命中时**只播音**：
+    // 0x41780C-0x417819 `push 0x69; mov ecx,0x8AB130; call 0x45AFC0` → 音效索引 0x69=105。
+    // 端口 sounds.json 中 105 对应 `SoundIndex.ButtonC`（ButtonA=103.wav、ButtonB=104.wav）。
+    // 模式位（原版 F267/268 为**空帧**，故默认模式两边都不画美术）在端口是 DXImageControl，
+    // 无点击能力，这里补一个透明热区以还原「点击播音」。
+    private DXButton _legacyModeTabHotspot;
     private DXLabel _legacyModeLabel;
     private DXLabel _legacyWeightValue;
     private DXImageControl _legacyModeArt;
@@ -330,6 +337,26 @@ public partial class InventoryDialog : DXWindow
         if (_legacyActionButton.GetParent() == null) AddControl(_legacyActionButton);
         _legacyActionButton.Location = new Vector2I(176, 262);
         _legacyActionButton.Size = new Vector2I(64, 20);
+        // 原版该钮属共享按钮类 → 点击音效 105（端口 ButtonC），非 DXButton 默认的 ButtonA。
+        _legacyActionButton.Sound = SoundIndex.ButtonC;
+
+        if (_legacyModeTabHotspot == null)
+        {
+            _legacyModeTabHotspot = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = -1,          // 不绘制：美术由 _legacyModeArt 负责
+                HoverIndex = -1,
+                PressedIndex = -1,
+                Location = new Vector2I(176, 286),
+                Size = new Vector2I(64, 20),
+                Sound = SoundIndex.ButtonC,
+            };
+            AddControl(_legacyModeTabHotspot);
+        }
+        _legacyModeTabHotspot.Location = new Vector2I(176, 286);
+        _legacyModeTabHotspot.Size = new Vector2I(64, 20);
+        _legacyModeTabHotspot.Visible = true;
         CloseButton.LibraryFile = LibraryFile.GameInter;
                 // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
         // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
@@ -340,6 +367,8 @@ public partial class InventoryDialog : DXWindow
         CloseButton.Modulate = new Color(1, 1, 1, 0);  // 不绘制（含 fallback 底色框）
         CloseButton.Location = new Vector2I(249, 288);
         CloseButton.Size = new Vector2I(28, 26);
+        // 同属共享按钮类：点击音效 105（端口 ButtonC）。
+        CloseButton.Sound = SoundIndex.ButtonC;
 
         // EI 负重/记录区使用 F280 垂直 gauge；旧版包袱模式的文本仍
         // 单独绘制在根相对 (0x86,0x18)-(0xF0,0x26)。
@@ -514,7 +543,12 @@ public partial class InventoryDialog : DXWindow
             && Grid.GridSize == new Vector2I(6, 6)
             && Grid.Location == new Vector2I(25, 41)
             && CloseButton.Location == new Vector2I(249, 288)
-            && _legacyActionButton?.Location == new Vector2I(176, 262);
+            && _legacyActionButton?.Location == new Vector2I(176, 262)
+            // 原版三控件点击音效=105（共享按钮类 release 0x4177F0），端口映射为 ButtonC
+            && _legacyActionButton?.Sound == SoundIndex.ButtonC
+            && CloseButton.Sound == SoundIndex.ButtonC
+            && _legacyModeTabHotspot?.Sound == SoundIndex.ButtonC
+            && _legacyModeTabHotspot?.Location == new Vector2I(176, 286);
         details = $"size={Size} background=F{_background.Index} grid={Grid.GridSize}@{Grid.Location} close={CloseButton.Location} action={_legacyActionButton?.Location}";
         return ok;
     }

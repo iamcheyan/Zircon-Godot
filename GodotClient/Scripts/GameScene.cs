@@ -11531,6 +11531,7 @@ public partial class GameScene : Control
     private bool TrySendNpcCall(uint objectId)
     {
         double now = Godot.Time.GetTicksMsec();
+        GD.Print($"[NPCLegacy] call object={objectId} throttled={now < _nextNpcCallMs}");
         if (now < _nextNpcCallMs) return false;
         _npcObjectId = objectId;
         _net?.Connection?.Enqueue(new C.NPCCall { ObjectID = objectId });

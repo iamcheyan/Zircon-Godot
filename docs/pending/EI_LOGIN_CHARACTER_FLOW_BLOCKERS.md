@@ -1,7 +1,7 @@
 # EI 登录—选角—创建—进游戏 流程：阻塞事项与待决清单
 
 > 归属 Goal：`docs/GOAL_OPENCODE_EI_LOGIN_CHARACTER_FLOW_REVIEW.md`
-> 复核/修复报告：`docs/EI_LOGIN_CHARACTER_FLOW_REVIEW_2026-09-30.md`
+> 复核/修复报告：`../EI_LOGIN_CHARACTER_FLOW_REVIEW_2026-09-30.md`
 > 基线：`master`（本轮代码提交 `a787ac85` / `7b876c33` / `13e2d104`）
 >
 > 说明：本文件用于登记**无法自行决定 / 需用户人工审批 / 受外部环境限制**的事项。

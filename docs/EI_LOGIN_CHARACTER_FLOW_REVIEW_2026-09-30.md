@@ -39,7 +39,7 @@
 | **confirmed defect（已修）** | 见上；修复前证据保留在截图 13/14 |
 | **not tested** | 名字 >14 的弹框（UI 不可达，见 F5）；非 Legacy(`--zircon-ui`) 全量回归 |
 | **blocked** | 原版运行画面同视口 A/B（本机无 Windows/Wine，沿用既有结论） |
-| **pending-evidence** | 公告框资源身份：本轮按 WIP 既有的 **GameInter F0** 修复 F1/F2；原版登录公告 UI 究竟用 F0 / F950 族 / `DMessageDlg` 帧 1240/1248/1250 尚未由逆向闭合（见 §5 F2 与 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`） |
+| **pending-evidence** | 公告框资源身份：本轮按 WIP 既有的 **GameInter F0** 修复 F1/F2；原版登录公告 UI 究竟用 F0 / F950 族 / `DMessageDlg` 帧 1240/1248/1250 尚未由逆向闭合（见 §5 F2 与 `pending/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`） |
 | **evidence-conflict** | 无 |
 | **对上一轮报告的更正** | 上一轮 §9「`--stay-select` 是无引用死标志」**错误**：该标志在报告自身基线 `db85cf8c` 即有 3 处引用（见 §5 F3） |
 
@@ -170,7 +170,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 - **修复**：`DefaultLocation` 改为 `((UiScaler.BaseWidth-324)/2,(UiScaler.BaseHeight-462)/2)=(238,69)`。
 - **实机验证（修复后）**：截图 19 中公告板左上 = 客户区 **(238,69)**（800×600 中心）。
 - **遗留 pending-evidence**：F0 是否为原版登录公告的正确资源仍未由逆向闭合（另见
-  `DMessageDlg` 帧 1240/1248/1250 候选）——已记入 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
+  `DMessageDlg` 帧 1240/1248/1250 候选）——已记入 `pending/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
 
 ### F3【docs 更正】`--stay-select` 并非无引用死标志
 
@@ -261,7 +261,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 - `pending-evidence`：**GameInter F0 公告框**的资源身份与屏幕坐标仍缺 primary —— F1/F2 已按
   「原版模态框居中 + 预游戏对话框族无标题栏关闭钮」的证据修复（`a787ac85`/`7b876c33`），
   但 F0 是否为原版登录公告的正确资源（对比 `DMessageDlg` 帧 1240/1248/1250）未闭合；
-  需用户提供 F0 归属的原始依据或授权继续逆向。已记入 `EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
+  需用户提供 F0 归属的原始依据或授权继续逆向。已记入 `pending/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
 - `blocked`：原版运行画面同视口对照（本机无 Windows/Wine，沿用既有 blocked）。
 - `evidence-conflict`：无（F3 是对上一轮报告的文字更正，非原版证据冲突）。
 - F6（phase0 左上提示文字）为 `candidate`，需否定性 primary 证据方能定论。
@@ -283,7 +283,7 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
 | 5 | `a787ac85` | `fix(ei复核): 公告框按 800×600 逻辑画布居中，修正 (80,60) 偏位`（F2） | ✅ |
 | 6 | `7b876c33` | `fix(ei复核): 公告框去掉 Zircon 关闭 ✕，消除关闭后永久黑屏`（F1） | ✅ |
 | 7 | 见下 | `docs(ei复核): 记录 F1/F2 修复与复验` + 截图 19/20 | ✅ |
-| 8 | 见下 | `docs: EI 登录流程阻塞事项`（`EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`，仅该文件） | ✅ |
+| 8 | 见下 | `docs: EI 登录流程阻塞事项`（`pending/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`，仅该文件） | ✅ |
 
 代码改动仅限 `GodotClient/Controls/LegacyEiNoticeDialog.cs`（F1/F2 两处）。报告自身的提交 SHA 无法内嵌，
 以推送后 `git ls-remote origin refs/heads/master` 的远端 HEAD 为准。全程未 force push、未切分支、
@@ -300,4 +300,4 @@ ZIRCON_LEGACY_UI_DATA_PATH=/home/tetsuya/mir2ei/LegacyEI/Data \
   此后本轮在其上做最小增量修复——仅 `GodotClient/Controls/LegacyEiNoticeDialog.cs` 两处
   （F2 居中常量 `a787ac85`、F1 关闭钮 `7b876c33`），未改动 `SelectScene.cs` 与其它对话框控件。
 - **本轮 docs 提交只含**：本报告、`docs/screenshots/ei-login-flow-review-2026-09-30/` 20 张截图、
-  上一轮报告 §9 一行更正、以及 `docs/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。
+  上一轮报告 §9 一行更正、以及 `docs/pending/EI_LOGIN_CHARACTER_FLOW_BLOCKERS.md`。

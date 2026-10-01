@@ -411,6 +411,10 @@ public partial class MagicDialog : DXWindow
     /// （row.Selected -> _legacySelectedSkill -> _legacyDetail.SetSkill）。
     /// 返回被选中技能的 id，未选中返回 -1。
     /// </summary>
+    /// <summary>当前选中技能名（本地化优先），供 Magic.exp 段落按名匹配与自检使用。</summary>
+    public string SelectedSkillNameForTest =>
+        _legacySelectedSkill?.Info?.Local() ?? _legacySelectedSkill?.Info?.Name;
+
     public int SelectFirstLegacySkillForTest()
     {
         if (_legacySkillRows.Count == 0)
@@ -806,15 +810,17 @@ public partial class LegacySkillRowView : DXControl
     }
 
     /// <summary>
-    /// EI 技能书右页逐行渲染 Magic.exp 的段落原文，段号即技能 id
-    /// （skill-window-render-loop-evidence.json 的 observations）。
+    /// EI 技能书右页逐行渲染 Magic.exp 的段落原文。
+    /// **按技能名匹配**（2026-10-01 更正）：EI 的 Magic.exp 只有 50 段，而 Zircon 有 174 个魔法，
+    /// 「段号 = 技能 id」不成立（实测选中「焦土烈焰」id=34 却显示 `#34 [莲月剑法]`）。
+    /// 段落首行形如 `[莲月剑法] 属性 : …`，故以方括号内的名字为键。
     /// 数据来自 ClientData/Magic.exp.txt。
     /// </summary>
-    public static string LegacyMagicExpParagraph(int skillId)
+    public static string LegacyMagicExpParagraph(string skillName)
     {
-        if (skillId < 0) return null;
+        if (string.IsNullOrWhiteSpace(skillName)) return null;
         EnsureLegacyMagicExpLoaded();
-        return _legacyMagicExp.TryGetValue(skillId, out string text) ? text : null;
+        return _legacyMagicExpByName.TryGetValue(skillName.Trim(), out string text) ? text : null;
     }
 
     private static void EnsureLegacyMagicExpLoaded()
@@ -838,15 +844,16 @@ public partial class LegacySkillRowView : DXControl
                     string line = raw.TrimEnd();
                     if (line.StartsWith('#'))
                     {
-                        if (currentId >= 0) _legacyMagicExp[currentId] = string.Join("\n", buffer);
+                        if (currentId >= 0) StoreLegacyMagicExp(currentId, buffer);
                         buffer.Clear();
                         currentId = int.TryParse(line[1..].Trim(), out int id) ? id : -1;
                         continue;
                     }
                     if (currentId >= 0) buffer.Add(line);
                 }
-                if (currentId >= 0) _legacyMagicExp[currentId] = string.Join("\n", buffer);
-                GD.Print($"[LegacyMagicExp] loaded {_legacyMagicExp.Count} paragraphs from {candidate}");
+                if (currentId >= 0) StoreLegacyMagicExp(currentId, buffer);
+                GD.Print($"[LegacyMagicExp] loaded {_legacyMagicExp.Count} paragraphs "
+                    + $"({_legacyMagicExpByName.Count} named) from {candidate}");
                 return;
             }
             GD.Print("[LegacyMagicExp] Magic.exp.txt not found; falling back to generated lines");
@@ -858,7 +865,24 @@ public partial class LegacySkillRowView : DXControl
     }
 
     private static readonly Dictionary<int, string> _legacyMagicExp = new();
+    private static readonly Dictionary<string, string> _legacyMagicExpByName = new();
     private static bool _legacyMagicExpLoaded;
+
+    /// <summary>记录一段 Magic.exp：按段号存档，并按首行 `[名字]` 建名字索引。</summary>
+    private static void StoreLegacyMagicExp(int id, List<string> buffer)
+    {
+        string text = string.Join("\n", buffer);
+        _legacyMagicExp[id] = text;
+        foreach (string line in buffer)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            int open = line.IndexOf('[');
+            int close = open >= 0 ? line.IndexOf(']', open + 1) : -1;
+            if (open >= 0 && close > open + 1)
+                _legacyMagicExpByName[line[(open + 1)..close].Trim()] = text;
+            break;   // 只用首个非空行（段首名字行）
+        }
+    }
 
     public override void _Draw()
     {
@@ -962,7 +986,9 @@ public partial class LegacySkillDetailView : DXControl
             // 元素 :/修炼N级需要等级 :/- 修炼值 :/说明 :），段号即技能 id。
             // 且 count==1 时是「一行流文本＝一行渲染、无自动换行」。
             // 现代模式仍用下面这套按当前状态拼的行。
-            string paragraph = LegacyEiLayout ? LegacySkillRowView.LegacyMagicExpParagraph(info?.Index ?? -1) : null;
+            string paragraph = LegacyEiLayout
+                ? LegacySkillRowView.LegacyMagicExpParagraph(info?.Local() ?? info?.Name)
+                : null;
             if (LegacyEiLayout)
             {
                 GD.Print($"[LegacyMagicDetail] id={info?.Index ?? -1} paragraph={(string.IsNullOrEmpty(paragraph) ? "null" : paragraph.Replace("\n", " / ").Substring(0, Math.Min(60, paragraph.Replace("\n", " / ").Length)))}");

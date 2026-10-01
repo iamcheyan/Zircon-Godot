@@ -270,7 +270,7 @@ public partial class LegacyHudLayoutLab : Control
             WindowManager.Open(_magic, _canvas);
             int id = _magic.SelectFirstLegacySkillForTest();
             GD.Print($"[LegacyMagicSelfTest] selectedSkillId={id} "
-                + $"paragraph={(LegacySkillRowView.LegacyMagicExpParagraph(id) == null ? "null" : "ok")}");
+                + $"paragraph={(LegacySkillRowView.LegacyMagicExpParagraph(_magic?.SelectedSkillNameForTest) == null ? "null" : "ok")}");
         }
     }
 

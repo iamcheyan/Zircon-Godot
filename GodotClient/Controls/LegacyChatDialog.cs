@@ -131,7 +131,12 @@ public sealed partial class LegacyChatDialog : DXWindow
         _input.TextSubmitted += Submit;
         AddControl(_input);
 
+        // 原版关闭钮 arg8=-1、arg9=0（普通/悬停都不画帧）；F161(✕) 已烘焙进 F350
+        // （模板搜索命中窗口(532,350)+背景偏移(-226,-62) = 帧(758,412)，diff 31.8）→ 只保留按下 arg3=162。
         _close = CreateSpriteButton(161, 162, new Vector2I(532, 350));
+        _close.Index = -1;
+        _close.HoverIndex = -1;
+        _close.PressedIndex = 162;
         _close.Size = new Vector2I(28, 26);
         _close.TooltipText = Lang.CommonControlClose;
         _close.MouseClick += (_, _) => CloseChat();

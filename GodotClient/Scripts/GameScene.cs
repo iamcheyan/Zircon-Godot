@@ -11107,7 +11107,12 @@ public partial class GameScene : Control
         // 有其它可见窗口时，全局游戏快捷键也必须停止，避免窗口内的自定义
         // 控件在没有原生焦点时仍被游戏快捷键抢占。
         if (WindowManager.OpenWindows.Any(window => window != null && window.Visible))
+        {
+            if (AutoLoginArgs.LegacyUi && (windowBind == KeyBindAction.LogoutCharacter || windowBind == KeyBindAction.ExitGameWindow))
+                GD.Print($"[LegacyKeys] {windowBind} 被可见窗口早退拦下: "
+                    + string.Join(",", WindowManager.OpenWindows.Where(w => w != null && w.Visible).Select(w => w.GetType().Name)));
             return;
+        }
 
         // 原版键位表分发：窗口、技能、物品、移动和战斗动作统一走这里。
         KeyBindAction bind = KeyBindManager.GetAction(key);

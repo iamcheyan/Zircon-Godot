@@ -2076,6 +2076,12 @@ public partial class SelectScene : Control
     private void OnLegacyStartNoticeConfirmed()
     {
         DetachLegacyStartNoticeHandlers();
+        // 修复（2026-10-01）：公告窗确认后必须从 WindowManager 注销。否则它作为"可见窗口"
+        // 残留，使游戏内 `_UnhandledKeyInput` 的"有可见窗口则早退"分支永久生效，
+        // 导致 Alt+X(注销人物)/Alt+Q(退出游戏) 等**非窗口类**全局快捷键失效。
+        // 实测日志：`[LegacyKeys] LogoutCharacter 被可见窗口早退拦下: LegacyEiNoticeDialog`，
+        // 且 Alt+X 后 F950 确认框不出现（全图模板搜索无匹配）。
+        WindowManager.Close(_legacyStartNoticeDialog);
         GD.Print("[LegacySelect] 公告框底部对勾 -> 进入游戏");
         EnterGameScene();
     }

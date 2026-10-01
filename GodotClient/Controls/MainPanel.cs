@@ -425,13 +425,22 @@ public partial class MainPanel : DXImageControl
         if (blue != null) orb.DrawTextureRect(blue, new Rect2(56, 0, 56, 110), false);
     }
 
+    /// <summary>
+    /// HUD 键位条按钮。入参沿用原版 caption ctor 实参顺序：<paramref name="index"/> = arg2（+0x18，
+    /// 悬停态帧）、<paramref name="hoverIndex"/> = arg3（+0x1C，**按下态**帧）。
+    /// 原版 16 个 caption 的 arg8(+0x20) = -1、arg9(+0x30) = 0
+    /// （`hud-label-evidence.json::paint_state_machine.hud_caption_result`：
+    /// "normal draws nothing / hover draws TEXT ONLY / pressed draws the state_frame art"），
+    /// 而按钮美术本身**已烘焙进 HUD 背景 F50**（本轮像素比对：F80 在 F50 内最佳匹配 (203,2)）
+    /// —— 故普通态/悬停态都不应叠画帧，只有按下态画 arg3。
+    /// </summary>
     private DXButton CreateButton(int index, int hoverIndex, int x, int y, int width, int height)
     {
         var b = new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
-            Index = index,
-            HoverIndex = hoverIndex,
+            Index = -1,
+            HoverIndex = -1,
             PressedIndex = hoverIndex,
             Location = new Vector2I(x, y),
             FixedSize = true,

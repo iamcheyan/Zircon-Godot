@@ -42,7 +42,24 @@ public partial class DXImageControl : DXControl
     /// </summary>
     public bool StretchImage;
 
-    public bool DrawImage = true;
+    private bool _drawImage = true;
+    /// <summary>
+    /// 是否绘制自身的图库贴图。**必须是属性**：调用方靠翻转它在运行期切换
+    /// 「画/不画」（如 ConfigDialog 的 ON/OFF 指示、各窗口隐藏多余按钮帧）。
+    /// 原为裸字段时赋值不触发 QueueRedraw，Godot 不会重绘该控件 →
+    /// 状态变了但画面不变（真机复现：设置窗第 3/4 个开关第一次点有效、
+    /// 之后反复点击画面零变化）。
+    /// </summary>
+    public bool DrawImage
+    {
+        get => _drawImage;
+        set
+        {
+            if (_drawImage == value) return;
+            _drawImage = value;
+            QueueRedraw();
+        }
+    }
 
     /// <summary>原版 Blend 标记；图库 UI 光效使用高亮混合。</summary>
     public bool Blend;

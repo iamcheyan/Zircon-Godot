@@ -88,6 +88,23 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
 （例：点 (222,11) 时命中探针回报 `mouseLogical=(222,11)`，此前为 `(223,35)`）。
 `harness.sh` 与探针脚本已按此修正，后续结论均基于修正后的基准。
 
+### ISSUE-6 设置窗开关状态变了但画面不刷新（第 2 次起点击零变化）— 已修复
+
+- **复现**：按 `N` 打开设置窗 → 反复点第 3/4 个开关（逻辑 440,314 / 440,341）→
+  第 1 次点击有视觉变化，**之后每次点击该区域像素零变化**（连点 3 轮：diff = 115 → 0 → 0）。
+  开关 1/2（440,167 / 440,240）每轮都正常（231px 变化）。
+- **根因**：`DXImageControl.DrawImage` 是**裸字段**（`DXImageControl.cs:45`），
+  `ConfigDialog` 靠 `onButton.DrawImage = enabled; offButton.DrawImage = !enabled;`
+  切换 ON/OFF 指示（`ConfigDialog.cs:236-237`）。裸字段赋值**不触发 `QueueRedraw`**，
+  Godot 不会重绘该控件，于是状态已变而画面不变。
+  开关 1/2 之所以「看起来正常」，是因为它们的 setter 额外调用了
+  `ClientSettings.ApplyAudioSettings()` 等副作用，间接带动了重绘；3/4 的 setter
+  只改纯内存/配置字段，没有副作用 → 立刻暴露。
+- **修复**：`DrawImage` 改为属性，setter 在值变化时 `QueueRedraw()`。
+- **验证**：真机 3 轮 on/off，ON 区域每轮 diff 稳定 **249px**（修复前 115→0→0）。
+  截图 `evidence/24-before-config-toggle-on/off.png`（修复前）与
+  `evidence/22-fixed-config-toggle-on.png` / `evidence/23-fixed-config-toggle-off.png`（修复后）。
+
 ## 2. 热键/窗口生命周期矩阵（修复后复跑）
 
 方法：每个键 `按一次 → 探针 → 再按一次 → 探针 → Esc → 探针`。判定「开」= 探针出现该窗口；「关」= 消失。

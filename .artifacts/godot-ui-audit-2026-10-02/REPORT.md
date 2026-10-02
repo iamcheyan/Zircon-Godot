@@ -215,6 +215,6 @@ godot-mono --path GodotClient res://Scenes/UITestScene.tscn -- --popup-dedup-aud
 | 交易窗全生命周期 | `BLOCKED` | 需第二玩家进入交易态；服务端 `TradeRequest` 有 `TradePartnerRequest` 守卫，单人无法制造重复投递 |
 | NPC 对话/商店/仓库/任务发放 | `BLOCKED` | 需对应 NPC 与业务状态（本轮 NPC 窗几何由 `--legacy-audit` 的 `npc=True` 覆盖） |
 | 现代 Zircon UI（`--zircon-ui`） | 未覆盖 | 本轮按仓库默认 legacy EI 审计 |
-| `StatusWindow`（F2） | 潜在缺口 | `GameScene` 无任何 toggle/Open 调用，实际不可达；如属预期需补入口 |
+| `StatusWindow`（M11 演示窗） | 已核实：不可达但**非缺陷** | `StatusWindow.cs` 头注释写明「M11 控件库接入演示…后续 M12 会做正式 MainPanel HUD」；现役 `KeyBindManager` 无 F2 绑定，原版 `Client/Envir/CEnvir.cs:829/850` 的 F2 绑定属其它动作。窗口类保留、无入口，属遗留演示代码 |
 | 小游戏浮层（`FishingCatchDialog`/`HorseTameDialog`/`TimerDialog`） | 未覆盖 | 需进入对应小游戏状态 |
 | 悬停提示/名牌 | 未覆盖 | parity matrix 已记 MATCH，本轮未重测 |

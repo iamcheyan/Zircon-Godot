@@ -31,6 +31,12 @@ public partial class BuffDialog : DXWindow
         Movable = false;
         Size = new Vector2I(30, 30);
         Opacity = 0.6f;
+        // BuffDialog 是 Zircon 扩展（EI 原版 HUD 无独立 buff 条），但它只是
+        // 图标条，不应带 Zircon 窗口边框：`DrawChrome` 默认 true →
+        // DXWindow._Draw 会画窗口底色 + Interface 金色边框/四角
+        // （DXWindow.cs:160-161/170-224）。真机实测该金框在 legacy HUD 上
+        // 非常显眼（evidence/45-hud-buff-frame-before.png → 46-...-after.png）。
+        DrawChrome = false;
         Visible = false;
     }
 

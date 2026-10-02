@@ -33,6 +33,11 @@ public sealed partial class MonsterDialog : DXWindow
     public MonsterDialog()
     {
         HasTitle = false; HasFooter = false; HasTopBorder = false; ShowCloseButton = false; Size = new Vector2I(186, 54);
+        // 悬停怪物信息框是 Zircon 扩展（原版只画一条 HP 条 + 名字），自身已用
+        // `CreateInfoBox` 画深色信息格，不应再叠 Zircon 窗口边框/底色：
+        // `DrawChrome` 默认 true → DXWindow._Draw 画 Interface 金色框
+        // （DXWindow.cs:160-161/170-224）。
+        DrawChrome = false;
         // 原版 MonsterDialog 的 Opacity=0.3 只作用于窗口底图；WinForms 不会把它
         // 级联到子标签。Godot 的 Modulate 会连文字一起变暗，因此背景透明度必须
         // 用 BackColour 的 alpha 表达，窗口本身保持不透明。

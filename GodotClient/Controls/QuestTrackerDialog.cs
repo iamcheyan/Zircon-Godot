@@ -29,6 +29,11 @@ public partial class QuestTrackerDialog : DXWindow
         Movable = true;
         AllowResize = true;
         Opacity = 0.0f;
+        // QuestTracker 是 Zircon 扩展（EI 原版无此常驻条），只画任务文字，
+        // 不应带 Zircon 窗口边框/底色。`DrawChrome` 默认 true 时 DXWindow._Draw
+        // 会画 Interface 金色框 + 窗口底色（DXWindow.cs:160-161/170-224）；
+        // Opacity=0 只在鼠标离开时整条压透明，有任务/悬停时就会露出非 EI 边框。
+        DrawChrome = false;
         Size = new Vector2I(250, 100);
 
         ScrollBar = new DXVScrollBar { Change = 15 };

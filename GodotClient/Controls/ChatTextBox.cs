@@ -86,6 +86,14 @@ public sealed partial class ChatTextBox : DXWindow
     public void ApplyLegacyHudLayout()
     {
         HasTitle = false;
+        // DrawChrome 会画 Zircon 版窗口底色 + Interface 金色边框/四角
+        // （DXWindow._Draw → DrawWindowChrome，DXWindow.cs:160-161/170-224）。
+        // EI 的 HUD 输入条只是 F50 里的一条深色凹槽，没有任何窗口边框，
+        // 所以这里必须整层关掉——只设 `Border=false`（子控件描边）不够。
+        // 真机实测：不关时输入条上下各多出 1px 金线（RGB 47,40,24）与
+        // 内圈暗线，而 F50 同位置既无这一对线、颜色也不一致（见
+        // evidence/43-hud-chat-input-before.png 对比 44-...-after.png）。
+        DrawChrome = false;
         HasTopBorder = false;
         HasFooter = false;
         ShowCloseButton = false;
@@ -93,6 +101,14 @@ public sealed partial class ChatTextBox : DXWindow
         AllowResize = false;
         Border = false;
         BackColour = Colors.Transparent;
+        // 输入控件自身的金色边框必须关掉：EI 的 HUD 输入条只是一条深色凹槽，
+        // 没有任何描边（F50 像素实测该带为纯色暗条；运行截图实测上缘 y 571
+        // 与 F50 逐列不一致——Godot 多画了一圈金框）。
+        // DXTextInput 构造期默认 `Border = true; BorderColour = DefaultBorderColour`
+        // （FilterDropDialog.cs:152-154），且 DXControl._Draw 在 Border 时
+        // `DrawRect(..., BorderColour, false, 1f)` 描边（DXControl.cs:195），
+        // 故必须显式关掉，否则 legacy HUD 出现不属于 EI 的边框。同理钉住
+        // _input.BackColour，避免 FocusChanged 把它切成黑色块（ChatTextBox.cs:75）。
         Opacity = 1f;
         Size = LegacyHudLayout.ChatInputSize;
         _modeButton.Visible = false;
@@ -100,6 +116,7 @@ public sealed partial class ChatTextBox : DXWindow
         _input.Position = Vector2.Zero;
         _input.Size = Size;
         _input.Border = false;
+        _input.BackColour = Colors.Transparent;
         _input.FontSize = 9;
         _input.TextOffsetY = -1f;
     }

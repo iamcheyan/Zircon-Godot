@@ -133,3 +133,18 @@ DC 值 rect : SetRect(736, 586, 794, 598)   @0x0042A7AA-0x0042A7C3
 - 现代模式血/蓝数值标签重叠（§3.2）：无 EI 对照，记录未改。
 - 经验条未达成比例的视觉：受存档等级 255 限制，未闭环。
 - 现代模式其它 Zircon 专有元素（技能条、buff 条、任务跟踪）的逐项视觉复核：待续。
+
+## 6. 与并发会话报告的交叉引用
+
+并发会话（`godot-ui-audit-20261002`，会话 id `01a0f9a5`）在 `.artifacts/hud-audit-2026-10-02/HUD_REPORT.md`
+§4 列出「现代 HUD 血/蓝数值条文本字号」为**已定位、未修复**（`CreateBarLabel` 未设
+`FontSize`，走 `DXLabel` 默认 12；原版继承 `CEnvir.FontSize(8F)`）。
+
+本会话批次 2（commit `f7d8481a`）已修复该项：
+
+- 构造期对 `HealthLabel`/`ManaLabel` 设 `FontSize = 8`（不再依赖运行期分支）；
+- 同时修正 `Align`（`Left` 而非默认 `Center`，避免 `AutoSize` 下 `Size.X==0` 时文字被推到左侧）；
+- 并修复同批发现的更严重缺陷：EI 玩家球在现代模式被拉伸成巨型乱码块（§3.1）。
+
+该行在本会话报告中标记为**已被 `f7d8481a` 取代**；为避免与另一 goal 的产物互相覆盖，
+未回改对方报告文件。

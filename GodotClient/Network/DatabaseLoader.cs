@@ -23,15 +23,24 @@ public static class DatabaseLoader
             string projectDir = ProjectSettings.GlobalizePath("res://");
             string root = Path.GetFullPath(Path.Combine(projectDir, "..", "Debug", "Client", "Data"))
                 + Path.DirectorySeparatorChar;
+            string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
             string clientRoot = System.Environment.GetEnvironmentVariable("MIR3_EI_ROOT");
             if (string.IsNullOrWhiteSpace(clientRoot))
-                clientRoot = "/home/tetsuya/mir2ei";
-            string localRoot = Path.Combine(clientRoot, "Data");
-            if (File.Exists(Path.Combine(localRoot, "System.db")))
-                root = localRoot + Path.DirectorySeparatorChar;
-            if (!File.Exists(Path.Combine(root, "System.db")) && Directory.Exists("/home/tetsuya/mir3ei/Data"))
+                clientRoot = Path.Combine(home, "mir2ei");
+
+            // Prefer the configured EI root, then the standard local resource mirror.
+            // A stale MIR3_EI_ROOT must not hide System.db from ~/mir2ei/Data.
+            string[] databaseRoots =
             {
-                root = "/home/tetsuya/mir3ei/Data" + Path.DirectorySeparatorChar;
+                Path.Combine(clientRoot, "Data"),
+                Path.Combine(home, "mir2ei", "Data"),
+                root.TrimEnd(Path.DirectorySeparatorChar)
+            };
+            foreach (string candidate in databaseRoots)
+            {
+                if (!File.Exists(Path.Combine(candidate, "System.db"))) continue;
+                root = candidate + Path.DirectorySeparatorChar;
+                break;
             }
 
             GD.Print($"[DB] 加载 System.db 从: {root}");

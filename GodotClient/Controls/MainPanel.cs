@@ -40,6 +40,12 @@ public partial class MainPanel : DXImageControl
     private bool _playerOrbHovered;
     private bool _legacyEiStats;
 
+    /// <summary>
+    /// 原版主 HUD 的 AC/DC 数值颜色。Mir3.exe `0x0042A77D` 与 `0x0042A801` 各自
+    /// 压栈 `0x0032C8FF`，按 Win32 COLORREF(0x00BBGGRR) 解出 RGB(255,200,50) 琥珀金。
+    /// </summary>
+    private static readonly Color LegacyEiAcDcColour = new(255 / 255f, 200 / 255f, 50 / 255f);
+
     public MainPanel()
     {
         LibraryFile = LibraryFile.GameInter;
@@ -290,26 +296,27 @@ public partial class MainPanel : DXImageControl
         LevelLabel.Size = new Vector2I(70, 16);
         LevelLabel.Visible = true;
 
-        // AC/DC 的**数值**必须落在 F50 里 AC/DC 标签右侧的两个黑色值框内，
-        // 且只显示数字（不带 "AC "/"DC " 前缀）。
+        // AC/DC 的**数值**矩形直接取自原版 Mir3.exe 的 SetRect 立即数（HUD 根 = (0,465)）：
+        //   AC `0x0042A752`-`0x0042A76B`: SetRect(636, 586, 694, 597)
+        //      → 面板相对 (636,121)，58x11
+        //   DC `0x0042A7AA`-`0x0042A7C3`: SetRect(736, 586, 794, 598)
+        //      → 面板相对 (736,121)，58x12
+        // 两处文本随后经 `0x45DE50` 以 DrawTextA flags=0x25
+        // （DT_SINGLELINE|DT_VCENTER|DT_CENTER）居中绘制，格式字面量 `0x0047BD28`
+        // = "%d-%d"，**不含** "AC"/"DC" 前缀——两个前缀字形是 F50 底图的烘焙美术
+        // （像素实测金色字形 AC 在 x607..620、DC 在 x705..717）。
+        // 独立佐证：GameInter F50 在该行带有两个黑色值框，实测 AC x635..696、
+        // DC x733..795，与上述 SetRect 立即数一致（相差 ≤2px 边框）。
         //
-        // 证据（primary-resource + primary-static）：
-        //  1) GameInter F50（800x136）像素实测：y 119..130 有两个 12/12 行纯黑矩形，
-        //     即原版预留的数值槽 —— AC 框 x 636..696、DC 框 x 734..795。
-        //  2) 标签本身是**烘焙美术**：同带内金色字形在 AC x 607..620、DC x 705..717，
-        //     金框内还有更亮的铭文；Mir3.exe 全二进制**不存在** "AC"/"DC" 格式串
-        //     （.data 里 HUD 相关格式串只有 (血量)%d/%d、(魔法)%d/%d、(经验条)%.2f%s、
-        //     (负重)%d/%d、%s : [%d,%d]、: %d/%d 等），故原版从不自己绘制 AC/DC 字样。
-        //  3) 旧 Client/Scenes/GameScene.cs:4136/4139 赋给 ACLabel/DCLabel 的也只是
-        //     数值（`Stats.GetFormat(Stat.MaxAC)`），不含前缀。
-        //
-        // 此前是 (580,108)/(680,108) 且文本带 "AC "/"DC " 前缀 → 数字整体偏左上、
-        // 压过金框并覆盖上方圆盘装饰（用户报告的「右下角 AC/DC 文本错位」）。
-        ACLabel.Location = new Vector2I(636, 118);
-        ACLabel.Size = new Vector2I(61, 13);
+        // 此前是 (580,108)/(680,108) 且文本带 "AC "/"DC " 前缀 → 数字整体偏左上约
+        // 41x10 px、压过金框并覆盖上方圆盘装饰（用户报告的「右下角 AC/DC 文本错位」）。
+        ACLabel.Location = new Vector2I(636, 121);
+        ACLabel.Size = new Vector2I(58, 11);
+        ACLabel.TextColour = LegacyEiAcDcColour;
         ACLabel.Visible = true;
-        DCLabel.Location = new Vector2I(734, 118);
-        DCLabel.Size = new Vector2I(62, 13);
+        DCLabel.Location = new Vector2I(736, 121);
+        DCLabel.Size = new Vector2I(58, 12);
+        DCLabel.TextColour = LegacyEiAcDcColour;
         DCLabel.Visible = true;
 
         // SetStats 会在收到服务器属性包后重新填值；这里先清掉旧版不应残留
@@ -592,8 +599,22 @@ public partial class MainPanel : DXImageControl
         if (HealthLabel == null || ManaLabel == null) return;
         if (!_legacyEiStats)
         {
-            HealthLabel.Visible = true;
-            ManaLabel.Visible = true;
+            // 现代 HUD 的血/蓝数值必须**显式限定字号与尺寸再居中**。
+            // 此前这里只设 Visible + CenterBarLabel，依赖 DXLabel 默认值：
+            // `FontSize = 12`（DXLabel.cs:12），而 CenterBarLabel 是按
+            // HealthBar(43x70)/ManaBar(42x70) 居中的；12px 在这些窄控件里
+            // 溢出成一团无法辨认的字形（真机 1024x768 --zircon-ui 实测：
+            // 屏幕 (190,610)-(300,768) 出现巨大 "…8950/8950…" 乱码块）。
+            // 原版用 CEnvir.FontSize(8F)（旧 Client/Controls/DXLabel.cs:432、
+            // Client/Scenes/Views/MainPanel.cs:450），此处对齐为 8。
+            foreach (var label in new[] { HealthLabel, ManaLabel })
+            {
+                label.AutoSize = true;
+                label.FontSize = 8;
+                label.Align = HorizontalAlignment.Center;
+                label.VAlign = VerticalAlignment.Center;
+                label.Visible = true;
+            }
             CenterBarLabel(HealthLabel, HealthBar);
             CenterBarLabel(ManaLabel, ManaBar);
             return;
@@ -788,10 +809,11 @@ public partial class MainPanel : DXImageControl
             && ACLabel.Visible
             && DCLabel.Visible
             && LevelLabel.Location == new Vector2I(665, 60)
-            // AC/DC 数值必须落在 F50 的黑色值框内（AC 636..696 / DC 734..795，
-            // 行带 y 118..131），且文本**不带** "AC "/"DC " 前缀（字样是烘焙美术）。
-            && ACLabel.Location == new Vector2I(636, 118)
-            && DCLabel.Location == new Vector2I(734, 118)
+            // AC/DC 数值必须落在原版 SetRect 的矩形内
+            // （AC 636..694 / DC 736..794，行带 y 121..132），
+            // 且文本**不带** "AC "/"DC " 前缀（字样是 F50 烘焙美术）。
+            && ACLabel.Location == new Vector2I(636, 121)
+            && DCLabel.Location == new Vector2I(736, 121)
             && !ACLabel.Text.StartsWith("AC")
             && !DCLabel.Text.StartsWith("DC");
         bool orb = AuditLegacyOrb(out string orbDetails);

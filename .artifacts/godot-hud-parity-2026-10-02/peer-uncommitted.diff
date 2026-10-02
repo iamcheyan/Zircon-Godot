@@ -1,0 +1,63 @@
+diff --git a/GodotClient/Controls/MainPanel.cs b/GodotClient/Controls/MainPanel.cs
+index 199c29d4..67ba3e32 100644
+--- a/GodotClient/Controls/MainPanel.cs
++++ b/GodotClient/Controls/MainPanel.cs
+@@ -592,8 +592,22 @@ public partial class MainPanel : DXImageControl
+         if (HealthLabel == null || ManaLabel == null) return;
+         if (!_legacyEiStats)
+         {
+-            HealthLabel.Visible = true;
+-            ManaLabel.Visible = true;
++            // 现代 HUD 的血/蓝数值必须**显式限定字号与尺寸再居中**。
++            // 此前这里只设 Visible + CenterBarLabel，依赖 DXLabel 默认值：
++            // `FontSize = 12`（DXLabel.cs:12），而 CenterBarLabel 是按
++            // HealthBar(43x70)/ManaBar(42x70) 居中的；12px 在这些窄控件里
++            // 溢出成一团无法辨认的字形（真机 1024x768 --zircon-ui 实测：
++            // 屏幕 (190,610)-(300,768) 出现巨大 "…8950/8950…" 乱码块）。
++            // 原版用 CEnvir.FontSize(8F)（旧 Client/Controls/DXLabel.cs:432、
++            // Client/Scenes/Views/MainPanel.cs:450），此处对齐为 8。
++            foreach (var label in new[] { HealthLabel, ManaLabel })
++            {
++                label.AutoSize = true;
++                label.FontSize = 8;
++                label.Align = HorizontalAlignment.Center;
++                label.VAlign = VerticalAlignment.Center;
++                label.Visible = true;
++            }
+             CenterBarLabel(HealthLabel, HealthBar);
+             CenterBarLabel(ManaLabel, ManaBar);
+             return;
+@@ -731,6 +745,21 @@ public partial class MainPanel : DXImageControl
+     }
+ 
+     /// <summary>旧版 HUD 球体审计：红球与红蓝球必须共用左侧同一控件。</summary>
++    /// <summary>
++    /// 诊断用：打印所有可见子控件的类型/位置/尺寸/文本，定位异常绘制的控件。
++    /// </summary>
++    public void DumpVisibleChildren(string tag)
++    {
++        foreach (var c in Controls)
++        {
++            if (c == null || !IsInstanceValid(c) || !c.Visible) continue;
++            string text = c is DXLabel l ? $" text='{l.Text}' fs={l.FontSize} auto={l.AutoSize}"
++                : c is DXImageControl i ? $" frame={i.Index}/{i.LibraryFile} sz={i.Size}"
++                : "";
++            GD.Print($"[MainPanelDump:{tag}] {c.GetType().Name} loc={c.Location} size={c.Size}{text}");
++        }
++    }
++
+     public bool AuditLegacyOrb(out string details)
+     {
+         SetPlayerOrbHovered(false);
+diff --git a/GodotClient/Scripts/GameScene.cs b/GodotClient/Scripts/GameScene.cs
+index cd534a59..2b6e1aa2 100644
+--- a/GodotClient/Scripts/GameScene.cs
++++ b/GodotClient/Scripts/GameScene.cs
+@@ -11110,6 +11110,7 @@ public partial class GameScene : Control
+         {
+             UiOverlay.ReloadAll();
+             DumpVisibleWindowRects();
++            _mainPanel?.DumpVisibleChildren("F12");
+             DumpHitTestProbe();
+             var img = GetViewport().GetTexture().GetImage();
+             img.SavePng("/tmp/game_screenshot.png");

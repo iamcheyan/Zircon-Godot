@@ -1,0 +1,5 @@
+0a3094ff5e2ffd0f584c798d7eea529cd53aa936 docs(hud-audit): HUD 视觉/布局/内容来源全面复核报告
+1ff758ebfe9be559ad928d6e5cb283bfeec38837 fix(Godot HUD): 去掉 Zircon 扩展 HUD 控件上的窗口金框（buff/任务跟踪/怪物悬停）
+5a12603b1bbb3da3356e4c2ab7dcb2d6eece7c8e fix(Godot HUD): 主 HUD 聊天输入条去掉不属于 EI 的窗口边框/底色
+9b0683fe033499cea400d31ccaad90efe1cba46a fix(Godot HUD): AC/DC 数值落回 F50 黑色值框并去掉文本前缀
+25ab78b0310feb8280fd626c0127080357eaf65e docs: 新增 Godot HUD 全面对照审计目标

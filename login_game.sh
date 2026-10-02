@@ -142,6 +142,35 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
     fi
     PORT="$REMOTE_PORT"
     CLIENT_PORT="$PORT"
+
+    # remote 模式必须使用本机 Syncthing 镜像中的完整运行资源。
+    # 环境中旧的 MIR3_EI_ROOT 可能只含 Data 子目录或是空目录。
+    if [ ! -f "$EI_BASE/Data/System.db" ] || [ ! -d "$EI_BASE/Map" ] || [ ! -d "$EI_BASE/Sound" ]; then
+        FALLBACK_EI_BASE="$HOME/mir2ei"
+        if [ -f "$FALLBACK_EI_BASE/Data/System.db" ] && [ -d "$FALLBACK_EI_BASE/Map" ] && [ -d "$FALLBACK_EI_BASE/Sound" ]; then
+            echo "资源根目录 $EI_BASE 不完整，改用本机镜像 $FALLBACK_EI_BASE。"
+            EI_BASE="$FALLBACK_EI_BASE"
+        else
+            echo "本机 EI 资源不完整（需要 Data/System.db、Map/ 和 Sound/）：$EI_BASE" >&2
+            exit 1
+        fi
+    fi
+    export MIR3_EI_ROOT="$EI_BASE"
+    if [ -z "${ZIRCON_EI_ROOT:-}" ]; then
+        EI_ROOT="$EI_BASE/LegacyEI"
+        export ZIRCON_LEGACY_UI_DATA_PATH="$EI_ROOT/Data"
+    fi
+
+    CLIENT_RESOURCE_LINK="$ROOT/Debug/Client"
+    if [ -L "$CLIENT_RESOURCE_LINK" ]; then
+        EXPECTED_CLIENT_ROOT=$(cd "$EI_BASE" && pwd -P)
+        CURRENT_CLIENT_ROOT=$(cd "$CLIENT_RESOURCE_LINK" && pwd -P)
+        if [ "$CURRENT_CLIENT_ROOT" != "$EXPECTED_CLIENT_ROOT" ]; then
+            rm -f "$CLIENT_RESOURCE_LINK"
+            ln -s "$EI_BASE" "$CLIENT_RESOURCE_LINK"
+            echo "修正客户端资源链接：$CLIENT_RESOURCE_LINK -> $EI_BASE"
+        fi
+    fi
 fi
 
 sync_remote_research_and_assets() {

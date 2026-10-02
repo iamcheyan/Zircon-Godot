@@ -77,8 +77,59 @@ DC 值 rect : SetRect(736, 586, 794, 598)   @0x0042A7AA-0x0042A7C3
 结论：数值落回 F50 黑色值框、位于烘焙字样右侧，位置误差 ≤1px，颜色与原版 `0x32C8FF` 完全一致，
 无重复前缀。
 
-## 3. 残余项
+## 3. 现代 Zircon UI（`--zircon-ui`）模式
 
-- 现代 Zircon UI（`--zircon-ui`）模式全量复核：进行中。
-- 第二种窗口尺寸（1024×768 等）复测：进行中。
+### 3.1 严重缺陷：EI 玩家球在现代模式被拉伸成巨型乱码块（本会话批次 2）
+
+- **现象**：`--zircon-ui` 1024×768 真机截图中，HP/MP 区域出现约 110px 高的巨型
+  金色字形块（形似 "DC"），压在血蓝条与数值上（`shots/20-zircon-ui-1024x768.png`）。
+- **根因（已证）**：`MainPanel._playerOrb` 是**旧版 EI 专有**控件，位于面板相对
+  `(49,13)`、尺寸 `112×110`，构造期即 `Visible`，而现代模式**没有任何代码把它关掉**。
+  其 `DrawPlayerOrb` 取 `MirSkin.GetTexture(GameInter, 62)`：legacy 模式解析的是
+  EI `GameInter.wil`（F62 = 112×110 完整红球），现代模式解析的是 Zircon 自己的
+  `Debug/Client/Data/GameInter.Zl`，其中 **F62 只有 24×12**（属性小图标）——
+  于是被拉伸到 112×110，放大成巨型乱码。
+  证据：`zlsdk` 读 `GameInter.Zl` → F50(1024,68)、F60(20,12)、F61(32,12)、
+  **F62(24,12)**、F63(36,12)；而 `wilsdk` 读 EI `GameInter.wil` → F50(800,136)、
+  F60/61(56,110)、**F62(112,110)**。真机诊断该控件 `global=(161,645) size=112x110`。
+- **修复**：`_playerOrb` / `_playerOrbHoverArea` 构造期 `Visible=false`，
+  由 `ApplyLegacyEiStatsLayout()`（仅 legacy 调用）重新置 true。
+  这样现代模式不再绘制任何 EI 专有球体，legacy 行为不变。
+- **同批**：HP/MP 数值字号/对齐改为构造期固定（`FontSize=8`、`AutoSize`、
+  `Align=Left`、`VAlign=Top`）；此前 `UpdatePlayerOrbNumbers` 的现代分支在运行期
+  反复改写 `Align=Center`，与构造期约定冲突，且 `Size.X==0` 时按 0 宽居中会把文字
+  推到 `Location` 左侧。
+- **验收**：
+  - 现代：`shots/23-zircon-ui-1024x768-final.png` —— 巨型乱码块消失，HUD 可读
+    （HP/MP/IP 条、CL 道士、LV 255、AC 2-25、DC 25-25、MAC 7-49、SC 45-101）。
+  - legacy 回归：`shots/04-legacy-regression-800x600.png` —— 球体正常渲染，
+    日志 `[LegacyHud] PASS ... orb=(49,13)/(112,110) visible=True`。
+- 修复前证据图：`shots/20-zircon-ui-1024x768.png`；viewport 原图 `shots/21-...`。
+
+### 3.2 现代模式血/蓝数值标签水平重叠（残余，未改）
+
+`HealthLabel`/`ManaLabel` 按 `HealthBar(43×70)`/`ManaBar(42×70)` 居中，
+但 "8950/8950"（54px）宽于 43px 的条，导致两个标签互相覆盖
+（`shots/23-zircon-ui-1024x768-final.png` 中 `8950/8950` 与 `3680/3680` 叠在一起）。
+
+- 这是**现代 Zircon UI 自有的布局问题**：EI legacy HUD 不用这两个标签（改用球体悬停
+  黄色提示），因此**没有原版对照坐标**，不属于本目标的 EI 保真范围。
+- 按目标要求「产品差异不能擅自定案」，本项**记录为残余**，未改；
+  若需修复应另行决定现代 HUD 的血蓝条宽度/文字方案。
+
+## 4. 窗口尺寸结论
+
+- **legacy EI 模式固定 800×600**：`GameScene.cs:1075` 在 `AutoLoginArgs.LegacyUi` 时
+  调 `ClientSettings.ApplyLegacyPregameWindow(800, 600)`，实测 `--window=1024x768`
+  仍以 800×600 开窗（日志 `[LegacyHud] PASS viewport=(800, 600)`），
+  AC/DC 与 800×600 结果完全一致（F50 y=464、AC cx=664、DC cx=764）。
+  这与原版 EI 3.0 固定 800×600 一致，不是缺陷。
+- **现代模式**在 1024×768 实测（本报告 §3）。
+- 截图：`shots/11-ingame-legacy-1024x768.png`（legacy 请求 1024 仍为 800×600）、
+  `shots/23-zircon-ui-1024x768-final.png`（现代）。
+
+## 5. 残余项
+
+- 现代模式血/蓝数值标签重叠（§3.2）：无 EI 对照，记录未改。
 - 经验条未达成比例的视觉：受存档等级 255 限制，未闭环。
+- 现代模式其它 Zircon 专有元素（技能条、buff 条、任务跟踪）的逐项视觉复核：待续。

@@ -130,6 +130,16 @@ public partial class MainPanel : DXImageControl
             ZIndex = 1000,
         };
         AddControl(_playerOrbValueHint);
+        // 玩家球是**旧版 EI HUD 专有**元素，现代 Zircon UI 没有它。
+        // 若在现代模式保持可见，DrawPlayerOrb 会用 `MirSkin.GetTexture(GameInter, 62)`
+        // 取图；现代模式解析的是 Zircon 自己的 `GameInter.Zl`，其 F62 是 24x12 的
+        // 属性小图标（EI 的 `GameInter.wil` F62 才是 112x110 完整红球），
+        // 于是被拉伸成 112x110 的巨型乱码块压在 HP/MP 数值上。
+        // 证据：`zlsdk` 读 `Debug/Client/Data/GameInter.Zl` → F50(1024x68)、F62(24,12)、
+        // F60(20,12)、F61(32,12)；真机 --zircon-ui 1024x768 实测该控件
+        // global=(161,645) size=112x110，渲染出 (161,645)-(273,755) 的巨型字形。
+        _playerOrb.Visible = false;
+        _playerOrbHoverArea.Visible = false;
         HealthBar.Visible = false;
         ManaBar.Visible = false;
 
@@ -240,10 +250,24 @@ public partial class MainPanel : DXImageControl
         DCLabel = CreateStatLabel(470, 42);
         MACLabel = CreateStatLabel(567, 22);
         MCLabel = CreateStatLabel(567, 42);
+
         SCLabel = CreateStatLabel(567, 42);
 
         HealthLabel = CreateBarLabel();
         ManaLabel = CreateBarLabel();
+        // HP/MP 数值字号必须在构造期就固定：现代模式走 SetHealth/SetMana 的
+        // `CenterBarLabel` 分支，**不会**经过 UpdatePlayerOrbNumbers，若依赖那里的
+        // 赋值就会保持 DXLabel 默认 `FontSize = 12`（DXLabel.cs:12）。
+        // 原版用 CEnvir.FontSize(8F)（旧 Client/Scenes/Views/MainPanel.cs:450）。
+        // 对齐方式同样显式声明：AutoSize 下 Size.X==0，若 Align 仍是默认的
+        // Center，DrawControl 会按 0 宽居中，把文字推到 Location 左侧。
+        foreach (DXLabel barLabel in new[] { HealthLabel, ManaLabel })
+        {
+            barLabel.FontSize = 8;
+            barLabel.AutoSize = true;
+            barLabel.Align = HorizontalAlignment.Left;
+            barLabel.VAlign = VerticalAlignment.Top;
+        }
         FocusLabel = CreateBarLabel();
         FocusLabel.Visible = false;
 
@@ -276,6 +300,9 @@ public partial class MainPanel : DXImageControl
         _legacyEiStats = true;
         // 原版旧版主 HUD 有竖着的背包负重条（F67）；新版属性栏没有。
         WeightBar.Visible = true;
+        // 旧版 EI 才有玩家球（红/蓝半球或完整红球）；现代 Zircon UI 不显示。
+        _playerOrb.Visible = true;
+        _playerOrbHoverArea.Visible = true;
 
         // 旧版没有新版属性栏的图标列，也没有职业、FP/CP、MR/MC/SC 文本。
         foreach (DXImageControl image in new[]
@@ -599,22 +626,14 @@ public partial class MainPanel : DXImageControl
         if (HealthLabel == null || ManaLabel == null) return;
         if (!_legacyEiStats)
         {
-            // 现代 HUD 的血/蓝数值必须**显式限定字号与尺寸再居中**。
-            // 此前这里只设 Visible + CenterBarLabel，依赖 DXLabel 默认值：
-            // `FontSize = 12`（DXLabel.cs:12），而 CenterBarLabel 是按
-            // HealthBar(43x70)/ManaBar(42x70) 居中的；12px 在这些窄控件里
-            // 溢出成一团无法辨认的字形（真机 1024x768 --zircon-ui 实测：
-            // 屏幕 (190,610)-(300,768) 出现巨大 "…8950/8950…" 乱码块）。
-            // 原版用 CEnvir.FontSize(8F)（旧 Client/Controls/DXLabel.cs:432、
-            // Client/Scenes/Views/MainPanel.cs:450），此处对齐为 8。
+            // 现代 HUD 的血/蓝数值字号/对齐在构造期已固定（见 ctor 里的
+            // HealthLabel/ManaLabel 设置），这里只负责刷新可见性与位置，
+            // 不要再次改写 Align——否则会与构造期约定互相打架。
+            // 位置由 CenterBarLabel 按 HealthBar(43x70)/ManaBar(42x70) 计算，
+            // AutoSize 下 Size.X==0，Align 必须是 Left，否则按 0 宽居中会把
+            // 文字推到 Location 左侧（真机 1024x768 --zircon-ui 实测）。
             foreach (var label in new[] { HealthLabel, ManaLabel })
-            {
-                label.AutoSize = true;
-                label.FontSize = 8;
-                label.Align = HorizontalAlignment.Center;
-                label.VAlign = VerticalAlignment.Center;
                 label.Visible = true;
-            }
             CenterBarLabel(HealthLabel, HealthBar);
             CenterBarLabel(ManaLabel, ManaBar);
             return;
@@ -750,6 +769,7 @@ public partial class MainPanel : DXImageControl
     {
         if (NewMailIcon != null) NewMailIcon.Visible = visible;
     }
+
 
     /// <summary>旧版 HUD 球体审计：红球与红蓝球必须共用左侧同一控件。</summary>
     public bool AuditLegacyOrb(out string details)

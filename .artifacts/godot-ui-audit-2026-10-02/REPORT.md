@@ -160,8 +160,10 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
 | `MiniMapDialog` | `V` / HUD cap | 无（常驻） | `V` 开/关两态 ✓ | **PASS** |
 | `MagicBar` | `B` / HUD cap2 | 无（常驻开关） | `Visible` 翻转（非 DXWindow，探针不反映） | **PASS**（行为已由代码与 HUD 点击确认） |
 | `NoticeDialog` / `LegacyEiNoticeDialog` | 服务端包 / 进游戏公告 | 对勾确认 ✓ | — | **PASS** |
-| `LogoutConfirmDialog`（F950） | `Alt+X` | YES/NO ✓（`--legacy-keychain-selftest`） | Tab 循环/回绕 | **PASS** |
-| `ExitGameDialog` | `Alt+Q` | — | — | **PASS** |
+| `LogoutConfirmDialog`（F950） | `Alt+X` | `Esc` ✓、NO(486,286) ✓ 关闭 | YES(293,286) ✓ 真实登出到选人界面（日志回到 StartGame 流程） | **PASS** |
+| `ExitGameDialog` | `Alt+Q` | `Esc` ✓ | 窗口 (218,176) 364x184 | **PASS** |
+
+证据：`evidence/30-f950-logout-confirm.png`、`evidence/31-exitgame-confirm.png`。
 
 **永久回归自检**（项目自带，可随时重跑）：
 ```

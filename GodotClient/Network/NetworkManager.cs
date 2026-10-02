@@ -54,7 +54,12 @@ public partial class NetworkManager : Node
             }
             else if (client != null && client.Client != null && !client.Connected)
             {
-                Log?.Invoke("[Net] TCP 连接已断开");
+                string bufferedFrame = _rawData.Length >= 4
+                    ? BitConverter.ToInt32(_rawData, 0).ToString()
+                    : "incomplete-header";
+                string reason = $"[Net] TCP 连接已断开（buffer={_rawData.Length} bytes, frameLength={bufferedFrame}）";
+                GD.PrintErr(reason);
+                Log?.Invoke(reason);
                 Connection.NotifyDisconnected(closeTransport: true);
                 return;
             }
@@ -63,7 +68,9 @@ public partial class NetworkManager : Node
         }
         catch (Exception ex)
         {
-            Log?.Invoke($"[Net] Process 异常: {ex}");
+            string reason = $"[Net] Process 异常（buffer={_rawData.Length} bytes）: {ex}";
+            GD.PrintErr(reason);
+            Log?.Invoke(reason);
             Connection.NotifyDisconnected(closeTransport: true);
         }
     }

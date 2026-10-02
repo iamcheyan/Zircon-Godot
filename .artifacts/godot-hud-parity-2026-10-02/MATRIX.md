@@ -13,11 +13,11 @@
 | A1 | F50 底板 | `SetRect(0,601-h,800,600)`；F50 800×136 | `MainPanel` ctor `MainPanel.cs:51-54`（Index=50, Size 800×136） | 无 | ✅ 一致 |
 | A2 | 玩家球 F60/61/62 | 面板相对 `(49,13)` 112×110；F62=完整红球 112×110，有 MaxMana 时 F60+F61 各 56×110 | `_playerOrb` `MainPanel.cs:107-114`；`DrawPlayerOrb` `MainPanel.cs:459-475` | 无 | ✅ 一致 |
 | A3 | 球悬停数值 | 光标跟随黄底黑框 caption；格式 `(血量)%d/%d`@0x47BD70、`(魔法量)%d/%d`@0x47BD60 | `LegacyHudCaptionHint` `MainPanel.cs:126-132`；文本 `MainPanel.cs:687-691`（`(血量)` 前缀见 683/687） | 无 | ✅ 一致 |
-| A4 | 经验条 F63 | 固定 `(0xEE,0x24E)`=(238,590)；F63 164×6；按比例裁切 | `ExperienceBar` `MainPanel.cs:64-71` loc `(235,122)`=abs(235,587) size 164×10；`DrawExperienceFill` `MainPanel.cs:438-457` | 左缘 −3px；高 10 vs 6 | ⚠ 轻微（见 B4 说明） |
-| A5 | 经验百分比文本 | `0x13B..0x250`/`0x145..0x252`；格式 `(经验条)%.2f%s`@0x47BD4C/5C | 仅 `ExperienceBar.TooltipText` `MainPanel.cs:718` | 原版为常显文本；Godot 为悬停提示 | ⚠ 形式差异（低影响） |
+| A4 | 经验条 F63 | F63 164×6；`SetRect(235,586,400,597)` @0x0042770D（容器 165×11，即原版条所在凹槽） | `ExperienceBar` `MainPanel.cs:64-71` loc `(235,122)`=abs(235,587) size 164×10；`DrawExperienceFill` `MainPanel.cs:438-457` | 容器高 10 vs 11、F63 原生 6px 居中 | ✅ 一致（本轮更正） |
+| A5 | 经验百分比文本 | `0x13B..0x250`/`0x145..0x252`（即 (315,583)-(592,594)）；格式 `(经验条)%.2f%s`@0x47BD4C/5C | 仅 `ExperienceBar.TooltipText` `MainPanel.cs:718` | 原版为常显文本；Godot 为悬停提示 | ⚠ 形式差异（低影响） |
 | A6 | 负重竖条 F67 | 位移 `[+0xC58]+0xD1, [+0xC5C]+0x25`；F67 4×70 | `WeightBar` `MainPanel.cs:82-88` loc (208,36)；`DrawWeightFill` `MainPanel.cs:744-759` | 无 | ✅ 一致 |
 | A7 | HP/MP 数值格式 | `(血量)%d/%d`@0x47BD70、`(魔法量)%d/%d`@0x47BD60（球悬停） | 同 A3 | 无 | ✅ 一致 |
-| A8 | 地图标题+坐标 | `SetRect(235,586,400,597)`；格式 `%s : [%d,%d]`@0x47BD30；颜色 `0x00C8FFFF`；带 4 向黑描边 | **无对应实现**（`MiniMapDialog` `HasTitle=false`，`MiniMapDialog.cs:80`） | 原版常显，Godot 缺 | ❌ 缺失（见 C1） |
+| A8 | 地图标题+坐标 | `0x0042A498-0x0042A4AE`：`SetRect(0,585,201,599)`（面板相对 (0,120) 201×14）；格式 `%s : [%d,%d]`@0x47BD30；颜色 `0x00C8FFFF`；带 4 向黑描边（±1） | **无对应实现**（`MiniMapDialog` `HasTitle=false`，`MiniMapDialog.cs:80`） | 原版常显于底栏左侧，Godot 缺 | ❌ 缺失（见 C1） |
 | A9 | 等级数字 | 面板相对 `(665,60)`；格式 `%d`@0x47A214 | `LevelLabel` `MainPanel.cs:322-324` (665,60) 70×16 | 无 | ✅ 一致 |
 | A10 | AC 数值 | `SetRect(636,586,694,597)`；格式 `%d-%d`@0x47BD28；色 `0x0032C8FF`；DT_VCENTER\|DT_CENTER | `ACLabel` `MainPanel.cs:340-343` (636,121) 58×11 + `LegacyEiAcDcColour` `MainPanel.cs:47` | 实测中心 Δ1px | ✅ 一致（本轮修复） |
 | A11 | DC 数值 | `SetRect(736,586,794,598)`；同上 | `DCLabel` `MainPanel.cs:344-347` (736,121) 58×12 | 实测中心 Δ1px | ✅ 一致（本轮修复） |
@@ -46,10 +46,10 @@
 
 | # | 项 | 证据 | 状态 |
 |---|---|---|---|
-| C1 | 原版地图标题+坐标文本（`%s : [%d,%d]`，`(235,586,400,597)`，色 `0xC8FFFF`）无 Godot 对应实现 | `EI_HUD_PRIMARY_STATIC.md` §1 序 8；Godot 侧无 `0x47BD30` 使用点（已全仓库 grep） | **记录为缺失**；未实现，属新增功能而非既有差异修复，未擅自添加 |
+| C1 | 原版地图标题+坐标文本（`%s : [%d,%d]`@0x47BD30，`SetRect(0,585,201,599)`，色 `0xC8FFFF`，4 向黑描边）无 Godot 对应实现 | `EI_HUD_PRIMARY_STATIC.md` §1 序 8（本轮重新反汇编 `0x0042A471-0x0042A4AE` 更正矩形）；Godot 侧无 `0x47BD30` 使用点（已全仓库 grep） | **记录为缺失**；属新增功能而非既有差异修复，未擅自添加。EI 参考截图中该处被水印遮盖，无法像素比对 |
 | C2 | 现代模式血/蓝数值标签水平重叠（"8950/8950" 宽 54px > 条宽 43px） | `REPORT.md` §3.2；截图 `shots/23-…-final.png` | 记录未改：无 EI 对照坐标，属现代 HUD 自有布局 |
 | C3 | 经验条未达成比例的视觉（0% 状态） | 存档等级 255，经验增长极慢 | 未闭环（资源限制） |
-| C4 | 经验条左缘 235 vs 原版 238、高度 10 vs 6 | A4 行 | 未改：现值为 EI 既有约定（`hud-bars-render-evidence.json` 记录 F63 164×6 但 Godot 容器 164×10 用于容纳整帧）；改动会影响并发会话已验收的 legacy 布局，缺乏独立裁决证据 |
+| C4 | 经验条容器高 10 vs 原版 SetRect 高 11（左缘 235 已与原版 `0x0042770D` 一致） | A4 行 | 未改：1px 容器差无独立裁决证据，且会影响并发会话已验收的 legacy 布局 |
 
 ## D. 模式与窗口尺寸结论
 

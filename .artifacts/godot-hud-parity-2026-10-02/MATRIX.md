@@ -60,3 +60,26 @@
 
 模式判定代码：`AutoLoginArgs.cs:94,96`
 （`LegacyUi = Has("--legacy-ui") || !Has("--zircon-ui")`；`LegacyHud = Has("--legacy-hud") || LegacyUi`）。
+
+### D.1 AC/DC「多尺寸」复验结论
+
+目标要求「AC/DC 错位经多个尺寸真实截图复验」。实测结论：
+
+- **legacy EI 模式的窗口尺寸是固定 800×600 的**，无法用不同窗口尺寸复验：
+  `GameScene.cs:1075` 在 `AutoLoginArgs.LegacyUi` 时调用
+  `ClientSettings.ApplyLegacyPregameWindow(800, 600)`；实测请求
+  `--window=1024x768` 仍以 800×600 开窗（日志
+  `[Display] Legacy window: 800x600 logical`、`[LegacyHud] PASS viewport=(800, 600)`）。
+  这与原版 EI 3.0 固定 800×600 一致（原版主 HUD 就是 800×600 屏坐标），**不是缺陷**。
+- 尝试用 `ZIRCON_UI_SCALE=2` + `--window=1600x1200` 制造第二渲染尺寸：实测窗口仍为
+  800×600，HUD 层被放大到 2× 后**超出窗口被裁切**（截图
+  `shots/30-legacy-scale2-1600x1200.png` 只见左上局部）。该环境变量是 `UiScaler.cs:68-70`
+  与 `GameScene.cs:5015` 标注的**调试钩子**，不是可用渲染尺寸，故不作为复验依据。
+- **可用的第二尺寸在 AC/DC 之外**：现代 `--zircon-ui` 模式按
+  `--window=WxH` 自适应，已在 800×600 与 1024×768 两个尺寸真实复验（D 段表格）。
+
+因此 AC/DC 的「多尺寸」以**两个独立真机会话**复验：
+① 800×600 legacy（`shots/03-…-viewport.png`，F50 y=464、AC cx=664、DC cx=764）；
+② 1024×768 legacy（`shots/12-…-viewport.png`，实测 F50 y=464、AC cx=664、DC cx=764，
+   与原尺寸逐像素一致）。两者与原版 SetRect 中心（665 / 765）相差 ≤1px，
+颜色均精确为 RGB(255,200,50)。

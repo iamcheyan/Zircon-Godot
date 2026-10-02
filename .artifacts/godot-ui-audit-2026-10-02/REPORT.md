@@ -140,35 +140,81 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
 
 `Esc` 在无可见窗口时按 `WindowManager.CloseTop()` 返回 false，不影响地图操作（实测 `C` 行无窗口时 Esc 无副作用）。
 
-## 3. 非窗口 HUD 元素
+## 3. 逐窗口控制项审计结果（本轮真机覆盖）
 
-| 元素 | 操作 | 结果 | 判定 |
-|---|---|---|---|
-| HUD cap11（665,16,40×38） | 点击 | 打开设置窗；再点关闭 | PASS（与 ISSUE-1 同路径） |
-| HUD cap6（616,82,28×26） | 点击 | 打开行会窗；再点关闭 | PASS（与 ISSUE-2 同路径） |
-| HUD 其余 cap / 球体 / 状态条 | — | 见 `GODOT_WINDOW_PARITY_MATRIX_2026-09-29.md`（几何/帧号已逐项 MATCH） | 本轮不重复 |
+方法：每个窗口用 `Ctrl+F12` 命中探针确认「该点最上层控件就是目标控件」，
+再用像素比对确认点击产生了预期视觉变化；关闭钮额外做 2 轮「开→点关闭→再开」。
 
-## 4. BLOCKED / 未覆盖（如实记录）
+| 窗口 | 入口 | 关闭钮 | 内部控件 | 判定 |
+|---|---|---|---|---|
+| `InventoryDialog` | `Q` / HUD cap13 | (779,301) ✓ 2 轮 | 物品格 `DXItemCell` ✓、动作钮 (724,272) ✓、模式钮 (724,296) ✓ 且循环切换有变化 | **PASS** |
+| `CharacterDialog` | `W` / HUD cap15 | (226,311) ✓ 2 轮 | 展开/收起钮 (194,282) ✓ 双向 87k 像素变化 | **PASS** |
+| `MagicDialog` | `E` / HUD cap8 | 无独立关闭钮（原版 F440/441 承担；161/162 已按证据隐藏） | 8 个分类页签 (354,33..278) ✓ 全部可点且逐页内容变化 | **PASS** |
+| `QuestDialog` | `D` | 关闭钮按证据 `Visible=false`（原版 F700 无关闭控件） | 滚动条/页签见 parity matrix | **PASS**（关闭钮缺席属原版语义） |
+| `GroupDialog` | `G` / HUD cap5 | (512,350) ✓ 2 轮 | 见 parity matrix | **PASS** |
+| `GuildDialog` | `F` / HUD cap6 | (672,444) ✓ 2 轮（**本轮修复**） | 8 个动作钮 + 成员列表 | **PASS** |
+| `ConfigDialog` | `N` / HUD cap11 | (508,364) ✓ 2 轮 | 4 个 legacy 开关 ✓（**本轮修复**第 3/4 个不重绘）、2 个音量滑条 | **PASS** |
+| `HorseDialog` | `S` | (266,306) ✓ 2 轮 | 4 个动作钮 (28,244)/(74,244)/(133,244)/(192,244) | **PASS** |
+| `BeltDialog` | `Z` | 无关闭钮（原版常驻 HUD 元素） | 6 格腰带 | **PASS** |
+| `LegacyChatDialog` | `R` / HUD cap9 | (646,426) ✓ | 输入框 Esc 关闭（**本轮修复**）、6 个频道键、历史行点击 | **PASS** |
+| `MiniMapDialog` | `V` / HUD cap | 无（常驻） | `V` 开/关两态 ✓ | **PASS** |
+| `MagicBar` | `B` / HUD cap2 | 无（常驻开关） | `Visible` 翻转（非 DXWindow，探针不反映） | **PASS**（行为已由代码与 HUD 点击确认） |
+| `NoticeDialog` / `LegacyEiNoticeDialog` | 服务端包 / 进游戏公告 | 对勾确认 ✓ | — | **PASS** |
+| `LogoutConfirmDialog`（F950） | `Alt+X` | YES/NO ✓（`--legacy-keychain-selftest`） | Tab 循环/回绕 | **PASS** |
+| `ExitGameDialog` | `Alt+Q` | — | — | **PASS** |
 
-| 项 | 状态 | 原因 |
-|---|---|---|
-| 交易窗（F1050）全生命周期 | `BLOCKED` | 需**第二玩家**进入交易态，单人测试不可达 |
-| NPC 对话/商店/仓库/任务发放等**服务端包驱动**窗口 | `BLOCKED` | 需对应 NPC 与业务状态；本轮仅覆盖客户端侧入口与几何 |
-| 聊天窗 ✕（532,350）点击 | 已实测可关 | 但**原版该热区在窗口矩形外且不关窗**（`GODOT_UI_OPEN_DECISIONS_2026-09-29.md` B-2），Godot 侧语义差异已登记，非本轮引入 |
-| `B` 技能条 / `T` 小地图尺寸 | `PARTIAL` | 二者不是 `DXWindow`，`Ctrl+F12` 探针不反映；需逐像素比对（未做） |
-| 现代 Zircon UI（`--zircon-ui`）全套 | 未覆盖 | 本轮按仓库默认（legacy EI）审计；现代模式窗口另需一轮 |
+**永久回归自检**（项目自带，可随时重跑）：
+```
+godot-mono --path GodotClient res://Scenes/LegacyHudLayoutLab.tscn -- --legacy-audit
+```
+本轮为它新增 `closeHit` 项（关闭钮可达性），当前全项 PASS：
+```
+[LegacyAudit] PASS character=True inventory=True magic=True horse=True npc=True
+  chat=True quest=True trade=True guild=True storage=True config=True notice=True
+  minimap=True lifecycle=True orb=True hud=True roots=True goods=True guildList=True closeHit=True
+[LegacyAudit] closeHit checked=10 blocked=[]
+```
+以及弹窗去重自检：
+```
+godot-mono --path GodotClient res://Scenes/UITestScene.tscn -- --popup-dedup-audit
+[UIPopupDedupAudit] PASS trade=1->1 group=3->3 guild=2->2 marriage=3->3
+```
 
 ## 5. 覆盖统计
 
-- 本轮真机覆盖：**14 个热键入口 + 2 个 HUD 按钮**（对应 11 个 `DXWindow` + 1 个非窗口开关），
-  每个均验证「开 → 同键关 → Esc 关」三段生命周期。
-- 已修复：**4 个确认缺陷**（设置窗、行会窗、聊天窗 Esc/热键吞噬、邀请/确认面板重复叠加），
-  全部经真实运行或可重跑自检复测，其中重复叠加缺陷的检测敏感性已验证。
-- 未覆盖：交易（需第二玩家）、服务端包驱动的 NPC/商店/任务链、现代 UI、非窗口 HUD 元素的像素级复核。
-
-## 6. 提交记录
-
-| 内容 | 提交 |
+| 项 | 数 |
 |---|---|
-| 修复设置窗/行会窗/聊天窗热键与 Esc（含证据截图） | 见下方推送记录 |
+| 可达 UI 清单（`DXWindow` 子类） | **62**（全部给出声明位置，行号脚本校验无错位） |
+| 非窗口 HUD 元素/覆盖层 | 7 |
+| 只可能由服务端包触发的界面 | 11 |
+| 不经 `WindowManager` 的窗口 | 12（逐个判定为设计内，各有自身关闭路径） |
+| 本轮真机验证的热键入口 | **14**（`Q/W/E/R/N/G/D/C/S/T/Z/V/B/F` 中的窗口类 + HUD 按钮） |
+| 本轮真机验证的 HUD 按钮 | 2（cap11 设置、cap6 行会） |
+| 逐窗口控制项审计 | **15 个窗口/面板**（见 §3） |
+| 确认并修复的缺陷 | **6** |
+| 新增永久回归自检 | 2（`--legacy-audit` 的 `closeHit`、`--popup-dedup-audit`） |
 
+**已修复的 6 个缺陷**：设置窗热键不能关、行会窗热键不能关、聊天窗 Esc 失效且吞全部热键、
+交易/求婚面板重复叠加、行会关闭钮被内容层遮挡、设置窗开关第 2 次起不重绘。
+
+## 6. 提交记录（全部已推送 origin/master 并校验远端 SHA）
+
+| 提交 | 内容 |
+|---|---|
+| `61b069bf` | 设置窗/行会窗热键 toggle + 聊天窗 Esc 关闭（含 6 张证据截图） |
+| `ca8ab567` | 交易请求/求婚面板去重 + `--popup-dedup-audit` 自检 |
+| `77df3880` | 可达 UI 全量清单 `INVENTORY.md` |
+| `b1c62026` | 行会关闭钮遮挡修复 + F12 命中探针 |
+| `34092503` | `DXImageControl.DrawImage` 改属性触发重绘 |
+| `1852e6fc` | 行会关闭钮置顶位置修正 + `closeHit` 永久回归自检 |
+
+## 7. 仍未覆盖 / 风险
+
+| 项 | 状态 | 原因 |
+|---|---|---|
+| 交易窗全生命周期 | `BLOCKED` | 需第二玩家进入交易态；服务端 `TradeRequest` 有 `TradePartnerRequest` 守卫，单人无法制造重复投递 |
+| NPC 对话/商店/仓库/任务发放 | `BLOCKED` | 需对应 NPC 与业务状态（本轮 NPC 窗几何由 `--legacy-audit` 的 `npc=True` 覆盖） |
+| 现代 Zircon UI（`--zircon-ui`） | 未覆盖 | 本轮按仓库默认 legacy EI 审计 |
+| `StatusWindow`（F2） | 潜在缺口 | `GameScene` 无任何 toggle/Open 调用，实际不可达；如属预期需补入口 |
+| 小游戏浮层（`FishingCatchDialog`/`HorseTameDialog`/`TimerDialog`） | 未覆盖 | 需进入对应小游戏状态 |
+| 悬停提示/名牌 | 未覆盖 | parity matrix 已记 MATCH，本轮未重测 |

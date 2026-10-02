@@ -565,10 +565,15 @@ public partial class LegacyHudLayoutLab : Control
         bool hud = _hud.AuditLegacyHud(out string hudDetails);
         // 商店窗 id2 的购买态面板（NPCGoodsPanel）legacy 布局。
         bool goods = _npc.AuditLegacyGoods(out string goodsDetails);
+        // 关闭钮遮挡回归：legacy 布局常把内容容器放大到铺满整窗，而内容容器
+        // 在构造期是**后于**关闭钮添加的 → 会盖住关闭钮并吃掉点击
+        // （真机缺陷：行会窗关闭钮点不到，探针 top=_content）。此处对每个
+        // legacy 窗口断言「关闭钮中心点上的最上层控件就是关闭钮本身」。
+        bool closeHit = AuditCloseButtonReachability(out string closeHitDetails);
         // 行会成员列表（legacy）：原版 18 行上限 + (35,60) 原点 + 字体度量行距。
         bool guildList = _guild.RunLegacyGuildListSelfTest(out string guildListDetails);
-        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods && group && guildList;
-        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods} guildList={guildList}");
+        bool pass = character && inventory && magic && horse && npc && chat && quest && trade && guild && storage && config && notice && minimap && lifecycle && orb && hud && roots && roots2 && roots3 && goods && group && guildList && closeHit;
+        GD.Print($"[LegacyAudit] {(pass ? "PASS" : "FAIL")} character={character} inventory={inventory} magic={magic} horse={horse} npc={npc} chat={chat} quest={quest} trade={trade} guild={guild} storage={storage} config={config} notice={notice} minimap={minimap} lifecycle={lifecycle} orb={orb} hud={hud} roots={roots && roots2 && roots3} goods={goods} guildList={guildList} closeHit={closeHit}");
         GD.Print($"[LegacyAudit] goods {goodsDetails}");
         GD.Print($"[LegacyAudit] character {characterDetails}");
         GD.Print($"[LegacyAudit] inventory {inventoryDetails}");
@@ -588,6 +593,7 @@ public partial class LegacyHudLayoutLab : Control
         GD.Print($"[LegacyAudit] lifecycle {lifecycleDetails}");
         GD.Print($"[LegacyAudit] orb {orbDetails}");
         GD.Print($"[LegacyAudit] hud {hudDetails}");
+        GD.Print($"[LegacyAudit] closeHit {closeHitDetails}");
         GetTree().Quit(pass ? 0 : 1);
     }
 
@@ -629,6 +635,104 @@ public partial class LegacyHudLayoutLab : Control
         }
         details = $"windows={opened} open-close={valid} stack={WindowManager.OpenWindows.Count}";
         return valid;
+    }
+
+    /// <summary>
+    /// 关闭钮可达性回归：对每个 legacy 窗口，取关闭钮矩形中心点，断言该点上
+    /// **最上层**的 DXControl 就是关闭钮本身（而不是被后添加的内容容器盖住）。
+    ///
+    /// 为什么需要：legacy 布局常把内容容器放大到铺满整窗（如 GuildDialog 的
+    /// `_content.Size = Size`），而内容容器在构造期后于关闭钮 AddControl →
+    /// Godot 里后添加的兄弟节点在上层，会吃掉关闭钮的点击。真机缺陷复现：
+    /// 点行会窗关闭钮无反应，命中探针 top=_content。
+    /// </summary>
+    private bool AuditCloseButtonReachability(out string details)
+    {
+        var checkedNames = new List<string>();
+        var blocked = new List<string>();
+        var windows = new (string Name, DXWindow Window)[]
+        {
+            ("character", _character), ("inventory", _inventory), ("magic", _magic),
+            ("quest", _quest), ("group", _group), ("guild", _guild),
+            ("config", _config), ("horse", _horse), ("notice", _notice),
+            ("storage", _storage), ("trade", _trade), ("npc", _npc),
+        };
+        while (WindowManager.CloseTop()) { }
+        foreach (var entry in windows)
+        {
+            // 关闭钮不一定是 DefaultCloseButton：legacy 窗口普遍自建
+            // `_closeButton`（GuildDialog/CharacterDialog/...）并在 legacy 布局里
+            // 重定位到 EI 实参位置。这里直接扫描窗口的直接子控件，挑出「可见的
+            // DXButton 且 Index/HoverIndex/PressedIndex 用到 161/162」的那一个。
+            var button = FindCloseButton(entry.Window);
+            if (button == null) continue;
+            WindowManager.Open(entry.Window, _canvas);
+            checkedNames.Add(entry.Name);
+            // 关闭钮中心点在**窗口坐标**中的位置
+            Vector2I centre = button.Location + new Vector2I((int)button.Size.X / 2, (int)button.Size.Y / 2);
+            if (!IsTopmostAt(entry.Window, centre, button))
+                blocked.Add($"{entry.Name}@{centre}->{LastHit}");
+            WindowManager.Close(entry.Window);
+        }
+        details = $"checked={checkedNames.Count} blocked=[{string.Join(",", blocked)}] ";
+        return blocked.Count == 0;
+    }
+
+    /// <summary>
+    /// 找出窗口的关闭钮：优先 <see cref="DXWindow.DefaultCloseButton"/>，
+    /// 否则在直接子控件里找「可见的 DXButton 且三态帧用到 161/162」的那个
+    /// （legacy 各窗口自建 `_closeButton` 后重定位到 EI 实参坐标）。
+    /// </summary>
+    private static DXButton FindCloseButton(DXWindow window)
+    {
+        if (window?.DefaultCloseButton != null) return window.DefaultCloseButton;
+        DXButton fallback = null;
+        foreach (var control in window.Controls)
+        {
+            if (control is not DXButton button || !button.Visible) continue;
+            if (button.Index is 161 or 162 || button.HoverIndex is 161 or 162
+                || button.PressedIndex is 161 or 162)
+                return button;
+            if (button.TooltipText == Lang.CommonControlClose) fallback ??= button;
+        }
+        return fallback;
+    }
+
+    /// <summary>
+    /// 判断窗口坐标 point 处最上层的控件是否就是 <paramref name="expected"/>。
+    /// 按 Controls 列表**倒序**（Godot 子节点顺序 = 绘制/命中顺序，后者在上）逐个
+    /// 做矩形命中，返回第一个命中的控件。
+    /// </summary>
+    private static string LastHit = "-";
+
+    private static string DumpOrder(DXWindow window)
+    {
+        var parts = new List<string>();
+        for (int i = 0; i < window.GetChildCount(); i++)
+            if (window.GetChild(i) is DXControl c) parts.Add($"{i}:{c.GetType().Name}@{c.Location}");
+        return string.Join("|", parts);
+    }
+
+    private static bool IsTopmostAt(DXWindow window, Vector2I point, DXControl expected)
+    {
+        LastHit = "<none>";
+        // 必须按 **Godot 子节点顺序**倒序：绘制与命中都遵循节点顺序，
+        // 而 `DXControl.Controls` 只是记账列表 —— `BringToFront()` 走
+        // `MoveChild` 只改节点顺序，不同步该列表，用它做命中判定会得出
+        // 与实际点击相反的结论。
+        for (int i = window.GetChildCount() - 1; i >= 0; i--)
+        {
+            if (window.GetChild(i) is not DXControl control) continue;
+            if (!GodotObject.IsInstanceValid(control)) continue;
+            if (!control.Visible || !control.IsEnabled) continue;
+            if (control.MouseFilter != Control.MouseFilterEnum.Stop) continue;
+            if (point.X < control.Location.X || point.Y < control.Location.Y) continue;
+            if (point.X >= control.Location.X + control.Size.X) continue;
+            if (point.Y >= control.Location.Y + control.Size.Y) continue;
+            LastHit = $"{control.GetType().Name}@{control.Location}/{control.Size}";
+            return ReferenceEquals(control, expected);
+        }
+        return false;
     }
 
     private void Toggle(DXWindow window) => WindowManager.Toggle(window, _canvas);

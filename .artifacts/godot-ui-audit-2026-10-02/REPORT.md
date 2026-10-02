@@ -76,8 +76,20 @@ ServerCore，legacy EI 界面（`--window=800x600`，逻辑画布 = 窗口像素
   探针证据：`[HitProbe] mouseLogical=(672,444) top=DXControl owner=GuildDialog rect=(0,0)/(596,446)`
   —— top 是 `_content` 而不是 `DXButton`。
 - **修复**：legacy 布局末尾对 `_closeButton` 调 `BringToFront()`。
-- **验证**：真机 `F` 开 → 点 (672,444) → 探针无 `GuildDialog`；连续 3 轮「开→点关闭钮」全部 CLOSED。
-  截图 `evidence/20-guild-open-with-close-visible.png` / `evidence/21-guild-closed-via-close-btn.png`。
+- **修复位置很重要**：`BringToFront()` 必须放在 `ApplyLegacyEiLayout()` 的**最后一步**。
+  首次尝试放在 `BuildLegacyActionButtons()` 之后仍失败，因为该方法尾部还会
+  `RefreshRows()` → `ResizeForBackground()`，后者再次执行 `_content.Size = Size`
+  并把内容层重新置回上层。
+- **验证**：
+  - 真机 `F` 开 → 点 (672,444) → 探针无 `GuildDialog`；连续 3 轮「开→点关闭钮」全部 CLOSED。
+    截图 `evidence/20-guild-open-with-close-visible.png` / `evidence/21-guild-closed-via-close-btn.png`。
+  - 新增**永久回归自检** `--legacy-audit` 的 `closeHit` 项（`LegacyHudLayoutLab.AuditCloseButtonReachability`）：
+    对 12 个 legacy 窗口断言「关闭钮中心点上最上层控件就是关闭钮本身」。
+    **敏感性已验证**：移除该 `BringToFront()` 后 `closeHit=False blocked=[guild@(570,422)->DXControl@(0,0)/(596,446)]`，
+    恢复后 `closeHit=True blocked=[]`。
+- **审计工具自身的坑（记录以免重犯）**：命中判定必须按 **Godot 子节点顺序**倒序，
+  不能用 `DXControl.Controls` 列表 —— `BringToFront()` 走 `MoveChild` 只改节点顺序，
+  不同步 `Controls` 记账列表，用后者会得出与实际点击相反的结论（初版自检因此误判为通过）。
 
 ### 附：坐标基准缺陷（审计工具本身，已修正，非产品缺陷）
 

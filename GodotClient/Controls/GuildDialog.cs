@@ -127,17 +127,18 @@ public partial class GuildDialog : DXWindow
         // 故 legacy 下 _content 铺满窗口，行坐标直接用 EI 值。
         _content.Location = Vector2I.Zero;
         _content.Size = Size;
-        // legacy 下 _content 被铺满整个窗口（Location=0 / Size=Size），而它在
-        // 构造期**后于** _closeButton 添加，于是盖在关闭钮 (556,409) 之上；
-        // 命中探针实测 top=DXControl(_content) —— 关闭钮点不到（真机复现：
-        // 点 (672,444) 无反应，探针 top 是 _content 而非按钮）。关闭钮须在最上层。
-        _closeButton.BringToFront();
         // 原版滚动条 0x4179B0@+0x76C，位置 (x+0x224, y+0xD0) = (548,208)
         // （guild-window-paint-evidence.json；落在 596x446 内，可直接作窗口相对坐标）。
         // 原值 (428,80) 无证据支撑 —— 截图里表现为窗口中部一条突兀的竖直黑条。
         _scroll.Location = new Vector2I(548, 208);
         _scroll.Size = new Vector2I(16, 415);
         BuildLegacyActionButtons();
+        // legacy 下 _content 被铺满整个窗口（Location=0 / Size=Size），且它在
+        // 构造期**后于** _closeButton 添加；BuildLegacyActionButtons 又追加了 8 个
+        // 动作钮，其中「关闭窗口」(397,402) 与关闭钮 (556,409) 矩形相邻。
+        // Godot 里后添加的兄弟节点在上层 → 关闭钮被盖住、点不到
+        // （真机复现：点 (672,444) 无反应，命中探针 top 是 DXControl/_content）。
+        // 必须在这两批控件都加完之后再置顶。
         UpdateClientAreaForLegacySkin();
         // 原版 F600 无页签；此处显式再执行一次，避免构造期先设成可见后无人回收。
         UpdateTabVisibility();
@@ -146,6 +147,11 @@ public partial class GuildDialog : DXWindow
         // 之后若没有行会数据到达就不会再刷新 → 真实联机运行里 legacy 行会窗显示的
         // 是现代建会页（2026-09-30 真机截图实证）。这里显式重建一次。
         RefreshRows();
+        // RefreshRows → ResizeForBackground 会把 _content 重新放大到铺满整窗
+        // （`_content.Size = _legacyEiLayout ? Size : ...`），而 _content 在构造期
+        // 后于 _closeButton 添加 → 再次盖住关闭钮。因此置顶必须放在**全部**
+        // 布局/刷新之后，作为本方法的最后一步。
+        _closeButton.BringToFront();
     }
 
     /// <summary>

@@ -69,7 +69,7 @@
   4. 旧 `Client/Scenes/Views/MainPanel.cs` 的 `(470,20)/(470,40)` 是**现代九格
      属性栏**版本，legacy HUD 有自己的布局覆盖，**不能照搬**。
 - **修复**：→ `(636,118)` 61×13 / `(734,118)` 62×13，只填数值。
-- **验证**：真机截图 `evidence/40-hud-acdc-before.png` → `41-hud-acdc-after.png`；
+- **验证**：真机截图 `../godot-ui-audit-2026-10-02/evidence/40-hud-acdc-before.png` → `../godot-ui-audit-2026-10-02/evidence/41-hud-acdc-after.png`；
   `--legacy-audit` 新增断言「位置 == (636,118)/(734,118) 且文本不以 AC/DC 开头」。
 
 ### ISSUE-B 主 HUD 聊天输入条带 Zircon 窗口金框 — 已修复，提交 `5a12603b`
@@ -84,7 +84,7 @@
   `_input.Border=false`、`_input.BackColour=Transparent`
   （避免 `FocusChanged` 聚焦时切成黑块，`ChatTextBox.cs:75`）。
 - **验证**：真机逐行实测输入条带 `y 569..584` 的 `max` 从 47 降到 ≤56（金线消失）；
-  `evidence/43-hud-chat-input-before.png` → `44-hud-chat-input-after.png`。
+  `../godot-ui-audit-2026-10-02/evidence/43-hud-chat-input-before.png` → `../godot-ui-audit-2026-10-02/evidence/44-hud-chat-input-after.png`。
 
 ### ISSUE-C Zircon 扩展 HUD 控件带窗口金框 — 已修复，提交 `1ff758eb`
 
@@ -93,7 +93,7 @@
   （EI 原版 HUD 无这些控件），却都保留了 `DXWindow.DrawChrome` 默认 true。
 - **修复**：三者构造期显式 `DrawChrome = false`。
 - **验证**：真机 buff 条金框消失，只剩图标自身边框；
-  `evidence/45-hud-buff-frame-before.png` → `46-hud-buff-frame-after.png`。
+  `../godot-ui-audit-2026-10-02/evidence/45-hud-buff-frame-before.png` → `../godot-ui-audit-2026-10-02/evidence/46-hud-buff-frame-after.png`。
 - **对照（本来就正确的）**：`MiniMapDialog.cs:83`、`BeltDialog.cs:132` 早已
   `DrawChrome=false`；`MagicBar` 是裸 `Control` 无 chrome；`MainPanel` 用自绘 F50。
 
@@ -117,3 +117,14 @@
 | buff / 任务跟踪 / 怪物框的**有内容**状态 | 部分 | buff 有内容已截图；任务跟踪需接任务、怪物框需悬停怪物 |
 | 现代 Zircon UI（`--zircon-ui`）HUD | 未覆盖 | 本轮只审 legacy EI HUD；现代 HUD 是另一套控件，需单独一轮 |
 | `MainPanel.DrawChrome` 保持 true | 记录 | F50 本身即整块底图、且它是 `DXImageControl` 非 `DXWindow`，实测无金框；未改动 |
+| 现代 HUD 血/蓝数值条文本字号 | 已定位、**未修复** | `CreateBarLabel`（`GodotClient/Controls/MainPanel.cs:505-516`）未设 `FontSize`，走 `DXLabel` 默认 12（`GodotClient/Controls/DXLabel.cs:12`）；原版 `HealthLabel`/`ManaLabel`（`Client/Scenes/Views/MainPanel.cs:449/462`）不覆盖字体，继承 `Client/Controls/DXLabel.cs:432` 的 `CEnvir.FontSize(8F)`。修复=`CreateBarLabel` 加 `FontSize = 8` 并真机复测（真机探针实测条上标签 `fs=12`） |
+
+## 5. 会话交接（2026-10-03）
+
+- 交互审计（`../godot-ui-audit-2026-10-02/REPORT.md`）已交付并推送：6 个交互缺陷 + 2 个永久回归自检，
+  远端 `origin/master` = 本地 HEAD 已校验。
+- 本 HUD 复核在本文件记录后由**独立 goal**（会话 `01a0fa17`，
+  产物 `.artifacts/godot-hud-parity-2026-10-02/`）接管续做；AC/DC 位置与颜色已由该 goal
+  在 `9b0683fe` 基础上补齐证据并提交 `a58495d0`。本会话不再重复改动 HUD 控件源码，
+  以免与并发会话在同一批文件上互相覆盖。
+- 本会话中断时正在处理的最后一项是上表「现代 HUD 血/蓝数值条文本字号」（仅定位，未改代码）。

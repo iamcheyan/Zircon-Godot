@@ -2071,6 +2071,11 @@ public partial class SelectScene : Control
         _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
         WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
         GD.Print($"[LegacySelect] StartGame 过场结束，黑屏上显示 GameInter F0 公告框: len={_pendingLegacyStartNotice.Length}");
+        if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect)
+        {
+            GD.Print("[LegacySelect] 自动登录测试：自动确认公告框");
+            CallDeferred(nameof(OnLegacyStartNoticeConfirmed));
+        }
     }
 
     private void OnLegacyStartNoticeConfirmed()

@@ -285,16 +285,31 @@ public partial class MainPanel : DXImageControl
         })
             label.Visible = false;
 
-        // 等级在右侧圆盘的中心；AC/DC 对齐圆盘下方原版的两个标识位。
+        // 等级在右侧圆盘的中心。
         LevelLabel.Location = new Vector2I(665, 60);
         LevelLabel.Size = new Vector2I(70, 16);
         LevelLabel.Visible = true;
 
-        ACLabel.Location = new Vector2I(580, 108);
-        ACLabel.Size = new Vector2I(88, 16);
+        // AC/DC 的**数值**必须落在 F50 里 AC/DC 标签右侧的两个黑色值框内，
+        // 且只显示数字（不带 "AC "/"DC " 前缀）。
+        //
+        // 证据（primary-resource + primary-static）：
+        //  1) GameInter F50（800x136）像素实测：y 119..130 有两个 12/12 行纯黑矩形，
+        //     即原版预留的数值槽 —— AC 框 x 636..696、DC 框 x 734..795。
+        //  2) 标签本身是**烘焙美术**：同带内金色字形在 AC x 607..620、DC x 705..717，
+        //     金框内还有更亮的铭文；Mir3.exe 全二进制**不存在** "AC"/"DC" 格式串
+        //     （.data 里 HUD 相关格式串只有 (血量)%d/%d、(魔法)%d/%d、(经验条)%.2f%s、
+        //     (负重)%d/%d、%s : [%d,%d]、: %d/%d 等），故原版从不自己绘制 AC/DC 字样。
+        //  3) 旧 Client/Scenes/GameScene.cs:4136/4139 赋给 ACLabel/DCLabel 的也只是
+        //     数值（`Stats.GetFormat(Stat.MaxAC)`），不含前缀。
+        //
+        // 此前是 (580,108)/(680,108) 且文本带 "AC "/"DC " 前缀 → 数字整体偏左上、
+        // 压过金框并覆盖上方圆盘装饰（用户报告的「右下角 AC/DC 文本错位」）。
+        ACLabel.Location = new Vector2I(636, 118);
+        ACLabel.Size = new Vector2I(61, 13);
         ACLabel.Visible = true;
-        DCLabel.Location = new Vector2I(680, 108);
-        DCLabel.Size = new Vector2I(88, 16);
+        DCLabel.Location = new Vector2I(734, 118);
+        DCLabel.Size = new Vector2I(62, 13);
         DCLabel.Visible = true;
 
         // SetStats 会在收到服务器属性包后重新填值；这里先清掉旧版不应残留
@@ -534,9 +549,11 @@ public partial class MainPanel : DXImageControl
         _stats = stats ?? new Stats();
         string ac = _stats.GetFormat(Stat.MaxAC) ?? "";
         string dc = _stats.GetFormat(Stat.MaxDC) ?? "";
-        ACLabel.Text = _legacyEiStats ? $"AC {ac}" : ac;
+        // 只填数值：原版 AC/DC 字样是 F50 烘焙美术，且 Mir3.exe 无对应格式串；
+        // 旧 Client/Scenes/GameScene.cs:4136/4139 同样只赋 GetFormat(Stat.MaxAC/DC)。
+        ACLabel.Text = ac;
         MACLabel.Text = _stats.GetFormat(Stat.MaxMR) ?? "";
-        DCLabel.Text = _legacyEiStats ? $"DC {dc}" : dc;
+        DCLabel.Text = dc;
         SCLabel.Text = _stats.GetFormat(Stat.MaxSC) ?? "";
         MCLabel.Text = _stats.GetFormat(Stat.MaxMC) ?? "";
         RefreshBars();
@@ -771,8 +788,12 @@ public partial class MainPanel : DXImageControl
             && ACLabel.Visible
             && DCLabel.Visible
             && LevelLabel.Location == new Vector2I(665, 60)
-            && ACLabel.Location == new Vector2I(580, 108)
-            && DCLabel.Location == new Vector2I(680, 108);
+            // AC/DC 数值必须落在 F50 的黑色值框内（AC 636..696 / DC 734..795，
+            // 行带 y 118..131），且文本**不带** "AC "/"DC " 前缀（字样是烘焙美术）。
+            && ACLabel.Location == new Vector2I(636, 118)
+            && DCLabel.Location == new Vector2I(734, 118)
+            && !ACLabel.Text.StartsWith("AC")
+            && !DCLabel.Text.StartsWith("DC");
         bool orb = AuditLegacyOrb(out string orbDetails);
         details = $"panel={Index}/{Size} buttons={buttons} legacyStats={legacyStats} "
             + $"vis(level/class/fp/cp/ac/dc/mac/mc/sc)={LevelLabel.Visible}/{ClassLabel.Visible}/{FPLabel.Visible}/{CPLabel.Visible}/{ACLabel.Visible}/{DCLabel.Visible}/{MACLabel.Visible}/{MCLabel.Visible}/{SCLabel.Visible} "

@@ -220,3 +220,16 @@ godot-mono --path GodotClient res://Scenes/UITestScene.tscn -- --popup-dedup-aud
 | `StatusWindow`（M11 演示窗） | 已核实：不可达但**非缺陷** | `StatusWindow.cs` 头注释写明「M11 控件库接入演示…后续 M12 会做正式 MainPanel HUD」；现役 `KeyBindManager` 无 F2 绑定，原版 `Client/Envir/CEnvir.cs:829/850` 的 F2 绑定属其它动作。窗口类保留、无入口，属遗留演示代码 |
 | 小游戏浮层（`FishingCatchDialog`/`HorseTameDialog`/`TimerDialog`） | 未覆盖 | 需进入对应小游戏状态 |
 | 悬停提示/名牌 | 未覆盖 | parity matrix 已记 MATCH，本轮未重测 |
+
+## 8. 收尾状态（2026-10-03）
+
+- 本 goal 的交互审计交付已完成并推送：远端 `origin/master` = 本地 HEAD（收尾提交
+  `21352a43`，`git ls-remote` 校验通过）。
+- 追加的 HUD 视觉/内容复核**不在本会话继续**：已由独立 goal（会话 `01a0fa17`，
+  产物 `.artifacts/godot-hud-parity-2026-10-02/`）接管；交接明细与已定位未修复项见
+  `.artifacts/hud-audit-2026-10-02/HUD_REPORT.md` §4/§5。本会话不再改动 HUD 控件源码，
+  避免与并发会话在同一批文件上互相覆盖。
+- 按仓库看门狗惯例停用本 goal 的自动续跑：`~/.omp/mir3-goal-watchdog.01a0f9a5.off`
+  （删除该文件即恢复自动续跑）。
+- 本目录 `shots/` 是 HUD 复核阶段的**未跟踪**草稿截图（未被任何报告引用；其中
+  `hud-modern-1024/1600*.png` 是现代 Zircon UI 的原始画面），保留未提交。

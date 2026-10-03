@@ -88,6 +88,21 @@ public static class AutoLoginArgs
     public static List<SelectInfo> PreviewCharacters()
     {
         MirClass cls = ParsePreviewClass();
+        if (Has("--legacy-preview-single"))
+        {
+            return new List<SelectInfo>
+            {
+                new SelectInfo { CharacterIndex = 0, CharacterName = "TestHero", Level = 255, Class = cls, Gender = Has("--legacy-preview-female") ? MirGender.Female : MirGender.Male, Location = 0 },
+            };
+        }
+        if (Has("--legacy-preview-slot1"))
+        {
+            return new List<SelectInfo>
+            {
+                new SelectInfo { CharacterIndex = 0, CharacterName = "PreviewAlt", Level = 40, Class = cls, Gender = MirGender.Female, Location = 0 },
+                new SelectInfo { CharacterIndex = 1, CharacterName = "TestHero", Level = 255, Class = cls, Gender = MirGender.Male, Location = 0 },
+            };
+        }
         return new List<SelectInfo>
         {
             new SelectInfo { CharacterIndex = 0, CharacterName = "TestHero", Level = 255, Class = cls, Gender = MirGender.Male, Location = 0 },
@@ -144,7 +159,7 @@ public static class AutoLoginArgs
         }
     }
 
-    private static bool Has(string name)
+    public static bool Has(string name)
     {
         foreach (var a in Args)
         {

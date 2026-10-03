@@ -30,9 +30,8 @@ public partial class SelectScene : Control
     // 角色直接站在 F50 洞窟背景里，不是列表面板。这里补第 2 槽与两个名称标签。
     private DXAnimatedControl _characterAnimation2;
     // 选角屏特效层（原版第三层）：`Mir3.exe 0x457CF8` 用 `[esi-2]+0x28` 取帧，
-    // 只在选中槽绘制。法师男 = 橙色火球（F1080..F1094）、法师女 = 青色地焰
-    // （F1385..F1391）、道士女 = 蓝色光点（F1984..F1994）；战士/道士男无特效。
-    private DXAnimatedControl _slotAura0, _slotAura1;
+    // 只在选中槽绘制。身体当前帧 + 40 逐帧同步，走 DrawBlend(..., 1) 屏幕混合材质。
+    private DXImageControl _slotAura0, _slotAura1;
     // 洞窟槽位地面阴影：WIL 中每个角色块后有 +20 的阴影块（帧数与角色块一致），
     // 阴影帧 = 角色当前帧 + 20，在 _Process 里同步 Index。
     private DXImageControl _caveShadow0, _caveShadow1;
@@ -248,10 +247,25 @@ public partial class SelectScene : Control
                 GD.Print($"[Select] 自动进入游戏, 角色: {_characters[0].CharacterName}");
                 CallDeferred(nameof(AutoStartGame));
             }
-            else
+        }
+
+        if (AutoLoginArgs.Has("--legacy-preview-create"))
+        {
+            SetSelectPhase(2);
+            ShowCreateCharacterPanel();
+            if (AutoLoginArgs.Has("--legacy-preview-class=wizard"))
             {
-                GD.Print("[Select] --stay-select: 角色列表就绪，停在选角屏验证");
+                SelectCreateClass(MirClass.Wizard);
             }
+            if (AutoLoginArgs.Has("--legacy-preview-female"))
+            {
+                SelectLegacyCreateSlot(1);
+            }
+        }
+
+        if (AutoLoginArgs.Has("--legacy-preview-slot1") && _characters.Count > 1)
+        {
+            SelectSkinCharacter(1);
         }
     }
 
@@ -292,9 +306,9 @@ public partial class SelectScene : Control
         TickPhaseBgm(delta);
         // EI stage 2 两个预览人物的帧推进（variant 4、120ms/帧、选中槽动/未选中槽定格首帧）
         ProcessLegacyCreatePreview(delta);
-        // 洞窟槽位几何同步（阴影帧 = 角色帧 + 20；命中框 = 锚点 + 帧头 offset）
-        SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, Slot0AnchorX);
-        SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, Slot1AnchorX);
+        // 洞窟槽位几何同步（阴影帧 = 角色帧 + 20；特效帧 = 角色帧 + 40；命中框 = 锚点 + 帧头 offset）
+        SyncLegacySlotGeometry(_caveShadow0, _slotAura0, _characterAnimation, _slotHit0, Slot0AnchorX, 0);
+        SyncLegacySlotGeometry(_caveShadow1, _slotAura1, _characterAnimation2, _slotHit1, Slot1AnchorX, 1);
         if (_characterAnimation == null || !_characterAnimation.Visible) return;
 
         // **legacy（EI 复古 UI）不画 +100/+130 叠加层**。
@@ -303,7 +317,12 @@ public partial class SelectScene : Control
         // +100/+130 是现代 Zircon 客户端的合成层，在 EI 里没有对应物：
         // 例如道士男 intro 段 1460-1476 的 +130 = 1590-1606，在 Interface1c.wil 里
         // 是**别的角色的技能帧**，会以 (450,200) 为基准叠在洞窟上 → 人物"闪现"杂影。
-        if (AutoLoginArgs.LegacyUi) return;
+        if (AutoLoginArgs.LegacyUi)
+        {
+            if (_characterOverlay1 != null && _characterOverlay1.Visible) _characterOverlay1.Visible = false;
+            if (_characterOverlay2 != null && _characterOverlay2.Visible) _characterOverlay2.Visible = false;
+            return;
+        }
 
         bool showOverlays = !_characterAnimation.Loop && _characterAnimation.Animated;
         Vector2I baseOffset = MirSkin.GetOffset(LibraryFile.Interface1c, _characterAnimation.Index);
@@ -522,13 +541,12 @@ public partial class SelectScene : Control
         if (_skinDelete != null) _skinDelete.Enabled = has;
         UpdateLegacySlotInfoBox(has ? index : -1);
         // **特效层只画在选中槽**（原版 `0x457CF0 cmp [ebx+0x1488],ebp; jne 0x457D2A`），
-        // 且与身体层**叠加**（+40 是纯火球/闪电序列，不含人物）。
+        // 且与身体层**叠加**（+40 逐帧同步）。未选中槽立即隐藏，选中槽由 SyncLegacySlotGeometry 逐帧同步。
         for (int slot = 0; slot < 2; slot++)
         {
             var aura = LegacySlotAura(slot);
             if (aura == null || slot >= _characters.Count) continue;
-            bool hasAura = LegacyAuraBlock(_characters[slot].Class, _characters[slot].Gender) != null;
-            aura.Visible = has && slot == index && hasAura;
+            if (slot != index) aura.Visible = false;
         }
         GD.Print($"[LegacySelect] 槽位选中: index={index} 开始={_skinStart?.Enabled} "
             + $"删除={_skinDelete?.Enabled}（原版 [0x1168] 语义，点击只改选中态）");
@@ -666,12 +684,9 @@ public partial class SelectScene : Control
                 // 解析器 0x459195 对两个槽都传 variant 1（0x459112 清零后两分支均置 1）
                 StartLegacySlotAnimation(anim, c, LegacySlotIntroVariant, LegacySlotIdleVariant, i);
             }
-            // 特效层跟随身体独立循环（同为 120ms/帧）；帧块按职业/性别查表，
-            // 没有特效的组合直接隐藏。
-            StartLegacyAuraAnimation(LegacySlotAura(i), c);
         }
-        SyncLegacySlotGeometry(_caveShadow0, _characterAnimation, _slotHit0, Slot0AnchorX);
-        SyncLegacySlotGeometry(_caveShadow1, _characterAnimation2, _slotHit1, Slot1AnchorX);
+        SyncLegacySlotGeometry(_caveShadow0, _slotAura0, _characterAnimation, _slotHit0, Slot0AnchorX, 0);
+        SyncLegacySlotGeometry(_caveShadow1, _slotAura1, _characterAnimation2, _slotHit1, Slot1AnchorX, 1);
         // **phase 2（新建人物）不画洞窟槽位**：原版 stage 2 的 tick 只画创建界面
         // （背景换成 F80 + 2 个预览槽 + F82/F81 + 5 按钮），不画列表槽位。
         if (_legacyCreateLayer is { Visible: true }) SetLegacyCaveSlotsVisible(false);
@@ -681,7 +696,7 @@ public partial class SelectScene : Control
     }
 
     /// <summary>槽 idx 的特效层控件（0 = _slotAura0，1 = _slotAura1）。</summary>
-    private DXAnimatedControl LegacySlotAura(int slot) => slot == 0 ? _slotAura0 : _slotAura1;
+    private DXImageControl LegacySlotAura(int slot) => slot == 0 ? _slotAura0 : _slotAura1;
 
     /// <summary>
     /// 原版 +40 特效块的**有效帧区间**（逐帧解码 Interface1c.wil 独立复核）：
@@ -741,22 +756,40 @@ public partial class SelectScene : Control
     }
 
     /// <summary>
-    /// 逐帧同步槽位的 bbox 派生几何：阴影帧号（= 角色帧 + 20）与命中框。
-    /// 阴影/命中框用**同一表达式**：左上 = 锚点 + 帧头 offset，尺寸 = 帧头 w/h
-    /// （原版 0x4578B0-0x4578F5 绘制，0x458A70 命中框 = 同一 bbox 写进 RECT）。
-    /// 旧实现用 UseOffSet=false 并把阴影按帧宽重新居中，会与身体（各自 offset 不同）错位。
+    /// 逐帧同步槽位的几何与三层帧号：阴影（= 角色帧 + 20）、特效（= 角色帧 + 40）与命中框。
+    /// 原版 IntroScn.pas:1320-1345：
+    ///   阴影 = 角色帧 + 20（DrawBlend mode 0，带半透明）
+    ///   身体 = 角色帧（普通绘制）
+    ///   特效 = 角色帧 + 40（DrawBlend mode 1，Screen Blend 混合，且仅选中槽显示）
     /// </summary>
-    private static void SyncLegacySlotGeometry(DXImageControl shadow, DXAnimatedControl anim,
-        DXControl hit, int anchorX)
+    private void SyncLegacySlotGeometry(DXImageControl shadow, DXImageControl aura, DXAnimatedControl anim,
+        DXControl hit, int anchorX, int slot)
     {
-        if (anim == null || !anim.Visible) return;
+        if (anim == null || !anim.Visible)
+        {
+            if (shadow != null) shadow.Visible = false;
+            if (aura != null) aura.Visible = false;
+            if (hit != null) hit.Visible = false;
+            return;
+        }
         int idx = anim.Index;
         Vector2I off = MirSkin.GetOffset(LibraryFile.Interface1c, idx);
         Vector2I size = MirSkin.GetSize(LibraryFile.Interface1c, idx);
-        if (shadow != null && shadow.Visible)
+        if (shadow != null)
         {
+            shadow.Visible = true;
             int shadowIndex = idx + 20;   // 阴影块 = 角色块 + 20
             if (shadowIndex != shadow.Index) shadow.Index = shadowIndex;
+        }
+        if (aura != null)
+        {
+            int auraIndex = idx + 40;     // 特效块 = 角色块 + 40
+            Vector2I auraSize = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex);
+            bool hasAura = auraSize.X > 4 || auraSize.Y > 2; // 排除 4x2 等空白占位
+            bool isSelected = _legacySelectedIndex == slot;
+            bool showAura = isSelected && hasAura;
+            if (aura.Visible != showAura) aura.Visible = showAura;
+            if (showAura && aura.Index != auraIndex) aura.Index = auraIndex;
         }
         if (hit != null && hit.Visible)
         {
@@ -1001,8 +1034,15 @@ public partial class SelectScene : Control
         // 只在 0/2 切：phase 1/4 由过场视频覆盖。
         if (_selectBackground != null && (phase == 0 || phase == 2))
             _selectBackground.Index = phase == 2 ? 80 : 50;
+
+        // 阶段互斥：phase 0 画洞窟列表槽位，phase 2 画建角预览槽位
+        SetLegacyCaveSlotsVisible(p0);
+        if (_legacySlotInfoBox != null && !p0) _legacySlotInfoBox.Visible = false;
+
         // EI phase 2 的两个人物预览/名牌/名字框只在创建相位显示。
         SetLegacyCreateLayerVisible(p2);
+        if (p2) RebuildLegacyCreateSlots();
+
         // 原版 phase 2 左上角只有说明框，没有移植版加的 phase-0 提示文字；
         // 进创建相位时清掉它，避免与说明框 (95,15) 重叠（错误文案保留）。
         if (p2 && AutoLoginArgs.LegacyUi && _statusLabel != null
@@ -1257,8 +1297,8 @@ public partial class SelectScene : Control
         // x = [slot+0x18] + 帧头 offsetX，y = [slot+0x1C] + 帧头 offsetY，尺寸取帧头。
         // 旧实现用 UseOffSet=false 并按帧宽重新居中，会与身体错位（两者 offset 不同）。
         // 位置固定为槽锚点，帧号在 _Process 里跟随角色当前帧。
-        _caveShadow0 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = Slot0Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        _caveShadow1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = Slot1Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        _caveShadow0 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, ImageOpacity = 0.6f, Location = Slot0Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        _caveShadow1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, ImageOpacity = 0.6f, Location = Slot1Anchor, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
         background.AddControl(_caveShadow0);
         background.AddControl(_caveShadow1);
 
@@ -1274,10 +1314,13 @@ public partial class SelectScene : Control
             MouseFilter = MouseFilterEnum.Ignore,
         };
         background.AddControl(_characterAnimation);
-        _characterOverlay1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        _characterOverlay2 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        background.AddControl(_characterOverlay1);
-        background.AddControl(_characterOverlay2);
+        if (!AutoLoginArgs.LegacyUi)
+        {
+            _characterOverlay1 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+            _characterOverlay2 = new DXImageControl { LibraryFile = LibraryFile.Interface1c, UseOffSet = true, Location = new Vector2I(320, 240), Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+            background.AddControl(_characterOverlay1);
+            background.AddControl(_characterOverlay2);
+        }
 
 
         // **第 2 个角色槽（EI 有 2 槽）**，锚点 (300,210)。
@@ -1293,35 +1336,27 @@ public partial class SelectScene : Control
         };
         background.AddControl(_characterAnimation2);
 
+        // 在身体与特效之间插入 BackBufferCopy，确保特效材质的 screen_texture 捕获到刚画上去的身体
+        background.AddChild(new BackBufferCopy { CopyMode = BackBufferCopy.CopyModeEnum.Viewport });
+
         // **特效层**（原版选角屏的第三层）：`Mir3.exe 0x457CF8` 用 `[esi-2]+0x28`
-        // 取帧（= 身体当前帧 + 40），只在**选中槽**绘制（`0x457CF0 cmp [ebx+0x1488],ebp;
-        // jne`）。实测各组合的 +40 块：法师男 = F1080..F1094（128x256 橙色火球），
-        // 法师女 = F1385..F1391（512x256 青色地焰，F1384 是 64x64 的第一帧），
-        // 道士女 = F1984..F1994（256x128/256 蓝色光点），战士/道士男 = 全空（无特效）。
-        // 帧数与身体**不同步**：每段有自己的长度（法师男 15 帧、法师女 7 帧、道士女 11 帧），
-        // 独立按 120ms/帧循环。
-        _slotAura0 = new DXAnimatedControl
+        // 取帧（= 身体当前帧 + 40），只在**选中槽**绘制（`0x457CF0 cmp [ebx+0x1488],ebp; jne`）。
+        // 帧号与身体严格同步，走 DrawBlend(..., 1) 屏幕混合材质（Blend = true）。
+        _slotAura0 = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            // +40 特效帧四周带**不透明纯黑**（F1080 实测 13999 个不透明像素里
-            // 6797 个是 alpha=255/RGB<12 的黑），必须用特效颜色键纹理（黑=透明），
-            // 否则那块黑椭圆会把底下的人物整个盖住（实测）。
-            // 注意**不是** Blend：Blend 走的是屏幕混合（out = dst + src*(1-dst)），
-            // 离屏验证会把人物冲成惨白/蓝色。
-            UseEffectTexture = true,
-            FrameCount = 1,
-            AnimationDelay = TimeSpan.FromMilliseconds(1),
+            Blend = true,
+            UseEffectTexture = false,
             UseOffSet = true,
             Location = Slot0Anchor,
             Visible = false,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _slotAura1 = new DXAnimatedControl
+        _slotAura1 = new DXImageControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            UseEffectTexture = true,
-            FrameCount = 1,
-            AnimationDelay = TimeSpan.FromMilliseconds(1),
+            Blend = true,
+            UseEffectTexture = false,
             UseOffSet = true,
             Location = Slot1Anchor,
             Visible = false,
@@ -1682,7 +1717,8 @@ public partial class SelectScene : Control
             if (aura != null)
             {
                 int auraIndex = frame + 40;
-                bool hasAura = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex) != Vector2I.Zero;
+                Vector2I auraSize = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex);
+                bool hasAura = auraSize.X > 4 || auraSize.Y > 2; // 排除 4x2 等空白占位
                 bool showAura = selected && hasAura;
                 if (aura.Visible != showAura) aura.Visible = showAura;
                 if (showAura && aura.Index != auraIndex) aura.Index = auraIndex;
@@ -1834,6 +1870,7 @@ public partial class SelectScene : Control
             {
                 LibraryFile = LibraryFile.Interface1c,
                 UseOffSet = true,          // 0x457BF0：锚点 + 帧头 offset，尺寸取帧头
+                ImageOpacity = 0.6f,       // 原版 DrawBlend(..., 0) 50%~60% 半透明阴影
                 MouseFilter = MouseFilterEnum.Ignore,
             };
             var body = new DXImageControl
@@ -1843,19 +1880,20 @@ public partial class SelectScene : Control
                 MouseFilter = MouseFilterEnum.Ignore,
             };
             // 特效层（+40 叠加）：原版 stage 2 的 tick 同样在身体之后画 +40 层，
-            // 且只在**选中槽**画（[0x1488] == slot）。
+            // 且只在选中槽画（[0x1488] == slot）。走 DrawBlend(..., 1) 屏幕混合
             var aura = new DXImageControl
             {
                 LibraryFile = LibraryFile.Interface1c,
                 UseOffSet = true,
-                // +40 特效帧用**特效颜色键**纹理（黑=透明）：四周那圈不透明纯黑
-                // （F1080 实测 6797 个 alpha=255/RGB<12 的黑像素）会盖住人物。
-                UseEffectTexture = true,
+                Blend = true,
+                UseEffectTexture = false,
                 Visible = false,
                 MouseFilter = MouseFilterEnum.Ignore,
             };
             _legacyCreateLayer.AddControl(shadow);
             _legacyCreateLayer.AddControl(body);
+            // 在身体与特效之间插入 BackBufferCopy，让特效 screen_texture 捕获已绘制的身体
+            _legacyCreateLayer.AddChild(new BackBufferCopy { CopyMode = BackBufferCopy.CopyModeEnum.Viewport });
             _legacyCreateLayer.AddControl(aura);
             var hit = new DXControl { Visible = false };
             int captured = slot;
@@ -2047,6 +2085,8 @@ public partial class SelectScene : Control
         // 角色改由洞窟里的 2 个槽位渲染（见 UpdateCaveSlots），面板整块隐藏，
         // 否则它会盖住 F50 的洞窟画面。
         if (_skinPanel != null) _skinPanel.Visible = false;
+        if (_characterOverlay1 != null) _characterOverlay1.Visible = false;
+        if (_characterOverlay2 != null) _characterOverlay2.Visible = false;
         GD.Print($"[LegacySelect] 按钮状态: create={_skinCreate?.Location}/{_skinCreate?.Size} vis={_skinCreate?.Visible} "
             + $"parent={_skinCreate?.GetParent()?.GetType().Name} delete={_skinDelete?.Location} start={_skinStart?.Location} "
             + $"panelVis={_skinPanel?.Visible}");

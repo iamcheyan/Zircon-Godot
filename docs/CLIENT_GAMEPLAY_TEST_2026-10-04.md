@@ -23,7 +23,11 @@
 | 物品移动 | ✅ 正常 |
 | 聊天 | ✅ 正常（收发） |
 | 窗口开关 | ✅ Q/W/E/N/S/Z/V/P/J/L/H/A 均正常 |
+| 普通攻击 | ✅ 正常（选中目标 + `C.Attack` + 血条掉血） |
+| GM 命令 | ✅ 可用（`@move` / `@monster`，经聊天框输入） |
 | **发现并修复的 bug** | **1 个（严重）：legacy 背包丢弃后格子永久锁死** |
+| 发现但未修复 | 服务端/客户端 System.db 地图表不一致（见第四节） |
+| 其它发现 | `AGENTS.md` 的 `@spawn` 命令名有误，实为 `@monster`（见第五节） |
 
 ---
 
@@ -137,6 +141,18 @@ F4–F8 无输出：该角色只学了 3 个火系技能（技能书显示火系
 
 `B` 在 legacy 下按设计切换技能条（非大地图）。
 
+### 9. 普通攻击（点击怪物）
+
+用 `@monster Pig 3` 在身前刷出 3 只怪（见第五节：实际命令名是 `@monster`），
+再点击怪物：
+
+```
+[Combat] 选中目标: 蛤蟆 ObjectID=9572
+[Combat] enqueue C.Attack action=Attack magic=None direction=DownRight
+```
+
+画面里角色进入攻击动作、怪物显示血条并掉血 —— 选中 / 追击 / 攻击链路正常。
+
 ---
 
 ## 三、发现并修复的 bug
@@ -174,23 +190,98 @@ F4–F8 无输出：该角色只学了 3 个火系技能（技能书显示火系
 
 ---
 
-## 四、未覆盖 / 环境限制
+## 四、发现但**未修复**：服务端 / 客户端 System.db 地图表不一致
 
-1. **直接打字（不先点输入框）无效**：`xdotool type` 需要先点击输入框取得焦点。
-   这是 X11 注入的限制，不是产品缺陷（点一下输入框即可正常输入）。
-2. **Shift + 点击** 组合：`keydown shift` 后 `click` 在 Godot 里未形成带 Shift
-   修饰的鼠标事件。因此 **Shift 快丢**（Shift+点地面 = 丢 1 个）只做了代码级
-   核对，未实机点击：
-   `GameScene.cs:11670` 起逻辑链完整（`ShiftPressed` → `CanBeginItemDrop`
-   → `Count = 1` → 直接 return，不弹数量框），服务端只拒绝 `Count <= 0`，
-   `Count = 1` 天然合法。
-3. **未测**：NPC 对话、商店买卖、仓库存取、修理/镶嵌、行会、组队交互、
-   大地图（B 在 legacy 下语义不同）、坐骑（无马）。
-4. 背包里剩余 2 件（蓝甲 + 一件红色物品）为有意保留的测试样本。
+测试 GM 传送时发现：**部分地图客户端加载不了，角色会停在旧地图上但坐标已被改写**
+（客户端与服务端位置失联）。
+
+### 现象
+
+```
+@move D203 → [Game] 地图切换: MapIndex=138          ✅ 正常切图
+@move D201 → [Game] 地图切换: MapIndex=136
+             [Game] 找不到地图: MapIndex=136        ❌ 停在旧图，坐标被改成 [22,34]
+@move D101 → [Game] 找不到地图: MapIndex=26          ❌ 同上
+```
+
+`LoadPlayerMap()` 用 `Globals.MapInfoList.Binding.FirstOrDefault(m => m.Index == _playerMapIndex)`
+查表；查不到只打印一行错误就 `return`，**不切图、不回滚坐标**，于是客户端停在
+旧地图上渲染新坐标 —— 玩家与服务端失联。
+
+### 根因：两个 System.db 不同步
+
+| 库 | 路径 | 大小 | 有 `D201` |
+|---|---|---|---|
+| 服务端 | `Debug/ServerCore/Database/System.db` | 5.75 MB | ✅ |
+| 客户端 | `Debug/Client/Data/System.db` | 11.2 MB | ❌ |
+
+客户端 `MapInfo` 共 627 条且索引有大量缺口（缺 10、11、15、21–27…136…）。
+服务端 `MapInfo` 含客户端没有的条目，`MapIndex=136`(D201)、`26`(D101) 即属此类。
+
+`mir2ei/ARCHIVED_ASSETS_MANIFEST.md` §5 也印证了这个顺序：
+> 「数据库未登记死重地图（167 个文件）：磁盘 `Map/` 原存 794 张，而 `System.db`
+> 登记的仅 627 张……已全部移入归档」
+
+—— 即**客户端库被当作基准**剔掉了 167 张地图文件，而服务端库仍保留这些地图。
+
+### 影响
+
+- `AGENTS.md` 的「常用矿区传送（测试用）」里 `@move D201`、`@move D101` **不可用**；
+  `@move D202` / `@move D203` 正常。
+- 任何**服务端有、客户端没有**的地图（含传送门/任务目的地指向的图）都会让
+  客户端卡在旧图。玩家会看到自己在错误的地图上移动。
+
+### 为什么不在这里修
+
+1. 正确修法是**同步两库**（`Tools/dbeditor/sync.sh` 的流程），属数据操作，
+   不是代码改动；
+2. `AGENTS.md` 明确要求「**服务端运行中绝不写 System.db**」，当前服务端在跑；
+3. 同步会重写两库、影响用户既有数据，需在停服并备份后由用户确认执行。
+
+**建议**：停服 → 用 dbeditor 同步双库（或按需把缺失地图补进客户端库）→
+重启后复测 `@move D201` / `@move D101`。
+
+### 附：客户端对「找不到地图」的容错（可另议）
+
+当前实现只打日志不切图也不回滚坐标，导致静默失联。更稳的做法是保留原图与
+原坐标，并把错误显式提示给玩家。这条属于**独立的小改动**，本次未动。
 
 ---
 
-## 五、复现用命令
+## 五、其它发现与未覆盖
+
+### 1. `AGENTS.md` 的 `@spawn` 命令名有误
+
+`@spawn GhostSorcerer 3` 被服务端拒绝：
+```
+Command @SPAWN does not exist.
+```
+实际命令名取自 `SpawnMonster.VALUE`，即 **`@monster <名字> [数量]`**
+（`ServerLibrary/Envir/Commands/Command/Admin/SpawnMob.cs:10`）。
+建议把 `AGENTS.md` 里的 `@spawn 怪物 数量` 改成 `@monster 怪物 [数量]`。
+
+已实测确认：`@monster Pig 3` 在身前刷出 3 只猪（`@spawn` 则报不存在）。
+怪物名须与服务端 `MonsterInfo.MonsterName` 完全一致（如 `Pig` / `Guard` /
+`Chicken`），否则回 `Could not find monster: <名字>`。
+
+### 2. 环境限制（非产品缺陷）
+
+- **直接打字（不先点输入框）无效**：`xdotool type` 需要先点击输入框取得焦点。
+- **Shift + 点击**：`keydown shift` 后 `click` 在 Godot 里未形成带 Shift 修饰的
+  鼠标事件。因此 **Shift 快丢**（Shift+点地面 = 丢 1 个）只做了代码级核对：
+  `GameScene.cs` 里 `ShiftPressed` → `CanBeginItemDrop` → `Count = 1` → 直接
+  return 不弹数量框；服务端只拒绝 `Count <= 0`，`Count = 1` 天然合法。
+
+### 3. 本次未测
+
+NPC 对话、商店买卖、仓库存取、修理/镶嵌、行会、组队交互、坐骑（无马）。
+（大地图 `B` 在 legacy 下按设计切换技能条，不是窗口。）
+
+背包里剩余 2 件（蓝甲 + 一件红色物品）为有意保留的测试样本。
+
+---
+
+## 六、复现用命令
 
 ```bash
 # 服务端

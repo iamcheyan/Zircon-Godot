@@ -115,8 +115,13 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
         fi
     done
 
-    # Pull committed source from D before building anything locally. Fast-forward only:
-    # a local divergence or overlapping edit stops startup instead of overwriting it.
+    # Pull committed source from D before building anything locally. Refuse to
+    # touch a dirty checkout; clean divergent histories are merged so commits
+    # made on either machine remain available. Conflicts stop startup safely.
+    if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+        echo "本机代码仓库有未提交改动；为避免覆盖，停止同步和启动。" >&2
+        exit 1
+    fi
     REMOTE_GIT_URL="ssh://${REMOTE_SSH_TARGET}${REMOTE_REPO_PATH}/.git"
     echo "同步远程代码：${REMOTE_SSH_TARGET}:${REMOTE_REPO_PATH} (${REMOTE_BRANCH})..."
     if ! git -C "$ROOT" fetch "$REMOTE_GIT_URL" "$REMOTE_BRANCH"; then
@@ -132,8 +137,12 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
     elif git -C "$ROOT" merge-base --is-ancestor FETCH_HEAD HEAD; then
         echo "本机提交已包含远程代码，无需更新。"
     else
-        echo "本地与远程代码已经分叉；为避免覆盖改动，停止启动。" >&2
-        exit 1
+        if ! git -C "$ROOT" merge --no-edit FETCH_HEAD; then
+            git -C "$ROOT" merge --abort || true
+            echo "本地与远程代码有冲突；已撤销合并，请人工处理后重试。" >&2
+            exit 1
+        fi
+        echo "本机与 Debian 的提交已安全合并。"
     fi
 
     REMOTE_PORT=$(ssh -o BatchMode=yes "$REMOTE_SSH_TARGET" "cat '$REMOTE_REPO_PATH/Debug/ServerCore/Server.ini'" | iconv -f UTF-16 -t UTF-8 | awk -F= '/^[[:space:]]*Port[[:space:]]*=/ {gsub(/[[:space:]\\r]/, "", $2); print $2; exit}') || {

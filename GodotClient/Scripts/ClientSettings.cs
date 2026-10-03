@@ -411,11 +411,30 @@ public static class ClientSettings
         if (DefaultMonitor >= 0 && DefaultMonitor < DisplayServer.GetScreenCount())
             DisplayServer.WindowSetCurrentScreen(DefaultMonitor);
 
-        DisplayServer.WindowSetMode(FullScreen ? DisplayServer.WindowMode.Fullscreen : DisplayServer.WindowMode.Windowed);
+        // **只在模式真的需要变时才调 WindowSetMode**：Godot 的 WindowSetMode(Windowed)
+        // 会把窗口恢复成「进入该模式时记录的尺寸」（这里是 project.godot 的 1024×768），
+        // 于是 legacy 下每次 ApplyDisplaySettings 都会把刚设好的 640×480 弹回 1024×768，
+        // 下一拍的 ApplyLegacyPregameWindow 再缩回去 —— 实测 [UiScaler] 出现
+        // 640×480 → 1024×768 → 640×480 的 2ms 抖动，中间那一帧 UI 会按错误倍率绘制。
+        var desiredWindowMode = FullScreen ? DisplayServer.WindowMode.Fullscreen : DisplayServer.WindowMode.Windowed;
+        if (DisplayServer.WindowGetMode() != desiredWindowMode)
+            DisplayServer.WindowSetMode(desiredWindowMode);
         if (!FullScreen)
         {
-            GameSize = new Vector2I(Mathf.Max(1024, GameSize.X), Mathf.Max(768, GameSize.Y));
-            DisplayServer.WindowSetSize(GameSize);
+            // **Legacy 模式下窗口尺寸由场景自己决定**，这里不能抢先改：
+            // 原版屏幕区是分 mode 的 —— mode 0/2（登录/选角/建角/过场）= 640×480
+            // （`0x419BF9 → 0x45D270(&0x8AB7A8, 0x280, 0x1E0, 0x10, 1|2)`），
+            // mode 3（进游戏）= 800×600（`0x419377 → 0x45D270(..., 0x320, 0x258, 0x10)`），
+            // 两者分别由 LoginScene/SelectScene/GameScene 的
+            // ApplyLegacyPregameWindow(640,480|800,600) 设定。若这里先按 GameSize
+            // （≥1024×768，`--window` 时甚至是屏幕的 75%）设一次，启动瞬间会出现
+            // 1024×768 → 1440×900 → 640×480 的连续跳变（实测 [UiScaler] 连打三行），
+            // 窗口与视频在那一帧都会以错误尺寸绘制。
+            if (!AutoLoginArgs.LegacyUi)
+            {
+                GameSize = new Vector2I(Mathf.Max(1024, GameSize.X), Mathf.Max(768, GameSize.Y));
+                DisplayServer.WindowSetSize(GameSize);
+            }
         }
         var actualSize = DisplayServer.WindowGetSize();
         float uiScale = Mathf.Clamp(Mathf.Min(actualSize.X / 1024f, actualSize.Y / 768f), 1f, 2f);

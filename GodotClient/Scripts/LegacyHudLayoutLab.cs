@@ -906,7 +906,8 @@ public partial class LegacyHudLayoutLab : Control
     {
         var parts = new List<string>();
         for (int i = 0; i < window.GetChildCount(); i++)
-            if (window.GetChild(i) is DXControl c) parts.Add($"{i}:{c.GetType().Name}@{c.Location}");
+            if (window.GetChild(i) is DXControl c)
+                parts.Add($"{i}:{c.GetType().Name}@{c.Location}{(c.Visible ? "" : "(hid)")}");
         return string.Join("|", parts);
     }
 

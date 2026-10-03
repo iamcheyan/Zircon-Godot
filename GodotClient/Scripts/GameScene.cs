@@ -1622,11 +1622,15 @@ public partial class GameScene : Control
             // 橄榄黄，**不是**青绿。此前的深棕 (18,15,8) 与原版不符。
             // 原版橄榄黄底 (150,150,50) 上再叠加稀有度彩色字（如 Superior 的绿），
             // 对比度太低看着发糊；这里压暗底色提高可读性（文字颜色不变）。
+            // legacy：按原版实机截图还原 0x329696 橄榄黄底（COLORREF→RGB
+            // (150,150,50)）+ 暗橄榄边框。此前压暗成深棕是为了可读性，但与原版不符。
             BackColour = AutoLoginArgs.LegacyUi
-                ? new Color(0.17f, 0.14f, 0.05f, 0.96f)
+                ? new Color(150f / 255f, 150f / 255f, 50f / 255f, 0.97f)
                 : new Color(18f / 255f, 15f / 255f, 8f / 255f, 230f / 255f),
             Border = true,
-            BorderColour = new Color(105f / 255f, 95f / 255f, 62f / 255f),
+            BorderColour = AutoLoginArgs.LegacyUi
+                ? new Color(110f / 255f, 96f / 255f, 40f / 255f)
+                : new Color(105f / 255f, 95f / 255f, 62f / 255f),
             TextPadding = new Vector2I(6, 4),
         };
         _uiLayer.AddChild(_hoverLabel);
@@ -6316,7 +6320,8 @@ public partial class GameScene : Control
     {
         Rarity.Superior => new Color(0.55f, 0.95f, 0.6f),
         Rarity.Elite => new Color(0.7f, 0.6f, 0.95f),
-        _ => new Color(0.9f, 0.9f, 0.5f),
+        // 原版实机截图：普通物品名是**亮黄**（实测约 247,243,64），不是暗黄。
+        _ => new Color(0.97f, 0.95f, 0.25f),
     };
 
     /// <summary>悬停文本核心（静态可测；原版 ItemLabelBuilder 的多行信息）。</summary>

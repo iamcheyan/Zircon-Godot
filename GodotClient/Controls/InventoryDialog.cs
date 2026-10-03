@@ -355,15 +355,6 @@ public partial class InventoryDialog : DXWindow
             };
             AddControl(_legacyModeArt);
         }
-        _legacyModeArt.Index = InvMode switch
-        {
-            InventoryMode.Repair => 263,
-            InventoryMode.Sell => 270,
-            InventoryMode.Storage => 273,
-            _ => -1,
-        };
-        _legacyModeArt.Visible = _legacyModeArt.Index >= 0;
-
         _legacyActionButton ??= new DXButton
         {
             LibraryFile = LibraryFile.GameInter,
@@ -395,7 +386,7 @@ public partial class InventoryDialog : DXWindow
         }
         _legacyModeTabHotspot.Location = new Vector2I(176, 286);
         _legacyModeTabHotspot.Size = new Vector2I(64, 20);
-        _legacyModeTabHotspot.Visible = true;
+        ApplyLegacyModeArt();
         CloseButton.LibraryFile = LibraryFile.GameInter;
                 // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
         // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
@@ -439,11 +430,14 @@ public partial class InventoryDialog : DXWindow
         _legacyWeightValue.Location = new Vector2I(0x86, 0x17);
         _legacyWeightValue.Visible = true;
         _goldTitle.Visible = false;
-        GoldLabel.Location = new Vector2I(0x41, 0x11A);
-        GoldLabel.Size = new Vector2I(0x8E - 0x41, 0x12B - 0x11A);
+        // 原版实机截图里这个数是**金橙色、右对齐**，落在底部左椭圆的中右部；
+        // 不是 EI 反汇编里那个恒为 0 的 0x64C8F8 蓝框（0x41,0x11A 是死字段）。
+        // 实测：数字占窗口 x84..129、y270..283，核心色约 (247,199,108)。
+        GoldLabel.Location = new Vector2I(0x41, 0x10E);
+        GoldLabel.Size = new Vector2I(0x81 - 0x41, 13);
         GoldLabel.FontSize = 10;
-        GoldLabel.Align = HorizontalAlignment.Left;
-        GoldLabel.TextColour = new Color(0x64 / 255f, 0xC8 / 255f, 0xF8 / 255f);
+        GoldLabel.Align = HorizontalAlignment.Right;
+        GoldLabel.TextColour = new Color(0xF8 / 255f, 0xC8 / 255f, 0x78 / 255f);
         _ggTitle.Visible = false;
         GgLabel.Visible = false;
         WalletButton.Visible = false;
@@ -679,6 +673,52 @@ public partial class InventoryDialog : DXWindow
             : new Color(0xF8 / 255f, 0xC8 / 255f, 0xC8 / 255f);
     }
 
+    /// <summary>
+    /// 右下角随模式换帧的 64x20 控件（原版只有一个：263/264/265 수리、270/271/272
+    /// 판매、273/274/275 보관）。mode 0 原版该处是空槽，标题帧/按钮帧一律不画，
+    /// 否则会出现 mode 0 也显示「수 리」和灰底方块的问题。
+    /// </summary>
+    private void ApplyLegacyModeArt()
+    {
+        if (_legacyModeArt != null)
+        {
+            _legacyModeArt.Index = InvMode switch
+            {
+                InventoryMode.Repair => 263,
+                InventoryMode.Sell => 270,
+                InventoryMode.Storage => 273,
+                _ => -1,
+            };
+            _legacyModeArt.Visible = _legacyModeArt.Index >= 0;
+        }
+        if (_legacyActionButton != null)
+        {
+            int normal = InvMode switch
+            {
+                InventoryMode.Repair => 264,
+                InventoryMode.Sell => 271,
+                InventoryMode.Storage => 274,
+                _ => -1,
+            };
+            int hover = InvMode switch
+            {
+                InventoryMode.Repair => 265,
+                InventoryMode.Sell => 272,
+                InventoryMode.Storage => 275,
+                _ => -1,
+            };
+            _legacyActionButton.Index = normal;
+            _legacyActionButton.HoverIndex = hover;
+            _legacyActionButton.PressedIndex = hover;
+            bool npcMode = normal >= 0;
+            _legacyActionButton.Visible = npcMode;
+        }
+        // Index<0 的 DXButton 会画「生成按钮/兜底灰框」，mode 0 那格在原版是空的，
+        // 所以直接隐藏热点（NPC 模式下才需要它承接点击）。
+        if (_legacyModeTabHotspot != null)
+            _legacyModeTabHotspot.Visible = InvMode != InventoryMode.Normal;
+    }
+
     /// <summary>仅供布局测试台预览负重/总量文字（不走 PlayerStats 查询）。</summary>
     public void SetLegacyWeightPreview(int bagWeight, int capacity)
     {
@@ -700,6 +740,7 @@ public partial class InventoryDialog : DXWindow
     {
         InvMode = mode;
         ApplyLegacyModeLabel();
+        ApplyLegacyModeArt();
         if (mode != InventoryMode.Sell)
         {
             ClearSaleSelection();
@@ -727,6 +768,7 @@ public partial class InventoryDialog : DXWindow
         // 原版按钮始终可用：有选中项时出售选中项，没有选中项时出售全部可售物品。
         SellButton.Enabled = true;
         ApplyLegacyModeLabel();
+        ApplyLegacyModeArt();
         SetCurrency(0, 0);
     }
 
@@ -746,6 +788,7 @@ public partial class InventoryDialog : DXWindow
         SellButton.Visible = false;
         SellButton.Enabled = false;
         ApplyLegacyModeLabel();
+        ApplyLegacyModeArt();
         SetCurrency(
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.Gold)?.Amount ?? 0,
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.GameGold)?.Amount ?? 0);

@@ -7636,6 +7636,9 @@ namespace Server.Models
             switch (p.ToGrid)
             {
                 case GridType.Inventory:
+                    // 背包无固定槽位上限（暗黑式空网格）：允许移动到更下面的空槽，
+                    // 数组按需扩容后再取数组引用。
+                    EnsureInventoryCapacity(p.ToSlot + 1);
                     toArray = Inventory;
                     break;
                 case GridType.Equipment:

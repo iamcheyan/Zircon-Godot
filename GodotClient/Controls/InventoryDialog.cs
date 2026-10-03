@@ -43,6 +43,7 @@ public partial class InventoryDialog : DXWindow
     private DXImageControl _legacyModeArt;
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private DXImageControl _legacyScrollTrack;
+    private DXControl _legacyScrollClip;
     private DXVScrollBar _legacyScrollBar;
     private LegacyGaugeDragSurface _legacyGaugeDrag;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
@@ -247,6 +248,19 @@ public partial class InventoryDialog : DXWindow
         Grid.Location = new Vector2I(25, 41);
         Grid.Clip = true;
 
+        // 锁链 GameInter F280（16x424，贴图里 y≈208 烤了一颗圆点=滑块）：
+        // 原版把锁链**裁到窗口内固定一段**，靠整体滑动让圆点落在滚动位置。
+        // 这里用一个裁剪容器把锁链限制在窗口可见区，避免它伸到窗口上方。
+        _legacyScrollClip ??= new DXControl
+        {
+            Location = new Vector2I(248, 0),
+            Size = new Vector2I(16, 260),
+            Clip = true,
+            IsControl = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_legacyScrollClip.GetParent() == null) AddControl(_legacyScrollClip);
+
         _legacyScrollTrack ??= new DXImageControl
         {
             LibraryFile = LibraryFile.GameInter,
@@ -254,10 +268,10 @@ public partial class InventoryDialog : DXWindow
             FixedSize = true,
             StretchImage = false,
             Size = new Vector2I(16, 424),
-            Location = new Vector2I(248, -165),
+            Location = new Vector2I(0, 0),
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        if (_legacyScrollTrack.GetParent() == null) AddControl(_legacyScrollTrack);
+        if (_legacyScrollTrack.GetParent() == null) _legacyScrollClip.AddControl(_legacyScrollTrack);
 
         _legacyScrollBar ??= new DXVScrollBar
         {
@@ -442,7 +456,10 @@ public partial class InventoryDialog : DXWindow
     {
         if (!_legacyEiLayout || Grid == null) return;
 
-        int rows = Grid.GetLegacyRequiredRows(6);
+        // 暗黑式：可视 6 行之外，网格要向下留出**空行**，玩家才能滚下去把物品
+        // 放到空位。内容不足时也保留至少 30 行（24 行空位）。
+        const int MinimumLegacyRows = 30;
+        int rows = Math.Max(MinimumLegacyRows, Grid.GetLegacyRequiredRows(6));
         Grid.GridSize = new Vector2I(6, rows);
         Grid.VisibleHeight = 6;
         Grid.ScrollValue = Math.Min(Grid.ScrollValue, Math.Max(0, rows - 6));
@@ -460,6 +477,25 @@ public partial class InventoryDialog : DXWindow
         _legacyScrollBar.MaxValue = rows;
         _legacyScrollBar.Value = Grid.ScrollValue;
         _legacyGaugeDrag?.SetTarget(_legacyScrollBar);
+        RefreshLegacyChainPosition();
+    }
+
+    /// <summary>
+    /// 按滚动值滑动整条锁链，让贴图里烤的圆点落在拇指位置（原版 F280 做法：
+    /// 锁链固定长度、只在窗口内滑动并裁掉多余部分）。
+    /// </summary>
+    private void RefreshLegacyChainPosition()
+    {
+        if (_legacyScrollBar == null || _legacyScrollTrack == null || _legacyScrollClip == null) return;
+        int range = _legacyScrollBar.MaxValue - _legacyScrollBar.MinValue - _legacyScrollBar.VisibleSize;
+        float t = range > 0
+            ? Mathf.Clamp((_legacyScrollBar.Value - _legacyScrollBar.MinValue) / (float)range, 0f, 1f)
+            : 0f;
+        const int bakedDotY = 208; // F280 圆点中心
+        const int pad = 8;
+        int trackH = (int)_legacyScrollClip.Size.Y;
+        float thumbY = pad + t * Mathf.Max(1f, trackH - pad * 2f - 14f);
+        _legacyScrollTrack.Location = new Vector2I(0, (int)Math.Round(thumbY - bakedDotY));
     }
 
     /// <summary>
@@ -481,8 +517,8 @@ public partial class InventoryDialog : DXWindow
     {
         if (Grid == null || _legacyScrollBar == null) return;
         Grid.ScrollValue = _legacyScrollBar.Value;
-        // 值变化时重绘 F280 上的指示块（滚轮/拖拽/点击都会经过这里）。
-        _legacyGaugeDrag?.QueueRedraw();
+        // 值变化时滑动锁链，让烤在图里的圆点跟着走到位。
+        RefreshLegacyChainPosition();
     }
 
     private void TrashItem()
@@ -818,25 +854,6 @@ public partial class InventoryDialog : DXWindow
             if (range <= 0) return;
             float t = Mathf.Clamp(y / Mathf.Max(1f, Size.Y), 0f, 1f);
             Target.Value = Target.MinValue + (int)Math.Round(t * range);
-        }
-
-        /// <summary>
-        /// F280 轨本身是静态锁链贴图；EI 的 gauge 会在其上画一枚随 value 移动的
-        /// 指示（fill/滑块）。这里照做：画随滚动值移动的指示块 + 上半段淡色填充，
-        /// 让滚轮/拖拽/滚动时右侧锁链有可见反馈。
-        /// </summary>
-        protected override void DrawControl()
-        {
-            if (Target == null) return;
-            int range = Target.MaxValue - Target.MinValue - Target.VisibleSize;
-            if (range <= 0) return;
-
-            float t = Mathf.Clamp((Target.Value - Target.MinValue) / (float)range, 0f, 1f);
-            const float knobH = 12f;
-            float y = t * Mathf.Max(1f, Size.Y - knobH);
-
-            DrawRect(new Rect2(0, 0, Size.X, y + knobH), new Color(1f, 0.85f, 0.5f, 0.16f));
-            DrawRect(new Rect2(0, y, Size.X, knobH), new Color(1f, 0.72f, 0.25f, 0.9f));
         }
     }
 }

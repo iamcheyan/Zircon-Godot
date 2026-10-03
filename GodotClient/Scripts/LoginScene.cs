@@ -397,7 +397,7 @@ public partial class LoginScene : Control
 
     private LegacyLoginDialog CreateAccountDialog()
     {
-        var dialog = new LegacyLoginDialog(Lang.LoginRegisterLabel3, new Vector2I(300, 255),
+        var dialog = new LegacyLoginDialog(Lang.LoginRegisterLabel3, new Vector2I(380, 300),
             new[] { Lang.LoginEmailLabel, Lang.LoginPasswordLabel6, Lang.LoginConfirmLabel, Lang.LoginUi466Label, Lang.LoginDateLabel, Lang.LoginUi468Label },
             new[] { false, true, true, false, false, false });
         dialog.Submitted += values =>
@@ -413,7 +413,7 @@ public partial class LoginScene : Control
 
     private LegacyLoginDialog CreateChangeDialog()
     {
-        var dialog = new LegacyLoginDialog(Lang.LoginDialogChangePasswordButtonLabel, new Vector2I(330, 205),
+        var dialog = new LegacyLoginDialog(Lang.LoginDialogChangePasswordButtonLabel, new Vector2I(380, 260),
             new[] { Lang.LoginEmailLabel, Lang.LoginPasswordLabel7, Lang.LoginPasswordLabel, Lang.LoginConfirmLabel2 }, new[] { false, true, true, true });
         dialog.Submitted += values =>
         {

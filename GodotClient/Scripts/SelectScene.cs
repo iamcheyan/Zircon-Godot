@@ -2481,6 +2481,10 @@ public partial class SelectScene : Control
         if (result == DeleteCharacterResult.Success)
         {
             _characters.RemoveAll(c => c.CharacterIndex == deletedIndex);
+            // 删除后必须复位选中态：_legacySelectedIndex 是**列表下标**，
+            // 删掉中间/前面的角色后它会指向别的角色甚至越界，导致
+            // 详情框与洞窟槽位仍按旧下标渲染 —— 表现为「角色已删但画面还在」。
+            _legacySelectedIndex = _characters.Count > 0 ? 0 : -1;
             RefreshList();
             _startBtn.Disabled = true;
             _deleteBtn.Disabled = true;

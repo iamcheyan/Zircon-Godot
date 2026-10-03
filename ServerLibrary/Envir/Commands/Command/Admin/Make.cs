@@ -18,6 +18,10 @@ namespace Server.Envir.Commands.Command.Admin
             if (vals.Length < PARAMS_LENGTH)
                 ThrowNewInvalidParametersException();
 
+            // 允许物品名含空格（`@make Wood Sword 5`）。Chat 层用 Split(' ') 切分，
+            // 这里按「最长的能命中物品名的前缀」贪心合并，把数量等尾部参数留下。
+            vals = RejoinLongestMatch(vals, name => SEnvir.GetItemInfo(name) != null);
+
             if (vals.Length > 3)
             {
                 player = SEnvir.GetPlayerByCharacter(vals[3]);

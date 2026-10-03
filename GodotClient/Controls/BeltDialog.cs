@@ -28,6 +28,15 @@ public partial class BeltDialog : DXWindow
     /// <summary>玩家是否拖动过腰带栏; LayoutHud 不能覆盖已自定义的位置。</summary>
     public bool UserMoved { get; private set; }
 
+    /// <summary>
+    /// 旧版 EI 的腰带是**固定行**：原版 id12 腰带窗由 hero+0x518E0 槽创建，
+    /// ctor `0x427B24`（caption「腰带(Ctrl+Z, Z)」，帧 0x9F/0x9F）与 F51 背景
+    /// 都没有任何移动/缩放入口；切换显示靠那个黄色圆钮（GameInter[159]，
+    /// HUD 内 hud+393/+13）。用户实机截图亦确认腰带固定贴在底栏上、点黄钮显隐。
+    /// → legacy 下禁掉拖动、缩放与位置记忆，每帧强制回默认锚点。
+    /// </summary>
+    private bool PositionLocked => _legacyEiPotionBeltLayout;
+
     public BeltDialog()
     {
         Movable = true;
@@ -38,7 +47,7 @@ public partial class BeltDialog : DXWindow
         Size = new Vector2I(10 * (DXItemCell.CellWidth - 1) + 19, DXItemCell.CellHeight - 1 + 13);
 
         // HasTitle=false 的 DXWindow 没有可拖拽标题栏；专用手柄不覆盖任何格子，
-        // 并把移动操作转发到窗口本身。
+        // 并把移动操作转发到窗口本身。旧版下整条禁用（原版腰带不可拖）。
         _dragHandle = new DXControl
         {
             Name = "BeltDragHandle",
@@ -50,6 +59,7 @@ public partial class BeltDialog : DXWindow
         };
         _dragHandle.MouseDown += (_, _) =>
         {
+            if (PositionLocked) return;
             _draggingHandle = true;
             _dragStartMouse = GetViewport().GetMousePosition() / GameScene.UiScale;
             _dragStartPosition = Position;
@@ -60,22 +70,24 @@ public partial class BeltDialog : DXWindow
         AddControl(_dragHandle);
 
         // 恢复上一次拖动后的位置; (-1,-1) 表示首次使用, 由 LayoutHud 给默认锚点。
-        Vector2I saved = ClientSettings.BeltDialogLocation;
-        if (saved.X >= 0 && saved.Y >= 0)
+        // 旧版腰带位置固定，绝不读存档——否则历史误写的坐标会一直把它钉在别处。
+        if (!PositionLocked)
         {
-            Position = saved;
-            UserMoved = true;
+            Vector2I saved = ClientSettings.BeltDialogLocation;
+            if (saved.X >= 0 && saved.Y >= 0)
+            {
+                Position = saved;
+                UserMoved = true;
+            }
         }
 
         // DXControl.Movable 拖动时触发 Moving; 松开时 MouseUp 持久化。
         Moving += (_, _) => UserMoved = true;
         MouseUp += (_, _) =>
         {
-            if (UserMoved)
-            {
-                ClientSettings.BeltDialogLocation = new Vector2I((int)Position.X, (int)Position.Y);
-                ClientSettings.Save();
-            }
+            if (PositionLocked || !UserMoved) return;
+            ClientSettings.BeltDialogLocation = new Vector2I((int)Position.X, (int)Position.Y);
+            ClientSettings.Save();
         };
         Links = new ClientBeltLink[Globals.MaxBeltCount];
         for (int i = 0; i < Globals.MaxBeltCount; i++)
@@ -129,6 +141,12 @@ public partial class BeltDialog : DXWindow
     public void ApplyLegacyEiPotionBeltLayout()
     {
         _legacyEiPotionBeltLayout = true;
+        // 原版腰带不可拖动、不可缩放：Movable/AllowResize 都要断掉，
+        // 拖动手柄在 MouseDown 里被 PositionLocked 拦下。
+        Movable = false;
+        AllowResize = false;
+        UserMoved = false;
+        if (_dragHandle != null) _dragHandle.MouseFilter = MouseFilterEnum.Ignore;
         DrawChrome = false;
         DropShadow = false;
         Size = LegacyEiBeltSize;
@@ -178,7 +196,7 @@ public partial class BeltDialog : DXWindow
 
     private void ApplyHandleDrag()
     {
-        if (!_draggingHandle) return;
+        if (!_draggingHandle || PositionLocked) return;
         Vector2 mouse = GetViewport().GetMousePosition() / GameScene.UiScale;
         Vector2 target = _dragStartPosition + mouse - _dragStartMouse;
         Vector2 viewport = GetViewportRect().Size / GameScene.UiScale;
@@ -186,20 +204,23 @@ public partial class BeltDialog : DXWindow
             Mathf.Clamp(target.X, 0, Mathf.Max(0, viewport.X - Size.X)),
             Mathf.Clamp(target.Y, 0, Mathf.Max(0, viewport.Y - Size.Y)));
     }
-
     private void FinishHandleDrag()
     {
         if (!_draggingHandle) return;
         _draggingHandle = false;
+        if (PositionLocked) return;
         ClientSettings.BeltDialogLocation = new Vector2I((int)Position.X, (int)Position.Y);
         ClientSettings.Save();
     }
+
 
     private void OnResized() => RefreshGridLayout();
     /// <summary>未拖动时由 LayoutHud 调用: 锚在主面板右上侧 (底栏旁), 贴右对齐。</summary>
     public void ApplyDefaultAnchor(Vector2 logicalViewport, Vector2I mainPanelLocation, Vector2 mainPanelSize)
     {
-        if (UserMoved) return;
+        // 旧版位置固定：忽略 UserMoved，每帧都拉回默认锚点，
+        // 这样即便有残留的拖动状态或外部改过 Position 也回得去。
+        if (UserMoved && !PositionLocked) return;
         float x = mainPanelLocation.X + mainPanelSize.X - Size.X;
         float y = mainPanelLocation.Y - Size.Y;
         Position = new Vector2(Mathf.Max(0, x), Mathf.Max(0, y));
@@ -285,6 +306,12 @@ public partial class BeltDialog : DXWindow
         if (!IsEnabled)
         {
             if (e is InputEventMouseButton or InputEventMouseMotion) AcceptEvent();
+            return;
+        }
+        if (PositionLocked)
+        {
+            // 旧版腰带尺寸固定：右下角不设缩放热区，也不跑 GetAcceptableResize。
+            base._GuiInput(e);
             return;
         }
         if (e is InputEventMouseButton button && button.ButtonIndex == MouseButton.Left)

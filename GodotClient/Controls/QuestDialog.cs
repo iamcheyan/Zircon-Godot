@@ -140,6 +140,11 @@ public partial class QuestDialog : DXWindow
         // 滚动条自身黑底会盖住 F700 烘焙的图标 → 透明化（仅保留功能与热区）。
         _scroll.BackColour = Colors.Transparent;
         _scroll.PositionBar.Visible = false;
+        // **但 DXVScrollBar 仍会画金边框 + 上下按钮**，落在 (290,59) 28x58
+        // 区域，正好盖住任务行右侧文字（行 x=65、宽 350 → 末端 415）。
+        // 原版此处由 F700 烘焙的滚动条美术承担显示，端口控件只该保留热区——
+        // 整个 _scroll 隐藏可彻底避免 Z-order 遮挡。
+        _scroll.Visible = false;
         foreach (var tab in _tabs)
         {
             tab.Button.Modulate = new Color(1, 1, 1, 0);

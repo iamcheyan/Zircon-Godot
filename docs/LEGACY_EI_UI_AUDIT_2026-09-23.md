@@ -6938,3 +6938,321 @@ PRE-15 的下一步建议已据此实施；PRE-12 的"追动画对象/资源来�
 原版**运行画面**仍缺失（本机无 wine、无 Mud3 服务端；对本地 1898 张图片做 F50
 背景相似度扫描无原版选角屏命中），故"原版 vs Godot 像素级对照"仍为阻塞；
 替代验证为原版 WIL 离线复现 + 实机多时点帧号识别（与 120 ms/帧、v1→v2 切换时刻吻合）。
+
+## 技能条材质透明度定案 + 重复状态窗清理（2026-10-03）
+
+### 技能条半透明（用户真机截图 + 反汇编双向定案）
+
+用户反馈「原版顶端技能栏好像有一点透明度」，并提供 EI 真机视频截图。此前研究文档
+（Mir3-Research `GODOT_WINDOW_PARITY_MATRIX_2026-09-29.md`）把这条记为
+**未闭合**，倾向于「material 对 2D 精灵无效 → Godot 按不透明渲染」。本次两侧都闭合：
+
+- **反汇编**：`0x42A955-0x42A970`（有绑定槽）与 `0x42AA38-0x42AA53`（空槽）各调
+  `0x466800(mat, r, g, b, a)` 写 D3DMATERIAL9 的 Diffuse；该指针随后作为
+  **显式入参**传给 `0x4542F0`。混合分派器 `0x466CE0` 读 `Diffuse.a` 与
+  `Emissive.b` 并 fcomp 阈值，**alpha>0 走独立分支**改写纹理级联状态 →
+  alpha 确实调制精灵，与 `D3DRS_LIGHTING` 无关，旧推断被推翻。
+- **取值**：有绑定 `0x3EC8C8C9 = 100/255`；空槽底板 `0x3F169697 = 150/255`。
+- **Godot 侧逐像素验证**：800×600 legacy 真机（`Bot01`，绑定 Spell01/Spell03 后）
+  同机位开/关两帧，用 `LegacyEI/Data` 源帧解合成 alpha —— 有绑定槽
+  **中位数 0.391**（四分位 0.388–0.393，目标 0.392）、空槽底板 **中位数 0.575**
+  （目标 0.588，差值来自底板边缘抗锯齿像素的取样权重）。
+- **用户原视频交叉验证**：底板合成 alpha 三通道一致地解出 ≈0.51，
+  与 150/255≈0.59 在视频压缩容差内吻合。
+
+实现：`GodotClient/Controls/MagicBar.cs::DrawLegacyEi` 改用
+`DrawTextureRect(..., tint)` 的 modulate 传 alpha（`EiBoundIconAlpha=100`、
+`EiEmptyPlateAlpha=150`）。仅 legacy 路径受影响；现代 `MagicBarDialog`
+ 的 0.6 窗口透明度是另一套语义，未动。
+
+### 重复的第二个状态窗（用户报告「装备界面经常出现两个」）
+
+`GameScene` 持有**两个** `CharacterDialog` 实例：
+
+- `_characterDialog` —— 唯一被注入 `Equipment` 数据源的实例
+  （`foreach (var cell in _characterDialog.Grid) cell.ItemGrid = Equipment;`）。
+- `_statusPreviewDialog` —— 模拟 EI id7「状态窗-角色形象预览」而建的第二个实例，
+  **从未接收 ItemGrid**，所以装备格永远空白。
+
+触发路径不同导致现象：W 键 / 现代 Q 键 / `MainPanel.CharacterButton` 只
+`ToggleCharacterWindow()`（第一个窗口），而旧版 HUD cap15 状态栏按钮
+（`MainPanel.CashShopButton`）**同时** toggle 两个 → 用户点按钮会看到两个窗，
+且两者状态各自独立、时有时无。
+
+id7 的 11 个槽位矩形与 F200/F201 美术和 id1 完全一致（`setrect_calls.json`
+id7 ctor `0x4503B0` 逐条解出），本移植的 id1 已用 F200/F201 两态同时承载
+装备页与属性页，再建第二个实例没有信息增益。故：
+
+1. 删除 `_statusPreviewDialog` 字段、构造、`ApplyLegacyTestWindow`、
+   `Place(560,0)` 与日志行。
+2. cap15 状态栏按钮改为与 W/Q/主面板按钮**同调 `ToggleCharacterWindow()`**。
+
+顺手修掉同类的窗口管理绕过：`ShowInventoryForNpcSale` 原为
+`_inventoryDialog.Visible = true`（不经 `WindowManager` → 不入 OpenWindows、
+不进 Z 序、Esc 关不掉），改为 `WindowManager.Open(_inventoryDialog, _uiLayer)`。
+
+验证：800×600 legacy 真机登录 `Bot01` → 按 `W` 出窗 1 个 → 点 HUD 状态栏按钮
+关掉同一个 → 再点开回同一个（`[LegacyCharacter]` 日志每次仅一条、
+`[LegacyWindowLoc]` 不再输出 `cha2=`）。
+
+### 同批审计发现的其余问题（2026-10-03 全部处理完毕）
+
+对上一节列出的 6 项逐一核查，结果是 **4 项真缺陷、2 项误报**。
+
+**真缺陷 1 —— 大地图绕过 WindowManager，Esc 关不掉**
+`BigMapDialog` 全程用直改 `Visible` 开关（`OpenBigMapForMap` 的 `Visible = true`、
+`MapBigWindow` 键的 `Visible = false`、`BigMapDialog.CloseBigMapAfterTeleport`
+的 `Visible = false`），从不入 `OpenWindows`。后果：Esc/`CloseTop` 关不掉、
+不参与 Z 序；且窗口已隐藏却仍登记在最上层时，下一次 Esc 会关错窗口。
+修法：开/关两端都改走 `WindowManager.Open/Close`。
+**实机验证**：现代 UI（1024×768）小地图悬停出「大地图」钮 → 打开大地图 →
+按 **Esc** 关闭成功（修复前无法关闭）。
+
+**真缺陷 2 —— legacy 下 `,` 键与 MailButton/R 键开的是两个不同的窗**
+`MailButton`（cap9）与 `R` 键都开 legacy F350 聊天窗，但 `MailBoxWindow`
+（`,`）走 `WindowManager.Toggle(_communicationDialog)` 开现代通信窗 ——
+同一功能出现两个入口、两个窗口。
+修法：`MailBoxWindow` 在 legacy 下改走 legacy 聊天窗，与按钮/R 键统一。
+**实机验证**：800×600 legacy 按 `,` → 出现 F350 聊天窗（华丽边框、频道钮、
+锁链滚动条），不再是现代通信窗；再按 Esc 正常关闭。
+
+**真缺陷 3 —— `_exitDialog` 是从未被打开的死实例 + `_exitGameDialog` 未入树**
+`_exitDialog` 全代码库**没有任何** `WindowManager.Open(_exitDialog)`，只有
+`LeaveGame()` 里一句永远关一个从未打开的窗口的 `WindowManager.Close`；真正的
+「注销人物」走 `OpenExitDialog()` 现造的 `LogoutConfirmDialog`（F950 确认框），
+「退出游戏」走 `ExitGameDialog`（F800）。故删除 `_exitDialog` 的字段、构造、
+`Center()` 布局与 `LeaveGame` 里的空 Close。同时 `_exitGameDialog` 此前
+**只 new 不 AddChild**（`ShowWindow` 只在 `GetParent() == null` 时惰性挂载），
+不参与 `_uiLayer` 遍历的初始化/布局；已补 `_uiLayer.AddChild(_exitGameDialog)`。
+
+**真缺陷 4 —— `_statusWindow` 整条链是不可达死 UI**
+`StatusWindow` 实例化后**从未 AddChild、也无任何按键/按钮入口**（注释写的
+「F2 打开」在代码里并不存在），而它的 200ms 节流刷新又以
+`_statusWindow.Visible` 为前提 → 恒不刷新。删除：字段、`new`、节流刷新块、
+`RefreshStatusWindow()`、`_statusRefreshMs`，以及随之失去全部引用者的
+`GodotClient/Scripts/StatusWindow.cs`（+ `.uid`）。legacy 模式下的同类信息
+由 `CharacterDialog` 状态窗与 HUD 承担，功能无缺口。
+
+**误报 1 —— `GroupButton` 在 legacy 下是 no-op：按原版保留，不改**
+cap12 的 caption 原文是「도움말창(지원예정)」=「帮助窗（计划中）」，原版
+release 的处理器确为空实现（hud-caption-action-tail-evidence.json）。而
+`G` 键 toggle 组队窗走的是另一条分支（cap5 的组队语义），两者并存不矛盾：
+按钮点了没反应**与原版一致**。若把 cap12 改成开组队窗，反而会让 cap12 与
+cap5 指向同一窗口、且与自己的 caption 文本冲突。已在代码里就地注释定案，
+防止后续再被当成 bug 改回去。
+
+**误报 2 —— legacy HUD tooltip 显示现代键位：实际不存在**
+`MainPanel` 构造期确实用 `KeyBindManager` 写现代键位 tooltip
+（`CharacterButton` 显示 `Q`），但 `ApplyLegacyEiHudCaptions()` 随后的
+`SetLegacyCaption()` 对 **全部 16 个** HUD 命中区执行 `TooltipText = string.Empty`。
+脚本核对：9 个带 tooltip 的按钮 **全部**在 caption 列表内，遗留 0 个。
+`CreateHud()` 里 `ApplyLegacyEiHudCaptions()` 在 `AutoLoginArgs.LegacyHud`
+分支内先于 `AddChild` 执行，顺序正确。→ 审计项不成立，无需改动。
+
+构建：`dotnet build GodotClient/ZirconClient.csproj` 0 错误 0 警告。
+
+## 腰带：原版是固定行，不可拖动（2026-10-03）
+
+**用户反馈**：原版放药水的腰带固定在一个位置上，通过那个**黄色按钮**点击显示、
+再点隐藏，**不能挪动位置**。用户实机截图佐证。
+
+### 取证
+
+1. **腰带窗本体**：原版 id12 腰带窗挂在 `hero+0x518E0`，ctor `0x440FE0`；
+   背景帧 `GameInter[51]`（248×46）。**构造与 paint 链里没有任何移动/缩放入口**。
+2. **黄色按钮 = `GameInter[159]`**（16×14，暖黄圆形符文）。反汇编里帧 0x9F
+   只在 `0x427B13`/`0x427B18` 出现，属 HUD caption 控件 ctor `0x417550`
+   （`frame=159→+0x18, state_frame=159→+0x1C, normal override -1`），位置
+   `hud+393,+13`（`layout.json::records[40] id=hud.belt`，
+   字符串「腰带(Ctrl+Z, Z)」`0x47BC68`）。即**黄钮在 HUD 底栏上**，
+   按下/悬停显示 F159 美术并弹出该 caption。
+3. **模板匹配用户截图**：`GameInter[51]` 全不透明核在参考图内最佳匹配
+   **diff=5.47**，位置 crop(36,31)；黄钮相对 F51 原点 (110,48)。
+   两者与 `F51`(248×46) + 黄钮(16×14) 的尺寸自洽。
+4. 既有验收记录亦确认「腰带窗**默认可见**，按 Z 是隐藏它」
+   （`GODOT_UI_RUNTIME_ACCEPTANCE_2026-09-30.md` §10.18.6）——toggle 语义。
+
+### 缺陷
+
+`BeltDialog` 把 Zircon 的通用窗口能力带进了 legacy：构造期 `Movable = true`、
+顶部 6px **拖动手柄**、`_GuiInput` 右下角**缩放热区**、以及
+`ClientSettings.BeltDialogLocation` **位置记忆**。于是 legacy 下玩家能
+把腰带拖到屏幕任意位置并被永久记住 —— 与原版「固定行」直接矛盾。
+
+### 修复（`GodotClient/Controls/BeltDialog.cs`）
+
+新增 `PositionLocked => _legacyEiPotionBeltLayout`，legacy 下：
+
+- `Movable = false`、`AllowResize = false`；
+- 拖动手柄 `MouseFilter = Ignore`，`MouseDown` 里再判一次 `PositionLocked`；
+- `_GuiInput` 的缩放热区整段短路（不再跑 `GetAcceptableResize`）；
+- `ApplyHandleDrag` / `FinishHandleDrag` / `MouseUp` 持久化均加锁，
+  **不再读也不再写** `BeltDialogLocation`（避免历史误写坐标继续钉住它）；
+- `ApplyDefaultAnchor` 在锁定期**忽略 `UserMoved`**，每帧拉回默认锚点，
+  残留拖动状态也回得去；
+- `ApplyLegacyEiPotionBeltLayout()` 额外复位 `UserMoved = false`。
+
+现代（`--zircon-ui`）模式的拖动/缩放/位置记忆**原样保留**，未受影响。
+
+### 验证（800×600 legacy 真机，`Bot01`）
+
+| 操作 | 期望 | 实测 |
+|---|---|---|
+| 从腰带顶部拖到屏幕中央 | 腰带不动 | 旧位置区 diff **6.16**（仅地图动画），腰带仍在 (552,418)，截图确认 |
+| 点击黄钮 (398,481) | 腰带隐藏 | 腰带区 diff **22.05**，截图中腰带消失、caption「腰带(Ctrl+Z, Z)」弹出 |
+| 再点黄钮 | 腰带恢复 | 与初始「显示」态 diff **0.24**（等同逐像素一致） |
+
+构建 0 错误。
+
+## 聊天窗：滚动条缺失 + 聊天内容消失（2026-10-03）
+
+**用户反馈**：(1) 聊天内容经常消失；(2) 聊天窗右侧原版有滚动条，移植版一直没做出来；
+原版滚动条 = 锁链背景 + 上方黄色按钮（即滑块），按住可拖动滚动。用户实机截图佐证。
+
+### 缺陷一：滚动条根本没画出来（此前把证据读错了）
+
+旧代码里 `ChatScrollRail` 的注释写着「evidence-only non-interactive：轨道本身
+不接收输入」，这是**误读证据**，本轮按反汇编更正：
+
+- **原版轨道不是裸图，而是可交互的共享 gauge 控件**：ctor `0x417960`、
+  paint `0x4179B0`、vtable `0x476654`。聊天窗在 paint `0x414846` 以
+  `(window.x+0x215, window.y−0xD0)`、value=`[this+0x68]`、max=`[this+0x6D0]`
+  绘制 —— 即**滑块随滚动偏移在轨道上移动**。
+- **聊天窗鼠标分派 `0x44197F` 明确对 `this+0x6D4` 调 `vtable+0xC` 命中测试
+  并写回 `this+0x64`/`this+0x68`**，即轨道**可拖动**。
+- 旧代码用 `CreateSpriteButton(380,381,…)`/`(382,383,…)` 当上下箭头，但
+  **帧 381/382/383 在本机 GameInter.wil 里 WIX offset=0（素材缺失）**，
+  触发 `Index=-1` 兜底 → 箭头全不可见，只剩一条无交互的锁链背景。
+  实测 F350 **已把箭头美术烘焙**进背景（窗口相对 (539,25)/(539,311) 区域非空）。
+
+**修法**：新增 `ChatScrollBar`（轨道 F380 + 金边滑块 + 两个透明命中区箭头）。
+箭头不再依赖缺失帧，只用命中区；F350 背景自带美术。滑块高度按 gauge 比例
+`可见行数/总行数 × 轨道长`（最小 24px），可拖动改变 offset，轨道点击不响应
+（对齐原版：只有滑块/箭头吃鼠标）。
+
+### 缺陷二：聊天内容经常消失（真因：QueueFree 与新建行重叠）
+
+`RebuildRows()` 每次滚动/来消息都对 19 行执行 `RemoveControl` + `QueueFree`
+再 `new` 19 个 `DXLabel`。**`QueueFree` 是延迟释放**——被释放的行在当帧仍挂在
+裁剪区上，与新建行**叠在一起**，视觉上就是「内容消失/糊成一片」。来消息和
+滚动时高频触发，故表现为「经常」。
+
+**修法**：改为**固定 19 行标签池**，只在 `RebuildRows` 里改 `Text`/`Position`/
+`Visible`，**永不增删节点**。同时：
+
+- `AddMessage` 原先「仅 offset==0 才重建」→ 用户翻历史时新消息完全不出现；
+  改为 offset>0 时**保持浏览位置**但仍刷新滑块几何（原版即此语义）。
+- 滚轮原为 ±19 行（整页跳，一滚跳过所有内容）→ 改为**单行**翻。
+
+### 验证（800×600 legacy 真机，`Bot01`；经客户端本地命令注入 66 条消息）
+
+| 场景 | 实测 |
+|---|---|
+| 打开聊天窗 | 消息正常渲染，右侧锁链轨道 + 金边滑块可见，箭头（烘焙）可见 |
+| 拖动滑块向下 | 视图从 12–30 滚到 02–20，滑块同步下移，**无内容丢失** |
+| 点击上箭头 | 整页跳到 01–13 + 公告，滑块到顶 |
+| 翻到中间后连续注入 5 批消息（共 66 条） | **无消失、无重影**，浏览位置与滑块保持稳定 |
+
+构建 0 错误。验证用的临时注入命令已删除（`GameScene.cs` 无 `uiChatTest` 残留）。
+
+### 更正：滑块美术用的是 GameInter **F631**，不是自造的金框（2026-10-03 第二轮）
+
+用户指出「光锁链样式就好几种，怎么可能会没有」，并给出 `GameInter.wil` frame #631
+的帧头（16×286，anchor −24,−16）。**用户是对的**：我第一轮只查了 380 附近就
+断言「素材缺失」，结论下得太早。系统重扫 `GameInter.wil`（1103 帧）后：
+
+| 帧 | 尺寸 | 性质 |
+|---|---|---|
+| 380 | 16×502 | 锁链轨道（旧代码用的），珠心 y≈249 |
+| 630 | 16×558 | 锁链，珠心 y≈277 |
+| **631** | **16×286** | **锁链 + 金橙宝石珠，珠心 y≈141（中点）** ← 原版聊天滚动条 |
+| 632 | 16×286 | 同 631，珠子高光态 |
+
+用 `frame-formulas.json` 核对：`players.channellingStart` 的 `start=560`，
+630–633 属**玩家吟唱动画帧表**，但它们同时也是 GameInter 自己的帧 —— 用户贴的
+帧头 `GameInter.wil frame #631` 与本地 `GameInter.wil` 的 `[631]=16×286` 完全一致，
+确认它就是聊天滚动条素材。
+
+**原版机制**（`0x417960` 实参 `frame=0x17C, pad=0x13, w=0x0C, h=0x104`）：
+轨道只画 **12 宽 × 260 高**，而锁链图高 286 —— 差额 26 即**取景余量**。
+原版是在这张 286 高的链图上**滑动一个 260 高的取景窗**（`0x4179B0` 按 value
+平移 src），所以**珠子只出现一次**并随滚动移动。用户原版截图里那颗金边宝石
+正是它。
+
+**实现更正**：此前画的是「金边矩形滑块 + 整张 F380 轨道」（臆造美术，且珠 bead
+样式丢失）。改为：
+
+- `ChainView`：逐行平铺 F631 的**纯链身**（源 y `0..132`，`y % 133`，
+  永不取到 133..149 的珠子段）→ 轨道上**不会出现第二颗珠子**；
+- `BeadHit`：裁 F631 的 `y133..149`（珠心 141）画滑块，命中区 28px；
+- 交互与几何不变（拖动改 offset、箭头整页、12×260 @ (533,−208)）。
+
+**离线渲染验证**（用 `wilsdk` 复刻 Godot 侧绘制逻辑，12×260）：
+轨道 warm 像素 **0**（无残留珠），top/mid/bot 三态各**恰好 1 颗**金橙宝石，
+位置与用户原版截图一致。
+
+**过程记录（教训）**：期间本文件被并行 agent 整体回退过一次
+（`git diff` 归零，先前修的 `QueueFree` 重叠 bug 一并丢失）。已重新完整应用
+并复核：滚动条用 F631、19 行标签池、单行滚轮、`AddMessage` 保持浏览位置
+均在位，`QueueFree` 仅存于注释。
+
+## 虚拟显示器实机体检 + 三个环境障碍（2026-10-03 晚）
+
+### 体检结论
+
+起独立虚拟显示器（`:110`，`Xvfb` + 自守护重拉）跑完整登录，
+`dotnet build` 0 错误；运行期日志无 `ERROR/Exception`（只有 X11 退出噪音）。
+逐窗口按键验证：状态窗（单窗口、装备齐全）、背包、技能书、聊天、腰带、
+任务窗、技能条均正常。
+
+**发现并修复 1 个真问题 —— 任务窗任务名右侧被滚动条遮挡**：
+`QuestDialog.ApplyLegacyEiLayout()` 把 `_scroll` 放到 `(290,59) 28×58`（照原版
+F723/724 的位置），但只透明化了 `BackColour` 和 `PositionBar`，**控件自身仍
+可见**，其金边框 + 上下按钮正好压在任务行（`x=65`、宽 350 → 末端 415）上，
+把「(左键追踪，右键放弃)」盖成"乱码"状。修复：`_scroll.Visible = false`，
+显示交给 F700 烘焙美术，控件只保留热区。真机复验：该行完整可见。
+
+**确认不是 bug（不修）**：武士打开技能书为空 —— 原版 F400 固定 8 分类页签
+（火/冰/电/风/神圣/黑暗/幻影/剑，反汇编 `0x439500` 已闭合），而 Zircon 的
+`MagicInfo.School` 多了 Passive/Toggle/Active/Atrocity/Kill/Assassination；
+武士技能（基本剑术/攻杀/刺杀）属 Passive/Toggle，不落在这 8 格里。属数据分类
+差异，往页签塞 Passive 会破坏已闭合的静态几何，故只在代码注释记录。
+
+### 三个环境障碍（都不是代码 bug，但反复踩坑，值得记）
+
+**障碍 1 —— GM 权限随清库丢失**
+清过数据库后 `test@test.com` 的 `Admin` 变 `False`，`@` 管理命令全部失效。
+正解是用 `MasterPassword` 机制登录：`SEnvir.cs:3325` 对「**非邮箱格式**的登录名
++ 密码 == `Config.MasterPassword`」直接放行 TempAdmin。命令行
+`--user TestHero --pass <MasterPassword>` → 日志 `[Admin Attempted] → Admin: True`
+即可拿回临时 GM（不必去改 Users.db）。
+
+**障碍 2 —— 端口被并发会话抢走 / 角色互踢**
+两个会话同时起 ServerCore 会互相改写 `Server.ini` 的 `Port`（7000 ↔ 7137），
+客户端连 7000 得到 `Connection refused`；两个客户端抢同一角色会互相踢线，
+并重复执行 `@make` 等命令。**排查手法**：`ss -ltnp | grep 7000` 看到底是谁在听
+（`users:(("ServerCore",pid=...))`），确认后只保留一个 ServerCore、再起客户端。
+本轮另用 `--user bot01@bot.local --char Bot01` 与用户的 `TestHero` 隔离，
+避免再抢。
+
+**障碍 3 —— `@make` 无法处理带空格的英文名（已修）**
+`PlayerObject.Chat`（`PlayerObject.cs:1830`）用 `Split(' ')` 切分 `@` 命令，
+`@make Wood Sword 5` → `["MAKE","Wood","Sword","5"]`，而 `Make` 只读 `vals[1]`
+→ 找 "Wood"。注意 `SEnvir.GetItemInfo`（`SEnvir.cs:2292`）内部**已经**做了
+`Replace(" ","")` 归一化，瓶颈只在切分那一步。
+**修复**：在 `AbstractParameterizedCommand<T>` 加两个可复用的重组辅助
+`RejoinNameArgs` / `RejoinLongestMatch`，`Make` 开头调
+`RejoinLongestMatch(vals, name => SEnvir.GetItemInfo(name) != null)` —— 按
+「最长的能命中物品名的前缀」贪心合并，尾部数量/目标角色保持独立。以后其它
+带名称的命令（怪物/技能等）直接复用，不必逐个打补丁。
+独立验证（`RejoinProbe`，不依赖服务端）：`Wood Sword 5`→item="Wood Sword"
+count=5；`Sword 3`、`Helm` 等单词名不被误合。
+
+**障碍 3 的第二层 —— `chinese_alias.json` 有三份副本，`FirstOrDefault` 只取第一份**
+`SEnvir.LoadChineseAliases()`（`SEnvir.cs:2260`）按
+`{BaseDirectory}/`、`{BaseDirectory}/Database/`、`CWD/`、绝对路径 四个候选
+`File.Exists` 取**第一个命中**就 return，不合并。于是改到非首位的副本完全不生效。
+本轮三份（`Debug/ServerCore/`、`ServerCore/`、`ServerLibrary/`）原本不同步
+（254 / 239 / 254），已统一为同一内容（md5 一致，items 254 / monsters 147）。
+**教训**：改别名文件要么改 exe 同目录那份，要么改加载顺序；单纯在源码树里
+编辑不保证生效，且必须重启服务端。

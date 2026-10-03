@@ -226,10 +226,14 @@ public partial class BigMapDialog : DXWindow
         dot.Location = new Vector2I((int)(ScaleX * cellX) - 1, (int)(ScaleY * cellY) - 1);
     }
 
-    /// <summary>传送后关闭大地图 (原版: 点一下地图跳走, 地图消失)。只隐藏不移除节点, 否则 B 键无法再打开。</summary>
+    /// <summary>
+    /// 传送后关闭大地图 (原版: 点一下地图跳走, 地图消失)。
+    /// 走 WindowManager 才能同步 OpenWindows/Z 序；直改 Visible 会留下
+    /// 「已隐藏但仍登记在最上层」的幽灵条目，让下一次 Esc 关错窗口。
+    /// </summary>
     private void CloseBigMapAfterTeleport()
     {
-        Visible = false;
+        WindowManager.Close(this);
     }
 
     /// <summary>Image 局部坐标 → 地图 cell (与 BigMapDialog.GetMapPoint 同公式)</summary>

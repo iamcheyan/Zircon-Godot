@@ -483,6 +483,15 @@ public partial class MagicDialog : DXWindow
             _tabOrder = LegacySchoolOrder.ToList();
             if (!_tabOrder.Contains(_selectedSchool))
                 _selectedSchool = _tabOrder[0];
+            // 原版固定 8 个分类页签（火/冰/电/风/神圣/黑暗/幻影/剑；paint
+            // `0x439500` 的 [0x2F4]..[0x7E0] stride 0xB4，帧 450/452/454/
+            // 456/458/460/462/464），与 `LegacySchoolOrder` 一致 —— 已闭合的
+            // 静态几何，不得改动。
+            // 注意：Zircon 的 `MagicInfo.School` 还含 Passive/Toggle/Active/
+            // Atrocity/Kill/Assassination 等 EI 没有的分类，而武士技能
+            // （基本剑术/攻杀/刺杀）正是 Passive/Toggle，故武士打开 F400
+            // **就是空列表**。这是数据分类差异，不是渲染缺陷；往原版页签里
+            // 塞 Passive 会破坏已闭合的静态几何，故不这么做。
             foreach (var button in _schoolButtons.Values)
             {
                 RemoveControl(button);
@@ -491,7 +500,7 @@ public partial class MagicDialog : DXWindow
             _schoolButtons.Clear();
             BuildLegacySchoolButtons();
             SelectSchool(_selectedSchool, preserveState: true);
-            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count}");
+            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count} entries={visible.Count(x => x.Info.School == _selectedSchool)}");
             return;
         }
 

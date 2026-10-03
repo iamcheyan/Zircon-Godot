@@ -238,7 +238,22 @@
     "神力戒指": "Seal Of Titans",
     "隐身戒指": "Loop Of Invisibility",
     "技巧项链": "Choker Of Learning",
-    "探测项链": "Pendant Of Tracking"
+    "探测项链": "Pendant Of Tracking",
+    "轻型盔甲": "Light Armour (M)",
+    "轻型盔甲(女)": "Light Armour (F)",
+    "中盔甲": "Medium Armour (M)",
+    "中盔甲(女)": "Medium Armour (F)",
+    "重盔甲(女)": "Heavy Armour (F)",
+    "幽灵盔甲": "Ghost Armour (M)",
+    "金创药": "Healing Potion",
+    "金创药(中)": "Healing Potion (II)",
+    "金创药(大)": "Healing Potion (III)",
+    "魔法药": "Mana Potion",
+    "魔法药(中)": "Mana Potion (II)",
+    "魔法药(大)": "Mana Potion (III)",
+    "猪肉": "Pork",
+    "牛肉": "Beef",
+    "羊肉": "Mutton"
   },
   "monsters": {
     "鸡": "Chicken",

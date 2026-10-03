@@ -151,6 +151,23 @@ public partial class DXItemGrid : DXControl
         return cellIndex;
     }
 
+    /// <summary>
+    /// 服务端槽号 → 显示该记录的格索引。
+    ///
+    /// 非 legacy footprint 模式下槽号即格索引；legacy 模式下物品按 first-fit
+    /// 摆放，槽号 6 的记录可能显示在格 0，两者**不相等**。任何按服务端槽号
+    /// 去索引 <c>Cells[]</c> 的代码都必须先经过这里，否则会操作到另一格
+    /// （实测：丢弃物品后锁住的是显示格，回包却解锁了 <c>cells[槽号]</c>，
+    /// 真正被锁的格永久卡死、无法再移动或装备）。
+    /// 返回 -1 表示该槽号当前没有可见格。
+    /// </summary>
+    public int ResolveSlotCell(int slot)
+    {
+        if (!UseLegacyFootprints) return slot;
+        if (slot < 0 || slot >= _legacySlotOriginCell.Length) return -1;
+        return _legacySlotOriginCell[slot];
+    }
+
     public ClientUserItem GetItemForCell(int cellIndex)
     {
         if (!UseLegacyFootprints || ItemGrid == null || cellIndex < 0)

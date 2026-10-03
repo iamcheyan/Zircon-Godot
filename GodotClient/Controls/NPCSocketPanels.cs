@@ -158,8 +158,7 @@ public sealed partial class NPCSocketPanel : DXControl
             if (packet.GridType == GridType.Inventory && packet.Slot >= 0 && packet.Slot < (GameScene.Game?.Inventory?.Length ?? 0))
             {
                 GameScene.Game.Inventory[packet.Slot] = packet.Item;
-                if (packet.Slot < GameScene.Game.InventoryCells.Length)
-                    GameScene.Game.InventoryCells[packet.Slot].RefreshItem();
+                GameScene.Game.RefreshInventorySlot(packet.Slot);
             }
             _target.ItemGrid[0] = packet.Item;
             _target.RefreshItem();
@@ -446,13 +445,13 @@ public sealed partial class NPCSocketCombinePanel : DXControl
         {
             if (slot < 0 || slot >= (GameScene.Game?.Inventory?.Length ?? 0)) continue;
             GameScene.Game.Inventory[slot] = null;
-            if (slot < GameScene.Game.InventoryCells.Length) GameScene.Game.InventoryCells[slot].RefreshItem();
+            GameScene.Game.RefreshInventorySlot(slot);
         }
         foreach (var item in packet.Items ?? new List<ClientUserItem>())
         {
             if (item == null || item.Slot < 0 || item.Slot >= (GameScene.Game?.Inventory?.Length ?? 0)) continue;
             GameScene.Game.Inventory[item.Slot] = item;
-            if (item.Slot < GameScene.Game.InventoryCells.Length) GameScene.Game.InventoryCells[item.Slot].RefreshItem();
+            GameScene.Game.RefreshInventorySlot(item.Slot);
         }
         var result = packet.Items?.FirstOrDefault(x => x != null && x.Slot == packet.ResultSlot)
                      ?? packet.Items?.LastOrDefault(x => x != null);

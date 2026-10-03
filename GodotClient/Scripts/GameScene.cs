@@ -6055,6 +6055,15 @@ public partial class GameScene : Control
     // 解锁源/目标格 (服务端回包后解除 Locked, 允许后续操作)
     private void UnlockCell(GridType type, int slot)
     {
+        DXItemGrid grid = type switch
+        {
+            GridType.Inventory => _inventoryDialog?.Grid,
+            GridType.Belt => _beltDialog?.Grid,
+            GridType.Storage => _storageDialog?.Grid,
+            GridType.PartsStorage => _storageDialog?.PartGrid,
+            GridType.CompanionInventory => _companionDialog?.InventoryGrid,
+            _ => null,
+        };
         DXItemCell[] cells = type switch
         {
             GridType.Inventory => InventoryCells,
@@ -6067,12 +6076,30 @@ public partial class GameScene : Control
             GridType.CompanionEquipment => CompanionEquipmentCells,
             _ => null,
         };
-        if (cells != null && slot >= 0 && slot < cells.Length && cells[slot] != null)
+        // 服务端槽号 ≠ 格索引：legacy 背包把物品按 first-fit 摆在别的格上
+        // （槽号 6 的记录显示在格 0）。直接 `cells[slot]` 会解锁另一格，
+        // 真正被锁的格永远保持 Locked，此后无法移动/装备/丢弃该格物品。
+        int index = grid != null ? grid.ResolveSlotCell(slot) : slot;
+        if (cells != null && index >= 0 && index < cells.Length && cells[index] != null)
         {
-            cells[slot].Locked = false;
-            cells[slot].Selected = false;
-            cells[slot].UpdateBorder();
+            cells[index].Locked = false;
+            cells[index].Selected = false;
+            cells[index].UpdateBorder();
         }
+    }
+
+    /// <summary>
+    /// 按**服务端槽号**刷新对应的可见背包格。
+    ///
+    /// legacy 背包按 first-fit 摆放，槽号 ≠ 格索引；直接用槽号索引
+    /// <c>InventoryCells[]</c> 会刷新到另一格，被改动的格看不到新图标。
+    /// </summary>
+    public void RefreshInventorySlot(int slot)
+    {
+        var grid = _inventoryDialog?.Grid;
+        int index = grid != null ? grid.ResolveSlotCell(slot) : slot;
+        if (index >= 0 && index < InventoryCells.Length && InventoryCells[index] != null)
+            InventoryCells[index].RefreshItem();
     }
 
     // 批量变更后刷新所有可见格

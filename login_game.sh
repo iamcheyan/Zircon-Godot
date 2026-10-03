@@ -33,6 +33,41 @@ EI_ROOT="${ZIRCON_EI_ROOT:-$EI_BASE/LegacyEI}"
 
 export ZIRCON_UI_DATA_PATH="${ZIRCON_UI_DATA_PATH:-$ROOT/Debug/Client/Data}"
 export ZIRCON_LEGACY_UI_DATA_PATH="${ZIRCON_LEGACY_UI_DATA_PATH:-$EI_ROOT/Data}"
+
+# ---- 素材路径自愈（2026-10-04）----
+# 背景：外部环境里残留的 ZIRCON_EI_ROOT / ZIRCON_LEGACY_UI_DATA_PATH 可能指向
+# 仓库根（.../development/Zircon）而不是素材根（.../mir2ei/LegacyEI），拼出的
+# LegacyEI/Data 不存在 → 客户端启动时静默跳过 4 个 .ogv 过场动画（日志只报
+# 「缺少背景视频 …，请运行 convert_legacy_login_video.sh」，极具误导性，
+# 实际文件好好的在 mir2ei 里）。
+# 这里做「至少要有 GameInter.wil 才算有效素材目录」的判定，并给出正确路径。
+REQUIRED_UI_FILE="GameInter.wil"
+if [ ! -f "$ZIRCON_LEGACY_UI_DATA_PATH/$REQUIRED_UI_FILE" ]; then
+    CANONICAL_LEGACY_DATA="$EI_BASE/LegacyEI/Data"
+    if [ -f "$CANONICAL_LEGACY_DATA/$REQUIRED_UI_FILE" ]; then
+        echo "素材路径无效：$ZIRCON_LEGACY_UI_DATA_PATH（缺 $REQUIRED_UI_FILE），已自动纠正为 $CANONICAL_LEGACY_DATA"
+        ZIRCON_LEGACY_UI_DATA_PATH="$CANONICAL_LEGACY_DATA"
+        export ZIRCON_LEGACY_UI_DATA_PATH
+    else
+        echo "找不到 EI 复古 UI 资源（需要 $REQUIRED_UI_FILE）：" >&2
+        echo "  当前 ZIRCON_LEGACY_UI_DATA_PATH=$ZIRCON_LEGACY_UI_DATA_PATH" >&2
+        echo "  期望路径=$CANONICAL_LEGACY_DATA" >&2
+        echo "  若该目录也不存在，请先跑：/home/tetsuya/mir2ei/restore_all_archived_assets.sh" >&2
+        exit 1
+    fi
+fi
+
+# .ogv 过场动画是运行时必需资源（缺失时**不报错**、只是静默不播）。
+# 启动前点名检查并提示，避免登录后才发现动画没了。
+MISSING_VIDEOS=""
+for v in wemade.ogv ei_Login.ogv CreateChr.ogv StartGame.ogv; do
+    [ -f "$ZIRCON_LEGACY_UI_DATA_PATH/$v" ] || MISSING_VIDEOS="$MISSING_VIDEOS $v"
+done
+if [ -n "$MISSING_VIDEOS" ]; then
+    echo "⚠ 缺少过场动画：$MISSING_VIDEOS"
+    echo "   这些文件缺失时客户端**不会报错**，只是登录/建角/进游戏动画不播。"
+    echo "   补回：/home/tetsuya/mir2ei/restore_all_archived_assets.sh"
+fi
 for arg in "$@"; do
     if [[ "$arg" =~ ^([1-9][0-9]*)x$ ]]; then
         export ZIRCON_UI_SCALE="${BASH_REMATCH[1]}"

@@ -79,12 +79,36 @@ public static class AutoLoginArgs
     /// </summary>
     public static bool LegacySlotPreview => Has("--legacy-slot-preview");
 
-    /// <summary>--legacy-slot-preview 的合成角色（道士男主槽 + 道女副槽，覆盖两个槽）。</summary>
-    public static List<SelectInfo> PreviewCharacters() => new()
+    /// <summary>
+    /// --legacy-slot-preview 的合成角色。默认是道士男主槽 + 道女副槽（覆盖两个槽）。
+    /// `--legacy-preview-class=wizard|warrior|taoist` 可换成对应职业的男女组合 ——
+    /// 法师/法师女是唯一带 **+40 元素特效**（F1080 火球 / F1385 闪电）的组合，
+    /// 需要用它们验证特效层时用这个开关（合成角色不占服务端槽位）。
+    /// </summary>
+    public static List<SelectInfo> PreviewCharacters()
     {
-        new SelectInfo { CharacterIndex = 0, CharacterName = "TestHero", Level = 255, Class = MirClass.Taoist, Gender = MirGender.Male, Location = 0 },
-        new SelectInfo { CharacterIndex = 1, CharacterName = "PreviewAlt", Level = 40, Class = MirClass.Taoist, Gender = MirGender.Female, Location = 0 },
-    };
+        MirClass cls = ParsePreviewClass();
+        return new List<SelectInfo>
+        {
+            new SelectInfo { CharacterIndex = 0, CharacterName = "TestHero", Level = 255, Class = cls, Gender = MirGender.Male, Location = 0 },
+            new SelectInfo { CharacterIndex = 1, CharacterName = "PreviewAlt", Level = 40, Class = cls, Gender = MirGender.Female, Location = 0 },
+        };
+    }
+
+
+    /// <summary>解析 `--legacy-preview-class=` 的职业值；缺省/非法都回落到道士。</summary>
+    private static MirClass ParsePreviewClass()
+    {
+        string raw = GetValue("--legacy-preview-class");
+        if (string.IsNullOrWhiteSpace(raw)) return MirClass.Taoist;
+        return raw.Trim().ToLowerInvariant() switch
+        {
+            "wizard" or "法师" or "mage" => MirClass.Wizard,
+            "warrior" or "战士" or "war" => MirClass.Warrior,
+            "taoist" or "道士" or "tao" => MirClass.Taoist,
+            _ => MirClass.Taoist,
+        };
+    }
     /// <summary>给每个 DXControl 画红色边框 + 四角方块/四边黄条 (临时布局诊断)</summary>
     public static bool UiDiagnosticBorders => Has("--ui-diagnostic-borders");
     /// <summary>

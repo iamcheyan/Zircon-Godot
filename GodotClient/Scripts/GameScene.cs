@@ -11610,12 +11610,19 @@ public partial class GameScene : Control
             _selectedCurrency = null;
             // 原版 MapControl：`new DXItemAmountWindow("Drop Item", new ClientUserItem(DropItem, Amount))`
             // —— 预览格显示货币掉落物，输入数量时按 IsCurrencyItem 分支实时更新 Count。
+            // 同普通物品：Shift = 直接丢 1 个货币，不弹数量框。
+            if (currencyMouse.ShiftPressed)
+            {
+                SendCurrencyDrop(currency.CurrencyIndex, 1);
+                GetViewport()?.SetInputAsHandled();
+                return;
+            }
             var dropItem = currency.Info?.DropItem;
             var preview = dropItem == null ? null : new ClientUserItem(dropItem, currency.Amount);
             var dialog = new ItemAmountDialog("Drop Item", currency.Amount, 1,
                 amount => SendCurrencyDrop(currency.CurrencyIndex, amount), preview);
             WindowManager.Open(dialog, _uiLayer);
-            GetViewport().SetInputAsHandled();
+            GetViewport()?.SetInputAsHandled();
             return;
         }
         // 原版 MapControl.ProcessInput `case Left: Mining = false;`：
@@ -11657,6 +11664,29 @@ public partial class GameScene : Control
                     return;
                 }
                 var source = cell;
+                // 按住 Shift 点地面 = 直接丢 1 个，不弹数量框。
+                // 数量框只留给"想丢多个"的普通点击；Shift 是快捷路径，
+                // 与原版 DXItemCell 的 Shift 加速语义一致。
+                if (dropMouse.ShiftPressed)
+                {
+                    if (!CanBeginItemDrop(source))
+                    {
+                        DXItemCell.SelectedCell = null;
+                        GetViewport()?.SetInputAsHandled();
+                        return;
+                    }
+                    source.Locked = true;
+                    source.UpdateBorder();
+                    SendItemDrop(new CellLinkInfo
+                    {
+                        GridType = source.GridType,
+                        Slot = source.Slot,
+                        Count = 1,
+                    });
+                    DXItemCell.SelectedCell = null;
+                    GetViewport()?.SetInputAsHandled();
+                    return;
+                }
                 var amount = new ItemAmountDialog(item, count =>
                 {
                     if (!CanBeginItemDrop(source))
@@ -11672,7 +11702,7 @@ public partial class GameScene : Control
                 });
                 DXItemCell.SelectedCell = null;
                 WindowManager.Open(amount, _uiLayer);
-                GetViewport().SetInputAsHandled();
+                GetViewport()?.SetInputAsHandled();
                 return;
             }
         }

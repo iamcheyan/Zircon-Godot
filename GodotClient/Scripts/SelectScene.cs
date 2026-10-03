@@ -521,14 +521,14 @@ public partial class SelectScene : Control
         if (_skinStart != null) _skinStart.Enabled = has;
         if (_skinDelete != null) _skinDelete.Enabled = has;
         UpdateLegacySlotInfoBox(has ? index : -1);
-        // **特效层只画在选中槽**（原版 `0x457CF0 cmp [ebx+0x1488],ebp; jne 0x457D2A`：
-        // `[0x1488]` = 选中槽号，相等才继续画 +40 叠加层）。未选中槽隐藏。
+        // **特效层只画在选中槽**（原版 `0x457CF0 cmp [ebx+0x1488],ebp; jne 0x457D2A`），
+        // 且与身体层**叠加**（+40 是纯火球/闪电序列，不含人物）。
         for (int slot = 0; slot < 2; slot++)
         {
             var aura = LegacySlotAura(slot);
             if (aura == null || slot >= _characters.Count) continue;
-            aura.Visible = has && slot == index
-                && LegacyAuraBlock(_characters[slot].Class, _characters[slot].Gender) != null;
+            bool hasAura = LegacyAuraBlock(_characters[slot].Class, _characters[slot].Gender) != null;
+            aura.Visible = has && slot == index && hasAura;
         }
         GD.Print($"[LegacySelect] 槽位选中: index={index} 开始={_skinStart?.Enabled} "
             + $"删除={_skinDelete?.Enabled}（原版 [0x1168] 语义，点击只改选中态）");
@@ -700,10 +700,12 @@ public partial class SelectScene : Control
         };
 
     /// <summary>
-    /// 把特效层设成与身体同一节奏的循环动画。特效块帧数与身体段不同
-    /// （身体 11~17 帧、特效 7~15 帧），原版两边**各自独立按 120ms/帧循环**
-    ///（0x457CF8 按 `[esi-2]+0x28` 取帧，0x457CF0 `cmp [ebx+0x1488],ebp` 只在
-    /// 选中槽绘制）。
+    /// 起播 +40 特效层（**叠在身体之上**，不是替代身体）。
+    /// 逐帧解码确认 `F1080..F1094`（法师男，15 帧）是**纯火球序列** —— 由小到大
+    /// 再收小，画面里只有火焰没有人物；`F1385..F1391`（法师女，8 帧）是纯闪电序列。
+    /// 原版 0x457C42 先画身体帧、0x457D04 再画 +40 帧，两层都画，所以这里**不动
+    /// 身体层的可见性**。只在选中槽绘制（0x457CF0 `cmp [ebx+0x1488],ebp; jne`），
+    /// 可见性由 `ApplyLegacySlotSelection` 统一管。
     /// </summary>
     private void StartLegacyAuraAnimation(DXAnimatedControl aura, SelectInfo c)
     {
@@ -721,7 +723,6 @@ public partial class SelectScene : Control
         aura.AnimationDelay = TimeSpan.FromMilliseconds((last - first + 1) * (long)LegacyFrameMs);
         aura.UseOffSet = true;
         aura.Loop = true;
-        aura.Visible = true;
         aura.Restart(true);
     }
 
@@ -1302,8 +1303,7 @@ public partial class SelectScene : Control
         _slotAura0 = new DXAnimatedControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            // +40 层是**混合**绘制（原版 0x457D25 → 0x457310 → 0x467920 → DrawBlend）。
-            // F1080/F1385/F1984 都带半透明黑底，不开 Blend 会用不透明黑椭圆盖住角色。
+            // 同上：+40 帧带不透明纯黑底，必须混合绘制。
             Blend = true,
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
@@ -1669,22 +1669,19 @@ public partial class SelectScene : Control
                 int shadowIndex = frame + 20;   // 0x457BE3 add eax, 0x14
                 if (shadow.Index != shadowIndex) shadow.Index = shadowIndex;
             }
-            // 特效层（+40）：只在选中槽绘制（0x457CF0 cmp [ebx+0x1488],ebp），
-            // 帧号与身体当前帧同步偏移 +40（0x457D04 add eax,0x28）。
+            // **特效层（+40）叠在身体之上**，两者都画。
+            // 逐帧解码确认 `F1080..F1094` 是**纯火球序列**（15 帧由小到大再收小，
+            // 画面里只有火焰，没有人物）；`F1385..F1391` 同理是纯闪电序列。
+            // 原版 0x457C42 先画身体帧、0x457D04 再画 +40 帧，是**两层叠加**，
+            // 所以身体层**不能隐藏**。
+            // 只在选中槽绘制（0x457CF0 cmp [ebx+0x1488],ebp; jne）。
             if (aura != null)
             {
                 int auraIndex = frame + 40;
-                bool showAura = selected && MirSkin.GetSize(LibraryFile.Interface1c, auraIndex) != Vector2I.Zero;
-                if (aura.Visible != showAura)
-                {
-                    aura.Visible = showAura;
-                    if (showAura) aura.QueueRedraw();
-                }
-                if (showAura && aura.Index != auraIndex)
-                {
-                    aura.Index = auraIndex;
-                    aura.QueueRedraw();
-                }
+                bool hasAura = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex) != Vector2I.Zero;
+                bool showAura = selected && hasAura;
+                if (aura.Visible != showAura) aura.Visible = showAura;
+                if (showAura && aura.Index != auraIndex) aura.Index = auraIndex;
             }
         }
     }
@@ -1847,9 +1844,10 @@ public partial class SelectScene : Control
             {
                 LibraryFile = LibraryFile.Interface1c,
                 UseOffSet = true,
-                // 原版 +40 层走**混合**绘制（0x457D25 → 0x457310 → 0x467920 → DrawBlend）。
-                // F1080 / F1385 都带半透明黑底（128x256 / 512x256 的椭圆），
-                // 不开 Blend 会用不透明黑椭圆把整个角色盖掉（实测）。
+                // **必须混合绘制**（原版 0x457D25 → 0x457310 → 0x467920 → DrawBlend）：
+                // F1080 有 6797 个**不透明纯黑**像素（alpha=255、RGB<12）围成椭圆，
+                // 叠加时要靠混合透出底下的身体，否则就是一个黑椭圆把人物上半身吞掉
+                // （实测确认）。同理 F1385/F1984。
                 Blend = true,
                 Visible = false,
                 MouseFilter = MouseFilterEnum.Ignore,

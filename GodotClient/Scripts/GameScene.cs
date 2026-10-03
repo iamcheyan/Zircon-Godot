@@ -5093,13 +5093,16 @@ public partial class GameScene : Control
                     && local.End.Y <= _mainPanel.Size.Y + 1;
             }
 
-            // 常驻 HUD 的两个历史偏移回归：技能栏必须落在主底栏左上方，
-            // 透明且无可见聊天内容时不能留下中央悬浮滚动条。
+            // 常驻 HUD 的两个历史偏移回归：现代模式技能栏必须落在主底栏左上方
+            // （EI 模式按原版锚在屏幕左上角），透明且无可见聊天内容时不能留下
+            // 中央悬浮滚动条。
             if (_magicBar != null && !_magicBar.UserMoved)
             {
-                var expectedMagic = new Vector2(
-                    Math.Max(0, _mainPanel.Position.X - _magicBar.Size.X - 5),
-                    Math.Max(0, _mainPanel.Position.Y - _magicBar.Size.Y - 5));
+                Vector2 expectedMagic = AutoLoginArgs.LegacyUi
+                    ? MagicBar.LegacyEiAnchor
+                    : new Vector2(
+                        Math.Max(0, _mainPanel.Position.X - _magicBar.Size.X - 5),
+                        Math.Max(0, _mainPanel.Position.Y - _magicBar.Size.Y - 5));
                 pass &= _magicBar.Position.DistanceTo(expectedMagic) <= 1f;
             }
             if (_chatLog != null)

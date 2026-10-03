@@ -16,6 +16,7 @@ config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 
 [autoload]
 
+BootWindow="*res://Scripts/BootWindow.cs"
 NetworkManager="*res://Network/NetworkManager.cs"
 SinglePlayerLauncher="*res://Network/SinglePlayerLauncher.cs"
 

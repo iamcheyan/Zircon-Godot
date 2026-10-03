@@ -55,6 +55,34 @@ public static class UiScaler
     }
 
     /// <summary>
+    /// 当前**生效**的 UI 倍率：视口推算值，若设了 `ZIRCON_UI_SCALE` 则用强制值。
+    /// 任何「不经过缩放层、但要和原版屏幕区对齐」的控件（例如挂在根 Viewport 上的
+    /// StartGame 过场视频）都必须用它，而不是裸的 <see cref="ComputeScale"/> ——
+    /// 后者只看视口：1280×960 视口算出 1.6，而强制倍率是 2，两者不一致时
+    /// 视频会被画成 1024×768 塞进 1280×960 窗口。
+    /// </summary>
+    public static float EffectiveScale(Viewport viewport)
+    {
+        float scale = ComputeScale(viewport);
+        string force = System.Environment.GetEnvironmentVariable("ZIRCON_UI_SCALE");
+        if (!string.IsNullOrEmpty(force)
+            && float.TryParse(force, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float forced)
+            && forced > 0f)
+            scale = forced;
+        return scale;
+    }
+
+    /// <summary>把逻辑画布 (BaseWidth×BaseHeight) 在给定视口下居中所需的偏移（非负）。</summary>
+    public static Vector2 ComputeOffset(Viewport viewport, float scale)
+    {
+        Vector2 vp = viewport?.GetVisibleRect().Size ?? Vector2.Zero;
+        if (vp.X <= 0 || vp.Y <= 0) vp = DisplayServer.WindowGetSize();
+        Vector2 offset = (vp - new Vector2(BaseWidth, BaseHeight) * scale) / 2f;
+        return new Vector2(Mathf.Max(offset.X, 0f), Mathf.Max(offset.Y, 0f));
+    }
+
+    /// <summary>
     /// 把缩放层 Transform 更新为当前视口倍率 + 居中偏移。
     /// 居中偏移保证 4K 下整幅 1024x768 逻辑画布放大后位于屏幕中央
     /// （GameScene HUD 是贴边布局不需要居中；登录/选人是整幅画布需要）。
@@ -62,19 +90,15 @@ public static class UiScaler
     public static void UpdateScale(CanvasLayer layer, Viewport viewport)
     {
         if (layer == null || !GodotObject.IsInstanceValid(layer)) return;
-        float scale = ComputeScale(viewport);
-        Vector2 vp = viewport?.GetVisibleRect().Size ?? Vector2.Zero;
-        if (vp.X <= 0 || vp.Y <= 0) vp = DisplayServer.WindowGetSize();
         // 调试钩子：ZIRCON_UI_SCALE 强制倍率（Xvfb 无头环境视口固定 1024x768
         // 无法模拟真全屏，用它强制 scale=2 验证放大/居中效果）。缺省 -1=自动。
         string force = System.Environment.GetEnvironmentVariable("ZIRCON_UI_SCALE");
         GD.Print($"[UiScaler] force={force ?? "<null>"}");
-        if (!string.IsNullOrEmpty(force) && float.TryParse(force, out float forced) && forced > 0f)
-            scale = forced;
+        float scale = EffectiveScale(viewport);
+        Vector2 vp = viewport?.GetVisibleRect().Size ?? Vector2.Zero;
+        if (vp.X <= 0 || vp.Y <= 0) vp = DisplayServer.WindowGetSize();
         MirSkin.SetUiScale(scale);
-        Vector2 offset = (vp - new Vector2(BaseWidth, BaseHeight) * scale) / 2f;
-        offset.X = Mathf.Max(offset.X, 0f);
-        offset.Y = Mathf.Max(offset.Y, 0f);
+        Vector2 offset = ComputeOffset(viewport, scale);
         GD.Print($"[UiScaler] scale={scale} viewport={vp} offset={offset}");
         layer.Transform = new Transform2D(scale, 0, 0, scale, offset.X, offset.Y);
     }

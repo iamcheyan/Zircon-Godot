@@ -931,6 +931,15 @@ public partial class SelectScene : Control
         // CreateChr 过场保留在 _uiLayer，随 SelectScene 生命周期即可。
         Node parent = attachToRoot ? (Node)GetTree().Root : _uiLayer;
         parent.AddChild(video);
+        if (attachToRoot)
+        {
+            // 根 Viewport 上的控件**不经过** `_uiLayer` 的 UiScaler Transform，
+            // 而原版过场是 1:1 铺满屏幕区（640×480）。放大倍率（4K/HiDPI、
+            // `ZIRCON_UI_SCALE`）下必须自己套同一套「缩放 + 居中偏移」，
+            // 否则 640×480 视频会只画在放大后窗口的左上角（实测 ZIRCON_UI_SCALE=2、
+            // 窗口 1280×960 时内容 bbox 只有 (0,0)-(639,479)）。
+            ApplyUiScalerTransform(video);
+        }
         video.Play();
         video.Finished += () =>
         {
@@ -938,7 +947,24 @@ public partial class SelectScene : Control
             GD.Print($"[LegacySelect] 过场 {name}.ogv 播放完毕");
             onFinished?.Invoke();
         };
+
         GD.Print($"[LegacySelect] 过场动画 {name}.ogv 开始播放 (attachToRoot={attachToRoot})");
+    }
+
+    /// <summary>
+    /// 给挂在**根 Viewport** 上的控件套上与 <see cref="UiScaler"/> 一致的
+    /// 「缩放 + 居中偏移」变换，使不经过 `_uiLayer` 的控件在放大倍率下
+    /// 仍与原版屏幕区 1:1 对齐（倍率为 1 时退化为 Position=(0,0)、Scale=1）。
+    /// 倍率必须取 <see cref="UiScaler.EffectiveScale"/>（含 `ZIRCON_UI_SCALE` 强制值），
+    /// 不能用只看视口的 `ComputeScale`：1280×960 视口后者给 1.6、强制值是 2，
+    /// 视频会被画成 1024×768 塞进 1280×960 窗口。
+    /// </summary>
+    private void ApplyUiScalerTransform(Control control)
+    {
+        if (control == null || !IsInstanceValid(control)) return;
+        float scale = UiScaler.EffectiveScale(GetViewport());
+        control.Scale = Vector2.One * scale;
+        control.Position = UiScaler.ComputeOffset(GetViewport(), scale);
     }
 
     private void HideCreateCharacterPanel()
@@ -2078,6 +2104,19 @@ public partial class SelectScene : Control
         }
     }
 
+    /// <summary>
+    /// StartGame 过场（640×480）播完 → 原版此刻才 `0x4570A0` enter-game，
+    /// 屏幕区从 mode 2 的 640×480 切到 mode 3 的 800×600。
+    /// 公告框（GameInter F0）按 800×600 逻辑画布居中，所以窗口切换必须发生在
+    /// `ShowLegacyStartNotice()`（内部会 `UiScaler.UpdateScale`）之前。
+    /// </summary>
+    private void OnLegacyStartGameCutsceneFinished()
+    {
+        // 0x419377 → 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)：mode 3 屏幕区。
+        ClientSettings.ApplyLegacyPregameWindow(800, 600);
+        ShowLegacyStartNotice();
+    }
+
     private void OnLegacyStartNoticeConfirmed()
     {
         DetachLegacyStartNoticeHandlers();
@@ -2229,21 +2268,22 @@ public partial class SelectScene : Control
             if (AutoLoginArgs.LegacyUi)
             {
                 SetSelectPhase(4);
-                // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场（后段淡入黑）。
-                // 过场期间隐藏选角 UI；视频完整播完 (1.37s / 41 帧) 后，黑屏显示
-                // GameInter F0 公告框；勾选后才创建 GameScene。视频挂到 Root。
+                // 原版 phase 4 = 进游戏，伴随 StartGame.dat 过场；过场期间隐藏选角 UI，
+                // 视频完整播完 (1.37s / 41 帧) 后黑屏显示 GameInter F0 公告框，
+                // 勾选后才创建 GameScene。视频挂到 Root。
+                //
+                // **窗口切换点必须在过场之后**：StartGame.dat 是 640×480 全屏过场，
+                // 仍属于 mode 2 的预游戏屏幕区（`0x45D270(&0x8AB7A8, 0x280, 0x1E0, 0x10)`）。
+                // 原版顺序是「phase 4 播完过场 → 0x4570A0 enter-game → mode 3 = 800×600」，
+                // 800×600 只在**进游戏**时才生效。提前切会把 640×480 过场画进
+                // 800×600 窗口的左上角，右侧 160px / 下方 120px 整片黑
+                // （实测截图内容 bbox (0,0)-(639,479)）。
                 if (_uiLayer != null) _uiLayer.Visible = false;
-                // 公告框按 **mode 3 = 800×600** 屏幕区布局（0x419377 →
-                // 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)），而选角屏是
-                // mode 2 = 640×480。这里在过场开始时就把窗口切到 800×600
-                // （过场后段本来就是黑屏，切换不可见）；LegacyEiNoticeDialog 按
-                // UiScaler 逻辑画布 (800×600) 居中，故 1.37s 后弹框正好居中。
-                ClientSettings.ApplyLegacyPregameWindow(800, 600);
                 // 证据 0x459456（紧邻服务端 case 0x20D 处理器 0x459465）读 +0x1144
                 // = StartGame.wav -> 进游戏时播一次性音效。
                 SoundPlayback.Play(this, SoundIndex.LegacyStartGame);
                 GD.Print("[Select] *** StartGame 成功! 播放 StartGame.ogv 过场后显示 GameInter F0 公告框 ***");
-                PlayLegacyTransition("StartGame", onFinished: ShowLegacyStartNotice, attachToRoot: true);
+                PlayLegacyTransition("StartGame", onFinished: OnLegacyStartGameCutsceneFinished, attachToRoot: true);
             }
             else
             {

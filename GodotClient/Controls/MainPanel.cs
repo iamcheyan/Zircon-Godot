@@ -28,6 +28,11 @@ public partial class MainPanel : DXImageControl
     public DXLabel ClassLabel, LevelLabel, FPLabel, CPLabel, ACLabel, DCLabel, MACLabel, MCLabel, SCLabel,
         HealthLabel, ManaLabel, FocusLabel, AttackModeLabel, PetModeLabel;
 
+    /// <summary>
+    /// 原版常显的「地图名 : [X, Y]」文本。Mir3.exe `0x0042A498`-`0x0042A4AE`
+    /// 的 SetRect 立即数 = (0,585,201,599)，即面板相对 (0,120) 201×14。
+    /// </summary>
+    public DXLabel MapTitleLabel;
     // 数据状态 (GameScene 注入)
     private int _currentHP, _currentMP, _currentFP;
     private decimal _experience, _maxExperience;
@@ -45,6 +50,20 @@ public partial class MainPanel : DXImageControl
     /// 压栈 `0x0032C8FF`，按 Win32 COLORREF(0x00BBGGRR) 解出 RGB(255,200,50) 琥珀金。
     /// </summary>
     private static readonly Color LegacyEiAcDcColour = new(255 / 255f, 200 / 255f, 50 / 255f);
+
+    /// <summary>
+    /// 原版地图标题文本色。`0x0042A6F9` 压栈 `0x00C8FFFF`，按 Win32
+    /// COLORREF(0x00BBGGRR) 解出 RGB(255,255,200) 米白。
+    /// </summary>
+    private static readonly Color LegacyEiMapTitleColour = new(1f, 1f, 200f / 255f);
+
+    /// <summary>
+    /// 地图标题矩形（面板相对）= 原版 `SetRect(0,585,201,599)` 减去 HUD 原点 (0,465)。
+    /// </summary>
+    private const int LegacyEiMapTitleX = 0;
+    private const int LegacyEiMapTitleY = 120;
+    private const int LegacyEiMapTitleWidth = 201;
+    private const int LegacyEiMapTitleHeight = 14;
 
     public MainPanel()
     {
@@ -288,6 +307,31 @@ public partial class MainPanel : DXImageControl
             Visible = false,
         };
         AddControl(PetModeLabel);
+
+        // 原版主 HUD 左下常显「地图名 : [X, Y]」：SetRect(0,585,201,599)
+        // → 面板相对 (0,120) 201x14（`0x0042A498`-`0x0042A4AE` 的压栈立即数
+        // 0x257=599 / 0xc9=201 / 0x249=585 / 0x0）。格式串 `0x0047BD30` =
+        // "%s : [%d,%d]"，坐标取自玩家当前格。
+        // 颜色 `0x00C8FFFF`（Win32 COLORREF 0x00BBGGRR → RGB(255,255,200)
+        // 米白），并带 4 向 1px 近黑描边（`0x42A57E`/`0x42A5E0`/`0x42A642`/
+        // `0x42A6A4`，色 `0x000A0A0A`）——DXLabel.DrawOutline 走的正是四次
+        // 1px 偏移，口径一致。垂直居中 + 水平靠左：原版 AC/DC 那一路用
+        // DT_CENTER，但那是 58px 宽的数值框；本矩形 201 宽，靠左才不会把
+        // 长地图名裁掉右半。
+        MapTitleLabel = new DXLabel
+        {
+            FontSize = 12,
+            TextColour = LegacyEiMapTitleColour,
+            DrawOutline = true,
+            OutlineColour = Colors.Black,
+            Align = HorizontalAlignment.Left,
+            VAlign = VerticalAlignment.Center,
+            AutoSize = false,
+            Location = new Vector2I(LegacyEiMapTitleX, LegacyEiMapTitleY),
+            Size = new Vector2I(LegacyEiMapTitleWidth, LegacyEiMapTitleHeight),
+            Visible = false,
+        };
+        AddControl(MapTitleLabel);
     }
 
     /// <summary>
@@ -345,6 +389,13 @@ public partial class MainPanel : DXImageControl
         DCLabel.Size = new Vector2I(58, 12);
         DCLabel.TextColour = LegacyEiAcDcColour;
         DCLabel.Visible = true;
+
+        // 「地图名 : [X, Y]」是原版旧版 HUD 的**常显**元素（不是悬停提示），
+        // 矩形 (0,120) 201x14、颜色米白 + 4 向黑描边，取值见构造函数注释。
+        // 原版在这条链上只画一次，位置由 SetRect 固定；故这里恢复常显。
+        MapTitleLabel.Location = new Vector2I(LegacyEiMapTitleX, LegacyEiMapTitleY);
+        MapTitleLabel.Size = new Vector2I(LegacyEiMapTitleWidth, LegacyEiMapTitleHeight);
+        MapTitleLabel.Visible = true;
 
         // SetStats 会在收到服务器属性包后重新填值；这里先清掉旧版不应残留
         // 的新版文本，避免测试场/登录瞬间出现一帧错误字段。
@@ -557,6 +608,18 @@ public partial class MainPanel : DXImageControl
     public void SetLevel(int level)
     {
         LevelLabel.Text = level.ToString();
+    }
+
+    /// <summary>
+    /// 设置原版主 HUD 左下常显的「地图名 : [X, Y]」。
+    /// 格式严格照抄 Mir3.exe `0x0047BD30` = "%s : [%d,%d]"（含两侧空格），
+    /// 地图名由调用方经 <c>MapInfo.Local()</c> 本地化后传入（"Bichon Town"
+    /// → "比奇县"），这里只负责按原版格式串拼坐标。
+    /// </summary>
+    public void SetMapTitle(string mapName, int x, int y)
+    {
+        if (!_legacyEiStats) return;
+        MapTitleLabel.Text = $"{mapName} : [{x},{y}]";
     }
 
     public void SetClass(MirClass cls)

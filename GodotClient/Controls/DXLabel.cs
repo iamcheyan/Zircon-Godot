@@ -34,6 +34,15 @@ public partial class DXLabel : DXControl
     /// <summary>文字相对控件内容区的垂直微调，供少数旧版贴图控件校准基线。</summary>
     public float TextOffsetY;
 
+
+    /// <summary>
+    /// 逐行文字颜色（index 与 <see cref="Text"/> 的换行分段一一对应）。
+    /// 原版物品提示 `0x004341F0` 的行记录步长 0x3C，每行自带颜色：
+    /// 绘制循环 `0x00434450` 逐行读 `[line-8]`（RGB），再调 `0x0045DD70`。
+    /// 颜色由 builder 按行的语义给定（物品名 / 普通属性 / "(+N)" 加成 / 耐久 /
+    /// 未满足需求 …），**与物品稀有度无关**。为 null 时全部行用 <see cref="TextColour"/>。
+    /// </summary>
+    public List<Color>? LineColours;
     /// <summary>true: 尺寸跟随文字大小 (旧 DXLabel 默认)</summary>
     public bool AutoSize = true;
 
@@ -63,7 +72,13 @@ public partial class DXLabel : DXControl
         else if (VAlign == VerticalAlignment.Bottom) pos.Y = physicalHeight - blockHeight - TextPadding.Y * canvasScale;
         pos.Y += TextOffsetY * canvasScale;
 
-        Color colour = IsEnabled ? TextColour : new Color(TextColour, 0.5f);
+        // 逐行可选自己的颜色（原版行记录自带颜色，见 LineColours）；缺省回落 TextColour。
+        // 禁用态沿用旧口径：整体半透明。
+        Color LineColour(int index)
+        {
+            Color c = LineColours != null && index < LineColours.Count ? LineColours[index] : TextColour;
+            return IsEnabled ? c : new Color(c, 0.5f);
+        }
 
         // Godot DrawString 的 Y 是基线 (baseline)，旧版 GDI TextRenderer.DrawText
         // 的 Y 是文本顶部。不补偿会让所有文字整体上移约一个 ascent（升部），
@@ -85,10 +100,10 @@ public partial class DXLabel : DXControl
                 DrawStringOutline(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, 1, OutlineColour);
             else if (DrawShadow)
                 DrawStringOutline(font, linePos + new Vector2(1, 1), lines[i], HorizontalAlignment.Left, -1, drawSize, 1, new Color(0, 0, 0, 0.7f));
-            DrawString(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, colour);
+            DrawString(font, linePos, lines[i], HorizontalAlignment.Left, -1, drawSize, LineColour(i));
                 if (DrawUnderline)
                     DrawLine(new Vector2(linePos.X, linePos.Y + drawSize + 1),
-                        new Vector2(linePos.X + textSize.X, linePos.Y + drawSize + 1), colour, 1f);
+                        new Vector2(linePos.X + textSize.X, linePos.Y + drawSize + 1), LineColour(i), 1f);
             }
         }
         finally { DrawSetTransform(Vector2.Zero, 0f, Vector2.One); }

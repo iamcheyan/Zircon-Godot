@@ -604,17 +604,39 @@ public partial class UITestScene : Control
                 partOk &= partText.Contains("过期于") || partText.Contains("Expires in") || partText.Contains("有効期限");
                 partOk &= partText.Contains("已锁定") || partText.Contains("Locked") || partText.Contains("ロック");
             }
-            bool raritySuperior = GameScene.HoverRarityColour(Rarity.Superior).G > .8f;
-            bool rarityElite = GameScene.HoverRarityColour(Rarity.Elite).B > .8f;
-            GD.Print(plainOk && partOk && raritySuperior && rarityElite
-                ? $"[UIItemHoverAudit] PASS name/type/part/expiry/locked/rarity"
-                : $"[UIItemHoverAudit] FAIL plain={plainOk} part={partOk} superior={raritySuperior} elite={rarityElite}");
+            // 原版悬浮框**每行自带颜色**（0x004341F0 渲染循环 0x00434450 逐行取色），
+            // 且**与物品稀有度无关** —— 物品名恒为 0x0000FAFF(亮黄)，普通属性行
+            // 0x00FFFFFF(白)，"(+N)" 加成形 0x00C8FF96(淡绿)，耐久 >1 为
+            // 0x00FFFF80(浅青)、<=1 为 0x003232FF(红)，未满足需求 0x000000FF。
+            // 这里断言这套调色板本身，避免回退成"整块单色"（看不清的根因）。
+            bool itemNameYellow = Near(GameScene.HoverItemNameColour(), 255, 250, 0);
+            bool plainWhite = Near(GameScene.HoverPlainColour(), 255, 255, 255);
+            bool bonusGreen = Near(GameScene.HoverBonusColour(), 150, 255, 200);
+            bool durabilityCyan = Near(GameScene.HoverDurabilityColour(), 128, 255, 255);
+            bool damagedRed = Near(GameScene.HoverDamagedColour(), 255, 50, 50);
+            bool failedRed = Near(GameScene.HoverFailedRequirementColour(), 255, 0, 0);
+            bool paletteOk = itemNameYellow && plainWhite && bonusGreen
+                && durabilityCyan && damagedRed && failedRed;
+            GD.Print(plainOk && partOk && paletteOk
+                ? $"[UIItemHoverAudit] PASS name/type/part/expiry/locked + per-line palette"
+                : $"[UIItemHoverAudit] FAIL plain={plainOk} part={partOk} palette={paletteOk}"
+                  + $" (name={itemNameYellow} white={plainWhite} bonus={bonusGreen}"
+                  + $" dur={durabilityCyan} dmg={damagedRed} req={failedRed})");
         }
         catch (Exception e)
         {
             GD.Print($"[UIItemHoverAudit] EXCEPTION {e}");
         }
     }
+
+    /// <summary>
+    /// 颜色近似比较：把 Color 的 0..1 分量换算回 0..255 后按每通道 ±2 容差比较。
+    /// 调色板断言要容忍浮点/量化误差，否则平台差异会造成假失败。
+    /// </summary>
+    private static bool Near(Color c, int r, int g, int b, int tolerance = 2)
+        => Math.Abs(Mathf.RoundToInt(c.R * 255f) - r) <= tolerance
+        && Math.Abs(Mathf.RoundToInt(c.G * 255f) - g) <= tolerance
+        && Math.Abs(Mathf.RoundToInt(c.B * 255f) - b) <= tolerance;
 
     private static void AuditEquipmentParity()
     {

@@ -16,14 +16,30 @@ public partial class MagicBar : Control
     private const int IconsPerRow = 12;
     private const int GroupSpacing = 5;
 
-    // EI 原版技能条（Mir3.exe `0x42A850`）：12 格 × 40px，索引 4/8 前各多 40px；
-    // 空槽底板 = GameInter.wil 帧 20..31（已烘焙 F1..F12 字样）。
     private const int EiSlotCount = 12;
     private const int EiCellSize = 40;
     private const int EiCellStride = 40;
     private const int EiGroupGap = 40;
+    // 空槽底板 = GameInter.wil 帧 20..31（画面已烘焙 F1..F12 字样）。
+    //
+    // 透明度证据（原版 Mir3.exe 0x42A850 技能条渲染循环）：
+    //   0x466800 是 D3DMATERIAL9 写入器：先 `rep stosd` 清零 68 字节，再按字节偏移
+    //   写入 Diffuse = (arg2, arg3, arg4, arg4)（[edx+0x00]=arg2 / [edx+0x04]=arg3 /
+    //   [edx+0x08]=arg4 / [edx+0x0C]=arg4），并把 arg2..arg4 复用到
+    //   Power/Reflection/Refraction/SpecularPower。**alpha 通道确实被写入**。
+    //   有绑定图标 0x42A955 压 (0x3F800000, 0x3EC8C8C9, 0x3EC8C8C9, 0x3EC8C8C9)
+    //   → Diffuse.A = 0.392157 = 100/255；空槽底板 0x42AA38 压
+    //   (0x3F800000, 0x3F169697, 0x3F169697, 0x3F169697) → Diffuse.A = 0.588235
+    //   = 150/255。（压入的 0x3F800000 是第 5 个实参，0x466800 并不存储它。）
+    //   混合分派 0x466ce0 显式比较 material+0x0C 与 1.0、对 alpha>0 走独立分支，
+    //   故这两个值是**真正生效的合成 alpha**，不是 RGB 变暗。
+    //
+    // 实测复核（用户提供的 EI 真机截图，对 F9 底板 GameInter F28 做合成预测 vs
+    // 像素测量）：alpha 模型预测 (107.2,92.0,67.7)，实测 (111.7,95.6,68.6)；
+    // 纯 RGB 变暗模型预测 (46.7,39.0,31.3) —— 差 2 倍以上，RGB 变暗模型被否。
+    private const byte EiBoundIconAlpha = 100;   // 0x3EC8C8C9 = 100/255
+    private const byte EiEmptyPlateAlpha = 150;  // 0x3F169697 = 150/255
     private const int EiEmptySlotFrame = 20;
-
     /// <summary>
     /// EI 技能条的屏幕原点 = 屏幕左上角。原版 `0x42A850` 给每格传的 pos 就是
     /// `(runningX, 2|3)`：`0x4542F0` 里的 `x - 400` / `y = 300 - y` 只是把
@@ -247,8 +263,13 @@ public partial class MagicBar : Control
             // 帧画布 64x64，实际内容只在左上 40x40；原版按原生尺寸 blit，
             // 多出的 24px 全透明，正好被下一格覆盖。
             // 原版空槽底板比图标低 1px（2.0 vs 3.0），照抄。
+            // 透明度 = 原版 0x466800 material alpha（见类头注释）：有绑定 100/255、
+            // 空槽底板 150/255。DrawTextureRect 的 modulate 乘 RGB+A，与
+            // D3D 材质 Diffuse 调制等价（纹理是灰度调制的 A8R8G8B8）。
             float top = magic != null ? EiIconTop : EiPlateTop;
-            DrawTextureRect(tex, new Rect2(EiSlotX(i), top, tex.GetWidth(), tex.GetHeight()), false);
+            var tint = new Color(1f, 1f, 1f,
+                (magic != null ? EiBoundIconAlpha : EiEmptyPlateAlpha) / 255f);
+            DrawTextureRect(tex, new Rect2(EiSlotX(i), top, tex.GetWidth(), tex.GetHeight()), false, tint);
         }
     }
 

@@ -274,8 +274,9 @@ namespace Server.Models
         {
             foreach (UserMagic magic in Character.Magics)
             {
+                // 与上面 CreateMagic 同一判据：Info 可能因 MagicInfo 被删而悬空。
+                if (magic?.Info == null) continue;
                 if (magic.Info.School == MagicSchool.None) continue;
-                if (!Config.EnableDiscipline && magic.Info.School == MagicSchool.Discipline) continue;
 
                 var type = magic.Info.Magic;
 
@@ -868,8 +869,12 @@ namespace Server.Models
                 BeltLinks = blinks,
                 AutoPotionLinks = alinks,
                 Milestones = GetClientUserMilestones(),
+                // Info 可能因对应 MagicInfo 被删除而悬空（同 SetupMagic 的判据）。
+                // 上面的 Where 已经用 `x.Info?.` 防过 null，这里把悬空记录整条滤掉：
+                // 它的 Info 已被删除，本就无法投影成 ClientUserMagic。
                 Magics = Character.Magics
-                    .Where(x => Config.EnableDiscipline || x.Info?.School != MagicSchool.Discipline)
+                    .Where(x => x?.Info != null)
+                    .Where(x => Config.EnableDiscipline || x.Info.School != MagicSchool.Discipline)
                     .Select(x => x.ToClientInfo()).ToList(),
                 Buffs = Buffs.Select(x => x.ToClientInfo()).ToList(),
                 Currencies = Character.Account.Currencies.Select(x => x.ToClientInfo(x.Info.Type == CurrencyType.GameGold && observer)).ToList(),

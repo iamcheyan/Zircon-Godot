@@ -5584,6 +5584,7 @@ public partial class GameScene : Control
         _mainPanel?.SetExperience(_playerExperience, _playerMaxExperience);
         _mainPanel?.SetAttackMode(_attackMode);
         _mainPanel?.SetPetModeEnabled(CompanionEnabled);
+        RefreshMapTitle();
         RefreshPlayerBars();
 
         _buffs.Clear();
@@ -6305,24 +6306,126 @@ public partial class GameScene : Control
     }
 
     /// <summary>
-    /// 原版 GameScene.CreateItemLabel 的物品悬停信息。新版单色标签无法复刻
-    /// 旧版每行颜色，但内容与顺序对齐旧版 ItemLabelBuilder。
+    /// 原版物品提示的逐行文字色（Mir3.exe `0x004341F0` 渲染循环读每行记录
+    /// `[line-8]` 的 COLORREF；颜色由 `0x00430B70` 的各类型 builder 在写入每行时
+    /// 显式给出，行数组只在 `0x00430B7A` 的 `rep stosd` 里清零过，没有默认色）。
+    /// 取值 = 压栈立即数按 Win32 COLORREF(0x00BBGGRR) 解码，证据 VA 见各行注释。
+    /// </summary>
+    private static class HoverLineColour
+    {
+        /// <summary>物品名：0x0000FAFF → RGB(255,250,0)（0x430CB8 等 5 处）。</summary>
+        public static readonly Color ItemName = Rgb(0x00FAFF);
+        /// <summary>普通属性行 / 已满足的需求：0x00FFFFFF → RGB(255,255,255)。</summary>
+        public static readonly Color Plain = Rgb(0xFFFFFF);
+        /// <summary>带 "(+N)" 加成的属性行：0x00C8FF96 → RGB(150,255,200)。</summary>
+        public static readonly Color Bonus = Rgb(0xC8FF96);
+        /// <summary>耐久 &gt; 1：0x00FFFF80 → RGB(128,255,255)（也用于纯度）。</summary>
+        public static readonly Color Durability = Rgb(0xFFFF80);
+        /// <summary>耐久 ≤ 1（已损坏）：0x003232FF → RGB(255,50,50)。</summary>
+        public static readonly Color Damaged = Rgb(0x3232FF);
+        /// <summary>未满足的需求：0x000000FF → RGB(255,0,0)。</summary>
+        public static readonly Color RequirementFailed = Rgb(0x0000FF);
+        /// <summary>元素/类型属性行（无加成）0x00FAFFFF / 0x00FAFAFF。</summary>
+        public static readonly Color ElementPlain = Rgb(0xFAFFFF);
+
+        /// <summary>把原版 COLORREF 立即数解成 Godot Color（小端字节序 = R,G,B）。</summary>
+        public static Color Rgb(uint colorref) => new(
+            (colorref & 0xFF) / 255f,
+            ((colorref >> 8) & 0xFF) / 255f,
+            ((colorref >> 16) & 0xFF) / 255f);
+    }
+
+    /// <summary>
+    /// 原版 GameScene.CreateItemLabel 的物品悬停信息。
+    /// 原版每一行自带颜色（行记录步长 0x3C，渲染循环 `0x00434450` 逐行取色），
+    /// 不是整块单色——此前把所有行刷成同一个稀有度色，橄榄黄底上对比极低，
+    /// 正是「看不清」的原因。这里按 <see cref="HoverLineColour"/> 逐行着色。
     /// </summary>
     private string BuildItemHoverText(ClientUserItem item)
     {
         if (item?.Info == null) return string.Empty;
-        _hoverLabel.TextColour = HoverRarityColour(item.Info.Rarity);
+        // 物品名是唯一带专属色的首行；原版不按稀有度变色（`0x00430B70` 按
+        // [item+0x22] 物品类型选 builder，与 Rarity 无关）。
+        _hoverLabel.TextColour = HoverLineColour.ItemName;
+        _hoverLabel.LineColours = null;
         return BuildItemHoverFull(item);
     }
 
-    /// <summary>原版 GetItemLabelRarityColour 的稀有度颜色。</summary>
-    public static Color HoverRarityColour(Rarity rarity) => rarity switch
+    /// <summary>
+    /// 逐行着色的物品提示文本构造器。原版每一行自带颜色（行记录带 COLORREF，
+    /// 渲染循环 `0x00434450` 逐行取色），故这里在文本之外再记录「第几行用
+    /// 什么颜色」，最后一起交给 <see cref="DXLabel.LineColours"/>。
+    /// 用法：写入某行内容**之前**调 <see cref="BeginLine"/>；未指定颜色的行
+    /// 归入 <see cref="DefaultColour"/>。
+    /// 组合而非继承：<see cref="StringBuilder"/> 是 sealed；且各 Append* 辅助
+    /// 方法的形参类型就是 StringBuilder，继承也无法拦截它们的写入。
+    /// 行号由已写入内容里 '\n' 的个数算出，所以任何写入路径都不会漏记。
+    /// </summary>
+    private sealed class HoverBuilder
     {
-        Rarity.Superior => new Color(0.55f, 0.95f, 0.6f),
-        Rarity.Elite => new Color(0.7f, 0.6f, 0.95f),
-        // 原版实机截图：普通物品名是**亮黄**（实测约 247,243,64），不是暗黄。
-        _ => new Color(0.97f, 0.95f, 0.25f),
-    };
+        private readonly Dictionary<int, Color> _lineColours = new();
+
+        /// <summary>文本缓冲；各 Append* 辅助方法按基类 StringBuilder 接收它。</summary>
+        public System.Text.StringBuilder Text { get; } = new();
+
+        /// <summary>未显式指定颜色的行所用的颜色（原版普通属性行 = 纯白）。</summary>
+        public Color DefaultColour = HoverLineColour.Plain;
+
+        /// <summary>当前将写入的行号（0 起）= 已写文本里的换行数。</summary>
+        private int LineIndex
+        {
+            get
+            {
+                int lines = 0;
+                foreach (char c in Text.ToString())
+                    if (c == '\n') lines++;
+                return lines;
+            }
+        }
+
+        /// <summary>为**下一行**选定颜色（必须在写入该行内容之前调用）。</summary>
+        public void BeginLine(Color colour) => _lineColours[LineIndex] = colour;
+
+        /// <summary>
+        /// 换行并推进行号。所有写入都必须经本方法 / <see cref="Text"/>，
+        /// 故行号与文本永远一致。
+        /// </summary>
+        public HoverBuilder NewLine()
+        {
+            Text.Append('\n');
+            return this;
+        }
+
+        /// <summary>转发到文本缓冲；让 <c>NewLine().Append(...)</c> 保持链式写法。</summary>
+        public HoverBuilder Append(string value) { Text.Append(value); return this; }
+
+        /// <inheritdoc cref="Append(string)"/>
+        public HoverBuilder Append(char value)
+        {
+            // '\n' 必须走 NewLine 推进行号，否则 TakeColours 少算行、
+            // 后面的行全部用不到自己指定的颜色（实测全框退化成首行色）。
+            if (value == '\n') return NewLine();
+            Text.Append(value);
+            return this;
+        }
+
+        /// <inheritdoc cref="Append(string)"/>
+        public HoverBuilder Append(object value) { Text.Append(value); return this; }
+
+        /// <summary>取每行颜色；长度与文本行数一致（行数由最终文本算出，不会被绕开）。</summary>
+        public List<Color> TakeColours()
+        {
+            int lines = 1;
+            foreach (char c in Text.ToString())
+                if (c == '\n') lines++;
+            var result = new List<Color>(lines);
+            for (int i = 0; i < lines; i++)
+                result.Add(_lineColours.TryGetValue(i, out var c) ? c : DefaultColour);
+            return result;
+        }
+
+        public override string ToString() => Text.ToString();
+    }
 
     /// <summary>悬停文本核心（静态可测；原版 ItemLabelBuilder 的多行信息）。</summary>
     public static string BuildItemHoverCore(ClientUserItem item)
@@ -6357,6 +6460,25 @@ public partial class GameScene : Control
     }
 
     /// <summary>
+    /// 收尾：把 <see cref="HoverBuilder"/> 累积的逐行颜色挂到悬浮标签上并返回文本。
+    /// 必须挂上而不是丢弃——原版每行自带颜色，全刷成单色正是「看不清」的根因。
+    /// </summary>
+    private string FinishHover(HoverBuilder sb)
+    {
+        if (_hoverLabel != null)
+            _hoverLabel.LineColours = sb.TakeColours();
+        return sb.ToString();
+    }
+
+    // 以下 accessor 供 UI 自检断言调色板本身（避免回退成整块单色）。
+    public static Color HoverItemNameColour() => HoverLineColour.ItemName;
+    public static Color HoverPlainColour() => HoverLineColour.Plain;
+    public static Color HoverBonusColour() => HoverLineColour.Bonus;
+    public static Color HoverDurabilityColour() => HoverLineColour.Durability;
+    public static Color HoverDamagedColour() => HoverLineColour.Damaged;
+    public static Color HoverFailedRequirementColour() => HoverLineColour.RequirementFailed;
+
+    /// <summary>
     /// 完整版物品悬停信息：对齐旧版 CreateItemLabel 的全部分区
     /// （元数据/属性/需求/插槽/交易状态/描述/修理/套装等）。
     /// 单色标签，行序与旧版一致；玩家相关判断用当前实例状态。
@@ -6372,60 +6494,79 @@ public partial class GameScene : Control
             if (partInfo != null) displayInfo = partInfo;
         }
 
-        var sb = new System.Text.StringBuilder();
+        var sb = new HoverBuilder();
 
-        // ---- Header: 名称 + [Part] ----
-        sb.Append(displayInfo.Local() ?? item.Info.Local() ?? string.Empty);
+        // ---- Header: 名称 + [Part]（原版 0x430CB8 压 0x0000FAFF → 亮黄）----
+        sb.BeginLine(HoverLineColour.ItemName);
+        sb.Text.Append(displayInfo.Local() ?? item.Info.Local() ?? string.Empty);
         if (item.Info.ItemEffect == ItemEffect.ItemPart)
-            sb.Append(" - [部件]");
+            sb.Text.Append(" - [部件]");
 
         // ---- Metadata ----
         if (displayInfo.ItemType != ItemType.Nothing)
         {
             var typeMember = typeof(ItemType).GetMember(displayInfo.ItemType.ToString()).FirstOrDefault();
             var typeDesc = typeMember?.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description;
-            sb.Append('\n').Append($"类型: {typeDesc ?? displayInfo.ItemType.ToString()}");
+            sb.NewLine().Append($"类型: {typeDesc ?? displayInfo.ItemType.ToString()}");
         }
 
         if (item.Info.Durability > 0)
         {
+            // 原版耐久/纯度行：耐久 > 1 用 0x00FFFF80（浅青，0x430D5B/0x431978/
+            // 0x431F6A/0x432B9B/0x43409D），≤ 1（已损坏）用 0x003232FF（红，
+            // 0x430D4E/0x43196B/0x431F5D/0x432B8E/0x434084）。纯度行同用浅青。
+            Color DurabilityColour(int current, int max)
+                => current > 1 ? HoverLineColour.Durability : HoverLineColour.Damaged;
+
             switch (displayInfo.ItemType)
             {
                 case ItemType.Book:
-                    sb.Append('\n').Append($"页数: {item.CurrentDurability / 1000}/{item.MaxDurability / 1000}");
+                    sb.NewLine();
+                    sb.BeginLine(DurabilityColour(item.CurrentDurability, item.MaxDurability));
+                    sb.Text.Append($"页数: {item.CurrentDurability / 1000}/{item.MaxDurability / 1000}");
                     break;
                 case ItemType.Meat:
-                    sb.Append('\n').Append($"品质: {Math.Round(item.CurrentDurability / 1000M)}/{Math.Round(item.MaxDurability / 1000M)}");
+                    sb.NewLine();
+                    sb.BeginLine(DurabilityColour(item.CurrentDurability, item.MaxDurability));
+                    sb.Text.Append($"品质: {Math.Round(item.CurrentDurability / 1000M)}/{Math.Round(item.MaxDurability / 1000M)}");
                     break;
                 case ItemType.Ore:
-                    sb.Append('\n').Append($"纯度: {Math.Round(item.CurrentDurability / 1000M)}");
+                    sb.NewLine();
+                    sb.BeginLine(HoverLineColour.Durability);
+                    sb.Text.Append($"纯度: {Math.Round(item.CurrentDurability / 1000M)}");
                     break;
                 case ItemType.SocketGem:
-                    sb.Append('\n').Append($"宝石类型: {GemTypeName(item.Info.Shape)}");
-                    sb.Append('\n').Append($"纯度: {GemPurityText(item)}");
+                    sb.NewLine().Append($"宝石类型: {GemTypeName(item.Info.Shape)}");
+                    sb.NewLine();
+                    sb.BeginLine(HoverLineColour.Durability);
+                    sb.Text.Append($"纯度: {GemPurityText(item)}");
                     break;
                 default:
                     if (item.Info.StackSize == 1)
-                        sb.Append('\n').Append($"耐久: {Math.Round(item.CurrentDurability / 1000M)}/{Math.Round(item.MaxDurability / 1000M)}");
+                    {
+                        sb.NewLine();
+                        sb.BeginLine(DurabilityColour(item.CurrentDurability, item.MaxDurability));
+                        sb.Text.Append($"耐久: {Math.Round(item.CurrentDurability / 1000M)}/{Math.Round(item.MaxDurability / 1000M)}");
+                    }
                     break;
             }
         }
 
         if (IsCurrencyItem(item.Info) || item.Info.ItemEffect == ItemEffect.Experience)
-            sb.Append('\n').Append($"数量: {item.Count:#,##0}");
+            sb.NewLine().Append($"数量: {item.Count:#,##0}");
         else if (item.Info.ItemEffect == ItemEffect.ItemPart)
-            sb.Append('\n').Append($"部件: {item.Count}/{displayInfo.PartCount}。");
+            sb.NewLine().Append($"部件: {item.Count}/{displayInfo.PartCount}。");
         else if (item.Info.StackSize > 1)
-            sb.Append('\n').Append($"数量: {item.Count}/{item.Info.StackSize}");
+            sb.NewLine().Append($"数量: {item.Count}/{item.Info.StackSize}");
 
         if (item.Info.Weight > 0)
-            sb.Append('\n').Append($"重量: {item.Info.Weight}");
+            sb.NewLine().Append($"重量: {item.Info.Weight}");
 
         // ---- 货币/经验物品：直接返回（旧版只显示描述）----
         if (IsCurrencyItem(item.Info) || item.Info.ItemEffect == ItemEffect.Experience)
         {
-            AppendDescription(sb, displayInfo);
-            return sb.ToString();
+            AppendDescription(sb.Text, displayInfo);
+            return FinishHover(sb);
         }
 
         // ---- 装备属性 ----
@@ -6444,7 +6585,7 @@ public partial class GameScene : Control
         }
 
         // ---- 训练信息（武器/饰品等级）----
-        AppendTrainingInfo(sb, item, displayInfo);
+        AppendTrainingInfo(sb.Text, item, displayInfo);
 
         // ---- 需求 ----
         AppendRequirements(sb, item, displayInfo);
@@ -6456,7 +6597,7 @@ public partial class GameScene : Control
         AppendTradeState(sb, item, displayInfo);
 
         // ---- 描述 ----
-        AppendDescription(sb, displayInfo);
+        AppendDescription(sb.Text, displayInfo);
 
         // ---- 特殊修理 ----
         if (item.Info.Durability > 0 && item.Info.CanRepair && item.Info.StackSize == 1)
@@ -6471,26 +6612,26 @@ public partial class GameScene : Control
                 case ItemType.Ring:
                 case ItemType.Shoes:
                 case ItemType.Shield:
-                    sb.Append('\n');
+                    sb.NewLine();
                     if (Library.Time.Now >= item.NextSpecialRepair)
-                        sb.Append("可特殊修理");
+                        sb.Text.Append("可特殊修理");
                     else
-                        sb.Append($"特殊修理将于 {Functions.ToString(item.NextSpecialRepair - Library.Time.Now, true)}");
+                        sb.Text.Append($"特殊修理将于 {Functions.ToString(item.NextSpecialRepair - Library.Time.Now, true)}");
                     break;
             }
         }
 
         // ---- 过期 / 复活 ----
         if ((item.Flags & UserItemFlags.Expirable) == UserItemFlags.Expirable)
-            sb.Append('\n').Append($"过期于 {Functions.ToString(item.ExpireTime, true)}");
+            sb.NewLine().Append($"过期于 {Functions.ToString(item.ExpireTime, true)}");
 
         if (item.AddedStats != null && item.AddedStats[Stat.ItemReviveTime] > 0)
         {
             DateTime value = item.Info.ItemEffect == ItemEffect.PillOfReincarnation
                 ? DateTimeOffset.FromUnixTimeMilliseconds((long)ReincarnationPillUntilMs).LocalDateTime
                 : DateTimeOffset.FromUnixTimeMilliseconds((long)ItemReviveUntilMs).LocalDateTime;
-            sb.Append('\n');
-            sb.Append(Library.Time.Now >= value
+            sb.NewLine();
+            sb.Text.Append(Library.Time.Now >= value
                 ? "Revival ready"
                 : $"Revival ready in {Functions.ToString(value - Library.Time.Now, true)}");
         }
@@ -6501,24 +6642,24 @@ public partial class GameScene : Control
 
         // ---- 结婚 / GM ----
         if ((item.Flags & UserItemFlags.Marriage) == UserItemFlags.Marriage)
-            sb.Append('\n').Append("婚戒。");
+            sb.NewLine().Append("婚戒。");
         if ((item.Flags & UserItemFlags.GameMaster) == UserItemFlags.GameMaster)
-            sb.Append('\n').Append("由管理员创建。");
+            sb.NewLine().Append("由管理员创建。");
 
         // ---- 碎片 / 重置 / 锁定 ----
         if (item.CanFragment())
         {
-            sb.Append('\n').Append($"碎片费用: {item.FragmentCost():#,##0}");
-            sb.Append('\n').Append($"碎片: {(item.Info.Rarity == Rarity.Common ? "Fragment" : "Fragment (II)")} x{item.FragmentCount():#,##0}");
+            sb.NewLine().Append($"碎片费用: {item.FragmentCost():#,##0}");
+            sb.NewLine().Append($"碎片: {(item.Info.Rarity == Rarity.Common ? "Fragment" : "Fragment (II)")} x{item.FragmentCount():#,##0}");
         }
 
         if (Library.Time.Now < item.NextReset)
-            sb.Append('\n').Append($"重置可用时间: {Functions.ToString(item.NextReset - Library.Time.Now, true)}");
+            sb.NewLine().Append($"重置可用时间: {Functions.ToString(item.NextReset - Library.Time.Now, true)}");
 
         if ((item.Flags & UserItemFlags.Locked) == UserItemFlags.Locked)
-            sb.Append('\n').Append("已锁定: 防止误售或误扔\n[鼠标中键] 或 [Scroll Lock] 解锁ck.");
+            sb.NewLine().Append("已锁定: 防止误售或误扔\n[鼠标中键] 或 [Scroll Lock] 解锁ck.");
 
-        return sb.ToString();
+        return FinishHover(sb);
     }
 
     private static string GemTypeName(int shape) => shape switch
@@ -6546,7 +6687,7 @@ public partial class GameScene : Control
     private static bool IsCurrencyItem(ItemInfo info)
         => Globals.CurrencyInfoList?.Binding.FirstOrDefault(x => x.DropItem == info) != null;
 
-    private void AppendEquipmentStats(System.Text.StringBuilder sb, ClientUserItem item, ItemInfo displayInfo)
+    private void AppendEquipmentStats(HoverBuilder sb, ClientUserItem item, ItemInfo displayInfo)
     {
         Stats stats = new Stats();
         stats.Add(displayInfo.Stats, displayInfo.ItemType != ItemType.Weapon);
@@ -6567,6 +6708,8 @@ public partial class GameScene : Control
             string text = stats.GetDisplay(pair.Key);
             if (text == null) continue;
             string added = item.AddedStats.GetFormat(pair.Key);
+            // 该行是否带 "(+N)" 加成后缀 —— 决定用普通白还是加成形淡绿。
+            bool hasBonus = false;
 
             switch (pair.Key)
             {
@@ -6574,19 +6717,27 @@ public partial class GameScene : Control
                 case Stat.ExperienceRate:
                 case Stat.SkillRate:
                 case Stat.GoldRate:
-                    if (added != null) text += $" ({added})";
+                    if (added != null) { text += $" ({added})"; hasBonus = true; }
                     break;
                 default:
                     if (item.AddedStats[pair.Key] != 0)
+                    {
                         text += $"   ({added})";
+                        hasBonus = true;
+                    }
                     break;
             }
 
-            sb.Append('\n').Append(text);
+            sb.Append('\n');
+            // 原版同一批属性行有普通/加成两种色：普通 0x00FFFFFF（白），
+            // 带 "(+N)" 的加成形 0x00C8FF96 → RGB(150,255,200) 淡绿
+            // （0x430E04/0x430EDA/0x430F9A… 共 34 处）。
+            sb.BeginLine(hasBonus ? HoverLineColour.Bonus : HoverLineColour.Plain);
+            sb.Append(text);
         }
     }
 
-    private void AppendPotionStats(System.Text.StringBuilder sb, ClientUserItem item)
+    private void AppendPotionStats(HoverBuilder sb, ClientUserItem item)
     {
         Stats stats = new Stats();
         stats.Add(item.Info.Stats);
@@ -6627,21 +6778,24 @@ public partial class GameScene : Control
         }
     }
 
-    private void AppendRequirements(System.Text.StringBuilder sb, ClientUserItem item, ItemInfo displayInfo)
+    private void AppendRequirements(HoverBuilder sb, ClientUserItem item, ItemInfo displayInfo)
     {
+        // 原版需求行：玩家满足为白（0x00FFFFFF），不满足为红（0x000000FF）。
+        // 同一段里 0x4317DB 的 `test edi,edi` 就是这个「是否满足」标志。
         if (displayInfo.RequiredGender != RequiredGender.None)
-            sb.Append('\n').Append($"所需性别: {displayInfo.RequiredGender}");
+            sb.NewLine().Append($"所需性别: {displayInfo.RequiredGender}");
 
         if (displayInfo.RequiredClass != RequiredClass.All)
         {
             var clsMember = typeof(RequiredClass).GetMember(displayInfo.RequiredClass.ToString()).FirstOrDefault();
             var clsDesc = clsMember?.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description;
-            sb.Append('\n').Append($"所需职业: {displayInfo.RequiredClass.Local()}");
+            sb.NewLine().Append($"所需职业: {displayInfo.RequiredClass.Local()}");
         }
 
         if (displayInfo.RequiredAmount <= 0) return;
 
         string text;
+        bool met = RequirementMet(displayInfo, item);
         switch (displayInfo.RequiredType)
         {
             case RequiredType.Level: text = $"所需等级: {displayInfo.RequiredAmount}"; break;
@@ -6659,10 +6813,41 @@ public partial class GameScene : Control
             case RequiredType.MaxRebirthLevel: text = $"Max 转生等级: {displayInfo.RequiredAmount}"; break;
             default: text = "Unknown Type Required"; break;
         }
-        sb.Append('\n').Append(text);
+        // 未满足的需求行用红（0x000000FF），与原始一致；满足则沿用默认白。
+        if (!met) sb.BeginLine(HoverLineColour.RequirementFailed);
+        sb.NewLine().Append(text);
     }
 
-    private void AppendSocketInfo(System.Text.StringBuilder sb, ClientUserItem item, ItemInfo displayInfo)
+    /// <summary>
+    /// 判断玩家是否满足物品需求。原版 `0x4317A9` 的 `cmp dl,al`（al=物品需求值，
+    /// dl=玩家对应属性）即此判定；满足则走白字分支，否则红字（0x431811）。
+    /// </summary>
+    private bool RequirementMet(ItemInfo info, ClientUserItem item)
+    {
+        if (info.RequiredAmount <= 0) return true;
+        int have = info.RequiredType switch
+        {
+            RequiredType.Level => _playerLevel,
+            RequiredType.MaxLevel => _playerLevel,
+            RequiredType.AC => _playerStats[Stat.MaxAC],
+            RequiredType.MR => _playerStats[Stat.MaxMR],
+            RequiredType.DC => _playerStats[Stat.MaxDC],
+            RequiredType.MC => _playerStats[Stat.MaxMC],
+            RequiredType.SC => _playerStats[Stat.MaxSC],
+            RequiredType.Health => _playerStats[Stat.Health],
+            RequiredType.Mana => _playerStats[Stat.Mana],
+            RequiredType.CompanionLevel => _companionLevel,
+            RequiredType.RebirthLevel => _playerStats[Stat.Rebirth],
+            RequiredType.MaxRebirthLevel => _playerStats[Stat.Rebirth],
+            _ => 0,
+        };
+        // 原版对所有需求类型同走 `cmp dl,al` + `jae`（有符号 >=），
+        // 即「玩家属性 >= 需求」视为满足（含 MaxLevel/MaxRebirthLevel）。
+        return have >= info.RequiredAmount;
+    }
+    private int _companionLevel;
+
+    private void AppendSocketInfo(HoverBuilder sb, ClientUserItem item, ItemInfo displayInfo)
     {
         if (displayInfo.ItemType != ItemType.Weapon && displayInfo.ItemType != ItemType.Armour) return;
 
@@ -6671,7 +6856,7 @@ public partial class GameScene : Control
             ClientUserItem gemItem = socket.Gem;
             if (gemItem?.Info == null)
             {
-                sb.Append('\n').Append("Empty Socket");
+                sb.NewLine().Append("Empty Socket");
                 continue;
             }
 
@@ -6681,19 +6866,19 @@ public partial class GameScene : Control
             {
                 string text = gemStats.GetDisplay(pair.Key);
                 if (text == null) continue;
-                sb.Append('\n').Append(text);
+                sb.NewLine().Append(text);
             }
         }
     }
 
-    private void AppendTradeState(System.Text.StringBuilder sb, ClientUserItem item, ItemInfo displayInfo)
+    private void AppendTradeState(HoverBuilder sb, ClientUserItem item, ItemInfo displayInfo)
     {
         long sale = item.Price(Math.Max(1, item.Count));
         bool any = false;
 
         if (sale > 0)
         {
-            sb.Append('\n').Append($"售价: {sale:#,##0}");
+            sb.NewLine().Append($"售价: {sale:#,##0}");
             any = true;
         }
 
@@ -6709,7 +6894,7 @@ public partial class GameScene : Control
                 case ItemType.Ring:
                 case ItemType.Shoes:
                 case ItemType.Shield:
-                    sb.Append('\n').Append("Cannot be repaired.");
+                    sb.NewLine().Append("Cannot be repaired.");
                     any = true;
                     break;
             }
@@ -6717,44 +6902,44 @@ public partial class GameScene : Control
 
         if (!item.Info.CanSell || (item.Flags & UserItemFlags.Worthless) == UserItemFlags.Worthless)
         {
-            sb.Append('\n').Append("Cannot be sold.");
+            sb.NewLine().Append("Cannot be sold.");
             any = true;
         }
         if (!item.Info.CanStore)
         {
-            sb.Append('\n').Append("Cannot be stored.");
+            sb.NewLine().Append("Cannot be stored.");
             any = true;
         }
         if (!item.Info.CanTrade || (item.Flags & UserItemFlags.Bound) == UserItemFlags.Bound)
         {
-            sb.Append('\n').Append("Cannot be traded.");
+            sb.NewLine().Append("Cannot be traded.");
             any = true;
         }
         if (!item.Info.CanDrop)
         {
-            sb.Append('\n').Append("Cannot be dropped.");
+            sb.NewLine().Append("Cannot be dropped.");
             any = true;
         }
         if (!item.Info.CanDeathDrop || (item.Flags & UserItemFlags.Worthless) == UserItemFlags.Worthless || (item.Flags & UserItemFlags.Bound) == UserItemFlags.Bound)
         {
-            sb.Append('\n').Append("Cannot be dropped on death.");
+            sb.NewLine().Append("Cannot be dropped on death.");
             any = true;
         }
         if ((item.Flags & UserItemFlags.Bound) == UserItemFlags.Bound)
         {
-            sb.Append('\n').Append("Bound Item.");
+            sb.NewLine().Append("Bound Item.");
             any = true;
         }
         if ((item.Flags & UserItemFlags.NonRefinable) == UserItemFlags.NonRefinable)
         {
-            sb.Append('\n').Append(item.Info.ItemType == ItemType.Book
+            sb.NewLine().Append(item.Info.ItemType == ItemType.Book
                 ? "Does not contain Level 4 Pages."
                 : "Cannot be Refined or Upgraded.");
             any = true;
         }
         else if (item.Info.ItemType == ItemType.Book)
         {
-            sb.Append('\n').Append("Contains high level Pages.");
+            sb.NewLine().Append("Contains high level Pages.");
             any = true;
         }
     }
@@ -6769,11 +6954,11 @@ public partial class GameScene : Control
         sb.Append('\n').Append(desc);
     }
 
-    private void AppendSetInfo(System.Text.StringBuilder sb, ClientUserItem item, SetInfo set)
+    private void AppendSetInfo(HoverBuilder sb, ClientUserItem item, SetInfo set)
     {
-        sb.Append('\n').Append("Item Set:");
-        sb.Append('\n').Append($"    {set.SetName}");
-        sb.Append('\n').Append("Parts:");
+        sb.NewLine().Append("Item Set:");
+        sb.NewLine().Append($"    {set.SetName}");
+        sb.NewLine().Append("Parts:");
 
         bool hasFullSet = true;
         var counted = new List<int>();
@@ -6797,10 +6982,10 @@ public partial class GameScene : Control
             if (!hasPart)
                 hasFullSet = false;
 
-            sb.Append('\n').Append("    " + info.ItemName);
+            sb.NewLine().Append("    " + info.ItemName);
         }
 
-        sb.Append('\n').Append("Set Bonus:");
+        sb.NewLine().Append("Set Bonus:");
 
         foreach (SetInfoStat stat in set.SetStats ?? Enumerable.Empty<SetInfoStat>())
         {
@@ -6813,7 +6998,7 @@ public partial class GameScene : Control
         {
             string text = setBonus.GetDisplay(pair.Key);
             if (text == null) continue;
-            sb.Append('\n').Append("    " + text);
+            sb.NewLine().Append("    " + text);
         }
     }
 
@@ -10687,6 +10872,22 @@ public partial class GameScene : Control
         _interactionAuditDeadline = Godot.Time.GetTicksMsec() + 4000.0;
     }
 
+    /// <summary>
+    /// 刷新原版主 HUD 左下常显的「地图名 : [X, Y]」。
+    /// 原版格式串 `0x0047BD30` = "%s : [%d,%d]"，取自 HUD 每帧绘制链
+    /// （`0x0042A471` 读当前坐标 → `0x0042A48A` wsprintfA → SetRect(0,585,201,599)）。
+    /// 地图名用 <see cref="LocalizedName.Local(MapInfo)"/>：它按当前语言查
+    /// `translations/db_names.json` 的 maps 表（"Bichon Town" → "比奇县"），
+    /// 与任务栏/BigMap 同源。地图未加载时不写，避免闪一行空文本。
+    /// </summary>
+    private void RefreshMapTitle()
+    {
+        if (_mainPanel == null || !AutoLoginArgs.LegacyHud) return;
+        var map = GetMapInfo(_playerMapIndex);
+        if (map == null) return;
+        _mainPanel.SetMapTitle(map.Local(), _player.CellX, _player.CellY);
+    }
+
 
     private void UpdatePlayerPosition()
     {
@@ -10696,6 +10897,10 @@ public partial class GameScene : Control
             + new Vector2(_player.OffsetX, _player.OffsetY);
         _player.ZIndex = RenderOrder.ObjectAtFoot(_player.RenderY);
         UpdateObjectPositions();
+        // 原版主 HUD 的「地图名 : [X, Y]」每帧随玩家格重画（`0x0042A471` 起的
+        // HUD 绘制链每次都取当前坐标）。UpdatePlayerPosition 是所有玩家格变化
+        // 的唯一汇聚点，接在这里即可覆盖移动、服务器纠正、受击位移与切图。
+        RefreshMapTitle();
     }
 
     // 视野范围随视口尺寸自适应 (窗口模式视口大, 固定 12x15 画不满)

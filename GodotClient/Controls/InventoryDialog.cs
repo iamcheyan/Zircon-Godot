@@ -250,13 +250,12 @@ public partial class InventoryDialog : DXWindow
         Grid.Clip = true;
 
         // 锁链 GameInter F280（16x424，贴图里 y≈208 烤了一颗圆点=滑块）：
-        // 原版把锁链**裁到窗口内固定一段**，靠整体滑动让圆点落在滚动位置。
-        // 这里用一个裁剪容器把锁链限制在窗口可见区，避免它伸到窗口上方。
-        // F250 实测：右侧锁链槽在窗口 y≈6..323（几乎整窗高），不是只到网格底部。
+        // 原版 F250 背包右侧黑槽范围：X=248..264，Y=40..256（高度 216），完全对齐左侧 6 行物品格子（Y=41..257）。
+        // 顶部是银帽 (Y≈20..35)，底部是银扣 (Y≈260)。裁剪框精准限定在黑槽内，不遮挡两端金属装饰。
         _legacyScrollClip ??= new DXControl
         {
-            Location = new Vector2I(248, 6),
-            Size = new Vector2I(16, 318),
+            Location = new Vector2I(248, 40),
+            Size = new Vector2I(16, 216),
             Clip = true,
             IsControl = false,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -270,44 +269,33 @@ public partial class InventoryDialog : DXWindow
             FixedSize = true,
             StretchImage = false,
             Size = new Vector2I(16, 424),
-            Location = new Vector2I(0, 0),
+            Location = new Vector2I(0, -198),
             MouseFilter = MouseFilterEnum.Ignore,
         };
         if (_legacyScrollTrack.GetParent() == null) _legacyScrollClip.AddControl(_legacyScrollTrack);
 
         _legacyScrollBar ??= new DXVScrollBar
         {
-            Size = new Vector2I(16, 424),
-            Location = new Vector2I(248, -165),
+            Size = new Vector2I(16, 216),
+            Location = new Vector2I(248, 40),
             Border = false,
             BackColour = Colors.Transparent,
             Change = 1,
+            Visible = false, // 视觉完全由 F280 锁链呈现，DXVScrollBar 仅作为纯逻辑状态存储
         };
         if (_legacyScrollBar.GetParent() == null) AddControl(_legacyScrollBar);
-        _legacyScrollBar.UpButton.DrawImage = false;
-        _legacyScrollBar.DownButton.DrawImage = false;
-        _legacyScrollBar.PositionBar.DrawImage = false;
-        _legacyScrollBar.UpButton.FixedSize = true;
-        _legacyScrollBar.DownButton.FixedSize = true;
-        _legacyScrollBar.PositionBar.FixedSize = true;
-        _legacyScrollBar.UpButton.Size = new Vector2I(16, 16);
-        _legacyScrollBar.DownButton.Size = new Vector2I(16, 16);
-        _legacyScrollBar.PositionBar.Size = new Vector2I(16, 34);
+        _legacyScrollBar.UpButton.Visible = false;
+        _legacyScrollBar.DownButton.Visible = false;
+        _legacyScrollBar.PositionBar.Visible = false;
         _legacyScrollBar.MouseWheel += _legacyScrollBar.DoMouseWheel;
         _legacyScrollBar.ValueChanged -= LegacyScrollChanged;
         _legacyScrollBar.ValueChanged += LegacyScrollChanged;
 
-        // F280 轨按 EI blit 放在窗口相对 y=-165，整条 16x424 只有下半段
-        // （窗口内 y≈0..259）可见；DXVScrollBar 的 PositionBar 落在 y≈-149
-        // 的窗口外，点/拖都够不到。补一块只覆盖可见段的透明命中面，
-        // 拖拽/点击把 Y 比例映射回滚动值，滚轮同样转发给同一条滚动条。
-        // 交互命中面只到关闭钮上沿（关闭钮 y=288）：链槽 x248-264 与关闭钮 x249-277
-        // 在底部重叠，命中面若覆盖上去就会挡住关闭钮。视觉锁链仍由裁到 y=318 的
-        // Ignore 容器绘制，只是底部那一小段不可拖。
+        // 交互命中面覆盖整条黑槽（Y=40..256），点击/拖动/滚轮都直接驱动滚动
         _legacyGaugeDrag ??= new LegacyGaugeDragSurface
         {
-            Location = new Vector2I(248, 6),
-            Size = new Vector2I(16, 282),
+            Location = new Vector2I(248, 40),
+            Size = new Vector2I(16, 216),
             MouseFilter = MouseFilterEnum.Stop,
         };
         _legacyGaugeDrag.Target = _legacyScrollBar;
@@ -501,24 +489,29 @@ public partial class InventoryDialog : DXWindow
             ? Mathf.Clamp((_legacyScrollBar.Value - _legacyScrollBar.MinValue) / (float)range, 0f, 1f)
             : 0f;
         const int bakedDotY = 208; // F280 圆点中心
-        const int pad = 8;
-        int trackH = (int)_legacyScrollClip.Size.Y;
-        float thumbY = pad + t * Mathf.Max(1f, trackH - pad * 2f - 14f);
+        const float pad = 10f;
+        float trackH = (float)_legacyScrollClip.Size.Y;
+        float travel = Mathf.Max(1f, trackH - pad * 2f);
+        float thumbY = pad + t * travel;
         _legacyScrollTrack.Location = new Vector2I(0, (int)Math.Round(thumbY - bakedDotY));
     }
 
     /// <summary>
-    /// legacy 背包：格子在 DXControl 里会 AcceptEvent，滚轮不会冒泡到滚动条；
-    /// 逐个把 MouseWheel 转发给 F280 滚动条。Cells 每次重建后都要重绑。
+    /// legacy 背包：绑定格子与网格区域滚轮，转发给 F280 滚动条。Cells 每次重建后都要重绑。
     /// </summary>
     public void BindLegacyInventoryScrollInputs()
     {
-        if (!_legacyEiLayout || Grid?.Cells == null || _legacyScrollBar == null) return;
-        foreach (var cell in Grid.Cells)
+        if (!_legacyEiLayout || Grid == null || _legacyScrollBar == null) return;
+        Grid.MouseWheel -= _legacyScrollBar.DoMouseWheel;
+        Grid.MouseWheel += _legacyScrollBar.DoMouseWheel;
+        if (Grid.Cells != null)
         {
-            if (cell == null) continue;
-            cell.MouseWheel -= _legacyScrollBar.DoMouseWheel;
-            cell.MouseWheel += _legacyScrollBar.DoMouseWheel;
+            foreach (var cell in Grid.Cells)
+            {
+                if (cell == null) continue;
+                cell.MouseWheel -= _legacyScrollBar.DoMouseWheel;
+                cell.MouseWheel += _legacyScrollBar.DoMouseWheel;
+            }
         }
     }
 
@@ -915,11 +908,26 @@ public partial class InventoryDialog : DXWindow
 
         public void SetTarget(DXVScrollBar target) => Target = target;
 
+        public LegacyGaugeDragSurface()
+        {
+            MouseWheel += (s, e) => Target?.DoMouseWheel(s, e);
+        }
+
         public override void _Process(double delta)
         {
             base._Process(delta);
-            // 鼠标在控件外松开时收不到 release，轮询左键状态复位拖拽。
-            if (!Input.IsMouseButtonPressed(MouseButton.Left)) _gaugeDragging = false;
+            if (_gaugeDragging)
+            {
+                if (!Input.IsMouseButtonPressed(MouseButton.Left))
+                {
+                    _gaugeDragging = false;
+                }
+                else
+                {
+                    Vector2 localMouse = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
+                    ApplyGaugeY(localMouse.Y);
+                }
+            }
         }
 
         public override void _GuiInput(InputEvent e)
@@ -930,19 +938,22 @@ public partial class InventoryDialog : DXWindow
             if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
             {
                 _gaugeDragging = mb.Pressed;
-                if (mb.Pressed) ApplyGaugeY((float)mb.Position.Y);
-            }
-            else if (e is InputEventMouseMotion mm && _gaugeDragging)
-            {
-                ApplyGaugeY((float)mm.Position.Y);
+                if (mb.Pressed)
+                {
+                    ApplyGaugeY((float)mb.Position.Y);
+                    AcceptEvent();
+                }
             }
         }
 
         private void ApplyGaugeY(float y)
         {
+            if (Target == null) return;
             int range = Target.MaxValue - Target.MinValue - Target.VisibleSize;
             if (range <= 0) return;
-            float t = Mathf.Clamp(y / Mathf.Max(1f, Size.Y), 0f, 1f);
+            const float pad = 10f;
+            float travel = Mathf.Max(1f, Size.Y - pad * 2f);
+            float t = Mathf.Clamp((y - pad) / travel, 0f, 1f);
             Target.Value = Target.MinValue + (int)Math.Round(t * range);
         }
     }

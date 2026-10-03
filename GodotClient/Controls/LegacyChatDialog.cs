@@ -50,13 +50,13 @@ public sealed partial class LegacyChatDialog : DXWindow
         private float _dragging;
         private bool _dragActive;
 
-        // 证据几何：gauge 12×260 @ 窗口相对 (533,−208)；箭头命中区 19×14 @ (539,25)/(539,311)。
-        private const int TrackX = 533;
-        private const int TrackY = -208;
-        private const int TrackH = 260;   // 0x104
-        private const int TrackW = 12;    // 0x0C
-        private const int UpY = 25;
-        private const int DownY = 311;
+        // 证据几何：F350 聊天窗口右侧黑槽 X=531..547 (宽16)，Y=40..295 (高255)，完全对齐左侧 19 行聊天文字 (Y=28..294)。
+        private const int TrackX = 531;
+        private const int TrackY = 40;
+        private const int TrackH = 255;
+        private const int TrackW = 16;
+        private const int UpY = 24;
+        private const int DownY = 300;
         private const int ButtonW = 19;
         private const int ButtonH = 14;
         /// <summary>原版聊天历史可见行数（unified-model max_rows=19）。</summary>
@@ -66,14 +66,25 @@ public sealed partial class LegacyChatDialog : DXWindow
 
         public ChatScrollBar()
         {
-            MouseFilter = MouseFilterEnum.Stop;
+            Size = new Vector2I(572, 388);
+            MouseFilter = MouseFilterEnum.Pass;
+            MouseWheel += (s, e) => ScrollByRows?.Invoke(e.Delta > 0 ? 1 : -1);
 
             // 轨道 = F631 的一段（无珠子的链身）。珠子由滑块单独画。
             _chain = new ChainView
             {
                 Location = new Vector2I(TrackX, TrackY),
                 Size = new Vector2I(TrackW, TrackH),
-                MouseFilter = MouseFilterEnum.Ignore,
+                MouseFilter = MouseFilterEnum.Stop,
+            };
+            _chain.MouseWheel += (s, e) => ScrollByRows?.Invoke(e.Delta > 0 ? 1 : -1);
+            _chain.MouseDown += (_, _) =>
+            {
+                Vector2 localMouse = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
+                int travel = Math.Max(1, TrackH - ThumbHitH);
+                float t = Mathf.Clamp((localMouse.Y - TrackY - ThumbHitH / 2f) / travel, 0f, 1f);
+                ScrollToFraction?.Invoke(t);
+                BeginDrag();
             };
             AddControl(_chain);
 
@@ -84,11 +95,12 @@ public sealed partial class LegacyChatDialog : DXWindow
                 Size = new Vector2I(TrackW, ThumbHitH),
                 MouseFilter = MouseFilterEnum.Stop,
             };
+            _thumb.MouseWheel += (s, e) => ScrollByRows?.Invoke(e.Delta > 0 ? 1 : -1);
             AddControl(_thumb);
 
             // 箭头美术已烘焙进 F350（帧 381/382/383 本机缺失）→ 只建透明命中区。
-            _up = HitButton(new Vector2I(TrackX + 6, UpY));
-            _down = HitButton(new Vector2I(TrackX + 6, DownY));
+            _up = HitButton(new Vector2I(TrackX, UpY));
+            _down = HitButton(new Vector2I(TrackX, DownY));
         }
 
         private DXButton HitButton(Vector2I at)
@@ -112,14 +124,12 @@ public sealed partial class LegacyChatDialog : DXWindow
         public event Action<int>? ScrollByRows;
         public event Action<float>? ScrollToFraction;
 
-        // 珠子源段常量定义在 ChainView / BeadHit 内部（各自就近声明），此处不再重复。
-
         public void Configure(int messageCount)
         {
             int maxOffset = Math.Max(0, messageCount - VisibleRowCount);
             _thumb.Visible = maxOffset > 0;
             if (maxOffset == 0)
-                _thumb.Position = new Vector2I(TrackX, TrackY);
+                _thumb.Position = new Vector2I(TrackX, TrackY + TrackH - ThumbHitH);
         }
 
         public void SetOffset(int offset, int messageCount)
@@ -128,10 +138,10 @@ public sealed partial class LegacyChatDialog : DXWindow
             int travel = Math.Max(1, TrackH - ThumbHitH);
             if (maxOffset <= 0)
             {
-                _thumb.Position = new Vector2I(TrackX, TrackY);
+                _thumb.Position = new Vector2I(TrackX, TrackY + travel);
                 return;
             }
-            float t = (float)offset / maxOffset;
+            float t = 1f - Mathf.Clamp((float)offset / maxOffset, 0f, 1f);
             _thumb.Position = new Vector2I(TrackX, TrackY + (int)Math.Round(t * travel));
         }
 
@@ -146,8 +156,8 @@ public sealed partial class LegacyChatDialog : DXWindow
         {
             if (!_thumb.Visible) return;
             _dragActive = true;
-            // 抓住珠子中心，而不是命中区顶部，拖动手感才跟手。
-            _dragging = GetLocalMousePosition().Y - (_thumb.Position.Y + ThumbHitH / 2f);
+            Vector2 localMouse = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
+            _dragging = localMouse.Y - (_thumb.Position.Y + ThumbHitH / 2f);
         }
 
         public override void _Process(double delta)
@@ -156,8 +166,9 @@ public sealed partial class LegacyChatDialog : DXWindow
             if (_dragActive && !Input.IsMouseButtonPressed(MouseButton.Left))
                 _dragActive = false;
             if (!_dragActive) return;
+            Vector2 localMouse = GetGlobalTransformWithCanvas().AffineInverse() * GetViewport().GetMousePosition();
             int travel = Math.Max(1, TrackH - ThumbHitH);
-            float t = Mathf.Clamp((GetLocalMousePosition().Y - _dragging - TrackY) / travel, 0f, 1f);
+            float t = Mathf.Clamp((localMouse.Y - _dragging - TrackY) / travel, 0f, 1f);
             ScrollToFraction?.Invoke(t);
         }
     }
@@ -233,7 +244,7 @@ public sealed partial class LegacyChatDialog : DXWindow
 
         _scrollBar = new ChatScrollBar();
         _scrollBar.ScrollByRows += ScrollBy;
-        _scrollBar.ScrollToFraction += f => SetScrollOffset((int)Math.Round(f * Math.Max(0, _messages.Count - VisibleRows)));
+        _scrollBar.ScrollToFraction += f => SetScrollOffset((int)Math.Round((1f - f) * Math.Max(0, _messages.Count - VisibleRows)));
         _scrollBar.Wire();
         AddControl(_scrollBar);
 
@@ -251,6 +262,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         _historyClip.MouseWheel += OnHistoryWheel;
         _historyClip.MouseClick += OnHistoryClick;
         AddControl(_historyClip);
+        MouseWheel += OnHistoryWheel;
 
         // 固定 19 行标签池：只复用、不增删（见 RebuildRows 的说明）。
         for (int i = 0; i < VisibleRows; i++)

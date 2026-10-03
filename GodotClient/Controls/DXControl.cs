@@ -296,8 +296,23 @@ public partial class DXControl : Control
             }
             else if (mb.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
             {
-                int delta = mb.ButtonIndex == MouseButton.WheelUp ? 1 : -1;
-                MouseWheel?.Invoke(this, new MouseWheelEventArgs(delta));
+                if (mb.Pressed)
+                {
+                    int delta = mb.ButtonIndex == MouseButton.WheelUp ? 1 : -1;
+                    var args = new MouseWheelEventArgs(delta);
+                    bool handled = false;
+                    for (DXControl cur = this; cur != null; cur = cur.ParentControl ?? cur.GetParent() as DXControl)
+                    {
+                        if (cur.MouseWheel != null)
+                        {
+                            cur.MouseWheel.Invoke(cur, args);
+                            handled = true;
+                            break;
+                        }
+                    }
+                    if (handled) AcceptEvent();
+                }
+                return;
             }
             AcceptEvent();
         }

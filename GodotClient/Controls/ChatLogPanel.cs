@@ -49,7 +49,7 @@ public partial class ChatLogPanel : Control
 
     public ChatLogPanel()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        MouseFilter = MouseFilterEnum.Pass;
         // 原版 ChatOptionsDialog.CreateDefaultWindows：主聊天窗初始为
         // ChatTextBox.Width × 150，而 ChatTextBox 的默认宽度是 400。
         Size = new Vector2(400, 150);
@@ -65,7 +65,7 @@ public partial class ChatLogPanel : Control
         AddChild(_legacyBackdrop);
         _tabBar = new DXControl { Location = Vector2I.Zero, Size = new Vector2I(400, 22), MouseFilter = MouseFilterEnum.Ignore };
         AddChild(_tabBar);
-        _textArea = new DXControl { Location = new Vector2I(0, 22), Size = new Vector2I(380, 124), Clip = true, MouseFilter = MouseFilterEnum.Ignore };
+        _textArea = new DXControl { Location = new Vector2I(0, 22), Size = new Vector2I(380, 124), Clip = true, MouseFilter = MouseFilterEnum.Stop };
         AddChild(_textArea);
         _scroll = new DXVScrollBar { Location = new Vector2I(380, 22), Size = new Vector2I(18, 124), VisibleSize = 124, Change = 32, HideWhenNoScroll = true };
         _scroll.ValueChanged += (s, e) => UpdateLines();
@@ -696,6 +696,24 @@ public partial class ChatLogPanel : Control
             x += charWidth;
         }
         return new Vector2(x, y);
+    }
+
+    public override void _GuiInput(InputEvent @event)
+    {
+        base._GuiInput(@event);
+        if (@event is InputEventMouseButton mb && mb.Pressed)
+        {
+            if (mb.ButtonIndex == MouseButton.WheelUp)
+            {
+                _scroll.DoMouseWheel(this, new MouseWheelEventArgs(1));
+                AcceptEvent();
+            }
+            else if (mb.ButtonIndex == MouseButton.WheelDown)
+            {
+                _scroll.DoMouseWheel(this, new MouseWheelEventArgs(-1));
+                AcceptEvent();
+            }
+        }
     }
 
     private sealed class ChatMessage

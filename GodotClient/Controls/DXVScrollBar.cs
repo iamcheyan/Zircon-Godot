@@ -17,25 +17,17 @@ public partial class DXVScrollBar : DXControl
         get => _value;
         set
         {
-            if (_value == value) return;
-            _value = value;
+            int clamped = Math.Max(MinValue, Math.Min(MaxValue - VisibleSize, value));
+            if (_value == clamped) return;
+            _value = clamped;
             OnValueChanged();
         }
     }
 
-    /// <summary>Value 越界时回钳 (照原版 OnValueChanged 首行语义)</summary>
     private void OnValueChanged()
     {
-        int previous = _value;
-        int clamped = Math.Max(MinValue, Math.Min(MaxValue - VisibleSize, Value));
-        if (Value != clamped) _value = clamped;
         UpdateScrollBar();
-        // Max/Min/VisibleSize 的动态更新也会经过这里，但列表控件通常在
-        // 重建行时才设置 MaxValue。只有实际滚动位置变化才通知订阅者，
-        // 避免“重建列表 -> MaxValue -> ValueChanged -> 再次重建”的递归，
-        // 以及因此留下已 QueueFree 的控件引用。
-        if (previous != _value)
-            ValueChanged?.Invoke(this, EventArgs.Empty);
+        ValueChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private int _maxValue;
@@ -46,9 +38,18 @@ public partial class DXVScrollBar : DXControl
         {
             if (_maxValue == value) return;
             _maxValue = value;
-            OnValueChanged();
-            MaxValueChanged?.Invoke(this, EventArgs.Empty);
+            OnMaxValueChanged();
         }
+    }
+
+    private void OnMaxValueChanged()
+    {
+        if (Value + VisibleSize > MaxValue)
+            Value = MaxValue - VisibleSize;
+        else
+            UpdateScrollBar();
+
+        MaxValueChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private int _minValue;
@@ -59,9 +60,18 @@ public partial class DXVScrollBar : DXControl
         {
             if (_minValue == value) return;
             _minValue = value;
-            OnValueChanged();
-            MinValueChanged?.Invoke(this, EventArgs.Empty);
+            OnMinValueChanged();
         }
+    }
+
+    private void OnMinValueChanged()
+    {
+        if (Value < MinValue)
+            Value = MinValue;
+        else
+            UpdateScrollBar();
+
+        MinValueChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private int _visibleSize;
@@ -72,9 +82,18 @@ public partial class DXVScrollBar : DXControl
         {
             if (_visibleSize == value) return;
             _visibleSize = value;
-            OnValueChanged();
-            VisibleSizeChanged?.Invoke(this, EventArgs.Empty);
+            OnVisibleSizeChanged();
         }
+    }
+
+    private void OnVisibleSizeChanged()
+    {
+        if (Value + VisibleSize > MaxValue)
+            Value = MaxValue - VisibleSize;
+        else
+            UpdateScrollBar();
+
+        VisibleSizeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private bool _hideWhenNoScroll;

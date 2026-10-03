@@ -15,6 +15,34 @@ public partial class MagicBar : Control
     private const int IconSize = 36;
     private const int IconsPerRow = 12;
     private const int GroupSpacing = 5;
+
+    // EI 原版技能条（Mir3.exe `0x42A850`）：12 格 × 40px，索引 4/8 前各多 40px；
+    // 空槽底板 = GameInter.wil 帧 20..31（已烘焙 F1..F12 字样）。
+    private const int EiSlotCount = 12;
+    private const int EiCellSize = 40;
+    private const int EiCellStride = 40;
+    private const int EiGroupGap = 40;
+    private const int EiEmptySlotFrame = 20;
+
+    /// <summary>
+    /// EI 技能条的屏幕原点 = 屏幕左上角。原版 `0x42A850` 给每格传的 pos 就是
+    /// `(runningX, 2|3)`：`0x4542F0` 里的 `x - 400` / `y = 300 - y` 只是把
+    /// **绝对屏幕坐标**换算到居中世界空间（同一路径的 `0x428F80` 元素
+    /// pos=(220,400)、size=(358,165) 换算回来正好落在它自己的屏幕矩形
+    /// (220,400)-(578,565) 上，可反证投影是 `screen = world + (400,300)`）。
+    /// 即原版技能条是**屏幕左上角的固定行**，挂在主底栏旁边是 Zircon 的排布。
+    /// 因此控件原点 = (0,0)，每格的 y 直接用原版数值（见 `EiIconTop`/`EiPlateTop`）。
+    /// </summary>
+    public static readonly Vector2 LegacyEiAnchor = Vector2.Zero;
+
+    /// <summary>有绑定槽位的 y：原版 `0x42A8ED` 写 `0x40000000`(2.0)。</summary>
+    private const float EiIconTop = 2f;
+    /// <summary>空槽底板的 y：原版 `0x42A9D8` 写 `0x40400000`(3.0)。</summary>
+    private const float EiPlateTop = 3f;
+
+    /// <summary>EI 复古 UI（默认开启，`--zircon-ui` 关闭）。</summary>
+    private static bool LegacyEi => AutoLoginArgs.LegacyUi;
+
     private readonly GameScene _game;
     private readonly DXButton _upButton;
     private readonly DXButton _downButton;
@@ -32,9 +60,19 @@ public partial class MagicBar : Control
         _game = game;
         // 技能槽本身需要接收点击；上下翻栏按钮仍由子控件处理。
         MouseFilter = MouseFilterEnum.Stop;
-        // 原版 MagicBarDialog.Opacity = 0.6，图标本身另有 0.6 透明度。
-        // 保留父级透明度，避免快捷栏比原版过亮。
-        Modulate = new Color(1f, 1f, 1f, 0.6f);
+        if (LegacyEi)
+        {
+            // EI 原版技能条不是窗口：没有 DXWindow 底框、没有栏组按钮/编号，
+            // 也没有 MagicBarDialog 的 0.6 窗口透明度（原版这里是屏幕上的裸精灵）。
+            Modulate = Colors.White;
+            ClipContents = true;
+        }
+        else
+        {
+            // 原版 MagicBarDialog.Opacity = 0.6，图标本身另有 0.6 透明度。
+            // 保留父级透明度，避免快捷栏比原版过亮。
+            Modulate = new Color(1f, 1f, 1f, 0.6f);
+        }
         // Client/Scenes/Views/MagicBarDialog.cs: frame on uses 49/46,
         // frame off uses 37/36. The extra 20px is reserved for set controls.
         Size = new Vector2(BarWidth(), BarHeight(1));
@@ -50,6 +88,9 @@ public partial class MagicBar : Control
             Position = Vector2.Zero;
             UserMoved = false;
         }
+
+        // EI 原版技能条没有栏组按钮/编号（栏组由 Ctrl+F1..F4 切换）。
+        if (LegacyEi) return;
 
         _upButton = new DXButton
         {
@@ -95,6 +136,12 @@ public partial class MagicBar : Control
     public override void _Draw()
     {
         if (_game == null) return;
+
+        if (LegacyEi)
+        {
+            DrawLegacyEi();
+            return;
+        }
 
         // MagicBarDialog 原版继承 DXWindow；边框/底色由窗口统一绘制，
         // 不是技能格自己负责。Godot 之前只绘制了格子，导致整条栏像悬浮
@@ -176,6 +223,48 @@ public partial class MagicBar : Control
         }
     }
 
+    /// <summary>
+    /// EI 原版技能条绘制（Mir3.exe `0x42A850`）：12 个 40x40 格，按 1:1 画在屏幕上。
+    /// 空槽 = `GameInter.wil` 帧 20+i（底板已烘焙 F1..F12 字样）；
+    /// 已绑定 = `MIcon.wil` 帧 999+技能ID（= `1000 + MagicInfo.Icon / 2`），
+    /// 帧取不到时按原版 `0x42A8C3` 退回空槽底板。
+    /// 步距 40px；索引 4/8 前各多 40px（`0x42A893` 的 `cmp eax,4` / `cmp eax,8`）。
+    /// 原版该行没有窗口底框、没有自绘编号、没有冷却数字。
+    /// </summary>
+    private void DrawLegacyEi()
+    {
+        var slots = GetSlotsForSet(_game.MagicBarSpellSet);
+        for (int i = 0; i < EiSlotCount; i++)
+        {
+            var magic = i < slots.Count ? slots[i] : null;
+            Texture2D tex = magic != null
+                ? MirSkin.GetTexture(LibraryFile.MagicIcon, EiIconFrame(magic.Info.Icon))
+                : null;
+            if (tex == null)
+                tex = MirSkin.GetTexture(LibraryFile.GameInter, EiEmptySlotFrame + i);
+            if (tex == null) continue;
+
+            // 帧画布 64x64，实际内容只在左上 40x40；原版按原生尺寸 blit，
+            // 多出的 24px 全透明，正好被下一格覆盖。
+            // 原版空槽底板比图标低 1px（2.0 vs 3.0），照抄。
+            float top = magic != null ? EiIconTop : EiPlateTop;
+            DrawTextureRect(tex, new Rect2(EiSlotX(i), top, tex.GetWidth(), tex.GetHeight()), false);
+        }
+    }
+
+    /// <summary>EI 技能栏第 i 格的原版 x（40px 步距，4/8 前各多 40px 分组间隔）。</summary>
+    private static float EiSlotX(int i)
+        => i * EiCellStride + (i >= 4 ? EiGroupGap : 0) + (i >= 8 ? EiGroupGap : 0);
+
+    /// <summary>
+    /// EI 技能栏图标帧 = 999 + EI 技能ID，而 EI 技能ID = `MagicInfo.Icon / 2 + 1`
+    /// （技能书帧号 = `2*ID-2`，正是 `MagicInfo.Icon`），故帧号 = `1000 + Icon / 2`。
+    /// 交叉验证：`Magic.exp.decoded.txt` 的 50 条 ID 与 MIcon.wil 帧 1000..1105
+    /// 一一对应（EI 无 28 号技能 ⇔ MIcon 无 1027 帧），逐条名称比对见
+    /// Mir3-Research/docs/research/ei-ui-layout/magic-icon-metadata-2026-09-25.json。
+    /// </summary>
+    private static int EiIconFrame(int icon) => 1000 + icon / 2;
+
     public override void _Process(double delta)
     {
         base._Process(delta);
@@ -242,6 +331,19 @@ public partial class MagicBar : Control
     {
         if (_game == null) return;
         var slots = GetSlotsForSet(_game.MagicBarSpellSet);
+        if (LegacyEi)
+        {
+            // EI 技能条只有一排 12 格，命中区就是 40x40 的格本身。
+            for (int i = 0; i < EiSlotCount; i++)
+            {
+                if (slots[i] != null && new Rect2(EiSlotX(i), EiIconTop, EiCellSize, EiCellSize).HasPoint(local))
+                {
+                    _game.UseMagicSlot(i);
+                    return;
+                }
+            }
+            return;
+        }
         int slotSpacing = _game.ShowMagicBarFrames ? 49 : 37;
         int slotSize = _game.ShowMagicBarFrames ? 46 : 36;
         for (int i = 0; i < slots.Count; i++)
@@ -304,11 +406,18 @@ public partial class MagicBar : Control
     public void Refresh() => QueueRedraw();
 
     /// <summary>
-    /// 未拖拽时由 GameScene.LayoutHud 调用：锚在主面板左上方（底栏旁）。
+    /// 未拖拽时由 GameScene.LayoutHud 调用。现代模式锚在主面板左上方（底栏旁）；
+    /// EI 模式锚在原版位置：屏幕左上角 `(0, 2)`。
     /// </summary>
     public void ApplyDefaultAnchor(Vector2 logicalViewport, Vector2I mainPanelLocation, Vector2 mainPanelSize)
     {
         if (UserMoved) return;
+        if (LegacyEi)
+        {
+            Position = LegacyEiAnchor;
+            ClampToViewport();
+            return;
+        }
         float x = mainPanelLocation.X - Size.X - 5f;
         float y = logicalViewport.Y - mainPanelSize.Y - Size.Y - 5f;
         Position = new Vector2(Mathf.Max(0, x), Mathf.Max(0, y));
@@ -354,8 +463,15 @@ public partial class MagicBar : Control
             Mathf.Clamp(Position.Y, 0, Mathf.Max(0, logicalViewport.Y - Size.Y)));
     }
 
-    private float BarWidth() => (_game?.ShowMagicBarFrames == false ? 37 : 49) * IconsPerRow + 15 + 20 + 18;
-    private float BarHeight(int rows) => _game?.ShowMagicBarFrames == false
-        ? (rows == 2 ? 37 * 2 + 5 : 37) + 12
-        : (rows == 2 ? 46 * 2 + 5 + 3 : 46) + 12;
+    // EI 原版技能条：12 格 × 40px + 索引 4/8 前的两个 40px 分组间隔 = 560 宽；
+    // 高取到空槽底板下缘（3 + 40 = 43，向上取 44），否则 ClipContents 会切掉底板底部 3 行。
+    private const float EiBarHeight = 44f;
+    private float BarWidth() => LegacyEi
+        ? EiSlotX(EiSlotCount - 1) + EiCellSize
+        : (_game?.ShowMagicBarFrames == false ? 37 : 49) * IconsPerRow + 15 + 20 + 18;
+    private float BarHeight(int rows) => LegacyEi
+        ? EiBarHeight
+        : _game?.ShowMagicBarFrames == false
+            ? (rows == 2 ? 37 * 2 + 5 : 37) + 12
+            : (rows == 2 ? 46 * 2 + 5 + 3 : 46) + 12;
 }

@@ -34,3 +34,6 @@ __pycache__/
 /Exports/*
 /artifacts
 /docs/changes
+
+# 本地 UI 审计产出（截图等），不入库
+.artifacts/

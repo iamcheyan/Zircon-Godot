@@ -1620,8 +1620,10 @@ public partial class GameScene : Control
             // 底色改为**原版实测值**：0x4341F0 的 backdrop 是 0x45E570(..., 0x329696, 1)。
             // 注意 0x329696 是 COLORREF（BGR）→ 实际 RGB = (0x96,0x96,0x32) = (150,150,50)
             // 橄榄黄，**不是**青绿。此前的深棕 (18,15,8) 与原版不符。
+            // 原版橄榄黄底 (150,150,50) 上再叠加稀有度彩色字（如 Superior 的绿），
+            // 对比度太低看着发糊；这里压暗底色提高可读性（文字颜色不变）。
             BackColour = AutoLoginArgs.LegacyUi
-                ? new Color(150f / 255f, 150f / 255f, 50f / 255f, 1f)
+                ? new Color(0.17f, 0.14f, 0.05f, 0.96f)
                 : new Color(18f / 255f, 15f / 255f, 8f / 255f, 230f / 255f),
             Border = true,
             BorderColour = new Color(105f / 255f, 95f / 255f, 62f / 255f),
@@ -6154,25 +6156,9 @@ public partial class GameScene : Control
             _hoverLabel.Visible = true;
             _hoverLabel.Text = BuildItemHoverText(_hoverItem);
             FitHoverLabelSize();
-            // 悬浮框内置图标：原版 0x4341F0 用 el82 Inventory.wil 的
-            // frame word[+0x28]，即物品自身的图标帧。
-            // **但背包链传 arg=0（不画图标）**，只有商店/仓库等非背包容器才带图标，
-            // 见 SetHoverItem(item, sourceGrid) 的注释与 ITEMTIP-01。
-            bool iconAllowed = _hoverItemSourceGrid is not (GridType.Inventory or GridType.Belt);
-            if (_hoverItemIcon != null)
-            {
-                int icon = _hoverItem.Info?.Image ?? -1;
-                _hoverItemIcon.LibraryFile = AutoLoginArgs.LegacyUi
-                    ? LibraryFile.Inventory
-                    : DXItemCell.ItemIconLibraryFile;
-                _hoverItemIcon.Index = icon;
-                _hoverItemIcon.Visible = iconAllowed && icon >= 0;
-                if (icon >= 0)
-                {
-                    var size = MirSkin.GetSize(_hoverItemIcon.LibraryFile, icon);
-                    _hoverItemIcon.Size = size == Vector2I.Zero ? new Vector2I(32, 32) : size;
-                }
-            }
+            // 用户要求：悬停只显示信息文本，**不要**再在鼠标处重复显示物品图标。
+            // （原版商店链才带内置图标；这里统一不显示。）
+            if (_hoverItemIcon != null) _hoverItemIcon.Visible = false;
         }
         else
         {
@@ -6296,19 +6282,22 @@ public partial class GameScene : Control
     private void FitHoverLabelSize()
     {
         if (_hoverLabel == null) return;
+        // DXLabel 用**物理**字号逐行绘制（lineHeight = MeasureTextPhysical().Y），
+        // 并按 1/canvasScale 变换。这里必须用同一口径（物理尺寸 / 缩放）来算外框，
+        // 并加上 TextPadding，否则最后几行会画到框外（用户截图里的溢出）。
+        float scale = _hoverLabel.GetGlobalTransformWithCanvas().X.Length();
+        if (scale < 0.01f) scale = 1f;
         const float padding = 6f;
-        var lines = _hoverLabel.Text.Split('\n');
+        var lines = (_hoverLabel.Text ?? string.Empty).Replace("\r", string.Empty).Split('\n');
         float maxW = 0f;
         foreach (var line in lines)
-        {
-            var w = MirSkin.MeasureText(line, _hoverLabel.FontSize).X;
-            if (w > maxW) maxW = w;
-        }
-        float lineH = lines.Length == 0 ? 0f : MirSkin.MeasureText(Lang.ChatLogPanelUi114Label, _hoverLabel.FontSize).Y;
-        // 原版 0x4341F0 的行高是**常量 0xF = 15px**（[esp+0x14] += 0xF），
-        // 不是字体实测高度。legacy 用原版常量。
-        if (AutoLoginArgs.LegacyUi) lineH = 15f;
-        _hoverLabel.Size = new Vector2I(Mathf.RoundToInt(maxW + padding * 2f), Mathf.RoundToInt(lineH * lines.Length + padding * 2f));
+            maxW = Mathf.Max(maxW, MirSkin.MeasureTextPhysical(line, _hoverLabel.FontSize).X / scale);
+        float lineH = lines.Length == 0
+            ? 0f
+            : MirSkin.MeasureTextPhysical(lines[0], _hoverLabel.FontSize).Y / scale;
+        _hoverLabel.Size = new Vector2I(
+            Mathf.CeilToInt(maxW + padding * 2f + _hoverLabel.TextPadding.X * 2f),
+            Mathf.CeilToInt(lineH * lines.Length + padding * 2f + _hoverLabel.TextPadding.Y * 2f));
     }
 
     /// <summary>

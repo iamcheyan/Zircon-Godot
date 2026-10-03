@@ -446,6 +446,9 @@ public partial class InventoryDialog : DXWindow
         Grid.GridSize = new Vector2I(6, rows);
         Grid.VisibleHeight = 6;
         Grid.ScrollValue = Math.Min(Grid.ScrollValue, Math.Max(0, rows - 6));
+        // 行数不变时 GridSize setter 不会重建，必须显式重建占用表，否则
+        // 物品移动后仍用旧锚点（大件被截成单格、高亮缩成 1x1）。
+        Grid.RefreshLegacyFootprints();
 
         // GridSize 行数变化会触发 CreateGrid() 重建 Cells，滚轮绑定必须在
         // 重建之后重挂，否则滚到新格子上就没反应。

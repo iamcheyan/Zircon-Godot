@@ -437,6 +437,17 @@ public partial class DXItemCell : DXControl
             return;
         }
 
+        // legacy 多格：整块高亮由网格覆盖层（RefreshLegacyHighlight）统一画。
+        // 单格不再画边框，否则大件选中/悬停只会框住一个 36px 小格。
+        if (HostGrid?.UseLegacyFootprints == true && HostGrid.IsLegacyCovered(GridIndex))
+        {
+            BackColour = Colors.Transparent;
+            Border = false;
+            QueueRedraw();
+            HostGrid.RefreshLegacyHighlight();
+            return;
+        }
+
         bool active = IsHovered || Selected || SaleSelected || Locked || LinkedSourceSlot >= 0;
         BackColour = !Enabled
             ? new Color(0f, 0f, 0f, 0.49f)

@@ -458,6 +458,17 @@ public partial class DXItemGrid : DXControl
         RefreshLegacyHighlight();
     }
 
+    /// <summary>
+    /// 内容变化后重建占用表（锚点/原点）。物品移动时 ItemGrid 引用和行数都可能不变，
+    /// 只靠 GridSize 变化触发重建会留下**旧锚点**，表现为大件被截成单格、高亮变小。
+    /// </summary>
+    public void RefreshLegacyFootprints()
+    {
+        if (Cells == null) return;
+        RebuildLegacyFootprints();
+        RefreshLegacyHighlight();
+    }
+
     /// <summary>重刷所有格子显示 (数组批量变更后调用)</summary>
     public void RefreshGrid()
     {

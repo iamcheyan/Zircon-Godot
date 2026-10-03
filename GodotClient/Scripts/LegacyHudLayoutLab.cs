@@ -616,12 +616,22 @@ public partial class LegacyHudLayoutLab : Control
         grid.GetLegacyFootprintSize(0, out int fpW, out int fpH);
         bool placementOk = origins == count && covered == count * 3 && fpW == 1 && fpH == 3;
 
+        // 原地改内容（数组引用与长度都不变）后再 Configure，占用表必须重建；
+        // 旧锚点会让移动/使用后的物品被截成单格、高亮缩成 1x1。
+        var restore0 = items[0];
+        items[0] = null;
+        _inventory.ConfigureLegacyInventoryGrid();
+        bool rebuilt = grid.LegacyFootprintAnchor(0) == 1
+            && ReferenceEquals(grid.GetItemForCell(0), items[1]);
+        items[0] = restore0;
+        _inventory.ConfigureLegacyInventoryGrid();
+
         // 独立期望：60 件 1x3、6 列 → 每层 6 件占 3 行 → 10 层 = 30 行；跨度 30-6=24。
         bool ok = cols == 6 && rows == 30 && grid.VisibleHeight == 6
             && cells == 6 * rows && range == 24 && barEnabled && scrolled == 24
-            && footprintOk && placementOk;
+            && footprintOk && placementOk && rebuilt;
 
-        GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk} origins={origins}/{count} covered={covered} fp={fpW}x{fpH}");
+        GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk} rebuilt={rebuilt} origins={origins}/{count} covered={covered} fp={fpW}x{fpH}");
 
         // --legacy-shot[=N]：不退出，打开背包供 scrot 截图目视验收；
         // 可选 N 先把滚动值设到 N（验证滚动后的内容与右侧指示块）。
@@ -646,38 +656,65 @@ public partial class LegacyHudLayoutLab : Control
     /// </summary>
     private void RunLegacyBagSampleShot()
     {
-        // Commoner Outfit (M) 的 Zircon Image=941（Inventory.Zl 实测 48x100 → 2x3）；
-        // 940 是 Mud3 Looks，不是当前库的 Image。
-        var armour = Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == 941);
-        var sword = Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == 1042);
-        if (sword == null)
+        // 真实物品：Moonlight 武器 Image=2510（Inventory.Zl 56x190 → 2x6 大件）、
+        // 男布衣 941（2x3）、木剑 1042（1x3）、金创药 5、魔法药 15。
+        ItemInfo ByImage(int img) => Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == img);
+        var weapon = ByImage(2510);
+        var armour = ByImage(941);
+        var sword = ByImage(1042);
+        var potion = ByImage(5);
+        var mana = ByImage(15);
+        var pool = new[] { armour, sword, weapon, potion, mana, armour, sword }.Where(x => x != null).ToArray();
+        if (weapon == null || pool.Length == 0)
         {
-            GD.Print("[LegacyBagSample] SKIP 客户端 DB 无 Image=1042 物品");
+            GD.Print("[LegacyBagSample] SKIP 客户端 DB 缺样例物品");
             GetTree().Quit(0);
             return;
         }
 
         var items = new ClientUserItem[48];
         for (int i = 0; i < items.Length; i++)
-        {
-            var info = i % 3 == 0 && armour != null ? armour : sword;
-            items[i] = new ClientUserItem { Info = info, Slot = i, Count = i % 5 == 0 ? 7 : 1 };
-        }
+            items[i] = new ClientUserItem { Info = i == 0 ? weapon : pool[i % pool.Length], Slot = i, Count = i % 5 == 0 ? 7 : 1 };
+
+        // --legacy-move=N：把 slot0 的大件原地换到 N（数组引用/长度不变），
+        // 复现「移动后其他人避让」并验证占用表重建。
+        int moveTo = -1;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            if (arg.StartsWith("--legacy-move=")
+                && int.TryParse(arg["--legacy-move=".Length..], out int m) && m > 0 && m < items.Length)
+            {
+                (items[0], items[m]) = (items[m], items[0]);
+                items[0].Slot = 0;
+                items[m].Slot = m;
+                moveTo = m;
+            }
+
         _inventory.Grid.ItemGrid = items;
         _inventory.ConfigureLegacyInventoryGrid();
+        if (moveTo >= 0 && _inventory.Grid.GetLegacyPlacement(0, out int ms, out int moc, out int mor, out int mw, out int mh))
+            GD.Print($"[LegacyBagSample] moved-to={moveTo} cell0 slot={ms} origin=({moc},{mor}) fp={mw}x{mh}");
 
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
-            if (!arg.StartsWith("--legacy-hover=")) continue;
-            if (!int.TryParse(arg["--legacy-hover=".Length..], out int h)) continue;
-            _inventory.Grid.NotifyLegacyHover(h, true);
-            if (_inventory.Grid.GetLegacyPlacement(h, out int hs, out int hoc, out int hor, out int hw, out int hh))
-                GD.Print($"[LegacyBagSample] hover={h} slot={hs} origin=({hoc},{hor}) fp={hw}x{hh}");
-            else
-                GD.Print($"[LegacyBagSample] hover={h} no-placement");
+            if (arg.StartsWith("--legacy-hover=")
+                && int.TryParse(arg["--legacy-hover=".Length..], out int h))
+            {
+                _inventory.Grid.NotifyLegacyHover(h, true);
+                if (_inventory.Grid.GetLegacyPlacement(h, out int hs, out int hoc, out int hor, out int hw, out int hh))
+                    GD.Print($"[LegacyBagSample] hover={h} slot={hs} origin=({hoc},{hor}) fp={hw}x{hh}");
+                else
+                    GD.Print($"[LegacyBagSample] hover={h} no-placement");
+            }
+            if (arg.StartsWith("--legacy-select=")
+                && int.TryParse(arg["--legacy-select=".Length..], out int s)
+                && s >= 0 && s < _inventory.Grid.Cells.Length && _inventory.Grid.Cells[s] != null)
+            {
+                _inventory.Grid.Cells[s].Selected = true;
+                GD.Print($"[LegacyBagSample] select={s}");
+            }
         }
 
-        GD.Print($"[LegacyBagSample] armour={(armour != null)} rows={_inventory.Grid.GridSize.Y} cells={_inventory.Grid.Cells?.Length}");
+        GD.Print($"[LegacyBagSample] weapon={(weapon != null)} rows={_inventory.Grid.GridSize.Y} cells={_inventory.Grid.Cells?.Length}");
         WindowManager.Open(_inventory, _canvas);
     }
 

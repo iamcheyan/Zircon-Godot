@@ -1283,7 +1283,12 @@ namespace Library.Network.ServerPackets
         [CompleteObject]
         public void OnComplete()
         {
-            MonsterInfo = Globals.MonsterInfoList.Binding.First(x => x.Index == MonsterIndex);
+            // **不能用 First**：客户端 System.db 与服务端不同步时（缺某个怪物/物品
+            // 模板），First 会抛 InvalidOperationException；异常发生在网络线程的
+            // Packet.ReceivePacket 内 → 整个连接被拆，用户表现为「刚进游戏就与
+            // 服务器断开」（真机栈：DataObjectMonster.OnComplete line 1286）。
+            // 取不到就留 null：调用方本就该容忍未知模板，直接断线代价太大。
+            MonsterInfo = Globals.MonsterInfoList.Binding.FirstOrDefault(x => x.Index == MonsterIndex);
         }
     }
     public sealed class DataObjectItem : Packet
@@ -1299,7 +1304,8 @@ namespace Library.Network.ServerPackets
         [CompleteObject]
         public void OnComplete()
         {
-            ItemInfo = Globals.ItemInfoList.Binding.First(x => x.Index == ItemIndex);
+            // 同 DataObjectMonster：First 抛异常会拆掉整个连接，改 FirstOrDefault。
+            ItemInfo = Globals.ItemInfoList.Binding.FirstOrDefault(x => x.Index == ItemIndex);
         }
     }
     public sealed class DataObjectLocation : Packet

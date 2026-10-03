@@ -563,3 +563,15 @@ C 与 D 是同一批客户端改动，建议同一个 PR。A 可以完全并行�
   文中行号是近似值（实际绑定在 `GameScene.cs` 4730–4736、`FillItems` 调用在 5614）。
 - **占用帧尺寸独立复核**：用 `Tools/common/zlsdk.py` 直读 `mir2ei/Data/Inventory.Zl`，
   Image 1042=16×102（木剑→1×3）、Image 940=48×98（男布衣→2×3），与 §2.2 表一致（换算未复用端口 C# 逻辑）。
+- **EI 占用表与滚动条模型（实施时按此实现，勿用 anchor==cellIndex 判原点）**：
+  - 占用表 `bag+0x2C4` 每格一个 WORD：`0xFFFF`=空；否则存槽号；**原点格额外 +0x3E8(1000)**。
+    绘制只画 `word>=0x3E8` 的格（原点格），其余被覆盖格不重复画
+    （`inventory-window-render-evidence.json` `0x0042F79C`）。
+  - 绘制行窗 = `max(0,[this+0x58]-5) .. [this+0x58]+6`（约 11 行），6 列、36px 步距、原点 `(25,41)`。
+  - 滚动条是 **F707 gauge**（`bag+0x278`），贴图 **GameInter 280**（16×424，竖向，
+    填充区 12×218），值 `[0x58]` 范围 0..`0x5E`(94)，**可点击/拖拽**（`0x417D00`，ratio `[0x284]`），
+    不是「滑块在轨上」的现代滚动条；聊天 F68 那条链 ≠ 本轨。
+  - 悬停/选中高亮覆盖**整个 footprint**，不是单格。
+- **`Commoner Outfit (M)` 的 Zircon `ItemInfo.Image` = 941**（帧 48×100→2×3）；
+  §2.2 表里的 940 是 Mud3 `Looks`，不是当前库 Image。实现按 `ItemInfo.Image` 取帧，
+  不要用 Mud3 `Looks` 直接当 Image。

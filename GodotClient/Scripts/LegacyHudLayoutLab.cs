@@ -231,6 +231,15 @@ public partial class LegacyHudLayoutLab : Control
             RunLegacyInventoryOverflowTest();
             return;
         }
+
+        bool bagSamples = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            bagSamples |= arg == "--legacy-bag-samples";
+        if (bagSamples)
+        {
+            RunLegacyBagSampleShot();
+            return;
+        }
         bool npcSelfTest = false;
         bool charSelfTest = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
@@ -614,14 +623,62 @@ public partial class LegacyHudLayoutLab : Control
 
         GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk} origins={origins}/{count} covered={covered} fp={fpW}x{fpH}");
 
-        // --legacy-shot：不退出，打开背包供 scrot 截图目视验收。
+        // --legacy-shot[=N]：不退出，打开背包供 scrot 截图目视验收；
+        // 可选 N 先把滚动值设到 N（验证滚动后的内容与右侧指示块）。
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
-            if (arg != "--legacy-shot") continue;
+            if (!arg.StartsWith("--legacy-shot")) continue;
+            if (arg.Length > "--legacy-shot".Length && arg["--legacy-shot".Length] == '='
+                && int.TryParse(arg[("--legacy-shot=".Length)..], out int sv))
+            {
+                grid.ScrollValue = Math.Clamp(sv, 0, Math.Max(0, range));
+                _inventory.ConfigureLegacyInventoryGrid();
+            }
             WindowManager.Open(_inventory, _canvas);
             return;
         }
         GetTree().Quit(ok ? 0 : 1);
+    }
+
+    /// <summary>
+    /// 目视验收（--legacy-bag-samples [--legacy-hover=N]）：混合 2x3 布衣与 1x3 木剑，
+    /// 打开背包供 scrot 截图，确认多列 footprint、滚动与整块高亮。
+    /// </summary>
+    private void RunLegacyBagSampleShot()
+    {
+        // Commoner Outfit (M) 的 Zircon Image=941（Inventory.Zl 实测 48x100 → 2x3）；
+        // 940 是 Mud3 Looks，不是当前库的 Image。
+        var armour = Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == 941);
+        var sword = Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == 1042);
+        if (sword == null)
+        {
+            GD.Print("[LegacyBagSample] SKIP 客户端 DB 无 Image=1042 物品");
+            GetTree().Quit(0);
+            return;
+        }
+
+        var items = new ClientUserItem[48];
+        for (int i = 0; i < items.Length; i++)
+        {
+            var info = i % 3 == 0 && armour != null ? armour : sword;
+            items[i] = new ClientUserItem { Info = info, Slot = i, Count = i % 5 == 0 ? 7 : 1 };
+        }
+        _inventory.Grid.ItemGrid = items;
+        _inventory.ConfigureLegacyInventoryGrid();
+
+        foreach (string arg in OS.GetCmdlineUserArgs())
+        {
+            if (!arg.StartsWith("--legacy-hover=")) continue;
+            if (!int.TryParse(arg["--legacy-hover=".Length..], out int h)) continue;
+            _inventory.Grid.NotifyLegacyHover(h, true);
+            if (_inventory.Grid.GetLegacyPlacement(h, out int hs, out int hoc, out int hor, out int hw, out int hh))
+                GD.Print($"[LegacyBagSample] hover={h} slot={hs} origin=({hoc},{hor}) fp={hw}x{hh}");
+            else
+                GD.Print($"[LegacyBagSample] hover={h} no-placement");
+        }
+
+        GD.Print($"[LegacyBagSample] armour={(armour != null)} rows={_inventory.Grid.GridSize.Y} cells={_inventory.Grid.Cells?.Length}");
+        WindowManager.Open(_inventory, _canvas);
     }
 
     private void RunLegacyAudit()

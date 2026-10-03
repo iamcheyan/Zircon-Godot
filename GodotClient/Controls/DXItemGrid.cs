@@ -94,6 +94,7 @@ public partial class DXItemGrid : DXControl
                 cell.ItemGrid = value;
                 cell.RefreshItem();
             }
+            RefreshLegacyHighlight();
         }
     }
     public bool Linked;
@@ -123,11 +124,19 @@ public partial class DXItemGrid : DXControl
     /// <summary>网格内图标使用的图库；EI legacy 背包切到 Inventory.wil。</summary>
     public LibraryFile ItemLibraryFile { get; set; } = LibraryFile.StoreItem;
 
+    // EI 占用表模型（bag+0x2C4）：每个格子一个标记——0xFFFF=空，否则存槽号，
+    // 原点格额外 +0x3E8(1000) 标记「这是该 footprint 的左上角，画图标」。
+    // 对应这里：_legacyCellAnchors[cell]=槽号（所有被覆盖格），
+    // _legacyCellOrigins[cell]=是否原点格。物品槽号与格子号通常不相等，
+    // 所以绝不能用 anchor==cellIndex 判原点。
     private int[] _legacyCellAnchors = Array.Empty<int>();
-    // 每个 footprint 的「原点格」= first-fit 放下的左上角格。物品记录槽号
-    // （anchor）与格子号**通常不相等**，所以不能用 anchor != cellIndex 判占位；
-    // 必须单独记原点，否则锚点格会被误判成占位格而不绘制图标。
     private bool[] _legacyCellOrigins = Array.Empty<bool>();
+    private int[] _legacySlotOriginCell = Array.Empty<int>();
+
+    // 整块 footprint 的高亮层（悬停/选中时画在占用区域外面一圈，而不是单格）。
+    private DXControl _legacyHighlight;
+    private int _legacyHoverCell = -1;
+    private int _legacyHighlightDrawnFor = int.MinValue;
 
 
     public int ResolveOperationSlot(int cellIndex)
@@ -193,12 +202,15 @@ public partial class DXItemGrid : DXControl
         {
             _legacyCellAnchors = Array.Empty<int>();
             _legacyCellOrigins = Array.Empty<bool>();
+            _legacySlotOriginCell = Array.Empty<int>();
             return;
         }
 
         _legacyCellAnchors = new int[Cells.Length];
         Array.Fill(_legacyCellAnchors, -1);
         _legacyCellOrigins = new bool[Cells.Length];
+        _legacySlotOriginCell = new int[Math.Max(Cells.Length, ItemGrid?.Length ?? 0)];
+        Array.Fill(_legacySlotOriginCell, -1);
         if (ItemGrid == null || GridSize.X <= 0 || GridSize.Y <= 0) return;
 
         var occupied = new bool[GridSize.X, GridSize.Y];
@@ -209,12 +221,96 @@ public partial class DXItemGrid : DXControl
             GetLegacyFootprint(item, out int width, out int height);
             if (!TryPlace(occupied, width, height, out int x, out int y)) continue;
             MarkPlacement(occupied, x, y, width, height);
-            // 原点格：整条记录只在这里画一次图标（其它覆盖格是占位格）。
-            _legacyCellOrigins[y * GridSize.X + x] = true;
+            // 原点格：整条记录只在这里画一次图标（其它覆盖格画图标切片/不重复）。
+            int originCell = y * GridSize.X + x;
+            _legacyCellOrigins[originCell] = true;
+            if (slot < _legacySlotOriginCell.Length) _legacySlotOriginCell[slot] = originCell;
             for (int row = y; row < y + height; row++)
                 for (int col = x; col < x + width; col++)
                     _legacyCellAnchors[row * GridSize.X + col] = slot;
         }
+    }
+
+    /// <summary>某格所属记录的放置信息（槽号、原点格坐标、footprint 格数）。</summary>
+    public bool GetLegacyPlacement(int cellIndex, out int slot, out int originCol,
+        out int originRow, out int width, out int height)
+    {
+        slot = -1; originCol = originRow = 0; width = height = 1;
+        if (!UseLegacyFootprints || GridSize.X <= 0) return false;
+        if (cellIndex < 0 || cellIndex >= _legacyCellAnchors.Length) return false;
+        slot = _legacyCellAnchors[cellIndex];
+        if (slot < 0 || slot >= _legacySlotOriginCell.Length) { slot = -1; return false; }
+        int originCell = _legacySlotOriginCell[slot];
+        if (originCell < 0) { slot = -1; return false; }
+        originCol = originCell % GridSize.X;
+        originRow = originCell / GridSize.X;
+        GetLegacyFootprintSize(cellIndex, out width, out height);
+        return true;
+    }
+
+    /// <summary>该格是否为某 footprint 的原点格（EI 标记 &gt;= 0x3E8 的那种）。</summary>
+    public bool IsLegacyOriginCell(int cellIndex)
+        => UseLegacyFootprints && cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length
+            && _legacyCellAnchors[cellIndex] >= 0
+            && cellIndex < _legacyCellOrigins.Length && _legacyCellOrigins[cellIndex];
+
+    /// <summary>该格是否被某条记录占用（原点或占位都算）。</summary>
+    public bool IsLegacyCovered(int cellIndex)
+        => UseLegacyFootprints && cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length
+            && _legacyCellAnchors[cellIndex] >= 0;
+
+    /// <summary>格子把鼠标进/出转给网格，以便整块 footprint 高亮。</summary>
+    public void NotifyLegacyHover(int cellIndex, bool entered)
+    {
+        if (!UseLegacyFootprints) return;
+        if (entered) _legacyHoverCell = cellIndex;
+        else if (_legacyHoverCell == cellIndex) _legacyHoverCell = -1;
+        RefreshLegacyHighlight();
+    }
+
+    private void EnsureLegacyHighlight()
+    {
+        if (_legacyHighlight != null) return;
+        _legacyHighlight = new DXControl { PassThrough = true, IsControl = false, ZIndex = 100 };
+        AddControl(_legacyHighlight);
+    }
+
+    /// <summary>
+    /// 把整块高亮框对准当前悬停/选中物品的 footprint（EI：选中/悬停高亮覆盖整个
+    /// 占用区，而不是单格）。越出视口的行不画。
+    /// </summary>
+    public void RefreshLegacyHighlight()
+    {
+        if (!UseLegacyFootprints)
+        {
+            if (_legacyHighlight != null) _legacyHighlight.Visible = false;
+            return;
+        }
+        EnsureLegacyHighlight();
+
+        int cell = _legacyHoverCell;
+        var selected = DXItemCell.SelectedCell;
+        if (selected != null && ReferenceEquals(selected.HostGrid, this)) cell = selected.GridIndex;
+        if (cell < 0 || !IsLegacyCovered(cell)
+            || !GetLegacyPlacement(cell, out _, out int oc, out int orow, out int w, out int h))
+        {
+            _legacyHighlight.Visible = false;
+            return;
+        }
+        if (orow + h <= ScrollValue || orow >= ScrollValue + VisibleHeight)
+        {
+            _legacyHighlight.Visible = false;
+            return;
+        }
+
+        _legacyHighlight.Location = new Vector2I((int)(oc * Step + GridPadding),
+            (int)((orow - ScrollValue) * Step + GridPadding));
+        _legacyHighlight.Size = new Vector2I((int)(w * Step), (int)(h * Step));
+        _legacyHighlight.Border = true;
+        _legacyHighlight.BorderColour = Colors.Lime;
+        _legacyHighlight.BackColour = new Color(1f, 0.6f, 0.2f, 0.12f);
+        _legacyHighlight.Visible = true;
+        _legacyHighlight.QueueRedraw();
     }
 
     private static bool TryPlace(bool[,] occupied, int width, int height, out int x, out int y)
@@ -359,6 +455,7 @@ public partial class DXItemGrid : DXControl
                     (int)((y - ScrollValue) * Step + GridPadding));
             }
         }
+        RefreshLegacyHighlight();
     }
 
     /// <summary>重刷所有格子显示 (数组批量变更后调用)</summary>
@@ -368,7 +465,7 @@ public partial class DXItemGrid : DXControl
         RebuildLegacyFootprints();
         foreach (var cell in Cells)
             cell?.RefreshItem();
-
+        RefreshLegacyHighlight();
     }
     public override void _Draw()
     {

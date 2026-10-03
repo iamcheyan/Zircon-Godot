@@ -478,6 +478,8 @@ public partial class InventoryDialog : DXWindow
     {
         if (Grid == null || _legacyScrollBar == null) return;
         Grid.ScrollValue = _legacyScrollBar.Value;
+        // 值变化时重绘 F280 上的指示块（滚轮/拖拽/点击都会经过这里）。
+        _legacyGaugeDrag?.QueueRedraw();
     }
 
     private void TrashItem()
@@ -813,6 +815,25 @@ public partial class InventoryDialog : DXWindow
             if (range <= 0) return;
             float t = Mathf.Clamp(y / Mathf.Max(1f, Size.Y), 0f, 1f);
             Target.Value = Target.MinValue + (int)Math.Round(t * range);
+        }
+
+        /// <summary>
+        /// F280 轨本身是静态锁链贴图；EI 的 gauge 会在其上画一枚随 value 移动的
+        /// 指示（fill/滑块）。这里照做：画随滚动值移动的指示块 + 上半段淡色填充，
+        /// 让滚轮/拖拽/滚动时右侧锁链有可见反馈。
+        /// </summary>
+        protected override void DrawControl()
+        {
+            if (Target == null) return;
+            int range = Target.MaxValue - Target.MinValue - Target.VisibleSize;
+            if (range <= 0) return;
+
+            float t = Mathf.Clamp((Target.Value - Target.MinValue) / (float)range, 0f, 1f);
+            const float knobH = 12f;
+            float y = t * Mathf.Max(1f, Size.Y - knobH);
+
+            DrawRect(new Rect2(0, 0, Size.X, y + knobH), new Color(1f, 0.85f, 0.5f, 0.16f));
+            DrawRect(new Rect2(0, y, Size.X, knobH), new Color(1f, 0.72f, 0.25f, 0.9f));
         }
     }
 }

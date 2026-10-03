@@ -241,12 +241,14 @@ public partial class DXItemCell : DXControl
     private void OnHoverEnter(object sender, EventArgs e)
     {
         GameScene.Game?.SetHoverItem(Item, GridType);
+        HostGrid?.NotifyLegacyHover(GridIndex, true);
         UpdateBorder();
     }
 
     private void OnHoverLeave(object sender, EventArgs e)
     {
         GameScene.Game?.SetHoverItem(null);
+        HostGrid?.NotifyLegacyHover(GridIndex, false);
         UpdateBorder();
     }
 
@@ -255,8 +257,17 @@ public partial class DXItemCell : DXControl
     protected override void DrawControl()
     {
         // 装备栏的武器/衣服/头盔/盾牌由 PaperDoll 绘制；
-        // EI 多格记录只在首格绘制一次，其他格保留命中区但不重复图标。
-        if (Hidden || IsLegacyFootprintPlaceholder) return;
+        if (Hidden) return;
+
+        // legacy 背包：图标按整块 footprint 绘制、按格切片，滚动时每格画自己那一条
+        // （否则高物品的图标会随原点行滚出视口而整块消失，看起来像空格）。
+        if (HostGrid?.UseLegacyFootprints == true)
+        {
+            DrawLegacyFootprintSlice();
+            return;
+        }
+
+        if (IsLegacyFootprintPlaceholder) return;
         var item = Item;
         // 原版 DXItemCell.LootBoxLocked：未揭示的宝箱格不显示普通物品图标，
         // 而显示 GameInter2 2930 的专用锁定图。
@@ -276,11 +287,11 @@ public partial class DXItemCell : DXControl
             DrawItemIcon(item);
     }
 
-    private void DrawItemIcon(ClientUserItem item)
+    /// <summary>物品实际绘制用的图库帧（含货币/物品部件替换），返回贴图与生效的 info。</summary>
+    private Texture2D ResolveItemTexture(ClientUserItem item, out ItemInfo info)
     {
-        ItemInfo info = item.Info;
+        info = item.Info;
         int drawIndex;
-
         if (IsCurrencyItem(info))
             drawIndex = CurrencyImage(info, item.Count);
         else
@@ -292,53 +303,88 @@ public partial class DXItemCell : DXControl
             }
             drawIndex = info.Image;
         }
+        return MirSkin.GetTexture(ItemLibraryFile, drawIndex);
+    }
 
-        var tex = MirSkin.GetTexture(ItemLibraryFile, drawIndex);
-        if (tex == null) return;
-
-        var imgSize = tex.GetSize();
-        float x, y;
-        if (CenterImage)
-        {
-            // legacy 背包图标按**整个 footprint**居中，而不是单个 36px 格：
-            // 1x3 剑若在单格里居中会整体偏到上方，铺不满占位格。
-            float spanX = Size.X, spanY = Size.Y;
-            if (HostGrid?.UseLegacyFootprints == true)
-            {
-                HostGrid.GetLegacyFootprintSize(GridIndex, out int fpW, out int fpH);
-                spanX = fpW * Size.X;
-                spanY = fpH * Size.Y;
-            }
-            x = (spanX - imgSize.X) / 2f;
-            y = (spanY - imgSize.Y) / 2f;
-        }
-        else
-        {
-            x = 0;
-            y = 0;
-        }
+    private Color ItemColour(ClientUserItem item, ItemInfo info)
+    {
         bool itemPartReady = item.Info.ItemEffect != ItemEffect.ItemPart
             || item.AddedStats == null
             || item.AddedStats[Stat.ItemIndex] <= 0
             || item.Count >= Math.Max(1, info.PartCount);
-        var colour = itemPartReady && item.Count > 0
-            ? Colors.White : new Color(0.5f, 0.5f, 0.5f, 1f);
+        return itemPartReady && item.Count > 0 ? Colors.White : new Color(0.5f, 0.5f, 0.5f, 1f);
+    }
+
+    /// <summary>Modern Interface badges 只在原点格画一次。</summary>
+    private void DrawItemBadges(ClientUserItem item, Color colour)
+    {
+        if (item.New)
+            DrawBadge(47, colour);
+        if (item.Flags.HasFlag(UserItemFlags.Locked) && !Hidden && GridType != GridType.Inspect)
+            DrawBadge(48, colour);
+        if (GameScene.Game != null && !GameScene.Game.CanUseItem(item) && !Hidden && GridType != GridType.Inspect)
+            DrawBadge(49, colour);
+        if (item.Info.ItemEffect == ItemEffect.ItemPart)
+            DrawBadge(103, colour);
+    }
+
+    /// <summary>
+    /// legacy 背包单格绘制：把物品贴图按整块 footprint 居中，然后**只画落在本格内
+    /// 的那一条**（源矩形切片）。滚动时上/下格各自画自己那一片，合成连续图标，
+    /// 不会因为原点行滚出视口就整块消失。
+    /// </summary>
+    private void DrawLegacyFootprintSlice()
+    {
+        var item = Item;
+        if (item?.Info == null) return;
+        if (HostGrid == null || !HostGrid.GetLegacyPlacement(GridIndex,
+                out _, out int originCol, out int originRow, out int fpW, out int fpH))
+            return;
+
+        var tex = ResolveItemTexture(item, out ItemInfo info);
+        if (tex == null) return;
+
+        int cols = HostGrid.GridSize.X;
+        if (cols <= 0) return;
+        // 本格相对 footprint 原点的偏移（**不是**绝对列/行）。
+        float cellX = (GridIndex % cols - originCol) * Size.X;
+        float cellY = (GridIndex / cols - originRow) * Size.Y;
+
+        Vector2 imgSize = tex.GetSize();
+        float spanW = fpW * Size.X, spanH = fpH * Size.Y;
+        float imgX = (spanW - imgSize.X) / 2f;
+        float imgY = (spanH - imgSize.Y) / 2f;
+
+        float ix0 = Math.Max(imgX, cellX), ix1 = Math.Min(imgX + imgSize.X, cellX + Size.X);
+        float iy0 = Math.Max(imgY, cellY), iy1 = Math.Min(imgY + imgSize.Y, cellY + Size.Y);
+        if (ix1 <= ix0 || iy1 <= iy0) return; // 本格与图标无交集
+
+        var colour = ItemColour(item, info);
+        var src = new Rect2(ix0 - imgX, iy0 - imgY, ix1 - ix0, iy1 - iy0);
+        var dst = new Rect2(ix0 - cellX, iy0 - cellY, ix1 - ix0, iy1 - iy0);
+        DrawTextureRectRegion(tex, dst, src, colour);
+
+        // 整条记录只在原点格画徽章与特效
+        if (!HostGrid.IsLegacyOriginCell(GridIndex)) return;
+        if (DrawItemBadgesEnabled) DrawItemBadges(item, colour);
+        DrawSpecialItemEffect(item);
+    }
+
+    private void DrawItemIcon(ClientUserItem item)
+    {
+        var tex = ResolveItemTexture(item, out ItemInfo info);
+        if (tex == null) return;
+
+        var imgSize = tex.GetSize();
+        float x = CenterImage ? (Size.X - imgSize.X) / 2f : 0;
+        float y = CenterImage ? (Size.Y - imgSize.Y) / 2f : 0;
+        var colour = ItemColour(item, info);
         DrawTextureRect(tex, new Rect2(x, y, imgSize.X, imgSize.Y), false, colour);
 
         // Modern Interface badges are not part of the EI status-window item
         // loop. Callers using that window opt out instead of borrowing ZL
         // frames whose meaning and resource identity are unverified for EI.
-        if (DrawItemBadgesEnabled)
-        {
-            if (item.New)
-                DrawBadge(47, colour);
-            if (item.Flags.HasFlag(UserItemFlags.Locked) && !Hidden && GridType != GridType.Inspect)
-                DrawBadge(48, colour);
-            if (GameScene.Game != null && !GameScene.Game.CanUseItem(item) && !Hidden && GridType != GridType.Inspect)
-                DrawBadge(49, colour);
-            if (item.Info.ItemEffect == ItemEffect.ItemPart)
-                DrawBadge(103, colour);
-        }
+        if (DrawItemBadgesEnabled) DrawItemBadges(item, colour);
 
         DrawSpecialItemEffect(item);
     }
@@ -435,7 +481,9 @@ public partial class DXItemCell : DXControl
 
         bool showCount = ShowCountLabel && !Hidden && item != null
             && !IsCurrencyItem(item.Info) && item.Info.ItemEffect != ItemEffect.Experience
-            && (item.Info.StackSize > 1 || item.Count > 1);
+            && (item.Info.StackSize > 1 || item.Count > 1)
+            // legacy 多格：数量只在原点格显示一次
+            && (HostGrid?.UseLegacyFootprints != true || HostGrid.IsLegacyOriginCell(GridIndex));
 
         // 窗口构造阶段可能还没有进入场景树，原版控件此时已经有 Handle，
         // Godot 的 _Ready 尚未创建数量标签；先保留数据，进入树后 _Ready 会重绘。

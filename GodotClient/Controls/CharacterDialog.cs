@@ -581,8 +581,7 @@ public partial class CharacterDialog : DXWindow
                 ? min.ToString()
                 : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
             entry.Value.Visible = true;
-            // 同左列：值紧贴标签，避免固定 x 造成的错位/重叠。
-            PlaceLegacyValue(entry.Label, entry.Value);
+            // 第二列按原版是**固定值列**（label x=0x17F, value x=0x1C3），不是连排。
         }
     }
 
@@ -598,6 +597,9 @@ public partial class CharacterDialog : DXWindow
     {
         if (_legacyExpandedLabels.Count > 0) return;
 
+        // status-option-names-evidence.json (F289)：第二列共 **18 个标签 / 16 个值** =
+        // 防御/攻击/魔法(仅标签) + 7 个攻击元素 + 7 个同名的防御(抗性)元素 + 魔法防御力(仅标签)。
+        // 此前只做了 11 行（漏掉 7 个防御元素）。
         var rows = new (string Name, Stat? Stat, Stat? MaxStat)[]
         {
             ("防御", Stat.MinAC, Stat.MaxAC),
@@ -610,6 +612,13 @@ public partial class CharacterDialog : DXWindow
             ("治疗(神圣)", Stat.HolyAttack, null),
             ("攻击(黑暗)", Stat.DarkAttack, null),
             ("召唤(幻影)", Stat.PhantomAttack, null),
+            ("火(火焰)", Stat.FireResistance, null),
+            ("冰(冰冻)", Stat.IceResistance, null),
+            ("电(雷电)", Stat.LightningResistance, null),
+            ("风(狂风)", Stat.WindResistance, null),
+            ("治疗(神圣)", Stat.HolyResistance, null),
+            ("攻击(黑暗)", Stat.DarkResistance, null),
+            ("召唤(幻影)", Stat.PhantomResistance, null),
             ("魔法防御力", null, null), // EI 本窗口仅绘制标签，不显示值。
         };
         for (int i = 0; i < rows.Length; i++)

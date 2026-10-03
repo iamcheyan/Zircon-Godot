@@ -14,12 +14,39 @@ public sealed partial class LegacyLoginDialog : DXWindow
     public event Action<IReadOnlyList<string>> Submitted;
     public event Action SecondaryClicked;
 
+    /// <summary>面板底色（半透明黑）。null = 不自绘面板底。</summary>
+    public Color? PanelFill { get; set; }
+    /// <summary>面板描边色。</summary>
+    public Color PanelBorder { get; set; } = new Color(0.72f, 0.57f, 0.20f, 0.9f);
+
+    protected override void DrawControl()
+    {
+        if (PanelFill.HasValue)
+        {
+            var rect = new Rect2(Vector2.Zero, Size);
+            DrawRect(rect, PanelFill.Value);
+            DrawRect(rect, PanelBorder, false, 1f);
+        }
+        base.DrawControl();
+    }
+
     public LegacyLoginDialog(string title, Vector2I size, string[] labels, bool[] secret = null, string secondary = null)
     {
         HasTitle = false;
         HasFooter = false;
+        // 不画 DXWindow 默认 chrome：它用 `LibraryFile.Interface` 合成 Zircon 现代
+        // 窗口金边与底色（`DXWindow.DrawWindowChrome`），而 legacy 模式下该库在 EI
+        // 素材目录不存在、每次回退到 mir2ei/Data/Interface.Zl，于是这些表单在
+        // legacy 登录屏上呈现现代风格，与周围格格不入。
+        // 原版没有这些窗口 —— 注册/改密是点按钮开浏览器
+        // (mir2ei.com/service/new_user_regi 与 /Modify_pwd，见 Mir3.exe
+        //  0x4043B0 / 0x40442F)，没有原版外观可抄。改用统一半透明黑底，
+        // 让底层登录背景透出来。
+        DrawChrome = false;
+        DropShadow = false;
         Size = size;
-        AddControl(new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 164, FixedSize = true, Size = size, MouseFilter = MouseFilterEnum.Ignore });
+        PanelFill = new Color(0f, 0f, 0f, 0.72f);
+        PanelBorder = new Color(0.72f, 0.57f, 0.20f, 0.9f);
         AddControl(new DXLabel { Text = title, FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, Location = new Vector2I(0, 8), Size = new Vector2I(size.X, 18), IsControl = false });
 
         int inputX = size.X <= 300 ? 85 : 105;

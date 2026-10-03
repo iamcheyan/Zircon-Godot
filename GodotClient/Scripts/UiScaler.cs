@@ -83,6 +83,23 @@ public static class UiScaler
         control.Position = transform.Origin;
     }
 
+    /// <summary>
+    /// 把预游戏变换套到 CanvasLayer，并**同步 MirSkin 的字号倍率**。
+    /// 必须走这里而不是直接赋 Transform：`MirSkin.PhysicalSize` 用 `_uiScale`
+    /// 算像素字体的屏幕字号，而 `DXLabel.DrawControl` 会先抵消自身所在画布的倍率，
+    /// 再按 `PhysicalSize` 绘制 —— 即**屏幕字号 = 基础字号 × `_uiScale`，与画布
+    /// Transform 无关**。预游戏路径若不同步 `_uiScale`，画面放大了字仍是 12px
+    /// （实测选角屏把窗口拖大后就是这样）。
+    /// </summary>
+    public static void ApplyPregameScale(CanvasLayer layer, Viewport viewport)
+    {
+        if (layer == null || !GodotObject.IsInstanceValid(layer)) return;
+        float scale = PregameScale(viewport);
+        MirSkin.SetUiScale(scale);
+        layer.Transform = PregameTransform(viewport);
+        GD.Print($"[UiScaler] pregame scale={scale} offset={PregameTransform(viewport).Origin}");
+    }
+
     private static Vector2 ViewportSize(Viewport viewport)
     {
         Vector2 size = viewport?.GetVisibleRect().Size ?? Vector2.Zero;

@@ -461,14 +461,15 @@ public partial class LoginScene : Control
 
     /// <summary>
     /// 登录屏内容的缩放。legacy 用**预游戏**变换：以原版 640×480 屏幕区等比 fit 到窗口
-    /// （宽 ≥4:3 时高度填满、两侧留黑，不钳制倍率），所以玩家把窗口拖大画面就等比放大填满。
+    /// （宽 ≥4:3 时高度填满、两侧留黑，不钳制倍率），并同步 `MirSkin` 的字号倍率，
+    /// 所以玩家把窗口拖大时画面和**字号**一起等比放大。
     /// 现代（`--zircon-ui`）仍走原来的 800×600 基准 + [1,2] 钳制。
     /// </summary>
     private void ApplyLoginScale()
     {
         if (_uiLayer == null || !IsInstanceValid(_uiLayer)) return;
         if (AutoLoginArgs.LegacyUi)
-            _uiLayer.Transform = UiScaler.PregameTransform(GetViewport());
+            UiScaler.ApplyPregameScale(_uiLayer, GetViewport());
         else
             UiScaler.UpdateScale(_uiLayer, GetViewport());
     }

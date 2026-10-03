@@ -97,20 +97,81 @@ public sealed class LegacyWilLibrary : IDisposable
         Image source = baseTexture.GetImage();
         byte[] pixels = source.GetData();
         if (pixels == null || pixels.Length < 4) return baseTexture;
-        // 原版透明键：与 ZL 侧 `ZlReader.EffectTransparentKeyTolerance = 32`
-        // 同一判据（**逐通道** <= 32 即视为键色），保证 EI WIL 与转换 ZL
-        // 两条路径抠掉的是同一批像素。实测 F1385 背景主色 (0,0,8)/(0,4,0)/
-        // (8,8,8) 全部命中，剩下的是真实美术（夜空渐变 (8,12,16) 等）应保留。
+        // 原版特效抠像（照 `ZlReader.RemoveConnectedEffectBackground` 的算法）：
+        // 特效帧四周有一圈**连通**的近黑背景，从四角向内按欧氏距离容差扩散抠掉，
+        // 遇到颜色跳变即停 —— 这样**只清背景**、不会误伤特效内部同样灰暗的像素
+        // （早期按"逐像素亮度/chroma 一刀切"的实现会把中间抠空，见 c79edccb → 53d992c4）。
+        //
+        // 之后再保留**带色辉光**：近黑或无彩色（chroma < 24）才当键色透出；
+        // 带色像素按亮度在 [32,255] 线性折算 alpha，让青光/火焰外围柔和渐隐
+        // 而不是被刀切（实测 F1385 法师女青光：带色 5600 像素需保留）。
+        const int ConnectedTolerance = 72;   // 与 ZL 侧特效一致
         const byte KeyTolerance = 32;
+        const int GlowFloor = 32;
+        RemoveConnectedEffectBackground(pixels, source.GetWidth(), source.GetHeight(), ConnectedTolerance);
+        // 辉光只在**带色**像素上按亮度渐变；无彩色像素一律交给上面的连通域判定，
+        // 不再按亮度/chroma 二次抠除 —— 否则特效内部同样灰暗的笔画会被抠空，
+        // 就是用户报的「创建人物时中间变黑、不该透明的地方也变透明」。
         for (int i = 0; i + 3 < pixels.Length; i += 4)
         {
-            if (pixels[i] <= KeyTolerance && pixels[i + 1] <= KeyTolerance && pixels[i + 2] <= KeyTolerance)
+            if (pixels[i + 3] == 0) continue;
+            int red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
+            int level = Math.Max(red, Math.Max(green, blue));
+            int chroma = level - Math.Min(red, Math.Min(green, blue));
+            if (chroma >= 24)
+            {
+                // 带色（青光/火焰的柔和外圈）→ 保留，按亮度渐变 alpha。
+                if (level > GlowFloor && level < 255)
+                {
+                    int span = 255 - GlowFloor;
+                    int scaled = (level - GlowFloor) * 255 / span;
+                    if (scaled < pixels[i + 3]) pixels[i + 3] = (byte)scaled;
+                }
+                continue;
+            }
+            // 完全无彩色且极暗 → 键色透出；内部灰阶笔画原样保留。
+            if (red <= KeyTolerance && green <= KeyTolerance && blue <= KeyTolerance)
                 pixels[i + 3] = 0;
         }
         ImageTexture texture = ImageTexture.CreateFromImage(
             Image.CreateFromData(source.GetWidth(), source.GetHeight(), false, Image.Format.Rgba8, pixels));
         _effectTextures[index] = texture;
         return texture;
+    }
+
+    /// <summary>
+    /// 从四角向内扩散清除**连通**的近黑特效背景（照 `ZlReader.RemoveConnectedEffectBackground`）。
+    /// 只清与边缘连通的区域，特效内部即使同样暗也不会被误删。
+    /// </summary>
+    private static void RemoveConnectedEffectBackground(byte[] pixels, int width, int height, int tolerance)
+    {
+        if (width <= 0 || height <= 0) return;
+        var visited = new bool[width * height];
+        var pending = new Queue<int>();
+        int[][] seeds = { new[] { 0, 0 }, new[] { width - 1, 0 }, new[] { 0, height - 1 }, new[] { width - 1, height - 1 } };
+
+        foreach (var seed in seeds)
+        {
+            int seedIndex = seed[1] * width + seed[0];
+            int seedOffset = seedIndex * 4;
+            byte sb = pixels[seedOffset], sg = pixels[seedOffset + 1], sr = pixels[seedOffset + 2];
+            pending.Enqueue(seedIndex);
+            while (pending.Count > 0)
+            {
+                int current = pending.Dequeue();
+                if (visited[current]) continue;
+                int offset = current * 4;
+                int db = pixels[offset] - sb, dg = pixels[offset + 1] - sg, dr = pixels[offset + 2] - sr;
+                if (db * db + dg * dg + dr * dr > tolerance * tolerance) continue;
+                visited[current] = true;
+                pixels[offset + 3] = 0;
+                int x = current % width, y = current / width;
+                if (x > 0) pending.Enqueue(current - 1);
+                if (x + 1 < width) pending.Enqueue(current + 1);
+                if (y > 0) pending.Enqueue(current - width);
+                if (y + 1 < height) pending.Enqueue(current + width);
+            }
+        }
     }
 
     private bool TryGetHeader(int index, out (int Width, int Height, int OffsetX, int OffsetY) header)

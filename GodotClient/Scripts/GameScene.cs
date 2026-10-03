@@ -4077,9 +4077,11 @@ public partial class GameScene : Control
         {
             Effect.SummonSkeleton => new MagicEffectTable.CastEffect { File = LibraryFile.Magic, StartIndex = 750, FrameCount = 10, Colour = MagicEffectTable.Phantom },
             Effect.SummonShinsu => new MagicEffectTable.CastEffect { File = LibraryFile.Mon_9, StartIndex = 9640, FrameCount = 10, Colour = MagicEffectTable.Phantom, Skip = 10 },
-            Effect.CursedDoll => new MagicEffectTable.CastEffect { File = LibraryFile.MagicEx3, StartIndex = 700, FrameCount = 13, Colour = MagicEffectTable.None },
+            // 原版 `MapObject.cs:4183`：`MirEffect(1260, 6, 100ms, MagicEx2, 10, 35)`
+            // —— 帧 1260 起 6 帧、光照 10→35（淡入淡出）。此前误写 1280/10 帧
+            // 且光照 0→0，导致镜像落在错误帧段、边缘也没有原版的淡出。
+            Effect.MirrorImage => new MagicEffectTable.CastEffect { File = LibraryFile.MagicEx2, StartIndex = 1260, FrameCount = 6, Colour = MagicEffectTable.None, FrameLight = 10 },
             Effect.UndeadSoul => new MagicEffectTable.CastEffect { File = LibraryFile.MonMagicEx20, StartIndex = 3300, FrameCount = 10, Colour = MagicEffectTable.None },
-            Effect.MirrorImage => new MagicEffectTable.CastEffect { File = LibraryFile.MagicEx2, StartIndex = 1280, FrameCount = 10, Colour = MagicEffectTable.None },
             Effect.FireWallSmoke => new MagicEffectTable.CastEffect { File = LibraryFile.ProgUse, StartIndex = 220, FrameCount = 1, DelayMs = 3500, Colour = MagicEffectTable.None, DrawType = MirEffectNode.EffectLayer.Floor, Opacity = 0.8f },
             _ => null,
         };
@@ -4145,6 +4147,9 @@ public partial class GameScene : Control
         fx.Skip = def.Skip;
         fx.SetStartDelay(def.StartDelayMs);
         fx.Direction = direction;
+        // 与 SpawnCastEffect 同口径：原版 MirEffect 一律带 startLight，
+        // CastEffect.FrameLight 此前在 target 分支从未被读取。
+        fx.FrameLight = def.FrameLight;
         fx.FrameLightColour = def.Colour;
         fx.UseEffectTransparency = !def.NoColourKey;
     }

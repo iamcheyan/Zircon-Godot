@@ -46,6 +46,7 @@ Visible/Enabled are local flags; IsVisible/IsEnabled reflect ancestry. Location/
 ## Scene integration and examples
 
 * `Client/Scenes/Views/InventoryDialog.cs`: item-grid dialog; actual common item tooltip is `GameScene.CreateItemLabel`, not this file.
+* Legacy item footprint & texture fallback architecture: [LEGACY_ITEM_GRID_AND_TEXTURE_ARCHITECTURE.md](LEGACY_ITEM_GRID_AND_TEXTURE_ARCHITECTURE.md).
 * [Crafting dialog examples](CANONICAL_EXAMPLES.md#complex-dialog) cover composed controls; [client scene integration](CLIENT_RUNTIME.md#gamescene-and-other-partials) maps their owners.
 * `Client/Controls/DXWindow.cs` and `Client/UserModels/WindowSetting.cs`: reusable window layout/settings. Inspect the window's settings identity and GameScene/menu/key action when adding a window.
 * `Client/Envir/Translations/{StringMessages,EnglishMessages,ChineseMessages}.cs`: client message definitions/implementations.

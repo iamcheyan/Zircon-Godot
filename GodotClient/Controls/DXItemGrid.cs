@@ -379,14 +379,30 @@ public partial class DXItemGrid : DXControl
     {
         width = height = 1;
         if (item?.Info == null) return;
-        // EI 背包物品记录的 frame WORD 由 Inventory.wil selector 绘制；
-        // 现代 StoreItem.Zl 不能作为旧版 footprint 尺寸的同号替代。
-        var texture = MirSkin.GetTexture(LibraryFile.Inventory, item.Info.Image);
+        // **必须用格子实际渲染图标的那个库**（`DXItemCell.ItemLibraryFile`，legacy
+        // 下即 StoreItem），不能用 LibraryFile.Inventory。
+        //
+        // 原因：`MirSkin.IsUiLibrary` 把 `Inventory` 列为 UI 库，legacy 下会去
+        // `LegacyEI/Data/inventory.wil`（仅 1440 帧）取图；而格子渲染走
+        // `Data/Storeitem.Zl`（8590 帧）。两个库索引空间不同，经典装备的
+        // `Info.Image`（7913/8187/8192…）在 1440 帧库里全是空帧 →
+        // `GetTexture` 返回 null → 所有物品 footprint 退化成 1×1 →
+        // 多格大物品（2×2 衣服）全部重叠在第一行，只有最上面一件可见
+        // （实测 16 件物品只显示 3 件）。
+        var texture = MirSkin.GetTexture(GridItemLibrary, item.Info.Image);
+        if (texture == null)
+        {
+            // 取不到就退回 Inventory 库，兼容格子改用 Inventory 渲染的场合。
+            texture = MirSkin.GetTexture(LibraryFile.Inventory, item.Info.Image);
+        }
         if (texture == null) return;
         Vector2 size = texture.GetSize();
         width = Math.Max(1, ((int)size.X + DXItemCell.CellWidth - 1) / DXItemCell.CellWidth);
         height = Math.Max(1, ((int)size.Y + DXItemCell.CellHeight - 1) / DXItemCell.CellHeight);
     }
+
+    /// <summary>legacy 下格子渲染图标的图库（与 DXItemCell.ItemLibraryFile 同源）。</summary>
+    private static LibraryFile GridItemLibrary => LibraryFile.StoreItem;
 
     public int LegacyFootprintAnchor(int cellIndex)
         => cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length ? _legacyCellAnchors[cellIndex] : -1;

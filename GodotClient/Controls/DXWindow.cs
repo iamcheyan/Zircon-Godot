@@ -55,6 +55,25 @@ public abstract partial class DXWindow : DXControl
     public const int TitleHeight = 24;
     public const int FooterHeight = 20;
 
+    /// <summary>
+    /// 无标题栏窗口（legacy EI 皮肤 `HasTitle=false`）的**拖动热区高度**。
+    /// 原版这类窗口没有 Zircon 标题栏，但顶部仍有一条画着窗口名（`[包袱]` 等）
+    /// 的美术带，原版就是拿这条带当拖动区。
+    /// <para>
+    /// 默认 17：实测 F250 背景顶部 y0..5 是装饰边、y5..17 是画着 `[包袱]`
+    /// 的标签带、y18 起才是第一行格子。取 17 刚好覆盖标签带且不吃到格子
+    /// （取 22 会把第一行格子也变成拖动热区，点物品变成拖窗口）。子类可
+    /// 显式设为 0 禁用拖动。
+    /// </para>
+    /// <para>
+    /// 修复记录：`DXWindow._GuiInput` 过去只在 `HasTitle` 时才启动拖动，
+    /// 于是**所有** legacy 窗口（背包/角色/商店/仓库…，共 23 个同时满足
+    /// `HasTitle=false` + `Movable=true` 的类）永远拖不动。这个问题被反复
+    /// "修了多回"都没好，因为每回都只盯着单个窗口的现象，没意识到是基类
+    /// 的条件把这一整类窗口全堵死了。故默认值给 17 而非逐个窗口去设。
+    /// </para>
+    /// </summary>
+    public int LegacyDragStripHeight = 17;
     private bool _moving;
     private Vector2 _moveGrabOffset;
 
@@ -340,8 +359,12 @@ public abstract partial class DXWindow : DXControl
                         return;
                     }
                 }
-                // 只允许在标题栏区域拖动
-                if (HasTitle && mb.Position.Y < TitleHeight)
+                // 拖动热区：有标题栏用标题栏；legacy 无标题栏窗口（HasTitle=false）
+                // 用 LegacyDragStripHeight，即顶部那条画着 `[包袱]` 等窗口名的美术带。
+                // 过去这里只判 HasTitle，于是所有 legacy EI 窗口永远拖不动。
+                // 同时要求 Movable，避免子类只设 Movable 却不想被拖的窗口被误拖。
+                float dragStrip = HasTitle ? TitleHeight : LegacyDragStripHeight;
+                if (Movable && dragStrip > 0 && mb.Position.Y < dragStrip)
                 {
                     _moving = true;
                     _moveGrabOffset = mb.Position;

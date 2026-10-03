@@ -738,6 +738,7 @@ namespace Server.Envir
         {
             LoadDatabase();
             LoadExperienceList();
+            LoadChineseAliases();
 
             for (int i = 0; i < InstanceInfoList.Count; i++)
             {
@@ -2246,10 +2247,57 @@ namespace Server.Envir
             }
         }
 
+        public static Dictionary<string, string> ChineseItemAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public static Dictionary<string, string> ChineseMonsterAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public static void LoadChineseAliases()
+        {
+            try
+            {
+                ChineseItemAliases.Clear();
+                ChineseMonsterAliases.Clear();
+
+                string[] paths = new[]
+                {
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "chinese_alias.json"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", "chinese_alias.json"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "chinese_alias.json"),
+                    "/home/tetsuya/development/zircon/ServerLibrary/chinese_alias.json"
+                };
+
+                string found = paths.FirstOrDefault(File.Exists);
+                if (found != null)
+                {
+                    var text = File.ReadAllText(found);
+                    using var doc = System.Text.Json.JsonDocument.Parse(text);
+                    if (doc.RootElement.TryGetProperty("items", out var itemsElem))
+                    {
+                        foreach (var prop in itemsElem.EnumerateObject())
+                            ChineseItemAliases[prop.Name] = prop.Value.GetString();
+                    }
+                    if (doc.RootElement.TryGetProperty("monsters", out var monstersElem))
+                    {
+                        foreach (var prop in monstersElem.EnumerateObject())
+                            ChineseMonsterAliases[prop.Name] = prop.Value.GetString();
+                    }
+                    Log($"[ChineseAlias] Loaded {ChineseItemAliases.Count} items and {ChineseMonsterAliases.Count} monsters from {found}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"[ChineseAlias] Failed to load aliases: {ex.Message}");
+            }
+        }
+
         public static ItemInfo GetItemInfo(string name)
         {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            if (ChineseItemAliases.TryGetValue(name.Trim(), out string enName))
+                name = enName;
+
             for (int i = 0; i < ItemInfoList.Count; i++)
-                if (string.Compare(ItemInfoList[i].ItemName.Replace(" ", ""), name, StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(ItemInfoList[i].ItemName.Replace(" ", ""), name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase) == 0)
                     return ItemInfoList[i];
 
             return null;
@@ -2262,8 +2310,13 @@ namespace Server.Envir
 
         public static MonsterInfo GetMonsterInfo(string name)
         {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            if (ChineseMonsterAliases.TryGetValue(name.Trim(), out string enName))
+                name = enName;
+
             return MonsterInfoList.Binding.FirstOrDefault
-            (monster => string.Compare(monster.MonsterName.Replace(" ", ""), name,
+            (monster => string.Compare(monster.MonsterName.Replace(" ", ""), name.Replace(" ", ""),
                             StringComparison.OrdinalIgnoreCase) == 0);
         }
 

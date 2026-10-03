@@ -33,7 +33,7 @@
    "ja": "烈火剣法"
   },
   "Dragon Rise": {
-   "zh": "龙影剑法",
+   "zh": "翔空剑法",
    "ja": "龍影剣法"
   },
   "Blade Storm": {
@@ -41,7 +41,7 @@
    "ja": "蓮月剣法"
   },
   "Destructive Surge": {
-   "zh": "破血狂杀",
+   "zh": "十方斩",
    "ja": "破血狂殺"
   },
   "Interchange": {
@@ -53,11 +53,11 @@
    "ja": "鉄布衫"
   },
   "Beckon": {
-   "zh": "召唤",
+   "zh": "斗转星移",
    "ja": "召喚"
   },
   "Might": {
-   "zh": "蛮力",
+   "zh": "破血狂杀",
    "ja": "蛮力"
   },
   "Swift Blade": {
@@ -309,7 +309,7 @@
    "ja": "透明化"
   },
   "Celestial Light": {
-   "zh": "圣言术",
+   "zh": "凝血离魂",
    "ja": "聖光術"
   },
   "Empowered Healing": {
@@ -637,11 +637,11 @@
    "ja": "無地の指輪"
   },
   "Iron Bracer": {
-   "zh": "铁护腕",
+   "zh": "铁手镯",
    "ja": "鉄の腕輪"
   },
   "Necklace Of Tranquility": {
-   "zh": "宁静项链",
+   "zh": "传统项链",
    "ja": "静寂の首飾り"
   },
   "Silver Bracelet": {
@@ -653,7 +653,7 @@
    "ja": "金の首飾り"
   },
   "Horned Ring": {
-   "zh": "角戒",
+   "zh": "牛角戒指",
    "ja": "角の指輪"
   },
   "Glass Ring": {
@@ -665,7 +665,7 @@
    "ja": "革の手袋"
   },
   "Golden Bracelet": {
-   "zh": "金手镯",
+   "zh": "大手镯",
    "ja": "黄金の腕輪"
   },
   "Magic Bracelet": {
@@ -673,15 +673,15 @@
    "ja": "魔法の腕輪"
   },
   "Arisu Bracelet": {
-   "zh": "爱丽丝手镯",
+   "zh": "黑檀手镯",
    "ja": "アリスの腕輪"
   },
   "Bracelet Of Exertion": {
-   "zh": "蛮力手镯",
+   "zh": "小手镯",
    "ja": "蛮力の腕輪"
   },
   "Black Crystal Ring": {
-   "zh": "黑水晶戒指",
+   "zh": "黑色水晶戒指",
    "ja": "黒水晶の指輪"
   },
   "Pearl Ring": {
@@ -693,11 +693,11 @@
    "ja": "短剣"
   },
   "Iron Sword": {
-   "zh": "铁剑",
+   "zh": "短剑",
    "ja": "鉄の剣"
   },
   "Arisu Wood Sword": {
-   "zh": "阿里斯木剑",
+   "zh": "乌木剑",
    "ja": "アリスの木剣"
   },
   "Chicken Meat": {
@@ -729,11 +729,11 @@
    "ja": "恐怖の爪"
   },
   "Trident": {
-   "zh": "三叉戟",
+   "zh": "海魂",
    "ja": "トライデント"
   },
   "Scimitar": {
-   "zh": "弯刀",
+   "zh": "半月",
    "ja": "シミター"
   },
   "Light Armour (M)": {
@@ -789,11 +789,11 @@
    "ja": "六角の刃"
   },
   "War Spear": {
-   "zh": "战矛",
+   "zh": "偃月",
    "ja": "戦槍"
   },
   "War Blade": {
-   "zh": "战刃",
+   "zh": "降魔",
    "ja": "戦刃"
   },
   "Master's Glaive": {
@@ -801,7 +801,7 @@
    "ja": "マスターの長刀"
   },
   "Naga Necklace": {
-   "zh": "娜迦项链",
+   "zh": "魔鬼项链",
    "ja": "ナーガの首飾り"
   },
   "Necklace Of Lantern": {
@@ -809,11 +809,11 @@
    "ja": "提灯の首飾り"
   },
   "Necklace Of Meditation": {
-   "zh": "冥想项链",
+   "zh": "真善项链",
    "ja": "瞑想の首飾り"
   },
   "White Tiger Tooth Necklace": {
-   "zh": "白虎牙项链",
+   "zh": "白色虎齿项链",
    "ja": "白虎の牙の首飾り"
   },
   "Coral Ring": {
@@ -821,23 +821,23 @@
    "ja": "珊瑚の指輪"
   },
   "White Serpent Ring": {
-   "zh": "白蛇戒指",
+   "zh": "白月银蛇戒指",
    "ja": "白蛇の指輪"
   },
   "Gauntlet Of Deathbringer": {
-   "zh": "死亡使者护手",
+   "zh": "死神手套",
    "ja": "死神の篭手"
   },
   "Bracelet Of Sorcery": {
-   "zh": "巫术手镯",
+   "zh": "思贝儿手镯",
    "ja": "魔術の腕輪"
   },
   "Black Crystal Necklace": {
-   "zh": "黑水晶项链",
+   "zh": "黑色水晶项链",
    "ja": "黒水晶の首飾り"
   },
   "Arisu Necklace": {
-   "zh": "爱丽丝项链",
+   "zh": "黑檀项链",
    "ja": "アリスの首飾り"
   },
   "Empowered Explosive Talisman": {
@@ -921,7 +921,7 @@
    "ja": "弟子の仮面"
   },
   "Magic Bronze Helmet": {
-   "zh": "魔法青铜头盔",
+   "zh": "魔法头盔",
    "ja": "魔法の青銅の兜"
   },
   "Straw Sandles": {
@@ -929,7 +929,7 @@
    "ja": "草鞋"
   },
   "Leather Shoes": {
-   "zh": "皮鞋",
+   "zh": "皮靴",
    "ja": "革の靴"
   },
   "Brown Chestnut": {
@@ -949,7 +949,7 @@
    "ja": "金の栗"
   },
   "Carnivorous Plant Leaf": {
-   "zh": "食人花叶",
+   "zh": "食人树叶",
    "ja": "食人花の葉"
   },
   "Carnivorous Plant Fruit": {
@@ -961,7 +961,7 @@
    "ja": "蛇の胆"
   },
   "Spitting Spider Tooth": {
-   "zh": "毒蛛牙齿",
+   "zh": "毒蜘蛛牙齿",
    "ja": "毒蜘蛛の牙"
   },
   "Tooth": {
@@ -1017,19 +1017,19 @@
    "ja": "サソリの尾"
   },
   "Zombie Bone": {
-   "zh": "僵尸骨",
+   "zh": "僵尸骨头",
    "ja": "ゾンビの骨"
   },
   "Maggot Pill": {
-   "zh": "蛆虫丸",
+   "zh": "蛆卵",
    "ja": "蛆虫の丸薬"
   },
   "Ant Egg": {
-   "zh": "蚁卵",
+   "zh": "蚂蚁卵",
    "ja": "蟻の卵"
   },
   "Flea Husk": {
-   "zh": "跳蚤壳",
+   "zh": "跳蚤皮",
    "ja": "ノミの殻"
   },
   "Elixir Of Destruction": {
@@ -1133,7 +1133,7 @@
    "ja": "自然のエリクサー（V）"
   },
   "Rugged Leather Gauntlet": {
-   "zh": "粗犷皮护手",
+   "zh": "坚固手套",
    "ja": "頑丈な革の篭手"
   },
   "!Balanced Bracelet (OLD)": {
@@ -1141,11 +1141,11 @@
    "ja": "均衡の腕輪（旧）"
   },
   "Platinum Necklace": {
-   "zh": "铂金项链",
+   "zh": "白金项链",
    "ja": "白金の首飾り"
   },
   "Oil Of Benediction": {
-   "zh": "祝福之油",
+   "zh": "祝福油",
    "ja": "祝福の油"
   },
   "Oil Of Conservation": {
@@ -1153,39 +1153,39 @@
    "ja": "保存の油"
   },
   "Oil Of The War God": {
-   "zh": "战神之油",
+   "zh": "战神油",
    "ja": "戦神の油"
   },
   "Loop Of Teleportation": {
-   "zh": "传送之环",
+   "zh": "传送戒指",
    "ja": "テレポートの環"
   },
   "Loop Of Paralysis": {
-   "zh": "麻痹之环",
+   "zh": "麻痹戒指",
    "ja": "麻痺の環"
   },
   "Choker Of Learning": {
-   "zh": "学识项圈",
+   "zh": "技巧项链",
    "ja": "学識のチョーカー"
   },
   "Loop Of Ressurection": {
-   "zh": "复活之环",
+   "zh": "复活戒指",
    "ja": "復活の環"
   },
   "Loop Of Protection": {
-   "zh": "守护之环",
+   "zh": "护身戒指",
    "ja": "守護の環"
   },
   "Loop Of Invisibility": {
-   "zh": "隐身之环",
+   "zh": "隐身戒指",
    "ja": "隠身の環"
   },
   "Pendant Of Tracking": {
-   "zh": "追踪吊坠",
+   "zh": "探测项链",
    "ja": "追跡のペンダント"
   },
   "Power Axe": {
-   "zh": "力量之斧",
+   "zh": "修罗",
    "ja": "力の斧"
   },
   "Gold Ring": {
@@ -1193,19 +1193,19 @@
    "ja": "金の指輪"
   },
   "Band Of Sorcery": {
-   "zh": "巫术之环",
+   "zh": "魅力戒指",
    "ja": "魔術の指輪"
   },
   "Blue Jade Necklace": {
-   "zh": "蓝玉项链",
+   "zh": "蓝翡翠项链",
    "ja": "青玉の首飾り"
   },
   "Pendant Of Image": {
-   "zh": "镜像吊坠",
+   "zh": "放大镜",
    "ja": "鏡像のペンダント"
   },
   "Helmet Of Shaman": {
-   "zh": "萨满头盔",
+   "zh": "道士头盔",
    "ja": "シャーマンの兜"
   },
   "Blade Of Spirit Caller": {
@@ -1229,11 +1229,11 @@
    "ja": "霊喚びの指輪"
   },
   "White Skull Helmet": {
-   "zh": "白色骷髅头盔",
+   "zh": "沃玛头盔",
    "ja": "白髑髏の兜"
   },
   "Boots Of Crimson Steed": {
-   "zh": "绯红骏马之靴",
+   "zh": "武神之靴",
    "ja": "深紅の駿馬の靴"
   },
   "Disguise Of The Master": {
@@ -1249,11 +1249,11 @@
    "ja": "暗殺の仮面"
   },
   "Husk": {
-   "zh": "壳",
+   "zh": "皮",
    "ja": "殻"
   },
   "Ginseng Of Eternity": {
-   "zh": "万年人参",
+   "zh": "万年雪霜",
    "ja": "永遠の人蔘"
   },
   "Helmet Of The War God": {
@@ -1261,11 +1261,11 @@
    "ja": "戦神の兜"
   },
   "Crown Of Feral Lord": {
-   "zh": "狂野领主皇冠",
+   "zh": "虎面头盔",
    "ja": "野獣王の王冠"
   },
   "Glowing Diamond Band": {
-   "zh": "发光钻石环",
+   "zh": "心魔戒指",
    "ja": "輝くダイヤの指輪"
   },
   "Crystal": {
@@ -1273,15 +1273,15 @@
    "ja": "結晶"
   },
   "Bone Claymore": {
-   "zh": "骨制大剑",
+   "zh": "双刃剑",
    "ja": "骨の大剣"
   },
   "Mage Staff": {
-   "zh": "法师法杖",
+   "zh": "魔杖",
    "ja": "魔導士の杖"
   },
   "Serpent Sword": {
-   "zh": "蛇纹剑",
+   "zh": "银蛇",
    "ja": "蛇紋剣"
   },
   "Glaive Of Manes": {
@@ -1289,15 +1289,15 @@
    "ja": "亡霊の長刀"
   },
   "Banya Gem Stone": {
-   "zh": "潘夜宝石",
+   "zh": "潘夜珠",
    "ja": "パンヤの宝石"
   },
   "Ring Of Exorcism": {
-   "zh": "驱魔戒指",
+   "zh": "降妖除魔戒指",
    "ja": "祓魔の指輪"
   },
   "Claw Necklace": {
-   "zh": "利爪项链",
+   "zh": "幽灵项链",
    "ja": "爪の首飾り"
   },
   "Iron Plate Armour (M)": {
@@ -1333,11 +1333,11 @@
    "ja": "偏斜の影鎧（女）"
   },
   "Tri Stone Necklace": {
-   "zh": "三石项链",
+   "zh": "银镜项链",
    "ja": "三石の首飾り"
   },
   "Butcher's Necklace": {
-   "zh": "屠夫项链",
+   "zh": "勇士项链",
    "ja": "屠殺者の首飾り"
   },
   "Puple Crystal Pendant": {
@@ -1377,7 +1377,7 @@
    "ja": "悪魔狩人の外套（女）"
   },
   "Gale Ring": {
-   "zh": "狂风之戒",
+   "zh": "狂风戒指",
    "ja": "疾風の指輪"
   },
   "Gale Necklace": {
@@ -1385,47 +1385,47 @@
    "ja": "疾風の首飾り"
   },
   "Horn": {
-   "zh": "角",
+   "zh": "号角",
    "ja": "角"
   },
   "Sword Of Purification": {
-   "zh": "净化之剑",
+   "zh": "凝霜",
    "ja": "浄化の剣"
   },
   "Horn Of Uma King": {
-   "zh": "沃玛教主之角",
+   "zh": "沃玛号角",
    "ja": "オマ教主の角"
   },
   "Signet Of Summoning": {
-   "zh": "召唤印章戒",
+   "zh": "记忆戒指",
    "ja": "召喚の印章"
   },
   "Amulet Of Summoning": {
-   "zh": "召唤护符",
+   "zh": "记忆项链",
    "ja": "召喚の護符"
   },
   "Bracelet Of Summoning": {
-   "zh": "召唤手镯",
+   "zh": "记忆手镯",
    "ja": "召喚の腕輪"
   },
   "Head-Guard Of Summoning": {
-   "zh": "召唤护额",
+   "zh": "记忆头盔",
    "ja": "召喚の額当て"
   },
   "Enchanted Blade": {
-   "zh": "附魔之刃",
+   "zh": "命运之刃",
    "ja": "魔力付与の刃"
   },
   "Signet Of Vigor": {
-   "zh": "活力印章戒",
+   "zh": "魔血戒指",
    "ja": "活力の印章"
   },
   "Arm Wrap Of Vigor": {
-   "zh": "活力臂带",
+   "zh": "魔血手镯",
    "ja": "活力の腕帯"
   },
   "Pendant Of Vigor": {
-   "zh": "活力吊坠",
+   "zh": "魔血项链",
    "ja": "活力のペンダント"
   },
   "Pendant Of Luminary": {
@@ -1433,59 +1433,59 @@
    "ja": "光輝のペンダント"
   },
   "Pendant Of Courage": {
-   "zh": "勇气吊坠",
+   "zh": "复血",
    "ja": "勇気のペンダント"
   },
   "Spider Web Thread": {
-   "zh": "蛛丝",
+   "zh": "蜘蛛线",
    "ja": "蜘蛛の糸"
   },
   "Green Bead Necklace": {
-   "zh": "绿珠项链",
+   "zh": "绿色项链",
    "ja": "緑玉の首飾り"
   },
   "Anti Evil Necklace": {
-   "zh": "辟邪项链",
+   "zh": "恶魔铃铛",
    "ja": "厄除けの首飾り"
   },
   "Ring Of Life Stealing": {
-   "zh": "吸血之戒",
+   "zh": "虹魔戒指",
    "ja": "吸血の指輪"
   },
   "Wrist Guard Of Life Stealing": {
-   "zh": "吸血护腕",
+   "zh": "虹魔手镯",
    "ja": "吸血の腕当て"
   },
   "Pendant Of Life Stealing": {
-   "zh": "吸血吊坠",
+   "zh": "虹魔项链",
    "ja": "吸血のペンダント"
   },
   "Bracer Of Artisan": {
-   "zh": "工匠护腕",
+   "zh": "如来手镯",
    "ja": "職人の腕輪"
   },
   "Dark Iron Gauntlet": {
-   "zh": "黑铁护手",
+   "zh": "铁炼腕",
    "ja": "黒鉄の篭手"
   },
   "Tainted Bracelet": {
-   "zh": "污秽手镯",
+   "zh": "火玉手镯",
    "ja": "汚染の腕輪"
   },
   "Claw": {
-   "zh": "爪子",
+   "zh": "指甲",
    "ja": "爪"
   },
   "Bronze Gauntlet": {
-   "zh": "青铜护手",
+   "zh": "幽灵手套",
    "ja": "青銅の篭手"
   },
   "Gold Plated Bracelet": {
-   "zh": "镀金手镯",
+   "zh": "金手镯",
    "ja": "金張りの腕輪"
   },
   "Bamboo Hat": {
-   "zh": "竹笠",
+   "zh": "斗笠",
    "ja": "竹の笠"
   },
   "Fierce Dragon Ring": {
@@ -1505,23 +1505,23 @@
    "ja": "幻影のチョーカー"
   },
   "Amulet Of Empowerment": {
-   "zh": "强化护符",
+   "zh": "气血项链",
    "ja": "強化の護符"
   },
   "Gloves Of Black Guard": {
-   "zh": "黑卫手套",
+   "zh": "黑皮手套",
    "ja": "黒衛兵の手袋"
   },
   "Gauntlet Of Hero": {
-   "zh": "英雄护手",
+   "zh": "英雄手套",
    "ja": "英雄の篭手"
   },
   "Brightly Coloured Shoes": {
-   "zh": "鲜艳彩鞋",
+   "zh": "五彩鞋",
    "ja": "鮮やかな靴"
   },
   "Iron Wood Helmet": {
-   "zh": "铁木头盔",
+   "zh": "天藤头盔",
    "ja": "鉄木の兜"
   },
   "White Lotus Disguise": {
@@ -1533,31 +1533,31 @@
    "ja": "紅蓮の変装"
   },
   "Fragment Of Zuma King": {
-   "zh": "祖玛教主碎片",
+   "zh": "祖玛头像",
    "ja": "ズマ教主の欠片"
   },
   "Amulet Of Vanquishment": {
-   "zh": "征服护符",
+   "zh": "怨恨项链",
    "ja": "征服の護符"
   },
   "Ring Of Endless Circle": {
-   "zh": "无尽轮回之戒",
+   "zh": "天机戒指",
    "ja": "無限輪廻の指輪"
   },
   "Ancient Myrmidon Band": {
-   "zh": "远古密尔弥冬之环",
+   "zh": "紫金环",
    "ja": "古代ミュルミドンの指輪"
   },
   "Loop Of Endless Combat": {
-   "zh": "无尽战斗之环",
+   "zh": "武圣之戒",
    "ja": "無限戦闘の環"
   },
   "Loop Of Seven Gems": {
-   "zh": "七宝石之环",
+   "zh": "七彩金环",
    "ja": "七つの宝石の環"
   },
   "Meteorite Pendant": {
-   "zh": "陨石吊坠",
+   "zh": "流星项链",
    "ja": "隕石のペンダント"
   },
   "Blessed Ring Of Exorcism": {
@@ -1565,19 +1565,19 @@
    "ja": "祝福されし祓魔の指輪"
   },
   "Zuma Judgement Mace": {
-   "zh": "祖玛裁决之锤",
+   "zh": "祖玛裁决之杖",
    "ja": "ズマ裁決の杖"
   },
   "Zuma Runed Staff": {
-   "zh": "祖玛符文法杖",
+   "zh": "祖玛无极棍",
    "ja": "ズマのルーン杖"
   },
   "Zuma Dragon Bone Staff": {
-   "zh": "祖玛龙骨法杖",
+   "zh": "祖玛骨玉权杖",
    "ja": "ズマの龍骨の杖"
   },
   "Statue Fragment": {
-   "zh": "雕像碎片",
+   "zh": "神灵雕像",
    "ja": "彫像の欠片"
   },
   "Claw Of Black Tortoise": {
@@ -1585,7 +1585,7 @@
    "ja": "玄武の爪"
   },
   "Laurel Mask": {
-   "zh": "月桂面罩",
+   "zh": "腐烂骷髅头盔",
    "ja": "月桂樹の仮面"
   },
   "Burning Dark Stone": {
@@ -1669,15 +1669,15 @@
    "ja": "突風の黒鉄石（V）"
   },
   "Great Axe": {
-   "zh": "巨斧",
+   "zh": "炼狱",
    "ja": "大斧"
   },
   "Mage Sword": {
-   "zh": "法师之剑",
+   "zh": "血饮",
    "ja": "魔導士の剣"
   },
   "Valor Blade": {
-   "zh": "英勇之刃",
+   "zh": "无名刀",
    "ja": "武勇の刃"
   },
   "White Lotus Glaive": {
@@ -1685,7 +1685,7 @@
    "ja": "白蓮の長刀"
   },
   "Amulet Of Ancient Kingdom": {
-   "zh": "古王国护符",
+   "zh": "金刚铃铛",
    "ja": "古代王国の護符"
   },
   "Nature Band Of Ancient Kingdom": {
@@ -1693,15 +1693,15 @@
    "ja": "古代王国の自然の指輪"
   },
   "Spirit Band Of Ancient Kingdom": {
-   "zh": "古王国灵魂之环",
+   "zh": "金刚精神戒指",
    "ja": "古代王国の霊魂の指輪"
   },
   "Armoured Bracer Of Ancient Kingdom": {
-   "zh": "古王国装甲护腕",
+   "zh": "金刚防御手镯",
    "ja": "古代王国の装甲の腕輪"
   },
   "Holy Bracer Of Ancient Kingdom": {
-   "zh": "古王国圣护腕",
+   "zh": "金刚魔法手镯",
    "ja": "古代王国の聖なる腕輪"
   },
   "Sanyum Bead": {
@@ -1717,11 +1717,11 @@
    "ja": "青銅の剣"
   },
   "Copper Ring": {
-   "zh": "铜戒指",
+   "zh": "古铜戒指",
    "ja": "銅の指輪"
   },
   "Blue Crystal Ring": {
-   "zh": "蓝水晶戒指",
+   "zh": "蓝色水晶戒指",
    "ja": "青水晶の指輪"
   },
   "Hexagonal Ring": {
@@ -1753,15 +1753,15 @@
    "ja": "鋭利な手刀"
   },
   "Yellow Crystal Necklace": {
-   "zh": "黄水晶项链",
+   "zh": "黄色水晶项链",
    "ja": "黄水晶の首飾り"
   },
   "Bracer Of Magic": {
-   "zh": "魔法护腕",
+   "zh": "道士手镯",
    "ja": "魔法の腕輪"
   },
   "Serpent Ring": {
-   "zh": "蛇纹戒指",
+   "zh": "蛇眼戒指",
    "ja": "蛇紋の指輪"
   },
   "Amber Necklace": {
@@ -1769,7 +1769,7 @@
    "ja": "琥珀の首飾り"
   },
   "Seal Of Titans": {
-   "zh": "泰坦封印",
+   "zh": "神力戒指",
    "ja": "タイタンの封印"
   },
   "Deathblow Talon": {
@@ -1797,11 +1797,11 @@
    "ja": "霊魂のエリクサー（V）"
   },
   "Ring Of Discipline": {
-   "zh": "戒律之戒",
+   "zh": "道德戒指",
    "ja": "戒律の指輪"
   },
   "Bamboo Necklace": {
-   "zh": "竹项链",
+   "zh": "竹笛",
    "ja": "竹の首飾り"
   },
   "Bracelet Of Three Eyes": {
@@ -1817,7 +1817,7 @@
    "ja": "灰のチョーカー"
   },
   "Necklace Of Nature": {
-   "zh": "自然项链",
+   "zh": "震天项链",
    "ja": "自然の首飾り"
   },
   "Band Of Magic": {
@@ -1829,15 +1829,15 @@
    "ja": "怒りのペンダント"
   },
   "Amulet Of Wisdom": {
-   "zh": "智慧护符",
+   "zh": "猫眼",
    "ja": "知恵の護符"
   },
   "Pendent Of Holy Spirit": {
-   "zh": "圣灵吊坠",
+   "zh": "灵魂项链",
    "ja": "聖霊のペンダント"
   },
   "Ring Of Destruction": {
-   "zh": "毁灭之戒",
+   "zh": "毁灭手镯",
    "ja": "破壊の指輪"
   },
   "Amulet Of Chaos": {
@@ -1845,7 +1845,7 @@
    "ja": "混沌の護符"
   },
   "Pendant Of Destruction": {
-   "zh": "毁灭吊坠",
+   "zh": "破坏项链",
    "ja": "破壊のペンダント"
   },
   "Freedom Pass": {
@@ -1857,7 +1857,7 @@
    "ja": "回避の首飾り"
   },
   "Dark Blade": {
-   "zh": "暗刃",
+   "zh": "夏普儿手镯",
    "ja": "闇の刃"
   },
   "Bracelet Of Evasion": {
@@ -1865,31 +1865,31 @@
    "ja": "回避の腕輪"
   },
   "Spiked Ring": {
-   "zh": "尖刺戒指",
+   "zh": "力量戒指",
    "ja": "棘の指輪"
   },
   "Opal Ring": {
-   "zh": "蛋白石戒指",
+   "zh": "紫碧螺",
    "ja": "オパールの指輪"
   },
   "Hieroglyphic Ring": {
-   "zh": "象形文字戒指",
+   "zh": "泰坦戒指",
    "ja": "象形文字の指輪"
   },
   "Red Maple Ring": {
-   "zh": "红枫戒指",
+   "zh": "红叶血环",
    "ja": "紅葉の指輪"
   },
   "Jewel": {
-   "zh": "宝石",
+   "zh": "宝玉",
    "ja": "宝石"
   },
   "Numa Power Axe": {
-   "zh": "诺马力量之斧",
+   "zh": "诺玛族修罗",
    "ja": "ヌマの力の斧"
   },
   "Numa Mage Staff": {
-   "zh": "诺马法师法杖",
+   "zh": "诺玛族魔杖",
    "ja": "ヌマの魔導士の杖"
   },
   "Rogue's Render": {
@@ -1897,7 +1897,7 @@
    "ja": "ローグの刃"
   },
   "Cursed Serpent Sword": {
-   "zh": "诅咒蛇纹剑",
+   "zh": "诅咒银蛇",
    "ja": "呪われた蛇紋剣"
   },
   "Ambitious Sword Of Abyss": {
@@ -1921,31 +1921,31 @@
    "ja": "従順の槍"
   },
   "Hero's Bracelet": {
-   "zh": "英雄手镯",
+   "zh": "骑士手镯",
    "ja": "英雄の腕輪"
   },
   "Holy Bracer": {
-   "zh": "圣护腕",
+   "zh": "心灵手镯",
    "ja": "聖なる腕輪"
   },
   "Wyvern Bracelet": {
-   "zh": "双足飞龙手镯",
+   "zh": "龙之手镯",
    "ja": "ワイバーンの腕輪"
   },
   "Enchanted Blade Of Banya": {
-   "zh": "潘夜附魔之刃",
+   "zh": "潘夜命运之刃",
    "ja": "パンヤの魔力付与の刃"
   },
   "Dark Banya Gem Stone": {
-   "zh": "潘夜暗宝石",
+   "zh": "夜明珠",
    "ja": "パンヤの暗黒宝石"
   },
   "Mage Sword Of Banya": {
-   "zh": "潘夜法师之剑",
+   "zh": "潘夜血饮",
    "ja": "パンヤの魔導士の剣"
   },
   "Runed Staff Of Banya": {
-   "zh": "潘夜符文法杖",
+   "zh": "潘夜无极棍",
    "ja": "パンヤのルーン杖"
   },
   "Forged Scimitar Of Banya": {
@@ -1969,23 +1969,23 @@
    "ja": "邪教教主の護符"
   },
   "Amulet Of Five Elements": {
-   "zh": "五行护符",
+   "zh": "五行神镜",
    "ja": "五行の護符"
   },
   "Amulet Of The Enlightened": {
-   "zh": "觉悟者护符",
+   "zh": "乾坤一气",
    "ja": "悟りし者の護符"
   },
   "Boots Of Despair": {
-   "zh": "绝望之靴",
+   "zh": "月光鞋",
    "ja": "絶望の靴"
   },
   "Boots Of Swiftness": {
-   "zh": "迅捷之靴",
+   "zh": "仙云靴",
    "ja": "疾風の靴"
   },
   "Boots Of Levitation": {
-   "zh": "漂浮之靴",
+   "zh": "绝地靴",
    "ja": "浮遊の靴"
   },
   "Blue Sword Of Purification": {
@@ -1993,23 +1993,23 @@
    "ja": "浄化の青色の剣"
   },
   "Serpent Sword Of Banya": {
-   "zh": "潘夜蛇纹剑",
+   "zh": "潘夜银蛇",
    "ja": "パンヤの蛇紋剣"
   },
   "Banya Mage Staff": {
-   "zh": "潘夜法师法杖",
+   "zh": "潘夜魔杖",
    "ja": "パンヤの魔導士の杖"
   },
   "Rugged Leather Boots": {
-   "zh": "粗犷皮靴",
+   "zh": "赤飞靴子",
    "ja": "頑丈な革靴"
   },
   "Boots Of Black Tortoise": {
-   "zh": "玄武之靴",
+   "zh": "黑皮靴子",
    "ja": "玄武の靴"
   },
   "Silk Boots": {
-   "zh": "丝绸靴",
+   "zh": "天掌靴子",
    "ja": "絹の靴"
   },
   "Tears Of Banya": {
@@ -2021,7 +2021,7 @@
    "ja": "死の長刀"
   },
   "Ring Of Unification": {
-   "zh": "统一之戒",
+   "zh": "六棱戒",
    "ja": "統一の指輪"
   },
   "Ruby Ring": {
@@ -2033,7 +2033,7 @@
    "ja": "白金の指輪"
   },
   "Gold Dragon Ring": {
-   "zh": "金龙戒指",
+   "zh": "龙之戒指",
    "ja": "金竜の指輪"
   },
   "Potion Of Forgetfulness": {
@@ -2045,27 +2045,27 @@
    "ja": "暴怒の悪魔の頭巾"
   },
   "Loop Of Secrets": {
-   "zh": "秘密之环",
+   "zh": "虚空道环",
    "ja": "秘密の環"
   },
   "Copper Ore": {
-   "zh": "铜矿石",
+   "zh": "铁矿",
    "ja": "銅鉱石"
   },
   "Iron Ore": {
-   "zh": "铁矿石",
+   "zh": "银矿",
    "ja": "鉄鉱石"
   },
   "Silver Ore": {
-   "zh": "银矿石",
+   "zh": "铜矿",
    "ja": "銀鉱石"
   },
   "Gold Ore": {
-   "zh": "金矿石",
+   "zh": "金矿",
    "ja": "金鉱石"
   },
   "Black Iron Ore": {
-   "zh": "黑铁矿石",
+   "zh": "黑铁",
    "ja": "黒鉄鉱石"
   },
   "Amethyst": {
@@ -2077,7 +2077,7 @@
    "ja": "ガーネット"
   },
   "Diamond": {
-   "zh": "钻石",
+   "zh": "金刚石",
    "ja": "ダイヤ"
   },
   "Corundum": {
@@ -2085,19 +2085,19 @@
    "ja": "コランダム"
   },
   "Forged Scimitar": {
-   "zh": "锻造弯刀",
+   "zh": "井中月",
    "ja": "鍛造シミター"
   },
   "Runed Staff": {
-   "zh": "符文法杖",
+   "zh": "无极棍",
    "ja": "ルーンの杖"
   },
   "Judgement Mace": {
-   "zh": "裁决之锤",
+   "zh": "裁决之杖",
    "ja": "裁決の杖"
   },
   "Dragon Bone Staff": {
-   "zh": "龙骨法杖",
+   "zh": "骨玉权杖",
    "ja": "龍骨の杖"
   },
   "Runed Emblem": {
@@ -2121,27 +2121,27 @@
    "ja": "処刑人の法衣（女）"
   },
   "Augmented Bronze Gauntlet": {
-   "zh": "强化青铜护手",
+   "zh": "阎罗手套",
    "ja": "増強された青銅の篭手"
   },
   "Crown Of Dark Crusader": {
-   "zh": "黑暗十字军皇冠",
+   "zh": "黑铁头盔",
    "ja": "暗黒十字軍の王冠"
   },
   "Blue Jade Signet": {
-   "zh": "蓝玉印章戒",
+   "zh": "雷神戒指",
    "ja": "青玉の印章"
   },
   "Loop Of Reincarnation": {
-   "zh": "轮回之环",
+   "zh": "润神戒指",
    "ja": "輪廻の環"
   },
   "Turban Of Discipline": {
-   "zh": "戒律头巾",
+   "zh": "行者帽",
    "ja": "戒律のターバン"
   },
   "Helmet Of The Conqueror": {
-   "zh": "征服者头盔",
+   "zh": "霸龙头盔",
    "ja": "征服者の兜"
   },
   "Enchanted Iron Plate Armour (M)": {
@@ -2169,7 +2169,7 @@
    "ja": "守護者の法衣（女）"
   },
   "Ring Of Sovereignty": {
-   "zh": "王权之戒",
+   "zh": "帝王戒指",
    "ja": "王権の指輪"
   },
   "Armour Of Condemned (M)": {
@@ -2237,7 +2237,7 @@
    "ja": "神獣召喚"
   },
   "Shadow Chaser": {
-   "zh": "追影靴",
+   "zh": "无影靴",
    "ja": "影追いの靴"
   },
   "Ice Rain": {
@@ -2253,11 +2253,11 @@
    "ja": "強化復活術"
   },
   "Fury Blade": {
-   "zh": "狂暴之刃",
+   "zh": "旋风流星刀",
    "ja": "狂乱の刃"
   },
   "Twisted Blade Of Souls": {
-   "zh": "扭曲灵魂之刃",
+   "zh": "飞魂魔刃",
    "ja": "歪んだ霊魂の刃"
   },
   "Yun Wine": {
@@ -2265,19 +2265,19 @@
    "ja": "雲酒"
   },
   "Band Of Netherworld": {
-   "zh": "冥界之环",
+   "zh": "魔灵戒指",
    "ja": "冥界の指輪"
   },
   "Diamond Encrusted Band": {
-   "zh": "镶钻之环",
+   "zh": "石榴戒指",
    "ja": "ダイヤ散りばめの指輪"
   },
   "Perfection Ring": {
-   "zh": "完美之戒",
+   "zh": "青摇戒指",
    "ja": "完璧の指輪"
   },
   "Universe Ring": {
-   "zh": "宇宙之戒",
+   "zh": "莲丸戒指",
    "ja": "宇宙の指輪"
   },
   "Iron Plate Necklace": {
@@ -2285,19 +2285,19 @@
    "ja": "鉄板の首飾り"
   },
   "Amulet Of Absorption": {
-   "zh": "吸收护符",
+   "zh": "追魂项链",
    "ja": "吸収の護符"
   },
   "Pendant Of Wind Elemental": {
-   "zh": "风元素吊坠",
+   "zh": "追风项链",
    "ja": "風の精霊のペンダント"
   },
   "Soul Trapped Necklace": {
-   "zh": "缚魂项链",
+   "zh": "魔令项链",
    "ja": "魂縛りの首飾り"
   },
   "Celestial Blade": {
-   "zh": "天界之刃",
+   "zh": "封魔剑",
    "ja": "天界の刃"
   },
   "Halberd Of Integrity": {
@@ -2309,15 +2309,15 @@
    "ja": "忘却のポーション"
   },
   "Sword Of Abyss": {
-   "zh": "深渊之刃",
+   "zh": "霹雷",
    "ja": "深淵の剣"
   },
   "Glaive Of Doom": {
-   "zh": "毁灭之刃",
+   "zh": "铁轮",
    "ja": "破滅の長刀"
   },
   "Warden's Fan Of Obedience": {
-   "zh": "道士扇",
+   "zh": "逍遥扇",
    "ja": "守護者の従順の扇"
   },
   "Divine Command": {
@@ -2401,39 +2401,39 @@
    "ja": "ハヤブサの長刀"
   },
   "Signet Of Myrmidon": {
-   "zh": "密尔弥冬印章戒",
+   "zh": "师承戒指",
    "ja": "ミュルミドンの印章"
   },
   "Signet Of Evoker": {
-   "zh": "唤魔师印章戒",
+   "zh": "龙马戒指",
    "ja": "喚霊師の印章"
   },
   "Signet Of Vicar": {
-   "zh": "牧师印章戒",
+   "zh": "青云戒指",
    "ja": "牧師の印章"
   },
   "Charm Of The Destroyer": {
-   "zh": "毁灭者护符",
+   "zh": "破荒项链",
    "ja": "破壊者のお守り"
   },
   "Amulet Of Dark Sorcery": {
-   "zh": "黑暗巫术护符",
+   "zh": "魔云项链",
    "ja": "暗黒魔術の護符"
   },
   "Pendant Of Purification": {
-   "zh": "净化吊坠",
+   "zh": "定心项链",
    "ja": "浄化のペンダント"
   },
   "Bracer Of Revelation": {
-   "zh": "启示护腕",
+   "zh": "金棱手镯",
    "ja": "啓示の腕輪"
   },
   "Ring Of Enlightenment": {
-   "zh": "启迪之戒",
+   "zh": "思过手镯",
    "ja": "啓蒙の指輪"
   },
   "Bracelet Of Ascension": {
-   "zh": "飞升手镯",
+   "zh": "世尊手镯",
    "ja": "飛昇の腕輪"
   },
   "Relic Fragment": {
@@ -2493,15 +2493,15 @@
    "ja": "魔神の爪"
   },
   "Hero's Band Of Supremacy": {
-   "zh": "至高英雄之环",
+   "zh": "全能戒指",
    "ja": "英雄の至高の指輪"
   },
   "Apocalypse": {
-   "zh": "天启",
+   "zh": "破山剑",
    "ja": "黙示録"
   },
   "Heavenly Staff Of Immortality": {
-   "zh": "永生天杖",
+   "zh": "天神法杖",
    "ja": "不死の天界の杖"
   },
   "Afterlife": {
@@ -3009,11 +3009,11 @@
    "ja": "嵐のつるはし"
   },
   "Obsidian Giant Blade": {
-   "zh": "黑曜巨刃",
+   "zh": "屠龙",
    "ja": "黒曜の巨刃"
   },
   "Divine Blade Of Judgement": {
-   "zh": "神圣裁决之刃",
+   "zh": "龙纹剑",
    "ja": "神聖なる裁きの刃"
   },
   "Staff Of Retribution": {
@@ -3033,7 +3033,7 @@
    "ja": "ムクの神聖なる裁きの刃"
   },
   "Muk's Staff Of Retribution": {
-   "zh": "穆克的惩戒法杖",
+   "zh": "嗜魂法杖",
    "ja": "ムクの報復の杖"
   },
   "Muk's Unparalleled Polearm": {
@@ -3157,11 +3157,11 @@
    "ja": "予言者の静寂のロケット"
   },
   "Symbol Of Holy Grounds": {
-   "zh": "圣地徽记",
+   "zh": "圣山项链",
    "ja": "聖地の象徴"
   },
   "Holy Bracer Of Grace": {
-   "zh": "恩典圣护腕",
+   "zh": "心念手镯",
    "ja": "恩寵の聖なる腕輪"
   },
   "Rusty Seal Of Overlord": {
@@ -4033,7 +4033,7 @@
    "ja": "悔悟のエリクサー（Lv.15）"
   },
   "Gold Chest": {
-   "zh": "金宝箱",
+   "zh": "金盒",
    "ja": "金の宝箱"
   },
   "Item Polisher": {
@@ -4303,6 +4303,18 @@
   "Blue Dragon Armour": {
    "zh": "蓝龙马甲",
    "ja": "青竜の馬鎧"
+  },
+  "Soul Crusher": {
+   "zh": "破魂"
+  },
+  "Cursed Scimitar": {
+   "zh": "赤血宝剑"
+  },
+  "Heavy Sword": {
+   "zh": "八荒"
+  },
+  "Sharp Blade": {
+   "zh": "凌风"
   }
  },
  "monsters": {
@@ -4315,7 +4327,7 @@
    "ja": "ニワトリ"
   },
   "Pig": {
-   "zh": "猪",
+   "zh": "蛤蟆",
    "ja": "ブタ"
   },
   "Deer": {
@@ -4331,7 +4343,7 @@
    "ja": "ヒツジ"
   },
   "Claw Cat": {
-   "zh": "爪猫",
+   "zh": "钉耙猫",
    "ja": "クローキャット"
   },
   "Wolf": {
@@ -4351,7 +4363,7 @@
    "ja": "肉食植物"
   },
   "Oma Warrior": {
-   "zh": "祖玛卫士",
+   "zh": "半兽战士",
    "ja": "ズマ戦士"
   },
   "Tiger Snake": {
@@ -4359,7 +4371,7 @@
    "ja": "タイガースネーク"
   },
   "Spitting Spider": {
-   "zh": "喷毒蜘蛛",
+   "zh": "蜘蛛娃",
    "ja": "スピッティングスパイダー"
   },
   "Scarecrow": {
@@ -4367,15 +4379,15 @@
    "ja": "カカシ"
   },
   "Oma": {
-   "zh": "祖玛",
+   "zh": "半兽人",
    "ja": "ズマ"
   },
   "Oma Hero": {
-   "zh": "祖玛英雄",
+   "zh": "半兽勇士",
    "ja": "ズマヒーロー"
   },
   "Cave Bat": {
-   "zh": "洞穴蝙蝠",
+   "zh": "角蝇，蝙蝠",
    "ja": "洞窟コウモリ"
   },
   "Scorpion": {
@@ -4391,51 +4403,51 @@
    "ja": "スケルトン"
   },
   "Skeleton Axe Thrower": {
-   "zh": "骷髅掷斧手",
+   "zh": "掷斧骷髅",
    "ja": "スケルトンアックススロワー"
   },
   "Skeleton Warrior": {
-   "zh": "骷髅战士",
+   "zh": "腐骨骷髅",
    "ja": "スケルトン戦士"
   },
   "Skeleton Lord": {
-   "zh": "骷髅王",
+   "zh": "骷髅战将",
    "ja": "スケルトンロード"
   },
   "Cave Maggot": {
-   "zh": "洞穴蛆虫",
+   "zh": "洞蛆",
    "ja": "洞窟マゴット"
   },
   "GhostSorcerer": {
-   "zh": "幽灵巫师",
+   "zh": "僵尸",
    "ja": "ゴーストソーサラー"
   },
   "Ghost Mage": {
-   "zh": "幽灵法师",
+   "zh": "绿僵尸",
    "ja": "ゴーストメイジ"
   },
   "Voracious Ghost": {
-   "zh": "贪婪幽灵",
+   "zh": "恶灵僵尸",
    "ja": "貪欲ゴースト"
   },
   "Devouring Ghost": {
-   "zh": "吞噬幽灵",
+   "zh": "夜行鬼",
    "ja": "貪食ゴースト"
   },
   "Corpse Raising Ghost": {
-   "zh": "起尸鬼",
+   "zh": "恶灵尸王",
    "ja": "屍起ゴースト"
   },
   "Ghoul Champion": {
-   "zh": "食尸鬼冠军",
+   "zh": "尸王",
    "ja": "グールチャンピオン"
   },
   "Ant Soldier": {
-   "zh": "蚂蚁士兵",
+   "zh": "兵蚁",
    "ja": "蟻兵士"
   },
   "Ant Healer": {
-   "zh": "蚂蚁治疗师",
+   "zh": "蚂蚁道士",
    "ja": "蟻ヒーラー"
   },
   "Ant Needler": {
@@ -4443,23 +4455,23 @@
    "ja": "蟻ニードラー"
   },
   "Armoured Ant": {
-   "zh": "装甲蚂蚁",
+   "zh": "盔甲蚂蚁",
    "ja": "装甲蟻"
   },
   "Ant Commander": {
-   "zh": "蚂蚁指挥官",
+   "zh": "蚂蚁将军",
    "ja": "蟻指揮官"
   },
   "Beetle": {
-   "zh": "甲虫",
+   "zh": "红甲虫",
    "ja": "ビートル"
   },
   "Corpse Devourer": {
-   "zh": "食尸者",
+   "zh": "威思尔小妖",
    "ja": "屍喰い"
   },
   "Visceral Worm": {
-   "zh": "内脏虫",
+   "zh": "沙虫",
    "ja": "内臓虫"
   },
   "Mutant Flea": {
@@ -4479,11 +4491,11 @@
    "ja": "テラースパイク"
   },
   "Wasp Hatchling": {
-   "zh": "黄蜂幼虫",
+   "zh": "跳跳蜂",
    "ja": "スズメバチ幼体"
   },
   "Centipede": {
-   "zh": "蜈蚣",
+   "zh": "邪恶蜈蚣",
    "ja": "ムカデ"
   },
   "Butterfly Worm": {
@@ -4491,7 +4503,7 @@
    "ja": "バタフライワーム"
   },
   "Mutant Maggot": {
-   "zh": "变异蛆虫",
+   "zh": "沃毒黑色恶蛆",
    "ja": "ミュータントマゴット"
   },
   "Earwig": {
@@ -4507,11 +4519,11 @@
    "ja": "ロード・ジネ"
   },
   "Rotting Ghoul": {
-   "zh": "腐烂食尸鬼",
+   "zh": "浪子人鬼",
    "ja": "腐敗グール"
   },
   "Decaying Ghoul": {
-   "zh": "腐朽食尸鬼",
+   "zh": "腐蚀人鬼",
    "ja": "朽ちたグール"
   },
   "Blood Thristy Ghoul": {
@@ -4523,23 +4535,23 @@
    "ja": "血に飢えたゾンビ"
   },
   "Spined Dark Lizard": {
-   "zh": "棘背暗蜥蜴",
+   "zh": "粪虫",
    "ja": "トゲ背ダークリザード"
   },
   "Uma Infidel": {
-   "zh": "祖玛异教徒",
+   "zh": "沃玛战士",
    "ja": "ズマ異端者"
   },
   "Uma Flame Thrower": {
-   "zh": "祖玛喷火者",
+   "zh": "火焰沃玛",
    "ja": "ズマ火炎放射者"
   },
   "Uma Anguisher": {
-   "zh": "祖玛折磨者",
+   "zh": "沃玛勇士",
    "ja": "ズマアングイッシャー"
   },
   "Uma King": {
-   "zh": "祖玛王",
+   "zh": "沃玛教主",
    "ja": "ズマ王"
   },
   "Spider Bat": {
@@ -4547,7 +4559,7 @@
    "ja": "スパイダーバット"
   },
   "Arachnid Gazer": {
-   "zh": "凝视蛛魔",
+   "zh": "幻影蜘蛛",
    "ja": "アラクニッドゲイザー"
   },
   "Larva": {
@@ -4555,23 +4567,23 @@
    "ja": "幼虫"
   },
   "Red Moon Guardian": {
-   "zh": "赤月守护者",
+   "zh": "血巨人",
    "ja": "赤月守護者"
   },
   "Red Moon Protector": {
-   "zh": "赤月保卫者",
+   "zh": "血金刚",
    "ja": "赤月プロテクター"
   },
   "Venomous Arachnid": {
-   "zh": "毒蛛魔",
+   "zh": "花吻蜘蛛",
    "ja": "毒アラクニッド"
   },
   "Dark Arachnid": {
-   "zh": "暗蛛魔",
+   "zh": "钢牙蜘蛛",
    "ja": "ダークアラクニッド"
   },
   "Arachnid Broodmother": {
-   "zh": "蛛魔巢母",
+   "zh": "八脚首领(小BOSS)",
    "ja": "アラクニッドブルードマザー"
   },
   "Red Moon Royal Guard": {
@@ -4579,31 +4591,31 @@
    "ja": "赤月近衛兵"
   },
   "Red Moon The Fallen": {
-   "zh": "赤月堕落者",
+   "zh": "赤月恶魔",
    "ja": "赤月の堕ちた者"
   },
   "Zuma Sharpshooter": {
-   "zh": "祖玛神射手",
+   "zh": "祖玛弓箭手",
    "ja": "ズマ狙撃手"
   },
   "Zuma Fanatic": {
-   "zh": "祖玛狂热者",
+   "zh": "祖玛雕像",
    "ja": "ズマ狂信者"
   },
   "Zuma Guardian": {
-   "zh": "祖玛守护者",
+   "zh": "祖玛卫士",
    "ja": "ズマ守護者"
   },
   "Vicious Rat": {
-   "zh": "凶恶老鼠",
+   "zh": "大老鼠",
    "ja": "凶暴ネズミ"
   },
   "Zuma Keeper": {
-   "zh": "祖玛看守",
+   "zh": "护法天",
    "ja": "ズマキーパー"
   },
   "Zuma King": {
-   "zh": "祖玛王",
+   "zh": "祖玛教主",
    "ja": "ズマ王"
   },
   "Evil Fanatic": {
@@ -4611,15 +4623,15 @@
    "ja": "邪悪な狂信者"
   },
   "Monkey": {
-   "zh": "猴子",
+   "zh": "震天首将",
    "ja": "サル"
   },
   "Evil Monkey": {
-   "zh": "邪猴",
+   "zh": "震天魔神",
    "ja": "邪悪な猿"
   },
   "Evil Elephant": {
-   "zh": "邪象",
+   "zh": "巨象兽",
    "ja": "邪悪な象"
   },
   "Cannibal Fanatic": {
@@ -4627,15 +4639,15 @@
    "ja": "人食い狂信者"
   },
   "Crazed Warrior": {
-   "zh": "疯狂战士",
+   "zh": "狂暴战士",
    "ja": "狂乱戦士"
   },
   "Spiked Beetle": {
-   "zh": "尖刺甲虫",
+   "zh": "邪恶钳虫",
    "ja": "トゲビートル"
   },
   "Numa Grunt": {
-   "zh": "诺玛步兵",
+   "zh": "沙人首领",
    "ja": "ヌマグラント"
   },
   "Numa Mage": {
@@ -4647,11 +4659,11 @@
    "ja": "ヌマエリート"
   },
   "Sand Shark": {
-   "zh": "沙鲨",
+   "zh": "沙漠鱼魔",
    "ja": "サンドシャーク"
   },
   "Stone Golem": {
-   "zh": "石魔像",
+   "zh": "诺玛石人",
    "ja": "ストーンゴーレム"
   },
   "Windfury Sorceress": {
@@ -4687,7 +4699,7 @@
    "ja": "ソニックリザード"
   },
   "Giant Lizard": {
-   "zh": "巨型蜥蜴",
+   "zh": "沙漠蜥蜴",
    "ja": "ジャイアントリザード"
   },
   "Crazed Lizard": {
@@ -4703,7 +4715,7 @@
    "ja": "デスロード・ジチョン"
   },
   "Mutant Lizard": {
-   "zh": "变异蜥蜴",
+   "zh": "恶性怪",
    "ja": "ミュータントリザード"
   },
   "Minotaur": {
@@ -4715,7 +4727,7 @@
    "ja": "フロストミノタウロス"
   },
   "Banya Right Guard": {
-   "zh": "潘夜右卫士",
+   "zh": "潘夜右护卫",
    "ja": "パンヤ右衛士"
   },
   "Shock Minotaur": {
@@ -4723,7 +4735,7 @@
    "ja": "ショックミノタウロス"
   },
   "Banya Left Guard": {
-   "zh": "潘夜左卫士",
+   "zh": "潘夜左护卫",
    "ja": "パンヤ左衛士"
   },
   "Fury Minotaur": {
@@ -4731,23 +4743,23 @@
    "ja": "フューリーミノタウロス"
   },
   "Flame Minotaur": {
-   "zh": "烈焰牛头人",
+   "zh": "潘夜牛魔王",
    "ja": "フレイムミノタウロス"
   },
   "Banya Guardian": {
-   "zh": "潘夜守护者",
+   "zh": "潘夜鬼将",
    "ja": "パンヤ守護者"
   },
   "Emperor Sa'Woo": {
-   "zh": "皇帝萨乌",
+   "zh": "霸王教主",
    "ja": "皇帝サウー"
   },
   "Bone Archer": {
-   "zh": "骨弓手",
+   "zh": "骷髅弓箭手",
    "ja": "ボーンアーチャー"
   },
   "Bone Bladesman": {
-   "zh": "骨刀手",
+   "zh": "骷髅武士",
    "ja": "ボーンブレードマン"
   },
   "Bone Captain": {
@@ -4759,11 +4771,11 @@
    "ja": "ボーンソルジャー"
   },
   "Skeleton Enforcer": {
-   "zh": "骷髅执法者",
+   "zh": "鬼骨将",
    "ja": "スケルトンエンフォーサー"
   },
   "Arch Lich Taedu": {
-   "zh": "大巫妖泰度",
+   "zh": "骷髅教主",
    "ja": "アークリッチ・テドゥ"
   },
   "Wedge Moth Larva": {
@@ -4783,7 +4795,7 @@
    "ja": "赤イノシシ"
   },
   "Claw Serpent": {
-   "zh": "爪蛇",
+   "zh": "蝎蛇",
    "ja": "クローサーペント"
   },
   "Black Boar": {
@@ -4923,7 +4935,7 @@
    "ja": "ヌマ石投げ"
   },
   "Numa Royal Guard": {
-   "zh": "诺玛皇家卫士",
+   "zh": "武力神将",
    "ja": "ヌマ近衛兵"
   },
   "Numa Armored Soldier": {
@@ -5123,7 +5135,7 @@
    "ja": "エメラルドダンサー"
   },
   "Queen Of Dawn": {
-   "zh": "黎明女王",
+   "zh": "犬猴魔",
    "ja": "夜明けの女王"
   },
   "Sabuk Lord": {
@@ -5303,7 +5315,7 @@
    "ja": "フロストイエティ"
   },
   "Evil Snake": {
-   "zh": "邪蛇",
+   "zh": "邪恶毒蛇",
    "ja": "邪悪な蛇"
   },
   "Salamander": {
@@ -5615,7 +5627,7 @@
    "ja": "狂暴猛牛"
   },
   "Fierce Falcon": {
-   "zh": "狂暴猎鹰",
+   "zh": "猎鹰",
    "ja": "狂暴隼"
   },
   "Fierce Stone Man": {
@@ -5643,11 +5655,11 @@
    "ja": "狂暴黒猪"
   },
   "Dungeon Goddess 1": {
-   "zh": "地宫女神1",
+   "zh": "地牢女神",
    "ja": "ダンジョン女神1"
   },
   "Dungeon Goddess 2": {
-   "zh": "地宫女神2",
+   "zh": "地牢女神",
    "ja": "ダンジョン女神2"
   },
   "Dungeon Goddess 3": {
@@ -5699,7 +5711,7 @@
    "ja": "異界の守護者3"
   },
   "Otherworld Sea General": {
-   "zh": "异界海将",
+   "zh": "海神将领",
    "ja": "異界の海将"
   },
   "Otherworld Sea General 1": {
@@ -5711,7 +5723,7 @@
    "ja": "異界の海将3"
   },
   "Otherworld Poison Demon": {
-   "zh": "异界毒魔",
+   "zh": "爆毒神魔",
    "ja": "異界の毒魔"
   },
   "Otherworld Poison Demon 1": {
@@ -5727,7 +5739,7 @@
    "ja": "異界の毒魔3"
   },
   "Otherworld Ship Guard": {
-   "zh": "异界船卫士",
+   "zh": "神舰守卫",
    "ja": "異界の船守衛"
   },
   "Otherworld Ship Guard 1": {
@@ -5735,7 +5747,7 @@
    "ja": "異界の船守衛1"
   },
   "Otherworld Red Mage": {
-   "zh": "异界红法师",
+   "zh": "红衣法师",
    "ja": "異界の赤魔導士"
   },
   "Otherworld Red Mage 1": {
@@ -5747,7 +5759,7 @@
    "ja": "異界の赤魔導士2"
   },
   "Otherworld Tentacle Demon": {
-   "zh": "异界触手魔",
+   "zh": "触角神魔",
    "ja": "異界の触手魔"
   },
   "Otherworld Tentacle Demon 1": {
@@ -5763,7 +5775,7 @@
    "ja": "異界の触手魔3"
   },
   "Otherworld Light Guard": {
-   "zh": "异界光卫士",
+   "zh": "轻甲守卫",
    "ja": "異界の光守衛"
   },
   "Otherworld Light Guard 1": {
@@ -5855,7 +5867,7 @@
    "ja": "ディープマッドマン"
   },
   "Flame Lion": {
-   "zh": "烈焰狮",
+   "zh": "火焰狮子",
    "ja": "フレイムライオン"
   },
   "Flame Demon Soldier": {
@@ -5999,7 +6011,7 @@
    "ja": "異界の光守衛2"
   },
   "Stone Lion": {
-   "zh": "石狮",
+   "zh": "石像狮子",
    "ja": "ストーンライオン"
   },
   "Ice Plain Warrior": {
@@ -6009,6 +6021,24 @@
   "Ice Plain Soldier": {
    "zh": "冰原士兵",
    "ja": "氷原の兵士"
+  },
+  "White Boar": {
+   "zh": "白野猪"
+  },
+  "Numa Wind Mage": {
+   "zh": "潘夜风魔"
+  },
+  "Numa Cloud Mage": {
+   "zh": "潘夜云魔"
+  },
+  "Flame Minotaur Mage": {
+   "zh": "潘夜火魔"
+  },
+  "Frost Minotaur Mage": {
+   "zh": "潘夜冰魔"
+  },
+  "Otherworld Heavy Guard": {
+   "zh": "霸王守卫"
   }
  },
  "npcs": {
@@ -7063,7 +7093,7 @@
    "ja": "烈火剣法"
   },
   "Dragon Rise": {
-   "zh": "龙影剑法",
+   "zh": "翔空剑法",
    "ja": "龍影剣法"
   },
   "Blade Storm": {
@@ -7071,7 +7101,7 @@
    "ja": "蓮月剣法"
   },
   "Destructive Surge": {
-   "zh": "破血狂杀",
+   "zh": "十方斩",
    "ja": "破血狂殺"
   },
   "Interchange": {
@@ -7083,11 +7113,11 @@
    "ja": "鉄布衫"
   },
   "Beckon": {
-   "zh": "召唤",
+   "zh": "斗转星移",
    "ja": "召喚"
   },
   "Might": {
-   "zh": "蛮力",
+   "zh": "破血狂杀",
    "ja": "蛮力"
   },
   "Swift Blade": {
@@ -7139,7 +7169,7 @@
    "ja": "突風衝撃"
   },
   "Repulsion": {
-   "zh": "抗拒火环",
+   "zh": "击退狂暴",
    "ja": "抗拒火環"
   },
   "Electric Shock": {
@@ -7147,11 +7177,11 @@
    "ja": "魅惑の光"
   },
   "Teleportation": {
-   "zh": "瞬息移动",
+   "zh": "乾坤大挪移",
    "ja": "瞬間移動"
   },
   "Adamantine Fire Ball": {
-   "zh": "金刚火球",
+   "zh": "大火球",
    "ja": "金剛火球"
   },
   "Thunder Bolt": {
@@ -7171,7 +7201,7 @@
    "ja": "焦土の炎"
   },
   "Lightning Beam": {
-   "zh": "雷电光柱",
+   "zh": "疾光电影",
    "ja": "雷光光線"
   },
   "Frozen Earth": {
@@ -7207,7 +7237,7 @@
    "ja": "雷撃波"
   },
   "Ice Storm": {
-   "zh": "寒冰风暴",
+   "zh": "冰咆哮",
    "ja": "氷嵐"
   },
   "Dragon Tornado": {
@@ -7239,7 +7269,7 @@
    "ja": "天罰"
   },
   "Thunder Storm": {
-   "zh": "疾光电影",
+   "zh": "狂暴之雷",
    "ja": "疾光電影"
   },
   "Fire Bounce": {
@@ -7271,7 +7301,7 @@
    "ja": "治癒術"
   },
   "Spirit Sword": {
-   "zh": "灵剑术",
+   "zh": "精神力战法",
    "ja": "霊剣術"
   },
   "Poison Dust": {
@@ -7291,11 +7321,11 @@
    "ja": "隠身術"
   },
   "Magic Resistance": {
-   "zh": "魔法抵抗",
+   "zh": "幽灵盾",
    "ja": "魔法抵抗"
   },
   "Mass Invisibility": {
-   "zh": "群体隐身",
+   "zh": "集体隐身术",
    "ja": "群体隠身"
   },
   "Greater Evil Slayer": {
@@ -7339,7 +7369,7 @@
    "ja": "透明化"
   },
   "Celestial Light": {
-   "zh": "圣光术",
+   "zh": "凝血离魂",
    "ja": "聖光術"
   },
   "Empowered Healing": {
@@ -7587,7 +7617,7 @@
    "ja": "群体召喚"
   },
   "Frost Bite": {
-   "zh": "冻伤",
+   "zh": "冰月震天",
    "ja": "凍傷"
   },
   "Infection": {
@@ -7663,7 +7693,7 @@
    "ja": "嵐"
   },
   "Tornado": {
-   "zh": "龙卷风",
+   "zh": "乱舞狂风",
    "ja": "竜巻"
   },
   "Empowered Celestial Light": {
@@ -7729,6 +7759,90 @@
   "Chain Of Fire": {
    "zh": "火焰连锁",
    "ja": "火炎連鎖"
+  },
+  "Fireball": {
+   "zh": "火球术"
+  },
+  "Fire Ring": {
+   "zh": "抗拒火环"
+  },
+  "Hellfire": {
+   "zh": "地狱火"
+  },
+  "Firewall": {
+   "zh": "火墙"
+  },
+  "Fire Bang": {
+   "zh": "爆裂火焰"
+  },
+  "Thunder Blast": {
+   "zh": "地狱雷光"
+  },
+  "Holy Strike": {
+   "zh": "圣言术"
+  },
+  "Flame Field": {
+   "zh": "灭天火"
+  },
+  "Gale": {
+   "zh": "龙卷风"
+  },
+  "Gust": {
+   "zh": "风掌"
+  },
+  "Frost Palm": {
+   "zh": "冰月神掌"
+  },
+  "Thunder Palm": {
+   "zh": "霹雳掌"
+  },
+  "Fire Rain": {
+   "zh": "焰天火雨"
+  },
+  "Frozen Palm": {
+   "zh": "冰沙掌"
+  },
+  "Healing": {
+   "zh": "治愈术"
+  },
+  "Poisoning": {
+   "zh": "施毒术"
+  },
+  "Soul Fire Ball": {
+   "zh": "灵魂火符"
+  },
+  "Resilence": {
+   "zh": "神圣战甲术"
+  },
+  "Revelation": {
+   "zh": "心灵启示"
+  },
+  "Trap Hex": {
+   "zh": "困魔咒"
+  },
+  "Mass Healing": {
+   "zh": "群体治疗术"
+  },
+  "Reincarnation": {
+   "zh": "复活术"
+  },
+  "Soul Shield": {
+   "zh": "灵魂屏障"
+  },
+  "Greater Poisoning": {
+   "zh": "猛毒术"
+  },
+  "Advanced Invisibility": {
+   "zh": "妙影无踪"
+  },
+  "Taoist Shield": {
+   "zh": "阴阳法环"
+  },
+  "Greater Reincarnation": {
+   "zh": "回生术"
+  },
+  "Air Palm": {
+   "zh": "空气掌"
   }
  },
  "maps": {

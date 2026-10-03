@@ -117,7 +117,24 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 
 ## 工作约定
 
-- 推送远程是 `fork`（iamcheyan/Zircon），不是 `origin`（Suprcode/Zircon）
+### 开发-测试分工与提交纪律（重要，所有流程都按这个来）
+
+- **开发只在 82（debian，本机）进行**；其他机器一律只做测试，不在这台机上开发。
+- **每次工作改完，立刻 commit + push**。其他机器靠拉取已提交代码测试；
+  不提交，它们就永远看不到改动。
+- 测试链路（测试机执行 `bash login_game.sh remote 192.168.3.82`）：
+  - **服务端**：SSH 到 82，从 `82:/home/tetsuya/development/zircon` 的**工作区**构建并重启。
+    未提交的服务端改动**也会生效**。
+  - **客户端**：在测试机上 `git fetch ssh://debian/home/tetsuya/development/zircon/.git master`
+    后本地构建，**只包含已提交的代码**。未提交的客户端改动在测试机上完全看不到。
+  - 结论：只改服务端可以立即远程测；**只要动了 `GodotClient/`（客户端），就必须先提交**。
+- `login_game.sh remote` 只检查**测试机**工作区是否干净（脏则拒绝运行），
+  **不检查 82 的工作区**。因此 82 上忘记提交时，表现就是"改完测试机毫无变化"。
+- 提交前先确认提交版能构建，且不含无关 WIP：
+  - `git worktree add /tmp/<name> HEAD && (cd /tmp/<name> && dotnet build GodotClient/ZirconClient.csproj)`
+  - `GameScene.cs` 等文件常有他任务/他人在改的内容；只 stage 本次任务的 hunk
+    （`git diff` 过滤出本任务的 hunk 后 `git apply --cached`），不要把别人的 WIP 一起提交。
+- 推送远程是 `origin`（iamcheyan/Zircon fork）；`upstream` 是 Suprcode/Zircon，**只读，不要推**。
 - 不要触碰原版 `Client/` 源码（除非通过 `NoColourKey` 机制等明确手段）
 - 用 `dotnet build GodotClient/ZirconClient.csproj` 验证 Godot 端修复
 - 用 `hub` 启动/停止服务（`zircon-dev`、`zircon-server`）

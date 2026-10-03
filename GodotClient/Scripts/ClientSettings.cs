@@ -53,6 +53,20 @@ public static class ClientSettings
     /// 尺寸记在本项里，进游戏前后都不再自动改窗口，画面内容按窗口等比适配。
     /// </summary>
     public static Vector2I LegacyWindowSize { get; set; } = new(-1, -1);
+    /// <summary>
+    /// 上次进入游戏用的角色名。选角屏据此**预选**：只有一个角色就选它；
+    /// 有多个则优先选上次那个（不存在时回落到第一个）。这样玩家不用每次都点一下。
+    /// </summary>
+    public static string LastCharacterName { get; set; } = string.Empty;
+
+    /// <summary>记住本次进入游戏的角色名（进游戏前调用一次）。</summary>
+    public static void RememberCharacter(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || LastCharacterName == name) return;
+        LastCharacterName = name;
+        Save();
+    }
+
     public static int DefaultMonitor { get; set; }
     public static string RenderingPipeline { get; set; } = "Forward Plus";
     // 原版移动是按走/跑帧时长连续回拉的；默认关闭会退化成按帧阶梯位移，
@@ -204,7 +218,7 @@ public static class ClientSettings
         }
         MonsterBoxVisible = Read(file, "Game", nameof(MonsterBoxVisible), MonsterBoxVisible);
         QuestTrackerVisible = Read(file, "Game", nameof(QuestTrackerVisible), QuestTrackerVisible);
-        LogChat = Read(file, "Game", nameof(LogChat), LogChat);
+        LastCharacterName = Read(file, "Game", nameof(LastCharacterName), LastCharacterName);
         SoundInBackground = Read(file, "Sound", nameof(SoundInBackground), SoundInBackground);
         FullScreen = Read(file, "Graphics", nameof(FullScreen), FullScreen);
         Borderless = Read(file, "Graphics", nameof(Borderless), Borderless);
@@ -278,6 +292,7 @@ public static class ClientSettings
         Write(file, "Game", nameof(MonsterBoxVisible), MonsterBoxVisible);
         Write(file, "Game", nameof(QuestTrackerVisible), QuestTrackerVisible);
         Write(file, "Game", nameof(LogChat), LogChat);
+        Write(file, "Game", nameof(LastCharacterName), LastCharacterName);
         Write(file, "Sound", nameof(SoundInBackground), SoundInBackground);
         Write(file, "Graphics", nameof(FullScreen), FullScreen);
         Write(file, "Graphics", nameof(Borderless), Borderless);

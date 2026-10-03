@@ -260,6 +260,26 @@ public partial class SelectScene : Control
         if (ReferenceEquals(_activeInstance, this)) _activeInstance = null;
     }
 
+    /// <summary>
+    /// 进游戏公告框（GameInter F0）**按空格 / 回车也能确认**。
+    /// 原版该框只能点底部对勾，但玩家进游戏前手已经在键盘上
+    /// （刚敲完账号密码），强制去点一下很别扭。这里只在该框可见时接管这两个键，
+    /// 其它按键与场景内其它 UI 不受影响。用 `_UnhandledKeyInput` 而不是 `_Input`，
+    /// 避免抢走输入框（创建角色时）的按键。
+    /// </summary>
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        base._UnhandledKeyInput(@event);
+        if (_legacyStartNoticeDialog == null || !IsInstanceValid(_legacyStartNoticeDialog)) return;
+        if (!_legacyStartNoticeDialog.Visible) return;
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+        if (key.Keycode != Key.Space && key.Keycode != Key.Enter && key.Keycode != Key.KpEnter) return;
+
+        GetViewport()?.SetInputAsHandled();
+        GD.Print("[LegacySelect] 公告框：空格/回车确认");
+        OnLegacyStartNoticeConfirmed();
+    }
+
     public override void _Process(double delta)
     {
         base._Process(delta);
@@ -321,6 +341,9 @@ public partial class SelectScene : Control
             ? _autoCharIndex
             : _characters[0].CharacterIndex;
         _lastStartIndex = idx;
+        // 记住这次进游戏的角色，下次选角屏直接预选它。
+        var started = _characters.Find(c => c.CharacterIndex == idx);
+        if (started != null) ClientSettings.RememberCharacter(started.CharacterName);
         GD.Print($"[Select] AutoStartGame: 发送 StartGame, charIndex={idx}");
         _net.Connection?.SendStartGame(idx);
     }
@@ -329,6 +352,9 @@ public partial class SelectScene : Control
     {
         _characters = chars ?? new List<SelectInfo>();
         RefreshList();
+        // 预选在 RefreshList 里做（LoginScene 在 SelectScene._Ready **之前**就调
+        // SetCharacters，那时 _charList 还是 null，RefreshList 直接 return；
+        // _Ready 里会再调一次 RefreshList，所以预选必须挂在那条路径上）。
         // **此处不播 SelChr**（我此前接在这里，是错的）：
         //   0x459220 读的 +0x1140 不是 SelChr；真正的 SelChr 证据在
         //   0x4577C0 -> push 0x47D624 = '.\Sound\SelChr.mp3'，
@@ -338,6 +364,20 @@ public partial class SelectScene : Control
         // 我方目前没有"按 phase 跑每帧更新"的循环，故该音效**暂不播放**，
         // 待实现 phase 更新循环时再接（见审计文档 2026-09-27 音效归属表）。
         // 不在此处保留任何 SelChr 播放：位置错误比缺失更糟。
+    }
+
+    /// <summary>
+    /// 预选角色的下标：记住的上次角色优先，其次是第一个。
+    /// </summary>
+    private int ResolvePreferredCharacterIndex()
+    {
+        string remembered = ClientSettings.LastCharacterName;
+        if (!string.IsNullOrWhiteSpace(remembered))
+        {
+            int found = _characters.FindIndex(c => c.CharacterName == remembered);
+            if (found >= 0) return found;
+        }
+        return 0;
     }
 
     private void RefreshList()
@@ -402,12 +442,13 @@ public partial class SelectScene : Control
         }
         else if (AutoLoginArgs.LegacyUi)
         {
-            // 原版列表刷新后**不默认选中任何角色**：0x458FCC-0x458FD0 把 [0x1168] 写成
-            // 0xFFFFFFFF，0x458310 见 -1 直接返回（不画详情）。选中只能由槽位点击产生
-            // （0x4598BF 命中槽 → [0x1168]=idx）。此前移植版自动选中槽 0，属偏差。
-            // phase 2（创建）左上角是原版说明框，不放移植版的 phase-0 提示文字。
+            // **预选一个角色**（2026-10-03 用户要求，覆盖此前"原版不默认选中"的移植决定）：
+            // 玩家不该每次都点一下才能开始。多个角色时优先选**上次进游戏用的那个**
+            // （`ClientSettings.LastCharacterName`，进游戏时记录），不存在时回落到第一个。
+            // 原版 0x458FCC 的"刷新后不选中"语义仍保留在玩家主动取消的场景
+            // （phase 切换会显式调 ApplyLegacySlotSelection(-1)），这里只管列表刚装好时的初值。
             _statusLabel.Text = _selectPhase == 2 ? string.Empty : Lang.SelectCharacterLabel4;
-            ApplyLegacySlotSelection(-1);
+            SelectSkinCharacter(ResolvePreferredCharacterIndex());
         }
         else
         {
@@ -2069,15 +2110,31 @@ public partial class SelectScene : Control
 
     private void OnStartPressed()
     {
-        if (_charList.GetSelectedItems().Length == 0) return;
-        int idx = _charList.GetSelectedItems()[0];
-        if (idx >= _characters.Count) return;
+        int idx = ResolveStartIndex();
+        if (idx < 0) return;
         _startBtn.Disabled = true;
         _skinStart.Enabled = false;
         _statusLabel.Text = Lang.SelectGameLabel2;
         _lastStartIndex = _characters[idx].CharacterIndex;
+        // 记住这次进游戏的角色，下次选角屏直接预选它。
+        ClientSettings.RememberCharacter(_characters[idx].CharacterName);
         // EI F55 直接发起进入请求；成功回包后先播 StartGame 过场，结束后再显示公告确认。
         _net.Connection?.SendStartGame(_lastStartIndex);
+    }
+
+    /// <summary>
+    /// 进游戏要用到的角色下标：优先列表/槽位里已选中的；没有选中（例如刚预选还没落
+    /// 到列表控件）时回落到 <see cref="ResolvePreferredCharacterIndex"/>。
+    /// 这样"默认已选中一个"之后，玩家不点也能直接回车/开始。
+    /// </summary>
+    private int ResolveStartIndex()
+    {
+        var selected = _charList?.GetSelectedItems();
+        if (selected != null && selected.Length > 0 && selected[0] < _characters.Count)
+            return selected[0];
+        if (_legacySelectedIndex >= 0 && _legacySelectedIndex < _characters.Count)
+            return _legacySelectedIndex;
+        return _characters.Count > 0 ? ResolvePreferredCharacterIndex() : -1;
     }
 
     private void ShowLegacyStartNotice()
@@ -2108,11 +2165,18 @@ public partial class SelectScene : Control
         _legacyStartNoticeDialog.SetNotice(_pendingLegacyStartNotice);
         _legacyStartNoticeDialog.Confirmed += OnLegacyStartNoticeConfirmed;
         WindowManager.Open(_legacyStartNoticeDialog, _legacyStartNoticeLayer);
-        GD.Print($"[LegacySelect] StartGame 过场结束，黑屏上显示 GameInter F0 公告框: len={_pendingLegacyStartNotice.Length}");
-        if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect)
+        // ZIRCON_SUPPRESS_NOTICE_CONFIRM=1：留给人工验证"点对勾 / 空格 / 回车"用。
+        // （这个 else-if 只是**跳过自动确认**；对话框自身的 Open/SetNotice/事件接线在上面，
+        //  缺了它们对话框根本不在场景树里 —— 第一次加开关时就删掉了这四行，实测空格无响应。）
+        if (AutoLoginArgs.AutoLogin && !AutoLoginArgs.StayInSelect
+            && System.Environment.GetEnvironmentVariable("ZIRCON_SUPPRESS_NOTICE_CONFIRM") != "1")
         {
             GD.Print("[LegacySelect] 自动登录测试：自动确认公告框");
             CallDeferred(nameof(OnLegacyStartNoticeConfirmed));
+        }
+        else if (System.Environment.GetEnvironmentVariable("ZIRCON_SUPPRESS_NOTICE_CONFIRM") == "1")
+        {
+            GD.Print("[LegacySelect] 公告框等待人工确认（点对勾 / 空格 / 回车）");
         }
     }
 
@@ -2129,6 +2193,10 @@ public partial class SelectScene : Control
 
     private void OnLegacyStartNoticeConfirmed()
     {
+        // 空格/回车入口需要防重入：确认后会 QueueFree 本场景，
+        // 一次按键可能带来第二次 pressed 事件，重复进入会二次创建 GameScene。
+        if (_legacyStartNoticeConfirmed) return;
+        _legacyStartNoticeConfirmed = true;
         DetachLegacyStartNoticeHandlers();
         // 修复（2026-10-01）：公告窗确认后必须从 WindowManager 注销。否则它作为"可见窗口"
         // 残留，使游戏内 `_UnhandledKeyInput` 的"有可见窗口则早退"分支永久生效，
@@ -2136,9 +2204,12 @@ public partial class SelectScene : Control
         // 实测日志：`[LegacyKeys] LogoutCharacter 被可见窗口早退拦下: LegacyEiNoticeDialog`，
         // 且 Alt+X 后 F950 确认框不出现（全图模板搜索无匹配）。
         WindowManager.Close(_legacyStartNoticeDialog);
-        GD.Print("[LegacySelect] 公告框底部对勾 -> 进入游戏");
+        GD.Print("[LegacySelect] 公告框确认 -> 进入游戏");
         EnterGameScene();
     }
+
+    /// <summary>公告框已确认（防空格/回车重复触发 EnterGameScene）。</summary>
+    private bool _legacyStartNoticeConfirmed;
 
     private void DetachLegacyStartNoticeHandlers()
     {

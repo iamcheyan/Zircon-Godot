@@ -760,11 +760,16 @@ public partial class LoginScene : Control
         // EI y=0..59 全黑（该区最大采样 0），没有任何文字；这条 Label 落在
         // (280,38)，正好在黑带里。非 Legacy 路径保留。
         if (_loginTitle != null) _loginTitle.Visible = false;
-        // 状态文字保留（登录失败/连接状态要显示），移到屏幕左下空白处。
+        // 状态文字保留（登录失败/连接状态要显示），移到**顶部黑带**。
+        // 原版该屏顶部 y=0..59 是纯黑且**没有任何文字**（SCREEN0001.jpg 解码后
+        // 最大采样为 0），放在那里不会遮挡画面；而底部 y≈456..480 只剩一条窄边，
+        // 两行状态（"已连接服务端 (版本: x)" + "请登录或注册"）挤在那里会顶到
+        // 屏幕底边、很局促（用户反馈）。故上移到顶部黑带：
+        // 两行 36px 从 y=6 起，底边 42，仍在 60px 黑带内。
         if (_skinStatus != null)
         {
-            _skinStatus.Location = new Vector2I(8, 460);
-            _skinStatus.Size = new Vector2I(620, 16);
+            _skinStatus.Location = new Vector2I(8, 6);
+            _skinStatus.Size = new Vector2I(620, 36);
         }
 
         // 6) Interface1c F2 标签条 (328x20)：「ID [框] PASSWORD [框]」——原版此屏唯一的

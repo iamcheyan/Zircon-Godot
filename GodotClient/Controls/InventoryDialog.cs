@@ -478,6 +478,12 @@ public partial class InventoryDialog : DXWindow
         _legacyScrollBar.MinValue = 0;
         _legacyScrollBar.VisibleSize = 6;
         _legacyScrollBar.MaxValue = rows;
+        // 滚轮步长必须与可视行数同量级。DXVScrollBar 默认 `Change = 10`，
+        // 而 legacy 背包 VisibleSize 只有 6 —— 一次滚轮跳 10 行，`Value -= 10`
+        // 从 0 直接变 -10 被 OnValueChanged 钳回 0，于是**上滚在前 6 下完全
+        // 没反应**（死区），且中间 4 行永远看不到。原版 F280 锁链是逐行滚的，
+        // 故这里取 1。
+        _legacyScrollBar.Change = 1;
         _legacyScrollBar.Value = Grid.ScrollValue;
         _legacyGaugeDrag?.SetTarget(_legacyScrollBar);
         RefreshLegacyChainPosition();

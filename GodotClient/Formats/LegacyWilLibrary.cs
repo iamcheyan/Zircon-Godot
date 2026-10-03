@@ -81,12 +81,15 @@ public sealed class LegacyWilLibrary : IDisposable
     }
 
     /// <summary>
-    /// 特效帧纹理：按原客户端的**黑色透明键**把近黑像素清成透明。
+    /// 特效帧纹理：按原客户端的**黑色透明键**把近黑像素清成透明，并让键色之外的
+    /// 暗部辉光按亮度折算成半透明。
     /// 元素特效帧（法师男 F1080 火球、法师女 F1385 闪电、道士女 F1984 光球）
     /// 四周都有一圈**不透明纯黑**（F1080 实测 13999 个不透明像素里 6797 个是
     /// alpha=255 / RGB&lt;12 的黑），普通 Image 层会把它当实体整块盖住底下的人物。
+    /// 纯黑之外还有一圈**暗色辉光**（F1080 残留 4365 像素，(40,16,0)…(80,28,0)）
+    /// 逐通道都 &gt; 32，键色抠不掉，会变成一块不透明暗斑盖住场景；故再按亮度
+    /// 线性折算 alpha（见循环内注释）。
     /// 与 `ZlLibrary.GetEffectTexture` 同语义。
-    /// </summary>
     public ImageTexture GetEffectTexture(int index)
     {
         if (index < 0 || index >= _frameOffsets.Length) return null;
@@ -97,15 +100,51 @@ public sealed class LegacyWilLibrary : IDisposable
         Image source = baseTexture.GetImage();
         byte[] pixels = source.GetData();
         if (pixels == null || pixels.Length < 4) return baseTexture;
-        // 原版透明键：与 ZL 侧 `ZlReader.EffectTransparentKeyTolerance = 32`
-        // 同一判据（**逐通道** <= 32 即视为键色），保证 EI WIL 与转换 ZL
-        // 两条路径抠掉的是同一批像素。实测 F1385 背景主色 (0,0,8)/(0,4,0)/
-        // (8,8,8) 全部命中，剩下的是真实美术（夜空渐变 (8,12,16) 等）应保留。
+        // 原版透明键：逐通道 <= 32 视为键色（与 ZL 侧
+        // `ZlReader.EffectTransparentKeyTolerance = 32` 同一判据）。
         const byte KeyTolerance = 32;
+        // 辉光保留区间：带**色彩**的暗像素（青光/蓝光的柔和外圈）要留下并按
+        // 亮度渐变，而不是被键色一刀切掉。
+        // 依据（逐帧解码 Interface1c.wil）：
+        //   F1385 512x256（法师女 +40 特效）52119 个不透明像素中，
+        //     **46519 个是近灰黑**（饱和度 max(RGB)-min(RGB) < 20，mean≈(3,4,9)），
+        //     **5600 个带色**（青光，mean≈(87,117,115)）。
+        //   F1080（法师男）同理：6797 纯黑 + 4365 暗色辉光 (40,16,0)…(80,28,0)。
+        // 原版靠绘制顺序让辉光落在人物上被挡住；落到空处就露馅。旧实现按
+        // **亮度**线性折算 alpha（F1385 剩 978/52119、青色剩 61，光球几乎被抹平，
+        // 边缘硬切 —— 就是用户报的「创建人物时青光周围没有黑色半透明、很难看」），
+        // 改为按**饱和度**判定键色：灰黑抠掉，带色辉光保留。
+        const int GrayChromaTolerance = 24;   // max-min < 24 视为无彩色（键色）
+        const int GlowFloor = 32;             // 低于此亮度完全透出
+        const int GlowCeiling = 255;          // 达到即保持原 alpha
         for (int i = 0; i + 3 < pixels.Length; i += 4)
         {
-            if (pixels[i] <= KeyTolerance && pixels[i + 1] <= KeyTolerance && pixels[i + 2] <= KeyTolerance)
+            int red = pixels[i], green = pixels[i + 1], blue = pixels[i + 2];
+            int level = Math.Max(red, Math.Max(green, blue));
+            int chroma = level - Math.Min(red, Math.Min(green, blue));
+
+            // (1) 近黑 → 完全键色，透出。
+            if (red <= KeyTolerance && green <= KeyTolerance && blue <= KeyTolerance)
+            {
                 pixels[i + 3] = 0;
+                continue;
+            }
+            // (2) 无彩色（灰/黑）→ 仍是键色，透出。带彩色的辉光不走这里。
+            if (chroma < GrayChromaTolerance)
+            {
+                pixels[i + 3] = 0;
+                continue;
+            }
+            // (3) 带色辉光：按亮度渐变 alpha，核心保持实、外围渐隐。
+            if (level <= GlowFloor)
+            {
+                pixels[i + 3] = 0;
+                continue;
+            }
+            if (level >= GlowCeiling) continue;
+            int span = GlowCeiling - GlowFloor;
+            int scaled = span <= 0 ? 0 : (level - GlowFloor) * 255 / span;
+            pixels[i + 3] = (byte)Math.Min(pixels[i + 3], Math.Max(scaled, 0));
         }
         ImageTexture texture = ImageTexture.CreateFromImage(
             Image.CreateFromData(source.GetWidth(), source.GetHeight(), false, Image.Format.Rgba8, pixels));

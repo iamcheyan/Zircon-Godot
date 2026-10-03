@@ -333,14 +333,33 @@ public sealed class ZlLibrary : IDisposable
         byte[] rgba = new byte[expected];
         for (int i = 0; i < expected; i += 4)
         {
-            if (effectTransparency && bgra[i + 3] != 0
-                && bgra[i] <= transparentKeyTolerance
-                && bgra[i + 1] <= transparentKeyTolerance
-                && bgra[i + 2] <= transparentKeyTolerance)
-                bgra[i + 3] = 0;
-            rgba[i] = bgra[i + 2];
-            rgba[i + 1] = bgra[i + 1];
-            rgba[i + 2] = bgra[i];
+            int blue = bgra[i], green = bgra[i + 1], red = bgra[i + 2];
+            if (effectTransparency && bgra[i + 3] != 0)
+            {
+                int level = Math.Max(red, Math.Max(green, blue));
+                int chroma = level - Math.Min(red, Math.Min(green, blue));
+                // 与 `LegacyWilLibrary.GetEffectTexture` 同一判据：近黑或**无彩色**
+                // （灰/黑，chroma < 24）视为键色透出；带色辉光保留并按亮度渐变。
+                // 依据 F1385（法师女 +40 特效）逐帧实测：52119 个不透明像素里
+                // 46519 个是近灰黑（mean≈(3,4,9)）应抠掉，5600 个是青光
+                // （mean≈(87,117,115)）必须保留 —— 否则光球被抹平、边缘硬切。
+                bool isKey = red <= transparentKeyTolerance
+                             && green <= transparentKeyTolerance
+                             && blue <= transparentKeyTolerance;
+                if (isKey || chroma < 24 || level <= 32)
+                {
+                    bgra[i + 3] = 0;
+                }
+                else if (level < 255)
+                {
+                    int span = 255 - 32;
+                    int scaled = span <= 0 ? 0 : (level - 32) * 255 / span;
+                    if (scaled < bgra[i + 3]) bgra[i + 3] = (byte)scaled;
+                }
+            }
+            rgba[i] = (byte)red;
+            rgba[i + 1] = (byte)green;
+            rgba[i + 2] = (byte)blue;
             rgba[i + 3] = bgra[i + 3];
         }
         return rgba;

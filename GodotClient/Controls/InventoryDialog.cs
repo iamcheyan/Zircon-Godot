@@ -322,28 +322,22 @@ public partial class InventoryDialog : DXWindow
         _titleLabel.Visible = false;
         _legacyModeLabel ??= new DXLabel
         {
-            TextColour = new Color(1f, .85f, .55f),
             DrawOutline = true,
             OutlineColour = Colors.Black,
-            FontSize = 9,
+            FontSize = 10,
             AutoSize = false,
+            Align = HorizontalAlignment.Center,
+            VAlign = VerticalAlignment.Center,
             IsControl = false,
         };
         if (_legacyModeLabel.GetParent() == null) AddControl(_legacyModeLabel);
-        _legacyModeLabel.Text = InvMode switch
-        {
-            InventoryMode.Repair => "[修补]",
-            InventoryMode.Sell => "[变卖]",
-            InventoryMode.Storage => "[储存]",
-            _ => "[包袱]",
-        };
-        // 模式文字位置证据缺失（只有 VA 0x42EF5B/0x42F03E/0x42F078/0x42F0FB，
-        // 没有绘制矩形），所以这里只把重叠消掉：金币框在 (65,282)-(142,299)，
-        // 原位置 (38,282) 会大幅压上去。
-        _legacyModeLabel.Location = new Vector2I(6, 282);
-        _legacyModeLabel.Size = new Vector2I(56, 18);
-        // 用户要求：去掉底部「[包袱]」两个字（原版 mode-0 会画，但这里不要）。
-        _legacyModeLabel.Visible = false;
+        // 证据：mode 0 的 [包袱] (0x47BE10) 画在 0x42EF5B，色 0xF8DCFA；
+        // mode 1-3 [修补]/[变卖]/[储存] 色 0xF8C8C8。绘制矩形未记录在 VA 里，
+        // 但原版截图里这行字就在顶部左侧那个黑框内（F250 实测框体
+        // 窗口 x25..127 / y22..38），所以居中放在框里。
+        _legacyModeLabel.Location = new Vector2I(25, 22);
+        _legacyModeLabel.Size = new Vector2I(102, 16);
+        ApplyLegacyModeLabel();
 
         // 证据里的第三个子控件：位置 (176,286)、尺寸 64x20、**随模式换帧** ——
         // 服务器模式分支给它换的是 263/264/265（수리 修理）、270/271/272
@@ -421,7 +415,9 @@ public partial class InventoryDialog : DXWindow
 
 
         WeightBar.Visible = false;
-        WeightLabel.Location = new Vector2I(0x86, 0x18);
+        // 证据整块是 (0x86,0x18)-(0xF0,0x26)；标签盒高 14 且文字垂直居中，
+        // 因此把盒顶收到 0x17 才能让字面中心正好落在黑框中线（框实测 y22..38）。
+        WeightLabel.Location = new Vector2I(0x86, 0x17);
         WeightLabel.Size = new Vector2I(0xF0 - 0x86, 0x26 - 0x18);
         WeightLabel.FontSize = 10;
         WeightLabel.Align = HorizontalAlignment.Left;
@@ -440,7 +436,7 @@ public partial class InventoryDialog : DXWindow
             };
             AddControl(_legacyWeightValue);
         }
-        _legacyWeightValue.Location = new Vector2I(0x86, 0x18);
+        _legacyWeightValue.Location = new Vector2I(0x86, 0x17);
         _legacyWeightValue.Visible = true;
         _goldTitle.Visible = false;
         GoldLabel.Location = new Vector2I(0x41, 0x11A);
@@ -664,20 +660,46 @@ public partial class InventoryDialog : DXWindow
     }
 
     /// <summary>
+    /// 旧版顶部模式文字：mode 0「[包袱]」色 0xF8DCFA，mode 1-3 色 0xF8C8C8
+    /// （证据 status_selector：0x42EF52 [包袱] / 0x42F02E [修补] / 0x42F068
+    /// [变卖] / 0x42F0EB [储存]）。
+    /// </summary>
+    private void ApplyLegacyModeLabel()
+    {
+        if (_legacyModeLabel == null) return;
+        _legacyModeLabel.Text = InvMode switch
+        {
+            InventoryMode.Repair => "[修补]",
+            InventoryMode.Sell => "[变卖]",
+            InventoryMode.Storage => "[储存]",
+            _ => "[包袱]",
+        };
+        _legacyModeLabel.TextColour = InvMode == InventoryMode.Normal
+            ? new Color(0xF8 / 255f, 0xDC / 255f, 0xFA / 255f)
+            : new Color(0xF8 / 255f, 0xC8 / 255f, 0xC8 / 255f);
+    }
+
+    /// <summary>仅供布局测试台预览负重/总量文字（不走 PlayerStats 查询）。</summary>
+    public void SetLegacyWeightPreview(int bagWeight, int capacity)
+    {
+        WeightLabel.Text = $"负重:{bagWeight}";
+        if (_legacyWeightValue != null)
+        {
+            _legacyWeightValue.Text = $"/ 总量:{capacity}";
+            float w = MirSkin.MeasureText(WeightLabel.Text, WeightLabel.FontSize).X;
+            _legacyWeightValue.Location = new Vector2I(
+                WeightLabel.Location.X + (int)w, WeightLabel.Location.Y);
+        }
+    }
+
+    /// <summary>
     /// 旧版模式由服务端消息切换，而不是点击装饰性页签。保留一个明确的
     /// 业务入口，供 NPC 修补/变卖/储存回包直接切换旧版文字和操作状态。
     /// </summary>
     public void SetLegacyMode(InventoryMode mode)
     {
         InvMode = mode;
-        if (_legacyModeLabel != null)
-            _legacyModeLabel.Text = mode switch
-            {
-                InventoryMode.Repair => "[修补]",
-                InventoryMode.Sell => "[变卖]",
-                InventoryMode.Storage => "[储存]",
-                _ => "[包袱]",
-            };
+        ApplyLegacyModeLabel();
         if (mode != InventoryMode.Sell)
         {
             ClearSaleSelection();
@@ -704,7 +726,7 @@ public partial class InventoryDialog : DXWindow
         SellButton.Visible = true;
         // 原版按钮始终可用：有选中项时出售选中项，没有选中项时出售全部可售物品。
         SellButton.Enabled = true;
-        if (_legacyModeLabel != null) _legacyModeLabel.Text = "[变卖]";
+        ApplyLegacyModeLabel();
         SetCurrency(0, 0);
     }
 
@@ -723,7 +745,7 @@ public partial class InventoryDialog : DXWindow
         TrashButton.Visible = true;
         SellButton.Visible = false;
         SellButton.Enabled = false;
-        if (_legacyModeLabel != null) _legacyModeLabel.Text = "[包袱]";
+        ApplyLegacyModeLabel();
         SetCurrency(
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.Gold)?.Amount ?? 0,
             GameScene.Game?.Currencies?.FirstOrDefault(x => x.Info?.Type == CurrencyType.GameGold)?.Amount ?? 0);

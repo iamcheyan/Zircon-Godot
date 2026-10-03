@@ -691,6 +691,8 @@ public partial class LegacyHudLayoutLab : Control
 
         _inventory.Grid.ItemGrid = items;
         _inventory.ConfigureLegacyInventoryGrid();
+        // 预览用负重/总量文字（原版 mode-0 画在 (0x86,0x18)-(0xF0,0x26)）。
+        _inventory.SetLegacyWeightPreview(44, 675);
         if (moveTo >= 0 && _inventory.Grid.GetLegacyPlacement(0, out int ms, out int moc, out int mor, out int mw, out int mh))
             GD.Print($"[LegacyBagSample] moved-to={moveTo} cell0 slot={ms} origin=({moc},{mor}) fp={mw}x{mh}");
 

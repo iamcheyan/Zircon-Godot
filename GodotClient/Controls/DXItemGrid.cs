@@ -177,21 +177,56 @@ public partial class DXItemGrid : DXControl
             && _legacyCellAnchors[cellIndex] >= 0
             && (cellIndex >= _legacyCellOrigins.Length || !_legacyCellOrigins[cellIndex]);
 
-    /// <summary>Returns the rows required by first-fit footprint placement.</summary>
+    /// <summary>
+    /// first-fit footprint 摆放所需行数。
+    ///
+    /// 注意：背包数组是**按最大 slot 扩容**的（`EnsureInventoryCapacity`），
+    /// 所以 `ItemGrid.Length` 反映的是「最高槽位 + 1」而不是行数。此前用
+    /// `rows = max(minimumRows, ItemGrid.Length)` 会把稀疏 slot 造成的空洞
+    /// （实测 1,13,14,19,25,...,115,186 → 数组长 187）直接当成 187 行，
+    /// 网格被撑到 187×6=1112 格，而 F250 背景只有 6 行可视 —— 物品排布
+    /// 整体错乱、滚动范围失真。改为：从可视行数起步，**放不下就翻倍扩容**，
+    /// 行数完全由实际摆放结果决定。
+    /// </summary>
     public int GetLegacyRequiredRows(int minimumRows = 6)
     {
         if (!UseLegacyFootprints || ItemGrid == null) return Math.Max(1, minimumRows);
-        int rows = Math.Max(minimumRows, ItemGrid.Length);
-        var occupied = new bool[GridSize.X, rows];
+
+        int columns = Math.Max(1, GridSize.X);
+        int rows = Math.Max(1, minimumRows);
         int maxRow = minimumRows;
-        for (int slot = 0; slot < ItemGrid.Length; slot++)
+
+        // 物品数即最坏情况所需格数（每件至少占 1 格），据此给初始容量，避免反复翻倍。
+        int itemCount = 0;
+        for (int i = 0; i < ItemGrid.Length; i++)
+            if (ItemGrid[i]?.Info != null) itemCount++;
+        rows = Math.Max(rows, (int)Math.Ceiling(itemCount / (double)columns));
+
+        while (true)
         {
-            var item = ItemGrid[slot];
-            if (item?.Info == null) continue;
-            GetLegacyFootprint(item, out int width, out int height);
-            if (!TryPlace(occupied, width, height, out int x, out int y)) continue;
-            MarkPlacement(occupied, x, y, width, height);
-            maxRow = Math.Max(maxRow, y + height);
+            var occupied = new bool[columns, rows];
+            maxRow = minimumRows;
+            bool placedAll = true;
+            for (int slot = 0; slot < ItemGrid.Length; slot++)
+            {
+                var item = ItemGrid[slot];
+                if (item?.Info == null) continue;
+                GetLegacyFootprint(item, out int width, out int height);
+                if (!TryPlace(occupied, width, height, out _, out int y))
+                {
+                    placedAll = false;
+                    break;
+                }
+                MarkPlacement(occupied, 0, y, width, height);
+                maxRow = Math.Max(maxRow, y + height);
+            }
+            if (placedAll) break;
+
+            int grown = rows * 2;
+            // 兜底：再放不下说明 footprint 非法（超大物品），此时保持当前 rows，
+            // 避免无限扩张。
+            if (grown > rows && grown <= 4096) { rows = grown; continue; }
+            break;
         }
         return maxRow;
     }

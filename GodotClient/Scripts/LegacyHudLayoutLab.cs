@@ -694,6 +694,16 @@ public partial class LegacyHudLayoutLab : Control
         if (moveTo >= 0 && _inventory.Grid.GetLegacyPlacement(0, out int ms, out int moc, out int mor, out int mw, out int mh))
             GD.Print($"[LegacyBagSample] moved-to={moveTo} cell0 slot={ms} origin=({moc},{mor}) fp={mw}x{mh}");
 
+        // --legacy-scroll=N：验证大件跨视口边界的切片绘制。
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            if (arg.StartsWith("--legacy-scroll=")
+                && int.TryParse(arg["--legacy-scroll=".Length..], out int sv0))
+            {
+                _inventory.Grid.ScrollValue = Math.Max(0, sv0);
+                _inventory.ConfigureLegacyInventoryGrid();
+                GD.Print($"[LegacyBagSample] scroll={_inventory.Grid.ScrollValue}");
+            }
+
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
             if (arg.StartsWith("--legacy-hover=")

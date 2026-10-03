@@ -35,7 +35,7 @@
 | 层 | 现在是什么 | 权威源 |
 |---|---|---|
 | 引擎 | Zircon C# + GodotClient | 本仓库代码 |
-| 世界静态库 | `System.db`（MirDB，不是 SQLite） | ItemInfo 1078、MonsterInfo 309、DropInfo 10382、MagicInfo 174；英文 `[IsIdentity]` |
+| 世界静态库 | `System.db`（MirDB，不是 SQLite） | ItemInfo 1078、MonsterInfo **434**、DropInfo 10382、MagicInfo 174；英文 `[IsIdentity]` |
 | 老世界 DAT | `stditem.dat` 1143 / `monster.dat` 433 / `magic.dat` 105 | GBK 名 + 老数值；已解码 |
 | 刷怪 / NPC / 传送 | `Mon_Def/*.gen`、`Merchant.txt`、`Mapinfo.txt` | 地图迁移已在用 |
 | 掉落 | Mud3 `MonItems/*.txt` 约 280 表 | 明文 GBK，还没进库 |
@@ -134,7 +134,7 @@ Mud3 和 Zircon **同源但不是同一套平衡**。例：祖玛教主老版 HP
 数量级：
 
 - 物品：Mud3 1143 vs Zircon 1078。按中文名粗对大约只有约 60 件共享；Mud3 独有约 289（含井中月 / 凝霜 / 裁决 / 屠龙 / 太阳水——其中不少是改名后没对上，不是真缺）
-- 怪物：Mud3 433 条 ≈ 262 种基础 + 变体（`0` / `9` / `61` / `96+`）。Zircon 309 种里混着苏美尔、兵马俑、Doom Claw
+- 怪物：Mud3 433 条 ≈ 262 种基础 + 变体（`0` / `9` / `61` / `96+`）。Zircon **434** 条里混着苏美尔、兵马俑、Doom Claw
 - 技能：老版 105（含 41 条装备附魔变体）vs Zircon 174（刺客一整棵约 53 个是后期的）
 
 Zircon 独有地图刷怪已经拿掉，**MonsterInfo / ItemInfo / DropInfo 行还在**。所以游戏里仍可能 `@spawn Doom Claw`，背包里仍有 Elite 英文刀。
@@ -542,3 +542,24 @@ C 与 D 是同一批客户端改动，建议同一个 PR。A 可以完全并行�
 - 不把占用做成 DB 字段
 - 不把背包改成无限槽
 - 不把聊天 F68 锁链套到背包 F280 上
+
+---
+
+## 8. 实施期独立复核补注（2026-10-03）
+
+> 本节由实施会话在动代码前对原文逐条复核后追加，只记录**与原文不一致**或**原文缺**的事实。
+
+- **MonsterInfo 数量更正**：原文 §1.2 / §1.4 写「309」。用 `Mir3-Research/Tools/SystemDbProbe`
+  直接读当前双库（`Debug/ServerCore/Database/System.db`、`Debug/Client/Data/System.db`）均为
+  **怪物 434 / 物品 1078 / 魔法 174 / 地图 627 / NPC 294 / 刷新点 2475 / 任务 38**。
+  旧值 309 来自更早快照的 `docs/database/views/`（`_summary.md`、`views/README.md` 同写 309/244/125），
+  `mud3-dat-decoded/comparison.md` §6 标题「老版 433 → Zircon 309」沿用了它。**以 SystemDbProbe 实读为准。**
+- **双库不同步**：当前 `Debug/Client/Data/System.db`（版本 2026.09.26.1）与
+  `Debug/ServerCore/Database/System.db`（2026.09.26.4）md5/大小不同，虽计数相同但不是同一份。
+  §1.7 第 3 条要求写库后双库同步，实施前需先确认以哪份为基线、并各自备份。
+- **C/D 代码事实复核通过**：`DXItemGrid.CreateGrid()` 确实未赋 `HostGrid`（WinForms 对照在
+  `Client/Controls/DXItemGrid.cs` 有赋）；`GameScene` 绑定顺序确实在空背包时算一次行数；
+  `AuditLegacyEiLayout` 确实断言 `GridSize==(6,6)`；`DXVScrollBar.LegacyChainTrack` 确实是 GameInter F68。
+  文中行号是近似值（实际绑定在 `GameScene.cs` 4730–4736、`FillItems` 调用在 5614）。
+- **占用帧尺寸独立复核**：用 `Tools/common/zlsdk.py` 直读 `mir2ei/Data/Inventory.Zl`，
+  Image 1042=16×102（木剑→1×3）、Image 940=48×98（男布衣→2×3），与 §2.2 表一致（换算未复用端口 C# 逻辑）。

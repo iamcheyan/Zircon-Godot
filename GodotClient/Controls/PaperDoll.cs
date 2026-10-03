@@ -114,9 +114,19 @@ public partial class PaperDoll : Control
         var shield = eq[(int)EquipmentSlot.Shield];
         var costume = eq[(int)EquipmentSlot.Costume];
 
+        // `ClientUserItem.Info` 是**懒加载**属性：装备格刚被填上（登录/换装/检视
+        // 同一帧绘制）时 Info 仍为 null，下面 `armour.Info.Image` 会抛
+        // NullReferenceException（真机栈：PaperDoll._Draw line 145）。
+        // 这里显式 Complete 一次，并同时把"Info 为空"当作"这一层不画"，
+        // 避免任何来源的半初始化物品再次把整个 _Draw 打断。
+        foreach (var piece in new[] { weapon, armour, helmet, shield, costume })
+            if (piece != null && piece.Info == null)
+                piece.Complete();
+        bool HasInfo(ClientUserItem piece) => piece?.Info != null;
+
         // 旧版护甲特效在裸身/装备主体之前绘制，且时装存在时不绘制
         // 护甲特效；这是 EquipEffectDecider 的独立 Image + Blend 层。
-        if (!hideBody && costume == null && armour != null)
+        if (!hideBody && costume == null && HasInfo(armour))
             DrawEquipmentEffect(armour, gender, true);
 
         // 1. 刺客女特殊发型
@@ -136,18 +146,18 @@ public partial class PaperDoll : Control
         // 3. 衣服 / 时装
         if (_equip != null)
         {
-            if (costume != null)
+            if (HasInfo(costume))
             {
                 DrawImage(_equip, costume.Info.Image, Colors.White);
             }
-            else if (armour != null)
+            else if (HasInfo(armour))
             {
                 DrawImage(_equip, armour.Info.Image, Colors.White);
                 DrawImageOverlay(_equip, armour.Info.Image, ToGodot(armour.Colour));
             }
 
             // 4. 武器
-            if (!hideWeapon && weapon != null)
+            if (!hideWeapon && HasInfo(weapon))
             {
                 DrawImage(_equip, weapon.Info.Image, Colors.White);
                 DrawImageOverlay(_equip, weapon.Info.Image, ToGodot(weapon.Colour));
@@ -155,7 +165,7 @@ public partial class PaperDoll : Control
             }
 
             // 5. 盾
-            if (!hideWeapon && shield != null)
+            if (!hideWeapon && HasInfo(shield))
             {
                 DrawImage(_equip, shield.Info.Image, Colors.White);
                 DrawImageOverlay(_equip, shield.Info.Image, ToGodot(shield.Colour));
@@ -164,7 +174,7 @@ public partial class PaperDoll : Control
 
         // 6. 头盔 / 普通头发。旧版 CharacterTab 在没有头盔时仍按
         // 职业和性别绘制头发；不能只处理刺客女的 1160 特例。
-        if (!hideHead && helmet != null)
+        if (!hideHead && HasInfo(helmet))
         {
             DrawImage(_equip, helmet.Info.Image, Colors.White);
             DrawImageOverlay(_equip, helmet.Info.Image, ToGodot(helmet.Colour));

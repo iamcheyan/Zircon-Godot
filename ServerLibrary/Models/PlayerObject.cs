@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using C = Library.Network.ClientPackets;
 using S = Library.Network.ServerPackets;
 
@@ -1828,7 +1829,12 @@ namespace Server.Models
             else if (text.StartsWith("@"))
             {
                 text = text.Remove(0, 1);
-                parts = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                // 参数按空格切分，但物品名常带空格（`@make Iron Plate Armour`）。
+                // 只按空格切会让 `GetItemInfo` 只收到首词 `Iron` 而匹配不到。
+                // 原版 EI 客户端的物品名是单字节无空格的中文，所以不需这个；
+                // Zircon 的 ItemName 是英文且带空格，故支持双引号包裹整个参数
+                // （`@make "Iron Plate Armour"`）。不带引号时行为与原来完全一致。
+                parts = SplitCommandArgs(text);
 
                 if (parts.Length == 0) return;
 
@@ -1867,6 +1873,45 @@ namespace Server.Models
                     }
                 }
             }
+        }
+
+
+        /// <summary>
+        /// 按空格切分 <c>@</c> 命令参数，但支持用**双引号**把一个参数包起来
+        /// 从而保留内部空格（<c>@make "Iron Plate Armour"</c>）。引号本身不进入
+        /// 结果，且可与其它参数混用（<c>@giveSkills TestHero</c>）。
+        /// 没有引号时行为与 <c>Split(' ')</c> 完全一致，故不影响现有命令。
+        /// </summary>
+        private static string[] SplitCommandArgs(string text)
+        {
+            List<string> args = new List<string>();
+            StringBuilder current = null;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+
+                if (c == '"')
+                {
+                    // 进入/退出引号：已开始累积则收尾，未开始则开新段。
+                    if (current != null) { args.Add(current.ToString()); current = null; }
+                    else current = new StringBuilder();
+                    continue;
+                }
+
+                if (char.IsWhiteSpace(c))
+                {
+                    if (current != null) { args.Add(current.ToString()); current = null; }
+                    continue;
+                }
+
+                current ??= new StringBuilder();
+                current.Append(c);
+            }
+
+            if (current != null) args.Add(current.ToString());
+
+            return args.ToArray();
         }
         public void ObserverChat(SConnection con, string text)
         {

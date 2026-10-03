@@ -576,21 +576,51 @@ public partial class LegacyHudLayoutLab : Control
         grid.ScrollValue = range;
         int scrolled = grid.ScrollValue;
 
-        // 木剑 1x3 竖排：cell0 是记录 0 的锚点，cell6/cell12 是同一条记录的
-        // 占位格（不重复绘制，操作落回锚点槽 0）；cell1 是记录 1 的锚点。
+        // 木剑 1x3 竖排：cell0 是记录 0 的**原点格**（只有它画图标），
+        // cell6/cell12 是同一条记录的占位格（不重复绘制，操作落回槽 0）；
+        // cell1 是记录 1 的原点格。注意 anchor 槽号 != 格子号，不能用二者相等判原点。
         bool footprintOk = !grid.IsLegacyFootprintPlaceholder(0)
             && grid.IsLegacyFootprintPlaceholder(6)
             && ReferenceEquals(grid.GetItemForCell(6), items[0])
             && grid.ResolveOperationSlot(6) == 0
             && !grid.IsLegacyFootprintPlaceholder(1)
             && ReferenceEquals(grid.GetItemForCell(1), items[1])
-            && grid.ResolveOperationSlot(1) == 1;
+            && grid.ResolveOperationSlot(1) == 1
+            // 记录 6 的 first-fit 原点在第 3 行第 0 列（cell 18），槽号 6 != 18；
+            // 旧实现会把它误判成占位格而不画，正是「大量物品不显示」的根因。
+            && !grid.IsLegacyFootprintPlaceholder(18)
+            && ReferenceEquals(grid.GetItemForCell(18), items[6])
+            && grid.ResolveOperationSlot(18) == 6
+            && grid.IsLegacyFootprintPlaceholder(24);
+
+        int origins = 0, covered = 0;
+        for (int c = 0; c < cells; c++)
+        {
+            if (grid.LegacyFootprintAnchor(c) < 0) continue;
+            covered++;
+            if (!grid.IsLegacyFootprintPlaceholder(c))
+            {
+                origins++;
+                if (grid.GetItemForCell(c) == null) footprintOk = false;
+            }
+        }
+        grid.GetLegacyFootprintSize(0, out int fpW, out int fpH);
+        bool placementOk = origins == count && covered == count * 3 && fpW == 1 && fpH == 3;
 
         // 独立期望：60 件 1x3、6 列 → 每层 6 件占 3 行 → 10 层 = 30 行；跨度 30-6=24。
         bool ok = cols == 6 && rows == 30 && grid.VisibleHeight == 6
-            && cells == 6 * rows && range == 24 && barEnabled && scrolled == 24 && footprintOk;
+            && cells == 6 * rows && range == 24 && barEnabled && scrolled == 24
+            && footprintOk && placementOk;
 
-        GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk}");
+        GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk} origins={origins}/{count} covered={covered} fp={fpW}x{fpH}");
+
+        // --legacy-shot：不退出，打开背包供 scrot 截图目视验收。
+        foreach (string arg in OS.GetCmdlineUserArgs())
+        {
+            if (arg != "--legacy-shot") continue;
+            WindowManager.Open(_inventory, _canvas);
+            return;
+        }
         GetTree().Quit(ok ? 0 : 1);
     }
 

@@ -124,6 +124,10 @@ public partial class DXItemGrid : DXControl
     public LibraryFile ItemLibraryFile { get; set; } = LibraryFile.StoreItem;
 
     private int[] _legacyCellAnchors = Array.Empty<int>();
+    // 每个 footprint 的「原点格」= first-fit 放下的左上角格。物品记录槽号
+    // （anchor）与格子号**通常不相等**，所以不能用 anchor != cellIndex 判占位；
+    // 必须单独记原点，否则锚点格会被误判成占位格而不绘制图标。
+    private bool[] _legacyCellOrigins = Array.Empty<bool>();
 
 
     public int ResolveOperationSlot(int cellIndex)
@@ -146,9 +150,23 @@ public partial class DXItemGrid : DXControl
         return slot >= 0 && slot < ItemGrid.Length ? ItemGrid[slot] : null;
     }
 
+    /// <summary>覆盖某格的那条记录的 footprint 尺寸（以格为单位；非 footprint 返回 1×1）。</summary>
+    public void GetLegacyFootprintSize(int cellIndex, out int width, out int height)
+    {
+        width = height = 1;
+        if (!UseLegacyFootprints || ItemGrid == null) return;
+        if (cellIndex < 0 || cellIndex >= _legacyCellAnchors.Length) return;
+        int slot = _legacyCellAnchors[cellIndex];
+        if (slot < 0 || slot >= ItemGrid.Length) return;
+        var item = ItemGrid[slot];
+        if (item?.Info == null) return;
+        GetLegacyFootprint(item, out width, out height);
+    }
+
     public bool IsLegacyFootprintPlaceholder(int cellIndex)
         => UseLegacyFootprints && cellIndex >= 0 && cellIndex < _legacyCellAnchors.Length
-            && _legacyCellAnchors[cellIndex] >= 0 && _legacyCellAnchors[cellIndex] != cellIndex;
+            && _legacyCellAnchors[cellIndex] >= 0
+            && (cellIndex >= _legacyCellOrigins.Length || !_legacyCellOrigins[cellIndex]);
 
     /// <summary>Returns the rows required by first-fit footprint placement.</summary>
     public int GetLegacyRequiredRows(int minimumRows = 6)
@@ -174,11 +192,13 @@ public partial class DXItemGrid : DXControl
         if (!UseLegacyFootprints || Cells == null)
         {
             _legacyCellAnchors = Array.Empty<int>();
+            _legacyCellOrigins = Array.Empty<bool>();
             return;
         }
 
         _legacyCellAnchors = new int[Cells.Length];
         Array.Fill(_legacyCellAnchors, -1);
+        _legacyCellOrigins = new bool[Cells.Length];
         if (ItemGrid == null || GridSize.X <= 0 || GridSize.Y <= 0) return;
 
         var occupied = new bool[GridSize.X, GridSize.Y];
@@ -189,6 +209,8 @@ public partial class DXItemGrid : DXControl
             GetLegacyFootprint(item, out int width, out int height);
             if (!TryPlace(occupied, width, height, out int x, out int y)) continue;
             MarkPlacement(occupied, x, y, width, height);
+            // 原点格：整条记录只在这里画一次图标（其它覆盖格是占位格）。
+            _legacyCellOrigins[y * GridSize.X + x] = true;
             for (int row = y; row < y + height; row++)
                 for (int col = x; col < x + width; col++)
                     _legacyCellAnchors[row * GridSize.X + col] = slot;

@@ -297,8 +297,26 @@ public partial class DXItemCell : DXControl
         if (tex == null) return;
 
         var imgSize = tex.GetSize();
-        float x = CenterImage ? (Size.X - imgSize.X) / 2f : 0;
-        float y = CenterImage ? (Size.Y - imgSize.Y) / 2f : 0;
+        float x, y;
+        if (CenterImage)
+        {
+            // legacy 背包图标按**整个 footprint**居中，而不是单个 36px 格：
+            // 1x3 剑若在单格里居中会整体偏到上方，铺不满占位格。
+            float spanX = Size.X, spanY = Size.Y;
+            if (HostGrid?.UseLegacyFootprints == true)
+            {
+                HostGrid.GetLegacyFootprintSize(GridIndex, out int fpW, out int fpH);
+                spanX = fpW * Size.X;
+                spanY = fpH * Size.Y;
+            }
+            x = (spanX - imgSize.X) / 2f;
+            y = (spanY - imgSize.Y) / 2f;
+        }
+        else
+        {
+            x = 0;
+            y = 0;
+        }
         bool itemPartReady = item.Info.ItemEffect != ItemEffect.ItemPart
             || item.AddedStats == null
             || item.AddedStats[Stat.ItemIndex] <= 0

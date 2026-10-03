@@ -88,7 +88,8 @@ namespace Server.Models
 
             ItemCheck check = new ItemCheck(Item, Item.Count - taxableAmount, Item.Flags, Item.ExpireTime);
 
-            if (ob.CanGainItems(false, check))
+            // 背包无槽位上限后，负重是唯一门槛：拾取必须按负重判定。
+            if (ob.CanGainItems(true, check))
             {
                 if (taxableAmount > 0)
                 {

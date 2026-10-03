@@ -296,6 +296,10 @@ public partial class DXItemGrid : DXControl
                         (int)(y * Step + GridPadding)),
                     GridIndex = slot,
                     Slot = slot,
+                    // 对齐 WinForms Client/Controls/DXItemGrid.CreateGrid()：
+                    // Item/Slot/IsLegacyFootprintPlaceholder 都靠 HostGrid 才能
+                    // 走 first-fit footprint，缺了它多格占用与占位格判定全部失效。
+                    HostGrid = this,
                     ItemLibraryFile = this.ItemLibraryFile,
                     ItemGrid = _itemGrid,
                     GridType = GridType,

@@ -215,6 +215,8 @@ namespace Server.Models
                     continue;
                 }
 
+                // 背包不设槽位上限：历史存档里 Slot 可能超过初始 48，先扩容再放。
+                EnsureInventoryCapacity(item.Slot + 1);
                 Inventory[item.Slot] = item;
             }
 
@@ -6258,9 +6260,25 @@ namespace Server.Models
             //   item.Flags &= ~UserItemFlags.Locked;
         }
 
+        /// <summary>
+        /// 背包不设槽位上限（产品口径：背包上限=负重上限）。数组按需扩容，
+        /// 但受 EquipmentOffSet 约束（Slot &gt;= 1000 属于装备区）。
+        /// </summary>
+        private void EnsureInventoryCapacity(int required)
+        {
+            if (required <= Inventory.Length) return;
+            if (required > Globals.EquipmentOffSet) required = Globals.EquipmentOffSet;
+            int size = Inventory.Length;
+            while (size < required) size = Math.Min(size * 2, Globals.EquipmentOffSet);
+            if (size <= Inventory.Length) return;
+            Array.Resize(ref Inventory, size);
+        }
+
         public bool CanGainItems(bool checkWeight, params ItemCheck[] checks)
         {
-            int index = 0;
+            // 产品口径：背包不设槽位上限，负重是唯一上限。checkWeight 参数为
+            // 兼容旧调用点保留，权重始终参与判定（任务物品/经验/货币已跳过）。
+            // 不再扫描空槽，因为需要时可以扩容。
             foreach (ItemCheck check in checks)
             {
                 if ((check.Flags & UserItemFlags.QuestItem) == UserItemFlags.QuestItem) continue;
@@ -6269,58 +6287,16 @@ namespace Server.Models
 
                 if (SEnvir.IsCurrencyItem(check.Info)) continue;
 
-                long count = check.Count;
-
-                if (checkWeight)
+                switch (check.Info.ItemType)
                 {
-                    switch (check.Info.ItemType)
-                    {
-                        case ItemType.Amulet:
-                        case ItemType.Poison:
-                            if (BagWeight + check.Info.Weight > Stats[Stat.BagWeight]) return false;
-                            break;
-                        default:
-                            if (BagWeight + check.Info.Weight * count > Stats[Stat.BagWeight]) return false;
-                            break;
-                    }
+                    case ItemType.Amulet:
+                    case ItemType.Poison:
+                        if (BagWeight + check.Info.Weight > Stats[Stat.BagWeight]) return false;
+                        break;
+                    default:
+                        if (BagWeight + check.Info.Weight * check.Count > Stats[Stat.BagWeight]) return false;
+                        break;
                 }
-
-                if (check.Info.StackSize > 1 && (check.Flags & UserItemFlags.Expirable) != UserItemFlags.Expirable)
-                {
-                    foreach (UserItem oldItem in Inventory)
-                    {
-                        if (oldItem == null) continue;
-
-                        if (oldItem.Info != check.Info || oldItem.Count >= check.Info.StackSize) continue;
-
-                        if ((oldItem.Flags & UserItemFlags.Expirable) == UserItemFlags.Expirable) continue;
-                        if ((oldItem.Flags & UserItemFlags.Bound) != (check.Flags & UserItemFlags.Bound)) continue;
-                        if ((oldItem.Flags & UserItemFlags.Worthless) != (check.Flags & UserItemFlags.Worthless)) continue;
-                        if ((oldItem.Flags & UserItemFlags.NonRefinable) != (check.Flags & UserItemFlags.NonRefinable)) continue;
-                        if (!oldItem.Stats.Compare(check.Stats)) continue;
-
-                        count -= check.Info.StackSize - oldItem.Count;
-
-                        if (count <= 0) break;
-                    }
-
-                    if (count <= 0) break;
-                }
-
-                //Start Index
-                for (int i = index; i < Inventory.Length; i++)
-                {
-                    index++;
-                    UserItem item = Inventory[i];
-                    if (item == null)
-                    {
-                        count -= check.Info.StackSize;
-
-                        if (count <= 0) break;
-                    }
-                }
-
-                if (count > 0) return false;
             }
 
             return true;
@@ -6432,17 +6408,31 @@ namespace Server.Models
                     if (handled) continue;
                 }
 
+                // 背包无限槽：先找空位，没有就扩容再找（上限 EquipmentOffSet）。
+                int freeSlot = -1;
                 for (int i = 0; i < Inventory.Length; i++)
+                    if (Inventory[i] == null) { freeSlot = i; break; }
+                if (freeSlot < 0 && Inventory.Length < Globals.EquipmentOffSet)
                 {
-                    if (Inventory[i] != null) continue;
-
-                    Inventory[i] = item;
-                    item.Slot = i;
-                    item.Character = Character;
-                    item.SetTemporary(false);
-                    LogMilestone(MilestoneType.ItemGain, item.Count, item: item.Info);
-                    break;
+                    EnsureInventoryCapacity(Inventory.Length + 1);
+                    for (int i = 0; i < Inventory.Length; i++)
+                        if (Inventory[i] == null) { freeSlot = i; break; }
                 }
+
+                if (freeSlot < 0)
+                {
+                    // 已达 1000 槽极端上限（正常负重不可能到达）：丢弃而不是静默丢失引用。
+                    Connection?.ReceiveChatWithObservers(con => con.Language.HarvestCarry, MessageType.System);
+                    item.SetTemporary(true);
+                    item.Delete();
+                    continue;
+                }
+
+                Inventory[freeSlot] = item;
+                item.Slot = freeSlot;
+                item.Character = Character;
+                item.SetTemporary(false);
+                LogMilestone(MilestoneType.ItemGain, item.Count, item: item.Info);
             }
 
             if (gainedItems.Count > 0)

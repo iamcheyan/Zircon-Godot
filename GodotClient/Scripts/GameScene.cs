@@ -4743,6 +4743,8 @@ public partial class GameScene : Control
             _inventoryDialog.ConfigureLegacyInventoryGrid();
         _inventoryDialog.Grid.CreateGrid();
         InventoryCells = _inventoryDialog.Grid.Cells;
+        // CreateGrid 会重建 Cells；legacy 下把新格子的滚轮重新转给 F280 滚动条。
+        _inventoryDialog.BindLegacyInventoryScrollInputs();
 
         foreach (var cell in _characterDialog.Grid)
             cell.ItemGrid = Equipment;
@@ -6076,6 +6078,24 @@ public partial class GameScene : Control
     // 批量变更后刷新所有可见格
     public void RefreshItemGrids()
     {
+        // 背包数组会因无槽位上限而 Array.Resize 换新引用；网格必须重新指向
+        // 新数组，否则仍然只看得到旧的 48 槽。
+        if (_inventoryDialog?.Grid != null)
+        {
+            if (!ReferenceEquals(_inventoryDialog.Grid.ItemGrid, Inventory))
+                _inventoryDialog.Grid.ItemGrid = Inventory;
+        }
+
+        // EI 背包的可视占用网格行数由 footprint first-fit 决定，物品是在
+        // 绑定顺序之后（InitHudData → FillItems）才进来的；只 RefreshItem()
+        // 会把 GridSize 永久停在空背包那次算出的 6 行，锁链就没有可滚范围。
+        // 每次批量变化都按当前内容重算行数，并在 Cells 重建后重挂数组引用。
+        if (AutoLoginArgs.LegacyUi && _inventoryDialog?.Grid != null)
+        {
+            _inventoryDialog.ConfigureLegacyInventoryGrid();
+            InventoryCells = _inventoryDialog.Grid.Cells ?? Array.Empty<DXItemCell>();
+        }
+
         foreach (var c in InventoryCells) c?.RefreshItem();
         foreach (var c in EquipmentCells) c?.RefreshItem();
         _beltDialog?.Grid?.RefreshGrid();
@@ -7481,12 +7501,27 @@ public partial class GameScene : Control
                 int slot = item.Slot - Globals.EquipmentOffSet;
                 if (slot >= 0 && slot < Equipment.Length) Equipment[slot] = item;
             }
-            else if (item.Slot >= 0 && item.Slot < Inventory.Length)
+            else if (item.Slot >= 0)
             {
-                Inventory[item.Slot] = item;
+                // 背包不设槽位上限：服务器可以把记录放在 48 之后的槽位。
+                EnsureInventoryCapacity(item.Slot + 1);
+                if (item.Slot < Inventory.Length) Inventory[item.Slot] = item;
             }
         }
         RefreshItemGrids();
+    }
+
+    /// <summary>
+    /// 背包无槽位上限（上限=负重）。客户端数组按需扩容，但不超过装备区起点。
+    /// </summary>
+    private void EnsureInventoryCapacity(int required)
+    {
+        if (required <= Inventory.Length) return;
+        if (required > Globals.EquipmentOffSet) required = Globals.EquipmentOffSet;
+        int size = Inventory.Length;
+        while (size < required) size = Math.Min(size * 2, Globals.EquipmentOffSet);
+        if (size <= Inventory.Length) return;
+        Array.Resize(ref Inventory, size);
     }
 
     public void FillStorage(List<ClientUserItem> items)
@@ -7634,12 +7669,19 @@ public partial class GameScene : Control
                 if (handled) continue;
             }
 
+            int freeSlot = -1;
             for (int i = 0; i < Inventory.Length; i++)
+                if (Inventory[i] == null) { freeSlot = i; break; }
+            if (freeSlot < 0 && Inventory.Length < Globals.EquipmentOffSet)
             {
-                if (Inventory[i] != null) continue;
-                Inventory[i] = item;
-                item.Slot = i;
-                break;
+                EnsureInventoryCapacity(Inventory.Length + 1);
+                for (int i = 0; i < Inventory.Length; i++)
+                    if (Inventory[i] == null) { freeSlot = i; break; }
+            }
+            if (freeSlot >= 0)
+            {
+                Inventory[freeSlot] = item;
+                item.Slot = freeSlot;
             }
         }
         RefreshItemGrids();
@@ -7884,6 +7926,7 @@ public partial class GameScene : Control
     {
         if (p == null) return;
         UnlockCell(p.Grid, p.Slot);
+        if (p.Grid == GridType.Inventory) EnsureInventoryCapacity(Math.Max(p.Slot, p.NewSlot) + 1);
         var arr = GetGrid(p.Grid);
         if (arr == null) return;
         if (p.Slot < 0 || p.Slot >= arr.Length) return;
@@ -7976,6 +8019,7 @@ public partial class GameScene : Control
     private void OnItemChanged(S.ItemChanged p)
     {
         if (p?.Link == null) return;
+        if (p.Link.GridType == GridType.Inventory) EnsureInventoryCapacity(p.Link.Slot + 1);
         var arr = GetGrid(p.Link.GridType);
         if (arr == null) return;
         if (p.Link.Slot < 0 || p.Link.Slot >= arr.Length) return;
@@ -8101,6 +8145,7 @@ public partial class GameScene : Control
             // 先解锁再校验数组/槽位：仓库、邮件、NPC 等批量操作的异常或迟到回包
             // 不能把来源格永久留在 Locked 状态。
             UnlockCell(link.GridType, link.Slot);
+            if (link.GridType == GridType.Inventory) EnsureInventoryCapacity(link.Slot + 1);
             var arr = GetGrid(link.GridType);
             if (arr == null) continue;
             if (link.Slot < 0 || link.Slot >= arr.Length) continue;

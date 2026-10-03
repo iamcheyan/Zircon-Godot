@@ -222,6 +222,15 @@ public partial class LegacyHudLayoutLab : Control
             auditRequested |= arg == "--legacy-audit";
         if (auditRequested)
             RunLegacyAudit();
+
+        bool inventoryOverTest = false;
+        foreach (string arg in OS.GetCmdlineUserArgs())
+            inventoryOverTest |= arg == "--legacy-inventory-overtest";
+        if (inventoryOverTest)
+        {
+            RunLegacyInventoryOverflowTest();
+            return;
+        }
         bool npcSelfTest = false;
         bool charSelfTest = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
@@ -531,6 +540,58 @@ public partial class LegacyHudLayoutLab : Control
             GD.PrintErr($"[NpcF1100SelfTest] ERROR {ex}");
             GetTree().Quit(2);
         }
+    }
+
+    /// <summary>
+    /// 行为自测（--legacy-inventory-overtest）：EI 背包的占用网格行数必须随
+    /// 实际内容长高，F280 才有可滚范围。用真实 System.db 的物品（Image 1042
+    /// = 木剑，zlsdk 实测帧 16x102 → 1x3）放 60 条记录（**超过旧的 48 槽上限**），
+    /// first-fit 后应为 30 行、可视 6 行、滚轮跨度 24。期望值来自独立的 zlsdk
+    /// 帧尺寸换算，不复用被测的 C# footprint 逻辑。
+    /// </summary>
+    private void RunLegacyInventoryOverflowTest()
+    {
+        var sword = Globals.ItemInfoList?.Binding?.FirstOrDefault(x => x?.Image == 1042);
+        if (sword == null)
+        {
+            GD.Print("[LegacyInventoryOverflow] SKIP 客户端 DB 无 Image=1042 物品");
+            GetTree().Quit(0);
+            return;
+        }
+
+        const int count = 60; // > Globals.InventorySize (48)
+        var items = new ClientUserItem[count];
+        for (int i = 0; i < items.Length; i++)
+            items[i] = new ClientUserItem { Info = sword, Slot = i, Count = 1 };
+
+        _inventory.Grid.ItemGrid = items;
+        _inventory.ConfigureLegacyInventoryGrid();
+
+        var grid = _inventory.Grid;
+        int cols = grid.GridSize.X;
+        int rows = grid.GridSize.Y;
+        int cells = grid.Cells?.Length ?? -1;
+        int range = _inventory.LegacyScrollRange;
+        bool barEnabled = _inventory.LegacyScrollEnabled;
+        grid.ScrollValue = range;
+        int scrolled = grid.ScrollValue;
+
+        // 木剑 1x3 竖排：cell0 是记录 0 的锚点，cell6/cell12 是同一条记录的
+        // 占位格（不重复绘制，操作落回锚点槽 0）；cell1 是记录 1 的锚点。
+        bool footprintOk = !grid.IsLegacyFootprintPlaceholder(0)
+            && grid.IsLegacyFootprintPlaceholder(6)
+            && ReferenceEquals(grid.GetItemForCell(6), items[0])
+            && grid.ResolveOperationSlot(6) == 0
+            && !grid.IsLegacyFootprintPlaceholder(1)
+            && ReferenceEquals(grid.GetItemForCell(1), items[1])
+            && grid.ResolveOperationSlot(1) == 1;
+
+        // 独立期望：60 件 1x3、6 列 → 每层 6 件占 3 行 → 10 层 = 30 行；跨度 30-6=24。
+        bool ok = cols == 6 && rows == 30 && grid.VisibleHeight == 6
+            && cells == 6 * rows && range == 24 && barEnabled && scrolled == 24 && footprintOk;
+
+        GD.Print($"[LegacyInventoryOverflow] {(ok ? "PASS" : "FAIL")} cols={cols} rows={rows} cells={cells} range={range} enabled={barEnabled} scroll={scrolled} footprint={footprintOk}");
+        GetTree().Quit(ok ? 0 : 1);
     }
 
     private void RunLegacyAudit()

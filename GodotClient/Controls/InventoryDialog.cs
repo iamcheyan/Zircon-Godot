@@ -44,6 +44,7 @@ public partial class InventoryDialog : DXWindow
     private DXLabel _titleLabel, _goldTitle, _ggTitle;
     private DXImageControl _legacyScrollTrack;
     private DXVScrollBar _legacyScrollBar;
+    private LegacyGaugeDragSurface _legacyGaugeDrag;
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
     private bool _legacyEiLayout;
 
@@ -239,6 +240,10 @@ public partial class InventoryDialog : DXWindow
         Grid.ItemLibraryFile = LibraryFile.Inventory;
         Grid.GridPadding = 0;
         Grid.GridSize = new Vector2I(6, 6);
+        // EI 视口固定 6 行；占用网格总行数由 ConfigureLegacyInventoryGrid()
+        // 按 footprint first-fit 重算（可 >= 6）。这里先给一个自洽初值，
+        // 否则审计/截图在 Configure 之前会看到 VisibleHeight 的默认 int.MaxValue。
+        Grid.VisibleHeight = 6;
         Grid.Location = new Vector2I(25, 41);
         Grid.Clip = true;
 
@@ -275,6 +280,19 @@ public partial class InventoryDialog : DXWindow
         _legacyScrollBar.MouseWheel += _legacyScrollBar.DoMouseWheel;
         _legacyScrollBar.ValueChanged -= LegacyScrollChanged;
         _legacyScrollBar.ValueChanged += LegacyScrollChanged;
+
+        // F280 轨按 EI blit 放在窗口相对 y=-165，整条 16x424 只有下半段
+        // （窗口内 y≈0..259）可见；DXVScrollBar 的 PositionBar 落在 y≈-149
+        // 的窗口外，点/拖都够不到。补一块只覆盖可见段的透明命中面，
+        // 拖拽/点击把 Y 比例映射回滚动值，滚轮同样转发给同一条滚动条。
+        _legacyGaugeDrag ??= new LegacyGaugeDragSurface
+        {
+            Location = new Vector2I(248, 0),
+            Size = new Vector2I(16, 260),
+            MouseFilter = MouseFilterEnum.Stop,
+        };
+        _legacyGaugeDrag.Target = _legacyScrollBar;
+        if (_legacyGaugeDrag.GetParent() == null) AddControl(_legacyGaugeDrag);
 
         _titleLabel.Visible = false;
         _legacyModeLabel ??= new DXLabel
@@ -429,11 +447,31 @@ public partial class InventoryDialog : DXWindow
         Grid.VisibleHeight = 6;
         Grid.ScrollValue = Math.Min(Grid.ScrollValue, Math.Max(0, rows - 6));
 
+        // GridSize 行数变化会触发 CreateGrid() 重建 Cells，滚轮绑定必须在
+        // 重建之后重挂，否则滚到新格子上就没反应。
+        BindLegacyInventoryScrollInputs();
+
         if (_legacyScrollBar == null) return;
         _legacyScrollBar.MinValue = 0;
         _legacyScrollBar.VisibleSize = 6;
         _legacyScrollBar.MaxValue = rows;
         _legacyScrollBar.Value = Grid.ScrollValue;
+        _legacyGaugeDrag?.SetTarget(_legacyScrollBar);
+    }
+
+    /// <summary>
+    /// legacy 背包：格子在 DXControl 里会 AcceptEvent，滚轮不会冒泡到滚动条；
+    /// 逐个把 MouseWheel 转发给 F280 滚动条。Cells 每次重建后都要重绑。
+    /// </summary>
+    public void BindLegacyInventoryScrollInputs()
+    {
+        if (!_legacyEiLayout || Grid?.Cells == null || _legacyScrollBar == null) return;
+        foreach (var cell in Grid.Cells)
+        {
+            if (cell == null) continue;
+            cell.MouseWheel -= _legacyScrollBar.DoMouseWheel;
+            cell.MouseWheel += _legacyScrollBar.DoMouseWheel;
+        }
     }
 
     private void LegacyScrollChanged(object sender, EventArgs e)
@@ -536,11 +574,23 @@ public partial class InventoryDialog : DXWindow
         GgLabel.Text = SaleTotal().ToString("N0");
     }
 
+    /// <summary>自测/审计用：legacy F280 滚动条的可滚动跨度 (Max-Min-VisibleSize)。</summary>
+    public int LegacyScrollRange => _legacyScrollBar == null
+        ? -1
+        : _legacyScrollBar.MaxValue - _legacyScrollBar.MinValue - _legacyScrollBar.VisibleSize;
+
+    /// <summary>自测/审计用：legacy F280 滚动条是否处于可拖动状态。</summary>
+    public bool LegacyScrollEnabled => _legacyScrollBar?.PositionBar?.Enabled == true;
+
     public bool AuditLegacyEiLayout(out string details)
     {
+        // 占用网格行数随 footprint first-fit 长高（>= 6），审计不能把
+        // GridSize 锁死在 6x6；可视视口恒为 6 行、六列、原点 (25,41) 才是契约。
         bool ok = Size == new Vector2I(284, 324)
             && _background.Index == 250
-            && Grid.GridSize == new Vector2I(6, 6)
+            && Grid.GridSize.X == 6
+            && Grid.GridSize.Y >= 6
+            && Grid.VisibleHeight == 6
             && Grid.Location == new Vector2I(25, 41)
             && CloseButton.Location == new Vector2I(249, 288)
             && _legacyActionButton?.Location == new Vector2I(176, 262)
@@ -720,5 +770,49 @@ public partial class InventoryDialog : DXWindow
         SelectedItems.Clear();
         GgLabel.Text = "0";
         DXItemCell.SelectedCell = null;
+    }
+
+    /// <summary>
+    /// F280 竖轨窗口内的命中面。EI 的 gauge 命中（0x42FFD0 → F707 0x417D00）
+    /// 把 pointer Y 的比例写回滚动值；这里照做：按下/拖动/滚轮都作用在同一条
+    /// DXVScrollBar 上，拖动方向 = 轨道方向（向下拖 → 行窗下移）。
+    /// </summary>
+    private sealed partial class LegacyGaugeDragSurface : DXControl
+    {
+        public DXVScrollBar Target;
+        private bool _gaugeDragging;
+
+        public void SetTarget(DXVScrollBar target) => Target = target;
+
+        public override void _Process(double delta)
+        {
+            base._Process(delta);
+            // 鼠标在控件外松开时收不到 release，轮询左键状态复位拖拽。
+            if (!Input.IsMouseButtonPressed(MouseButton.Left)) _gaugeDragging = false;
+        }
+
+        public override void _GuiInput(InputEvent e)
+        {
+            base._GuiInput(e);
+            if (Target == null) return;
+
+            if (e is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+            {
+                _gaugeDragging = mb.Pressed;
+                if (mb.Pressed) ApplyGaugeY((float)mb.Position.Y);
+            }
+            else if (e is InputEventMouseMotion mm && _gaugeDragging)
+            {
+                ApplyGaugeY((float)mm.Position.Y);
+            }
+        }
+
+        private void ApplyGaugeY(float y)
+        {
+            int range = Target.MaxValue - Target.MinValue - Target.VisibleSize;
+            if (range <= 0) return;
+            float t = Mathf.Clamp(y / Mathf.Max(1f, Size.Y), 0f, 1f);
+            Target.Value = Target.MinValue + (int)Math.Round(t * range);
+        }
     }
 }

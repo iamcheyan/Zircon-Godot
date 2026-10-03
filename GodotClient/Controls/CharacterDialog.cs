@@ -547,8 +547,12 @@ public partial class CharacterDialog : DXWindow
                 value(Stat.Accuracy), value(Stat.Agility));
         for (int i = 0; i < _legacyAttributeLabels.Count; i++)
         {
-            _legacyAttributeLabels[i].Label.Text = LegacyFirstAttributeNames[i];
-            _legacyAttributeLabels[i].Value.Text = values[i];
+            var (label, valueLabel) = _legacyAttributeLabels[i];
+            label.Text = LegacyFirstAttributeNames[i];
+            valueLabel.Text = values[i];
+            // 原版标签与值是同排连续贴出的（标签后紧跟值），不是左标签/右数值两列。
+            // 值紧贴标签实测宽度之后，避免与第二列（x=0x17F）撞在一起。
+            PlaceLegacyValue(label, valueLabel);
         }
         if (_legacyEiLayout)
         {
@@ -561,8 +565,9 @@ public partial class CharacterDialog : DXWindow
         foreach (var entry in _legacyExpandedLabels)
         {
             entry.Label.Text = entry.Name;
-            entry.Label.TextColour = entry.Name is "防御" or "攻击" or "魔法" or "魔法防御力"
-                ? Colors.Black : LegacyAttributeLabelColour;
+            // 颜色由 BuildLegacyExpandedPanel 设定（防御/攻击/魔法/魔法防御力 = 0xff 红，
+            // 其余 0xfae1c8）。此处**不要**覆盖成黑色——黑字在深色底上等于看不见，
+            // 那 4 行的值就会变成「没有标签的孤立数字」。
             if (entry.Stat == null)
             {
                 // EI draws 魔法/魔法防御力 as label-only rows in this paint region.
@@ -576,7 +581,17 @@ public partial class CharacterDialog : DXWindow
                 ? min.ToString()
                 : $"{min}-{stats?[entry.MaxStat.Value] ?? 0}";
             entry.Value.Visible = true;
+            // 同左列：值紧贴标签，避免固定 x 造成的错位/重叠。
+            PlaceLegacyValue(entry.Label, entry.Value);
         }
+    }
+
+    /// <summary>把值标签紧贴到标签实测宽度之后（原版「标签+值连续贴出」的版式）。</summary>
+    private static void PlaceLegacyValue(DXLabel label, DXLabel valueLabel)
+    {
+        if (label == null || valueLabel == null) return;
+        float width = MirSkin.MeasureText(label.Text ?? string.Empty, label.FontSize).X;
+        valueLabel.Location = new Vector2I(label.Location.X + Mathf.RoundToInt(width) + 2, label.Location.Y);
     }
 
     private void BuildLegacyExpandedPanel()

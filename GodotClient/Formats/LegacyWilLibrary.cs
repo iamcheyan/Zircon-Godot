@@ -19,6 +19,8 @@ public sealed class LegacyWilLibrary : IDisposable
     private readonly byte[] _wilData;
     private readonly int[] _frameOffsets;
     private readonly Dictionary<int, ImageTexture> _textures = new();
+    // 特效颜色键纹理（黑=透明），与 .Zl 侧 `ZlLibrary.GetEffectTexture` 同语义。
+    private readonly Dictionary<int, ImageTexture> _effectTextures = new();
     private readonly Dictionary<int, (int Width, int Height, int OffsetX, int OffsetY)> _headers = new();
 
     public string WilPath { get; }
@@ -75,6 +77,37 @@ public sealed class LegacyWilLibrary : IDisposable
         Image image = Image.CreateFromData(header.Width, header.Height, false, Image.Format.Rgba8, rgba);
         ImageTexture texture = ImageTexture.CreateFromImage(image);
         _textures[index] = texture;
+        return texture;
+    }
+
+    /// <summary>
+    /// 特效帧纹理：按原客户端的**黑色透明键**把近黑像素清成透明。
+    /// 元素特效帧（法师男 F1080 火球、法师女 F1385 闪电、道士女 F1984 光球）
+    /// 四周都有一圈**不透明纯黑**（F1080 实测 13999 个不透明像素里 6797 个是
+    /// alpha=255 / RGB&lt;12 的黑），普通 Image 层会把它当实体整块盖住底下的人物。
+    /// 与 `ZlLibrary.GetEffectTexture` 同语义。
+    /// </summary>
+    public ImageTexture GetEffectTexture(int index)
+    {
+        if (index < 0 || index >= _frameOffsets.Length) return null;
+        if (_effectTextures.TryGetValue(index, out ImageTexture cached)) return cached;
+        ImageTexture baseTexture = GetImageTexture(index);
+        if (baseTexture == null) return null;
+
+        Image source = baseTexture.GetImage();
+        byte[] pixels = source.GetData();
+        if (pixels == null || pixels.Length < 4) return baseTexture;
+        // RGB565 0x0000 解码成 (0,0,0,255)。原版透明键判据是「近黑」，
+        // 这里用同一阈值：任一通道 <= 12 视为键色。
+        const byte KeyTolerance = 12;
+        for (int i = 0; i + 3 < pixels.Length; i += 4)
+        {
+            if (pixels[i] <= KeyTolerance && pixels[i + 1] <= KeyTolerance && pixels[i + 2] <= KeyTolerance)
+                pixels[i + 3] = 0;
+        }
+        ImageTexture texture = ImageTexture.CreateFromImage(
+            Image.CreateFromData(source.GetWidth(), source.GetHeight(), false, Image.Format.Rgba8, pixels));
+        _effectTextures[index] = texture;
         return texture;
     }
 

@@ -1303,8 +1303,12 @@ public partial class SelectScene : Control
         _slotAura0 = new DXAnimatedControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            // 同上：+40 帧带不透明纯黑底，必须混合绘制。
-            Blend = true,
+            // +40 特效帧四周带**不透明纯黑**（F1080 实测 13999 个不透明像素里
+            // 6797 个是 alpha=255/RGB<12 的黑），必须用特效颜色键纹理（黑=透明），
+            // 否则那块黑椭圆会把底下的人物整个盖住（实测）。
+            // 注意**不是** Blend：Blend 走的是屏幕混合（out = dst + src*(1-dst)），
+            // 离屏验证会把人物冲成惨白/蓝色。
+            UseEffectTexture = true,
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
             UseOffSet = true,
@@ -1315,7 +1319,7 @@ public partial class SelectScene : Control
         _slotAura1 = new DXAnimatedControl
         {
             LibraryFile = LibraryFile.Interface1c,
-            Blend = true,
+            UseEffectTexture = true,
             FrameCount = 1,
             AnimationDelay = TimeSpan.FromMilliseconds(1),
             UseOffSet = true,
@@ -1844,11 +1848,9 @@ public partial class SelectScene : Control
             {
                 LibraryFile = LibraryFile.Interface1c,
                 UseOffSet = true,
-                // **必须混合绘制**（原版 0x457D25 → 0x457310 → 0x467920 → DrawBlend）：
-                // F1080 有 6797 个**不透明纯黑**像素（alpha=255、RGB<12）围成椭圆，
-                // 叠加时要靠混合透出底下的身体，否则就是一个黑椭圆把人物上半身吞掉
-                // （实测确认）。同理 F1385/F1984。
-                Blend = true,
+                // +40 特效帧用**特效颜色键**纹理（黑=透明）：四周那圈不透明纯黑
+                // （F1080 实测 6797 个 alpha=255/RGB<12 的黑像素）会盖住人物。
+                UseEffectTexture = true,
                 Visible = false,
                 MouseFilter = MouseFilterEnum.Ignore,
             };

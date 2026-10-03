@@ -120,6 +120,7 @@ public static class MirSkin
     private static readonly Dictionary<LibraryFile, LegacyWilLibrary> _legacyWilLibraries = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _textures = new();
     private static readonly Dictionary<(LibraryFile, int), Texture2D> _overlayTextures = new();
+    private static readonly Dictionary<(LibraryFile, int), Texture2D> _effectTextures = new();
 
     private static FontFile _font;
     private static readonly List<Font> _fontFallbacks = new();
@@ -238,6 +239,33 @@ public static class MirSkin
         if (tex == null) return null;
         _overlayTextures[key] = tex;
         return tex;
+    }
+
+    /// <summary>
+    /// 特效颜色键纹理（黑=透明）。元素特效帧（火球/闪电/光球）四周带不透明纯黑，
+    /// 普通 <see cref="GetTexture"/> 会把它当实体盖住底下的人物。
+    /// </summary>
+    public static Texture2D GetEffectTexture(LibraryFile file, int index)
+    {
+        if (index < 0) return null;
+        var key = (file, index);
+        if (_effectTextures.TryGetValue(key, out var cached) && cached != null) return cached;
+
+        if (LegacyUiRequested)
+        {
+            LegacyWilLibrary legacy = GetLegacyWilLibrary(file);
+            if (legacy != null && index < legacy.Count)
+            {
+                Texture2D effectTex = legacy.GetEffectTexture(index);
+                if (effectTex != null) _effectTextures[key] = effectTex;
+                return effectTex;
+            }
+        }
+        var lib = GetLibrary(file);
+        if (lib == null) return null;
+        if (index < lib.Images.Length) return lib.GetEffectTexture(index);
+        LegacyWilLibrary fallback = GetLegacyWilLibrary(file);
+        return fallback != null && index < fallback.Count ? fallback.GetEffectTexture(index) : null;
     }
 
     public static Vector2I GetSize(LibraryFile file, int index)

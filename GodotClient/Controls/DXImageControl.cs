@@ -67,6 +67,14 @@ public partial class DXImageControl : DXControl
     /// <summary>绘制图库的 Overlay 层，而不是普通 Image 层。</summary>
     public bool UseOverlayTexture;
 
+    /// <summary>
+    /// 用**特效颜色键**纹理（黑=透明）而不是普通 Image 纹理。
+    /// 原版的元素特效帧（火球/闪电/光球）四周有一圈纯黑，
+    /// 普通 Image 层会把这圈黑当不透明像素整块盖住底下的人物；
+    /// 特效库走 `ZlLibrary.GetEffectTexture` 的透明键（见 ZlReader 注释）。
+    /// </summary>
+    public bool UseEffectTexture;
+
     /// <summary>true: 绘制时加上图的 OffSetX/OffSetY 偏移（原版默认 false）</summary>
     public bool UseOffSet;
 
@@ -91,7 +99,9 @@ public partial class DXImageControl : DXControl
 
         var tex = UseOverlayTexture
             ? MirSkin.GetOverlayTexture(LibraryFile, idx)
-            : MirSkin.GetTexture(LibraryFile, idx);
+            : UseEffectTexture
+                ? MirSkin.GetEffectTexture(LibraryFile, idx)
+                : MirSkin.GetTexture(LibraryFile, idx);
         if (tex == null) return;
 
         // 旧版 DXImageControl 的 Blend 标记通过

@@ -366,7 +366,7 @@ public static class ClientSettings
         if (DisplayServer.GetName() == "headless") return;
         DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-        int displayScale = (int)Mathf.Max(1f, DisplayServer.ScreenGetScale(0));
+        int displayScale = ResolveLegacyDisplayScale();
         int w = width * displayScale;
         int h = height * displayScale;
         // 只调 DisplayServer.WindowSetSize 的话，X11 窗口会改，但 Godot 的
@@ -378,6 +378,25 @@ public static class ClientSettings
         if (root != null) root.Size = new Vector2I(w, h);
         DisplayServer.WindowSetSize(new Vector2I(w, h));
         GD.Print($"[Display] Legacy window: {width}x{height} logical (x{displayScale} → {w}x{h} px)");
+    }
+
+    /// <summary>
+    /// 原版屏幕区的物理倍率。默认取显示器的缩放（Retina/HiDPI），
+    /// 同时尊重 `ZIRCON_UI_SCALE`（`./login_game.sh 2x`、AGENTS.md 的 4K 缩放测试）：
+    /// 该变量会强制 `UiScaler`/`GameScene.RefreshUiScale` 的倍率，若窗口仍按 1x 开，
+    /// 内容会被放大到 2 倍画进 640×480 窗口然后裁掉 —— 实测登录背景视频
+    /// 640×360 @(0,60) 变成 (0,120)-(1280,840)，只剩左上角可见。
+    /// </summary>
+    private static int ResolveLegacyDisplayScale()
+    {
+        int displayScale = (int)Mathf.Max(1f, DisplayServer.ScreenGetScale(0));
+        string forced = System.Environment.GetEnvironmentVariable("ZIRCON_UI_SCALE");
+        if (!string.IsNullOrWhiteSpace(forced)
+            && float.TryParse(forced, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out float scale)
+            && scale > displayScale)
+            displayScale = (int)scale;
+        return displayScale;
     }
 
     /// <summary>将原版 Graphics 页的窗口选项映射到 Godot 当前窗口。</summary>

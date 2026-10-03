@@ -931,6 +931,15 @@ public partial class SelectScene : Control
         // CreateChr 过场保留在 _uiLayer，随 SelectScene 生命周期即可。
         Node parent = attachToRoot ? (Node)GetTree().Root : _uiLayer;
         parent.AddChild(video);
+        if (attachToRoot)
+        {
+            // 根 Viewport 上的控件**不经过** `_uiLayer` 的 UiScaler Transform，
+            // 而原版过场是 1:1 铺满屏幕区（640×480）。放大倍率（4K/HiDPI、
+            // `ZIRCON_UI_SCALE`）下必须自己套同一套「缩放 + 居中偏移」，
+            // 否则 640×480 视频会只画在放大后窗口的左上角（实测 ZIRCON_UI_SCALE=2、
+            // 窗口 1280×960 时内容 bbox 只有 (0,0)-(639,479)）。
+            ApplyUiScalerTransform(video);
+        }
         video.Play();
         video.Finished += () =>
         {
@@ -938,7 +947,24 @@ public partial class SelectScene : Control
             GD.Print($"[LegacySelect] 过场 {name}.ogv 播放完毕");
             onFinished?.Invoke();
         };
+
         GD.Print($"[LegacySelect] 过场动画 {name}.ogv 开始播放 (attachToRoot={attachToRoot})");
+    }
+
+    /// <summary>
+    /// 给挂在**根 Viewport** 上的控件套上与 <see cref="UiScaler"/> 一致的
+    /// 「缩放 + 居中偏移」变换，使不经过 `_uiLayer` 的控件在放大倍率下
+    /// 仍与原版屏幕区 1:1 对齐（倍率为 1 时退化为 Position=(0,0)、Scale=1）。
+    /// 倍率必须取 <see cref="UiScaler.EffectiveScale"/>（含 `ZIRCON_UI_SCALE` 强制值），
+    /// 不能用只看视口的 `ComputeScale`：1280×960 视口后者给 1.6、强制值是 2，
+    /// 视频会被画成 1024×768 塞进 1280×960 窗口。
+    /// </summary>
+    private void ApplyUiScalerTransform(Control control)
+    {
+        if (control == null || !IsInstanceValid(control)) return;
+        float scale = UiScaler.EffectiveScale(GetViewport());
+        control.Scale = Vector2.One * scale;
+        control.Position = UiScaler.ComputeOffset(GetViewport(), scale);
     }
 
     private void HideCreateCharacterPanel()

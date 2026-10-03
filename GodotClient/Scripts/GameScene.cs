@@ -6127,12 +6127,16 @@ public partial class GameScene : Control
         var dragged = DXItemCell.SelectedCell?.Item;
         if (dragged != null)
         {
-            // 物品图标
+            // 物品图标：拿起时显示物品的**正常背包外观**（legacy 用 Inventory.wil，
+            // 与背包格一致）；地面掉落外观是另一套资源，不要用于跟随图标。
             if (_mouseItemIcon != null)
             {
                 int drawIndex = DXItemCell.GetItemDrawIndex(dragged);
-                _mouseItemIcon.LibraryFile = DXItemCell.ItemIconLibraryFile;
+                _mouseItemIcon.LibraryFile = AutoLoginArgs.LegacyUi
+                    ? LibraryFile.Inventory
+                    : DXItemCell.ItemIconLibraryFile;
                 _mouseItemIcon.Index = drawIndex;
+                _mouseItemIcon.UseOffSet = false;
                 _mouseItemIcon.Visible = true;
             }
             // 物品名称
@@ -6179,9 +6183,20 @@ public partial class GameScene : Control
         if (_mouseItemIcon?.Visible == true || _mouseItemLabel.Visible || _hoverLabel.Visible)
         {
             var p = GetGlobalMousePosition() / UiScale;
-            // 图标在鼠标右下方，文字在图标右侧
+            // legacy：图标按原尺寸居中跟随鼠标（拿着物品的样子）；
+            // 现代：沿用原来的右下角小图标 + 右侧文字。
             if (_mouseItemIcon != null && _mouseItemIcon.Visible)
-                _mouseItemIcon.Position = new Vector2(p.X + 8, p.Y + 8);
+            {
+                if (AutoLoginArgs.LegacyUi)
+                {
+                    var iconSize = MirSkin.GetSize(_mouseItemIcon.LibraryFile, _mouseItemIcon.Index);
+                    _mouseItemIcon.Position = p - new Vector2(iconSize.X / 2f, iconSize.Y / 2f);
+                }
+                else
+                {
+                    _mouseItemIcon.Position = new Vector2(p.X + 8, p.Y + 8);
+                }
+            }
             _mouseItemLabel.Position = new Vector2(p.X + 42, p.Y + 14);
             // item-tooltip-and-store-family-evidence.json：原版 0x4341F0 的浮动框
             // 锚点是 (mouse+10, +10)，**且矩形本身再向左上各扩 5px**

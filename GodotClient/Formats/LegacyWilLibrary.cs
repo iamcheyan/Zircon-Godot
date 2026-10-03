@@ -97,9 +97,11 @@ public sealed class LegacyWilLibrary : IDisposable
         Image source = baseTexture.GetImage();
         byte[] pixels = source.GetData();
         if (pixels == null || pixels.Length < 4) return baseTexture;
-        // RGB565 0x0000 解码成 (0,0,0,255)。原版透明键判据是「近黑」，
-        // 这里用同一阈值：任一通道 <= 12 视为键色。
-        const byte KeyTolerance = 12;
+        // 原版透明键：与 ZL 侧 `ZlReader.EffectTransparentKeyTolerance = 32`
+        // 同一判据（**逐通道** <= 32 即视为键色），保证 EI WIL 与转换 ZL
+        // 两条路径抠掉的是同一批像素。实测 F1385 背景主色 (0,0,8)/(0,4,0)/
+        // (8,8,8) 全部命中，剩下的是真实美术（夜空渐变 (8,12,16) 等）应保留。
+        const byte KeyTolerance = 32;
         for (int i = 0; i + 3 < pixels.Length; i += 4)
         {
             if (pixels[i] <= KeyTolerance && pixels[i + 1] <= KeyTolerance && pixels[i + 2] <= KeyTolerance)

@@ -25,6 +25,10 @@ if [ ! -f "$ROOT/GodotClient/ZirconClient.csproj" ]; then
     exit 1
 fi
 EI_BASE="${MIR3_EI_ROOT:-${HOME}/mir2ei}"
+if [ ! -d "$EI_BASE" ] && [ -d "$HOME/mir2ei" ]; then
+    EI_BASE="$HOME/mir2ei"
+    export MIR3_EI_ROOT="$EI_BASE"
+fi
 EI_ROOT="${ZIRCON_EI_ROOT:-$EI_BASE/LegacyEI}"
 
 export ZIRCON_UI_DATA_PATH="${ZIRCON_UI_DATA_PATH:-$ROOT/Debug/Client/Data}"

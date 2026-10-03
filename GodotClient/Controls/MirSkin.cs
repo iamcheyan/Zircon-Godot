@@ -67,7 +67,7 @@ public static class MirSkin
         }
         string[] candidates =
         {
-            "/home/tetsuya/mir3ei/Data/",
+            "/home/tetsuya/mir2ei/Data/",
             "/home/tetsuya/development/Zircon/Debug/Client/Data/",
             "/home/tetsuya/development/zircon/Debug/Client/Data/",
         };
@@ -98,7 +98,7 @@ public static class MirSkin
             string.IsNullOrWhiteSpace(zirconEiRoot) ? null : Path.Combine(zirconEiRoot, "Data"),
             string.IsNullOrWhiteSpace(mir3EiRoot) ? null : Path.Combine(mir3EiRoot, "LegacyEI", "Data"),
             homeEiData,
-            "/home/tetsuya/mir3ei/LegacyEI/Data/",
+            "/home/tetsuya/mir2ei/LegacyEI/Data/",
             "/home/tetsuya/development/Mir3-Research/LegacyEI/Data/",
         };
         foreach (string candidate in legacyCandidates)

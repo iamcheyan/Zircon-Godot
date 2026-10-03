@@ -58,15 +58,36 @@ if [ ! -f "$ZIRCON_LEGACY_UI_DATA_PATH/$REQUIRED_UI_FILE" ]; then
 fi
 
 # .ogv 过场动画是运行时必需资源（缺失时**不报错**、只是静默不播）。
-# 启动前点名检查并提示，避免登录后才发现动画没了。
+# 启动前检查；缺失则**自动从归档补回**再继续 —— mir2ei 是 Syncthing 同步目录，
+# 归档目录不在同步范围内，是这些文件的稳定来源；同步抖动/对端瘦身后
+# 都可能让本地副本被删，自愈比只提示更可靠（2026-10-03 实际发生过）。
+REQUIRED_VIDEOS="wemade.ogv ei_Login.ogv CreateChr.ogv StartGame.ogv"
 MISSING_VIDEOS=""
-for v in wemade.ogv ei_Login.ogv CreateChr.ogv StartGame.ogv; do
+for v in $REQUIRED_VIDEOS; do
     [ -f "$ZIRCON_LEGACY_UI_DATA_PATH/$v" ] || MISSING_VIDEOS="$MISSING_VIDEOS $v"
 done
 if [ -n "$MISSING_VIDEOS" ]; then
-    echo "⚠ 缺少过场动画：$MISSING_VIDEOS"
-    echo "   这些文件缺失时客户端**不会报错**，只是登录/建角/进游戏动画不播。"
-    echo "   补回：/home/tetsuya/mir2ei/restore_all_archived_assets.sh"
+    RESTORE_SH="/home/tetsuya/mir2ei/restore_all_archived_assets.sh"
+    if [ -x "$RESTORE_SH" ]; then
+        echo "⚠ 缺少过场动画：$MISSING_VIDEOS —— 正在从归档自动补回..."
+        if "$RESTORE_SH" >/dev/null 2>&1; then
+            STILL_MISSING=""
+            for v in $REQUIRED_VIDEOS; do
+                [ -f "$ZIRCON_LEGACY_UI_DATA_PATH/$v" ] || STILL_MISSING="$STILL_MISSING $v"
+            done
+            if [ -z "$STILL_MISSING" ]; then
+                echo "✓ 过场动画已补齐，继续启动。"
+            else
+                echo "✗ 补回后仍缺失：$STILL_MISSING（登录/建角/进游戏动画不会播）" >&2
+            fi
+        else
+            echo "✗ 自动补回失败，请手动执行：$RESTORE_SH" >&2
+        fi
+    else
+        echo "⚠ 缺少过场动画：$MISSING_VIDEOS"
+        echo "   这些文件缺失时客户端**不会报错**，只是登录/建角/进游戏动画不播。"
+        echo "   补回：$RESTORE_SH"
+    fi
 fi
 for arg in "$@"; do
     if [[ "$arg" =~ ^([1-9][0-9]*)x$ ]]; then

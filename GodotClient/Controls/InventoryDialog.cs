@@ -46,6 +46,7 @@ public partial class InventoryDialog : DXWindow
     private DXControl _legacyScrollClip;
     private DXVScrollBar _legacyScrollBar;
     private LegacyGaugeDragSurface _legacyGaugeDrag;
+
     private readonly List<CellLinkInfo> _pendingSellLinks = new();
     private bool _legacyEiLayout;
 
@@ -251,10 +252,11 @@ public partial class InventoryDialog : DXWindow
         // 锁链 GameInter F280（16x424，贴图里 y≈208 烤了一颗圆点=滑块）：
         // 原版把锁链**裁到窗口内固定一段**，靠整体滑动让圆点落在滚动位置。
         // 这里用一个裁剪容器把锁链限制在窗口可见区，避免它伸到窗口上方。
+        // F250 实测：右侧锁链槽在窗口 y≈6..323（几乎整窗高），不是只到网格底部。
         _legacyScrollClip ??= new DXControl
         {
-            Location = new Vector2I(248, 0),
-            Size = new Vector2I(16, 260),
+            Location = new Vector2I(248, 6),
+            Size = new Vector2I(16, 318),
             Clip = true,
             IsControl = false,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -299,14 +301,23 @@ public partial class InventoryDialog : DXWindow
         // （窗口内 y≈0..259）可见；DXVScrollBar 的 PositionBar 落在 y≈-149
         // 的窗口外，点/拖都够不到。补一块只覆盖可见段的透明命中面，
         // 拖拽/点击把 Y 比例映射回滚动值，滚轮同样转发给同一条滚动条。
+        // 交互命中面只到关闭钮上沿（关闭钮 y=288）：链槽 x248-264 与关闭钮 x249-277
+        // 在底部重叠，命中面若覆盖上去就会挡住关闭钮。视觉锁链仍由裁到 y=318 的
+        // Ignore 容器绘制，只是底部那一小段不可拖。
         _legacyGaugeDrag ??= new LegacyGaugeDragSurface
         {
-            Location = new Vector2I(248, 0),
-            Size = new Vector2I(16, 260),
+            Location = new Vector2I(248, 6),
+            Size = new Vector2I(16, 282),
             MouseFilter = MouseFilterEnum.Stop,
         };
         _legacyGaugeDrag.Target = _legacyScrollBar;
         if (_legacyGaugeDrag.GetParent() == null) AddControl(_legacyGaugeDrag);
+
+        // 全窗滚轮兜底：格子/锁链各自转发滚轮；其余区域（顶部负重栏、底部区）
+        // 的滚轮不会被其它子控件消费，会冒泡到窗口本身。这里在窗口上统一转发，
+        // 像普通窗口一样到处都能滚，且不新增控件、不影响按钮命中。
+        MouseWheel -= OnLegacyWindowWheel;
+        MouseWheel += OnLegacyWindowWheel;
 
         _titleLabel.Visible = false;
         _legacyModeLabel ??= new DXLabel
@@ -331,6 +342,8 @@ public partial class InventoryDialog : DXWindow
         // 原位置 (38,282) 会大幅压上去。
         _legacyModeLabel.Location = new Vector2I(6, 282);
         _legacyModeLabel.Size = new Vector2I(56, 18);
+        // 用户要求：去掉底部「[包袱]」两个字（原版 mode-0 会画，但这里不要）。
+        _legacyModeLabel.Visible = false;
 
         // 证据里的第三个子控件：位置 (176,286)、尺寸 64x20、**随模式换帧** ——
         // 服务器模式分支给它换的是 263/264/265（수리 修理）、270/271/272
@@ -511,6 +524,12 @@ public partial class InventoryDialog : DXWindow
             cell.MouseWheel -= _legacyScrollBar.DoMouseWheel;
             cell.MouseWheel += _legacyScrollBar.DoMouseWheel;
         }
+    }
+
+    /// <summary>窗口级滚轮兜底：未被格子/锁链消费的滚轮也驱动同一条滚动值。</summary>
+    private void OnLegacyWindowWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_legacyEiLayout) _legacyScrollBar?.DoMouseWheel(sender, e);
     }
 
     private void LegacyScrollChanged(object sender, EventArgs e)

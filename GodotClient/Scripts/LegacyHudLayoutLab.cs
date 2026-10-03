@@ -866,7 +866,7 @@ public partial class LegacyHudLayoutLab : Control
             // 关闭钮中心点在**窗口坐标**中的位置
             Vector2I centre = button.Location + new Vector2I((int)button.Size.X / 2, (int)button.Size.Y / 2);
             if (!IsTopmostAt(entry.Window, centre, button))
-                blocked.Add($"{entry.Name}@{centre}->{LastHit}");
+                blocked.Add($"{entry.Name}@{centre}->{LastHit} order={DumpOrder(entry.Window)}");
             WindowManager.Close(entry.Window);
         }
         details = $"checked={checkedNames.Count} blocked=[{string.Join(",", blocked)}] ";

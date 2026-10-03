@@ -144,8 +144,9 @@ public partial class SelectScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
-        // EI 选角屏（mode 0 / mode 2）屏幕区 640×480；进游戏后由 GameScene 改回 800×600。
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(640, 480);
+        // 窗口尺寸**不在这里改**（原版选角屏 mode 2 = 640×480、进游戏 mode 3 = 800×600，
+        // 但那样窗口会随阶段跳变）。legacy 窗口由 BootWindow 启动时定一次，
+        // 之后只由用户拖动决定；内容按窗口等比适配。
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -171,12 +172,13 @@ public partial class SelectScene : Control
         _uiLayer = new CanvasLayer { Name = "UiScaleLayer" };
         AddChild(_uiLayer);
         BuildLegacySelectUi();
-        UiScaler.UpdateScale(_uiLayer, GetViewport());
+        ApplySelectScale();
         // 调试审计：ZIRCON_UI_AUDIT=1 时列出所有超出逻辑画布的控件
         if (System.Environment.GetEnvironmentVariable("ZIRCON_UI_AUDIT") == "1")
             UiScaler.AuditOverflow(_uiLayer, "SelectScene");
-        // 窗口大小变化后视口才更新，用 Viewport.SizeChanged 确保缩放跟随。
-        GetViewport().SizeChanged += () => UiScaler.UpdateScale(_uiLayer, GetViewport());
+        // 窗口大小变化后视口才更新，用 Viewport.SizeChanged 确保缩放跟随；
+        // 用户拖动窗口时这也正是「内容等比缩放填满」的驱动点。
+        GetViewport().SizeChanged += ApplySelectScale;
 
         // 填充职业/性别选项
         _classBtn.AddItem("战士", (int)MirClass.Warrior);
@@ -952,19 +954,28 @@ public partial class SelectScene : Control
     }
 
     /// <summary>
-    /// 给挂在**根 Viewport** 上的控件套上与 <see cref="UiScaler"/> 一致的
-    /// 「缩放 + 居中偏移」变换，使不经过 `_uiLayer` 的控件在放大倍率下
-    /// 仍与原版屏幕区 1:1 对齐（倍率为 1 时退化为 Position=(0,0)、Scale=1）。
-    /// 倍率必须取 <see cref="UiScaler.EffectiveScale"/>（含 `ZIRCON_UI_SCALE` 强制值），
-    /// 不能用只看视口的 `ComputeScale`：1280×960 视口后者给 1.6、强制值是 2，
-    /// 视频会被画成 1024×768 塞进 1280×960 窗口。
+    /// 选角屏内容的缩放。legacy 用**预游戏**变换（原版 640×480 屏幕区等比 fit 到窗口，
+    /// 宽 ≥4:3 时高度填满、两侧留黑，不钳制倍率）；现代（`--zircon-ui`）仍走
+    /// 800×600 基准 + [1,2] 钳制。
+    /// </summary>
+    private void ApplySelectScale()
+    {
+        if (_uiLayer == null || !IsInstanceValid(_uiLayer)) return;
+        if (AutoLoginArgs.LegacyUi)
+            _uiLayer.Transform = UiScaler.PregameTransform(GetViewport());
+        else
+            UiScaler.UpdateScale(_uiLayer, GetViewport());
+    }
+
+    /// <summary>
+    /// 给挂在**根 Viewport** 上的控件（StartGame 过场视频）套上与 `_uiLayer` 相同的
+    /// 预游戏变换 —— 它不经过缩放层，必须自己套，否则玩家把窗口拖大后
+    /// 640×480 视频只会画在窗口左上角（实测 ZIRCON_UI_SCALE=2、窗口 1280×960 时
+    /// 内容 bbox 只有 (0,0)-(639,479)）。
     /// </summary>
     private void ApplyUiScalerTransform(Control control)
     {
-        if (control == null || !IsInstanceValid(control)) return;
-        float scale = UiScaler.EffectiveScale(GetViewport());
-        control.Scale = Vector2.One * scale;
-        control.Position = UiScaler.ComputeOffset(GetViewport(), scale);
+        UiScaler.ApplyPregameTransform(control, GetViewport());
     }
 
     private void HideCreateCharacterPanel()
@@ -2107,13 +2118,11 @@ public partial class SelectScene : Control
     /// <summary>
     /// StartGame 过场（640×480）播完 → 原版此刻才 `0x4570A0` enter-game，
     /// 屏幕区从 mode 2 的 640×480 切到 mode 3 的 800×600。
-    /// 公告框（GameInter F0）按 800×600 逻辑画布居中，所以窗口切换必须发生在
-    /// `ShowLegacyStartNotice()`（内部会 `UiScaler.UpdateScale`）之前。
+    /// **但窗口尺寸不再跟着切**（按设计要求窗口只由用户决定）；公告框那一层仍按
+    /// 800×600 逻辑画布居中（`UiScaler.UpdateScale`，与 `GameScene` 同一套基准）。
     /// </summary>
     private void OnLegacyStartGameCutsceneFinished()
     {
-        // 0x419377 → 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)：mode 3 屏幕区。
-        ClientSettings.ApplyLegacyPregameWindow(800, 600);
         ShowLegacyStartNotice();
     }
 

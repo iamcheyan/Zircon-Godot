@@ -52,8 +52,9 @@ public partial class LoginScene : Control
     {
         ClientSettings.Load();
         ClientSettings.ApplyDisplaySettings();
-        // EI 登录屏（mode 0）屏幕区是 640×480，不是 800×600。
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(640, 480);
+        // 窗口尺寸**不在这里改**：legacy 会话的窗口由 BootWindow 启动时定一次，
+        // 之后只由用户拖动决定（原版按 mode 切 640×480 / 800×600，那会让窗口跳变）。
+        // 预游戏内容改成按窗口等比适配，见 UiScaler.PregameTransform。
         // Legacy 会话清屏色 = 原版黑。Godot 默认 default_clear_color 是 0.3 灰
         // （RGB 76,76,76），EI 原版屏幕表面是纯黑：SCREEN0001.jpg 解码后
         // y=0..59 / y=421..479 采样均值 0.28/255。不清成黑，视频矩形以外的
@@ -93,19 +94,19 @@ public partial class LoginScene : Control
 
         _loginBtn.Pressed += OnLoginPressed;
         _registerBtn.Pressed += OnRegisterPressed;
-        // 2 倍 UI 缩放：DX 旧版 UI 按 1024x768 逻辑坐标布局，直接挂到
-        // CanvasLayer 缩放层（与 GameScene 的 _uiLayer 一致），窗口放大时
-        // 跟随缩放。不用 Control 中转——Control 的 anchors 会干扰 Transform。
+        // UI 缩放层（与 GameScene 的 _uiLayer 一致）。不用 Control 中转——
+        // Control 的 anchors 会干扰 Transform。
         _uiLayer = new CanvasLayer { Name = "UiScaleLayer" };
         AddChild(_uiLayer);
         BuildLegacyLoginUi();
-        UiScaler.UpdateScale(_uiLayer, GetViewport());
+        ApplyLoginScale();
         // 调试审计：ZIRCON_UI_AUDIT=1 时列出所有超出逻辑画布的控件
         if (System.Environment.GetEnvironmentVariable("ZIRCON_UI_AUDIT") == "1")
             UiScaler.AuditOverflow(_uiLayer, "LoginScene");
         // 窗口大小变化后视口才更新，Resized（Control）可能错过时序，
         // 用 Viewport.SizeChanged 确保窗口变化时重新应用缩放。
-        GetViewport().SizeChanged += () => UiScaler.UpdateScale(_uiLayer, GetViewport());
+        // 用户拖动窗口时这也正是「内容跟着窗口等比缩放」的驱动点。
+        GetViewport().SizeChanged += ApplyLoginScale;
 
         // 连接服务端
         _net.Log += OnNetLog;
@@ -456,6 +457,20 @@ public partial class LoginScene : Control
         var dialog = new LegacyLoginDialog(Lang.LoginUi446Label, new Vector2I(330, 150), new[] { Lang.LoginEmailLabel });
         dialog.Submitted += values => { if (!string.IsNullOrWhiteSpace(values[0])) _net.Connection?.SendRequestActivationKey(values[0]); };
         return dialog;
+    }
+
+    /// <summary>
+    /// 登录屏内容的缩放。legacy 用**预游戏**变换：以原版 640×480 屏幕区等比 fit 到窗口
+    /// （宽 ≥4:3 时高度填满、两侧留黑，不钳制倍率），所以玩家把窗口拖大画面就等比放大填满。
+    /// 现代（`--zircon-ui`）仍走原来的 800×600 基准 + [1,2] 钳制。
+    /// </summary>
+    private void ApplyLoginScale()
+    {
+        if (_uiLayer == null || !IsInstanceValid(_uiLayer)) return;
+        if (AutoLoginArgs.LegacyUi)
+            _uiLayer.Transform = UiScaler.PregameTransform(GetViewport());
+        else
+            UiScaler.UpdateScale(_uiLayer, GetViewport());
     }
 
     private void BuildLegacyLoginUi()

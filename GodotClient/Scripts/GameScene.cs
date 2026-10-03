@@ -607,7 +607,7 @@ public partial class GameScene : Control
     {
         if (_inventoryDialog == null) return;
         _inventoryDialog.SellMode(currency, sellableTypes);
-        _inventoryDialog.Visible = true;
+        WindowManager.Open(_inventoryDialog, _uiLayer);
     }
 
     public void EndInventoryNpcSale() => _inventoryDialog?.NormalMode();
@@ -815,7 +815,6 @@ public partial class GameScene : Control
 
     private InventoryDialog _inventoryDialog;
     private CharacterDialog _characterDialog;
-    private CharacterDialog _statusPreviewDialog;
     private EditCharacterDialog _editCharacterDialog;
     private StorageDialog _storageDialog;
     private BeltDialog _beltDialog;
@@ -1068,11 +1067,10 @@ public partial class GameScene : Control
         // 完成、每个窗口 _Ready（deferred）和 F12 热重载时应用。
         UiOverlay.Load();
         ClientSettings.ApplyDisplaySettings();
-        // legacy 会话进游戏后是 **mode 3 = 800×600**（0x419377 →
-        // 0x45D270(&0x8AB7A8, 0x320, 0x258, 0x10)），且 ApplyDisplaySettings
-        // 会把窗口重置为存档 GameSize（1014x658pt 等），导致 800x600 legacy
-        // HUD 布局被拉伸。登录/选角屏是 640×480，到这里必须切回 800×600。
-        if (AutoLoginArgs.LegacyUi) ClientSettings.ApplyLegacyPregameWindow(800, 600);
+        // legacy 会话进游戏后原版会把屏幕区切到 **mode 3 = 800×600**（0x419377 →
+        // 0x45D270(&0x8AB7A8, 0x320, 0x258, 0x10)）。**这里不再改窗口尺寸**：
+        // 按设计要求窗口只由用户拖动决定（启动时 BootWindow 定一次，尺寸记在
+        // ClientSettings.LegacyWindowSize），HUD 按窗口用 RefreshUiScale 等比放大。
         ClientSettings.UpdateWindowTitle();
         ClientSettings.BindWindowTitle(GetViewport());
         ClientSettings.ApplyAudioSettings();
@@ -4608,13 +4606,6 @@ public partial class GameScene : Control
         _characterDialog = new CharacterDialog();
         _characterDialog.Location = Vector2I.Zero;
         _uiLayer.AddChild(_characterDialog);
-        // id7 第二状态窗（证据 window_identities_final.id7：ctor 0x4503B0、
-        // F200、(560,0)、244x328、「状态窗-角色形象预览」）。11 个装备槽矩形
-        // 与 id1 完全一致（setrect_calls.json 逐条解出），所以直接复用
-        // CharacterDialog 的 legacy 布局。legacy_ui.json 把它误名为 GroupPopup。
-        _statusPreviewDialog = new CharacterDialog();
-        _statusPreviewDialog.Location = Vector2I.Zero;
-        _uiLayer.AddChild(_statusPreviewDialog);
         _editCharacterDialog = new EditCharacterDialog();
         _uiLayer.AddChild(_editCharacterDialog);
 
@@ -4826,16 +4817,17 @@ public partial class GameScene : Control
         };
         _mainPanel.CashShopButton.MouseClick += (o, e) =>
         {
-            // EI cap15 是状态栏：toggle id1 **并**开 id7 第二状态窗
+            // EI cap15 是状态栏：原版 toggle id1 **并**另开 id7 第二状态窗
             // （hud-caption-action-tail-evidence.json：cap15 = toggle id1 +
             // 0x423E80(+0x29CE4, 0xC8, [0x29CFC], [0x29D00], 0xF4, 0x148)
-            // 开 244x328 面板）。它只是复用了现代客户端的商店按钮控件/帧位。
+            // 开 244x328 面板）。id7 的 11 个槽位矩形与 F200 美术和 id1 完全
+            // 一致（setrect_calls.json id7 ctor 0x4503B0），本移植的 id1 已用
+            // F200/F201 两态承载装备+属性，再建第二个实例只会得到一份没接
+            // Equipment 数据源的重复窗（实测：HUD 状态栏与 W 键开出两个窗口，
+            // 其中一个装备格空白）。故 cap15 与 W/Q/主面板按钮统一走
+            // ToggleCharacterWindow 这一个入口。
             if (AutoLoginArgs.LegacyHud)
-            {
                 ToggleCharacterWindow();
-                if (_statusPreviewDialog != null)
-                    WindowManager.Toggle(_statusPreviewDialog, _uiLayer);
-            }
             else
                 OpenGameStoreDialog();
         };
@@ -4910,8 +4902,6 @@ public partial class GameScene : Control
         // 控件树；默认正式布局暂不隐藏尚未完成旧版数据绑定的现代内容。
         LegacyUiSkin.ApplyLegacyTestWindow(_inventoryDialog, _inventoryDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_characterDialog, _characterDialog.Location);
-        if (_statusPreviewDialog != null)
-            LegacyUiSkin.ApplyLegacyTestWindow(_statusPreviewDialog, _statusPreviewDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_magicDialog, _magicDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_groupDialog, _groupDialog.Location);
         LegacyUiSkin.ApplyLegacyTestWindow(_questDialog, _questDialog.Location);
@@ -5441,7 +5431,6 @@ public partial class GameScene : Control
 
         Place(_inventoryDialog, 518, 0);   // window.inventory  (GameInter 250, 284x324)
         Place(_characterDialog, 0, 0);     // window.status     (GameInter 200, 244x328)
-        Place(_statusPreviewDialog, 560, 0); // window_identities_final.id7 第二状态窗
         Place(_magicDialog, 348, 0);       // window.skill-book (GameInter 400, 452x380)
         // 位置依据 window-paint-and-hotkey-dispatch-evidence.json 的
         // cell_analysis.window_identities_final.id14（frame 400, x=348, y=0,
@@ -5470,7 +5459,6 @@ public partial class GameScene : Control
         static string Fmt(DXWindow w) =>
             w == null || !IsInstanceValid(w) ? "-" : $"{w.GetType().Name}@{w.Location}";
         GD.Print($"[LegacyWindowLoc] inv={Fmt(_inventoryDialog)} cha={Fmt(_characterDialog)} "
-            + $"cha2={Fmt(_statusPreviewDialog)} "
             + $"mag={Fmt(_magicDialog)} qst={Fmt(_questDialog)} grp={Fmt(_groupDialog)} "
             + $"cfg={Fmt(_configDialog)} hor={Fmt(_horseDialog)} npc={Fmt(_npcDialog)} "
             + $"gld={Fmt(_guildDialog)} trd={Fmt(_tradeDialog)} sto={Fmt(_storageDialog)} "

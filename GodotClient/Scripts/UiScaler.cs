@@ -22,23 +22,73 @@ namespace ZirconClient.Scripts;
 public static class UiScaler
 {
     // **EI 各 mode 的屏幕区尺寸不同**（证据：login-flow-evidence.json mode 写入者）
-    //   - mode 0 / mode 2（登录、选角、建角、F602 前的 phase 0-4）= **640×480**
+    //   - mode 0 / mode 2（登录、选角、建角、CreateChr/StartGame 过场）= **640×480**
     //     0x419BF9 → 0x45D270(&0x8AB7A8, 0x280=640, 0x1E0=480, 0x10, 1|2)
     //     运行期反证：SCREEN0001.jpg（登录屏）按 640×480 反解完全吻合——视频矩形
     //     (0,60)-(640,420) 铺满整宽；按 800×600 反解则视频只占左侧 80%，与图不符。
     //   - mode 3（进游戏后）= **800×600**：0x419377 → 0x45D270(..., 0x320, 0x258, 0x10)。
     //
-    // **BaseWidth/BaseHeight 仍取 800/600**，不是因为原版预游戏屏是 800×600：
-    // ComputeScale 被钳在 [1,2]、offset 被钳在 ≥0，于是 640×480 与 800×600
-    // 两个视口算出来都是 scale=1、offset=(0,0) —— 恒等变换，逻辑坐标即屏幕坐标。
-    // 保持 800×600 基准的好处是进游戏后无需改基准；代价是**预游戏阶段超出
-    // 640×480 的元素会被窗口直接裁掉**——这正是我们要的保真行为（原版也是裁掉）。
+    // 原版是**按 mode 改窗口大小**的。本客户端改成「窗口只由用户决定」：窗口尺寸启动后
+    // 不再变化，内容按窗口适配。于是这里有两套变换：
+    //   - **预游戏**（登录/选角/过场）：<see cref="PregameTransform"/> —— 以 640×480 画布
+    //     等比 **fit** 到窗口（宽 ≥4:3 时高度填满、两侧留黑），**不做 [1,2] 钳制**，
+    //     玩家把窗口拖大画面就等比放大填满。
+    //   - **进游戏 / 公告框**：沿用 <see cref="ComputeScale"/><see cref="ComputeOffset"/>
+    //     （800×600 基准、钳在 [1,2]、居中），与 `GameScene.RefreshUiScale` 一致。
+    //
+    // BaseWidth/BaseHeight 是**进游戏/公告框**那一套的基准；预游戏用下面的
+    // PregameWidth/PregameHeight，别混用。
     // **不要顺手改**：F50 背景仍画 (0,0) 且尺寸 640x480 不拉伸；角色模型中心仍是
     // 640x480 那张图自身的中心 (320,240)，不是本画布中心。
-    // **引用面**：本类只被 LoginScene 与 SelectScene 使用（已 grep 查证），
-    // 现代 UI 不引用，故基准只影响这两个 legacy 场景。
     public const float BaseHeight = 600f;
     public const float BaseWidth = 800f;
+
+    /// <summary>原版**预游戏**屏幕区（mode 0/2）：登录 / 服务器列表 / 选角 / 建角 / 过场。</summary>
+    public const float PregameWidth = 640f;
+    public const float PregameHeight = 480f;
+
+    /// <summary>
+    /// 预游戏内容的等比倍率：`min(h/480, w/640)` —— 窗口宽高比 ≥ 4:3 时**高度填满**、
+    /// 宽度居中两侧留黑；窗口更"窄高"时以宽度为准，保证内容永远完整可见（不裁切）。
+    /// **不钳制**：窗口拖大就等比放大，拖小就等比缩小。
+    /// </summary>
+    public static float PregameScale(Viewport viewport)
+    {
+        Vector2 size = ViewportSize(viewport);
+        if (size.X <= 0 || size.Y <= 0) return 1f;
+        return Mathf.Min(size.Y / PregameHeight, size.X / PregameWidth);
+    }
+
+    /// <summary>
+    /// 预游戏（640×480 画布）的「等比缩放 + 居中」变换。
+    /// 直接赋给 CanvasLayer.Transform，或把 Scale/Position 套到根 Viewport 上的 Control
+    /// （例如 StartGame 过场视频，它挂在根上、不经过 `_uiLayer`）。
+    /// </summary>
+    public static Transform2D PregameTransform(Viewport viewport)
+    {
+        float scale = PregameScale(viewport);
+        Vector2 size = ViewportSize(viewport);
+        Vector2 offset = new(
+            Mathf.Max((size.X - PregameWidth * scale) / 2f, 0f),
+            Mathf.Max((size.Y - PregameHeight * scale) / 2f, 0f));
+        return new Transform2D(scale, 0f, 0f, scale, offset.X, offset.Y);
+    }
+
+    /// <summary>把预游戏变换套到挂在根 Viewport 上的控件上。</summary>
+    public static void ApplyPregameTransform(Control control, Viewport viewport)
+    {
+        if (control == null || !GodotObject.IsInstanceValid(control)) return;
+        Transform2D transform = PregameTransform(viewport);
+        control.Scale = transform.Scale;
+        control.Position = transform.Origin;
+    }
+
+    private static Vector2 ViewportSize(Viewport viewport)
+    {
+        Vector2 size = viewport?.GetVisibleRect().Size ?? Vector2.Zero;
+        if (size.X <= 0 || size.Y <= 0) size = DisplayServer.WindowGetSize();
+        return size;
+    }
 
     /// <summary>按视口大小计算 UI 缩放倍率（1..2，与 GameScene.RefreshUiScale 一致）。</summary>
     public static float ComputeScale(Viewport viewport)

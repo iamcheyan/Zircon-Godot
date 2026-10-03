@@ -46,6 +46,13 @@ public static class ClientSettings
     public static bool VSync { get; set; }
     public static bool LimitFPS { get; set; }
     public static Vector2I GameSize { get; set; } = new(1280, 1024);
+    /// <summary>
+    /// Legacy（EI）会话的窗口物理像素尺寸；`(-1,-1)` = 用户还没拖过，用默认值。
+    /// EI 原版的屏幕区是分 mode 固定的（预游戏 640×480 / 进游戏 800×600），
+    /// 但那意味着**游戏会自己改窗口大小**。这里改成「窗口只由用户决定」：
+    /// 尺寸记在本项里，进游戏前后都不再自动改窗口，画面内容按窗口等比适配。
+    /// </summary>
+    public static Vector2I LegacyWindowSize { get; set; } = new(-1, -1);
     public static int DefaultMonitor { get; set; }
     public static string RenderingPipeline { get; set; } = "Forward Plus";
     // 原版移动是按走/跑帧时长连续回拉的；默认关闭会退化成按帧阶梯位移，
@@ -204,6 +211,10 @@ public static class ClientSettings
         VSync = Read(file, "Graphics", nameof(VSync), VSync);
         LimitFPS = Read(file, "Graphics", nameof(LimitFPS), LimitFPS);
         GameSize = ReadVector2I(file, "Graphics", nameof(GameSize), GameSize);
+        // 不能用 ReadVector2I：它把值钳到 ≥320×240（那是给 GameSize 用的），
+        // 会把「未设置」哨兵 (-1,-1) 变成真实的 320×240 窗口（实测启动日志打出
+        // `Legacy window: 320x240 px`，窗口被缩成一个巴掌大）。
+        LegacyWindowSize = ReadPoint(file, "Graphics", nameof(LegacyWindowSize), LegacyWindowSize);
         DefaultMonitor = 0;
         DefaultMonitor = Read(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         RenderingPipeline = Read(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
@@ -273,6 +284,7 @@ public static class ClientSettings
         Write(file, "Graphics", nameof(VSync), VSync);
         Write(file, "Graphics", nameof(LimitFPS), LimitFPS);
         Write(file, "Graphics", nameof(GameSize), GameSize);
+        Write(file, "Graphics", nameof(LegacyWindowSize), LegacyWindowSize);
         Write(file, "Graphics", nameof(DefaultMonitor), DefaultMonitor);
         Write(file, "Graphics", nameof(RenderingPipeline), RenderingPipeline);
         Write(file, "Graphics", nameof(SmoothMove), SmoothMove);
@@ -348,36 +360,68 @@ public static class ClientSettings
     }
 
     /// <summary>
-    /// Legacy 会话窗口固定"逻辑尺寸"，与原版 EI 各 mode 的屏幕区一致：
-    /// 登录 / 选角（mode 0、mode 2）= <b>640×480</b>，进游戏（mode 3）= <b>800×600</b>。
-    /// 证据：login-flow-evidence.json mode=2 写入者 0x419BF9 调
-    /// <c>0x45D270(0x8AB7A8, 0x280=640, 0x1E0=480, 0x10, 1|2)</c>；mode=3 走
-    /// 0x419377 的 <c>0x45D270(..., 0x320=800, 0x258=600, 0x10)</c>；
-    /// 运行期截图 SCREEN0001.jpg（登录屏）反解出的像素标定是 640×480
-    /// （视频矩形 (0,60)-(640,420) 恰好铺满整宽），800×600 假设与该图不符。
+    /// 默认 legacy 窗口尺寸（物理像素）= 原版**进游戏**屏幕区 800×600
+    /// （`0x419377 → 0x45D270(&0x8AB7A8, 0x320=800, 0x258=600, 0x10)`）
+    /// 乘以显示器缩放（Retina/HiDPI；`ZIRCON_UI_SCALE` 也算）。
     ///
-    /// Godot 在 macOS/Windows 上以物理像素为 WindowSetSize 单位，因此需乘以显示
-    /// 缩放因子（Retina 2x → 物理 1280×960 = 640×480 点；1x → 640×480），
-    /// 使窗口在屏幕上始终呈现"正常"观感，并跟随用户显示比例放大。
-    /// 视口随之放大后 UiScaler 自动计算对应倍率。
+    /// 为什么默认取进游戏的 800×600 而不是预游戏的 640×480：**窗口尺寸现在只由用户决定**
+    /// （见 <see cref="ApplyLegacyWindow"/>），启动后不再随 mode 变化，所以要取两档里较大的
+    /// 那个 —— 进游戏的 HUD 是 800×600 逻辑画布且 `RefreshUiScale` 下限为 1，
+    /// 窗口小于 800×600 会把 HUD 裁掉。预游戏内容 640×480 会等比放大 1.25 倍填满窗口
+    /// （原版是 640×480 窗口 + 两侧留黑，这里按用户要求改成等比填满）。
     /// </summary>
-    public static void ApplyLegacyPregameWindow(int width = 800, int height = 600)
+    public static Vector2I DefaultLegacyWindowSize()
+        => new Vector2I(800, 600) * ResolveLegacyDisplayScale();
+
+    /// <summary>
+    /// 用户记住的 legacy 窗口尺寸；没记过或不合法时回落到
+    /// <see cref="DefaultLegacyWindowSize"/>。会按显示器可用区域限幅，
+    /// 防止换显示器后窗口落在屏幕外。
+    /// </summary>
+    public static Vector2I ResolveLegacyWindowSize()
+    {
+        Vector2I size = LegacyWindowSize;
+        if (size.X < 320 || size.Y < 240) return DefaultLegacyWindowSize();
+        if (DisplayServer.GetName() != "headless")
+        {
+            Vector2I screen = DisplayServer.ScreenGetSize(DefaultMonitor);
+            if (screen.X > 0 && screen.Y > 0)
+                size = new Vector2I(Mathf.Min(size.X, screen.X), Mathf.Min(size.Y, screen.Y));
+        }
+        return size;
+    }
+
+    /// <summary>
+    /// **只在启动时调一次**：把 legacy 窗口设成 <paramref name="size"/> 并允许用户拖动缩放的窗口样式。
+    /// 之后游戏**不再**改窗口尺寸 —— 原版是按 mode 用 `0x45D270` 切 640×480 / 800×600 的，
+    /// 那会让窗口在启动/进游戏时跳变；按用户要求改成窗口只由用户决定，内容等比适配。
+    /// </summary>
+    public static void ApplyLegacyWindow(Vector2I size)
     {
         if (DisplayServer.GetName() == "headless") return;
         DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-        int displayScale = ResolveLegacyDisplayScale();
-        int w = width * displayScale;
-        int h = height * displayScale;
         // 只调 DisplayServer.WindowSetSize 的话，X11 窗口会改，但 Godot 的
         // Window 节点与根视口可能停在旧尺寸：实测选角屏 StartGame 成功后
         // ds=(800,600) 而 win=(640,480)、vp=(640,480)，结果内容只画在左上
         // 640×480、右侧与下方整片黑（F602 公告窗右半被切掉）。
         // Window.Size 走 Godot 自己的入口，节点尺寸、视口尺寸、OS 窗口一起更新。
         var root = (Engine.GetMainLoop() as SceneTree)?.Root;
-        if (root != null) root.Size = new Vector2I(w, h);
-        DisplayServer.WindowSetSize(new Vector2I(w, h));
-        GD.Print($"[Display] Legacy window: {width}x{height} logical (x{displayScale} → {w}x{h} px)");
+        if (root != null) root.Size = size;
+        DisplayServer.WindowSetSize(size);
+        GD.Print($"[Display] Legacy window: {size.X}x{size.Y} px（用户尺寸，游戏不再改动）");
+    }
+
+    /// <summary>
+    /// 记住用户拖动后的窗口尺寸。由 `BootWindow` 在窗口尺寸稳定后调用（带去抖），
+    /// 写盘前与当前值比对，避免每次拖动都写配置文件。
+    /// </summary>
+    public static void RememberLegacyWindowSize(Vector2I size)
+    {
+        if (size.X < 320 || size.Y < 240) return;
+        if (LegacyWindowSize == size) return;
+        LegacyWindowSize = size;
+        Save();
     }
 
     /// <summary>
@@ -431,24 +475,20 @@ public static class ClientSettings
             DisplayServer.WindowSetCurrentScreen(DefaultMonitor);
 
         // **只在模式真的需要变时才调 WindowSetMode**：Godot 的 WindowSetMode(Windowed)
-        // 会把窗口恢复成「进入该模式时记录的尺寸」（这里是 project.godot 的 1024×768），
-        // 于是 legacy 下每次 ApplyDisplaySettings 都会把刚设好的 640×480 弹回 1024×768，
-        // 下一拍的 ApplyLegacyPregameWindow 再缩回去 —— 实测 [UiScaler] 出现
-        // 640×480 → 1024×768 → 640×480 的 2ms 抖动，中间那一帧 UI 会按错误倍率绘制。
+        // 会把窗口恢复成「进入该模式时记录的尺寸」（project.godot 的 1024×768），
+        // 于是 legacy 下每次 ApplyDisplaySettings 都会把刚设好的窗口尺寸弹回去，
+        // 实测 [UiScaler] 出现 640×480 → 1024×768 → 640×480 的 2ms 抖动，
+        // 中间那一帧 UI 会按错误倍率绘制。
         var desiredWindowMode = FullScreen ? DisplayServer.WindowMode.Fullscreen : DisplayServer.WindowMode.Windowed;
         if (DisplayServer.WindowGetMode() != desiredWindowMode)
             DisplayServer.WindowSetMode(desiredWindowMode);
         if (!FullScreen)
         {
-            // **Legacy 模式下窗口尺寸由场景自己决定**，这里不能抢先改：
-            // 原版屏幕区是分 mode 的 —— mode 0/2（登录/选角/建角/过场）= 640×480
-            // （`0x419BF9 → 0x45D270(&0x8AB7A8, 0x280, 0x1E0, 0x10, 1|2)`），
-            // mode 3（进游戏）= 800×600（`0x419377 → 0x45D270(..., 0x320, 0x258, 0x10)`），
-            // 两者分别由 LoginScene/SelectScene/GameScene 的
-            // ApplyLegacyPregameWindow(640,480|800,600) 设定。若这里先按 GameSize
-            // （≥1024×768，`--window` 时甚至是屏幕的 75%）设一次，启动瞬间会出现
-            // 1024×768 → 1440×900 → 640×480 的连续跳变（实测 [UiScaler] 连打三行），
-            // 窗口与视频在那一帧都会以错误尺寸绘制。
+            // **Legacy 会话的窗口只由用户决定**（启动时 `BootWindow` 用
+            // `ClientSettings.LegacyWindowSize` 定一次，之后拖边缘缩放），
+            // 这里不能再按 `GameSize`（≥1024×768，`--window` 时甚至是屏幕的 75%）
+            // 改一次 —— 否则启动瞬间会出现 1024×768 → 1440×900 → 用户尺寸 的连续跳变
+            // （实测 [UiScaler] 连打三行），窗口与视频在那一帧都会以错误尺寸绘制。
             if (!AutoLoginArgs.LegacyUi)
             {
                 GameSize = new Vector2I(Mathf.Max(1024, GameSize.X), Mathf.Max(768, GameSize.Y));

@@ -24,8 +24,11 @@ public partial class LegacyEiNoticeDialog : DXWindow
     /// 「DMessageDlg 按 DialogSize 选背景帧……并居中」）；UiScaler 会把整块逻辑画布
     /// 缩放+居中到真实视口，因此本框只需按逻辑画布居中，任意缩放下都落在屏幕中心。
     ///
-    /// 修正：此前按 640×480 算得 (158,9)，而本框在 `ApplyLegacyPregameWindow(800,600)`
-    /// **之后**才显示，画布已是 800×600，于是整体偏左上 (80,60)（见复核报告 F2）。
+    /// 修正：此前按 640×480 算得 (158,9)，而本框显示时所在的层是按 800×600 画布
+    /// （`UiScaler.UpdateScale`，与 `GameScene` 同一套基准）缩放的，于是整体偏左上 (80,60)
+    /// （见复核报告 F2）。窗口尺寸现在只由用户决定、不再由 `ApplyLegacyPregameWindow`
+    /// 在进游戏前切到 800×600，但本层仍用 800×600 基准并把画布居中到窗口，
+    /// 所以本框在任何窗口尺寸下都落在**窗口中心**。
     /// </summary>
     public static readonly Vector2I DefaultLocation = new(
         (int)((UiScaler.BaseWidth - FrameWidth) / 2),

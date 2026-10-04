@@ -523,9 +523,18 @@ for _ in $(seq 1 10); do
     [ "$FOUND" = "1" ] || break
     sleep 1
 done
-if pgrep -f '^dotnet ServerCore\.dll$' | while read -r pid; do
-    [ "$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)" != "$SERVER_DIR_REAL" ] || exit 1
-done; then
+# 注意：这里判断的是「还有没有属于本工作树的服务端」。
+# 原实现写成 `if pgrep | while ...; then 报错`，而 while 在**没有**匹配进程时
+# 退出码为 0 —— 于是服务端**成功停掉反而报错退出**，真正没停掉时倒放行启动
+# 第二个实例。改为显式统计。
+STILL_RUNNING=0
+for pid in $(pgrep -f '^dotnet ServerCore\.dll$' || true); do
+    if [ "$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)" = "$SERVER_DIR_REAL" ]; then
+        STILL_RUNNING=1
+        break
+    fi
+done
+if [ "$STILL_RUNNING" = "1" ]; then
     echo "远程测试服务端未能退出，停止以避免启动重复实例。" >&2
     exit 1
 fi

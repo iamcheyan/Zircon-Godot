@@ -308,10 +308,17 @@ Shroud (M)`），在纯净库里没有对应 `ItemInfo`，换库后被服务端�
 在客户端 `MapInfo` 里校验目标索引，不存在就保持当前地图与 `_playerMapIndex` 不变，
 打印明确错误并在状态栏提示（`e08c8c24`）。
 
+### 中文别名文件（已修）
+
+`Debug/ServerCore/chinese_alias.json` 同样被还原成旧规模（1073 物品 / 425 怪物），
+而仓库源 `ServerCore/chinese_alias.json` 是清洗后的 **254 物品 / 147 怪物**
+（与清洗方案记录的「239 物品 / 147 怪物」吻合）。已把源文件安装到服务端并重启，
+启动日志确认 `Loaded 254 items and 147 monsters`。
+
 ### 遗留
 
-- 服务端 `chinese_alias.json` 仍是旧库规模（1073 物品 / 425 怪物别名），
-  多于纯净库的 326 / 116；多余别名无害，但可另行清理。
+- 本次未动 `Tools/dbeditor` 的 workspace/`_baseline`；它们已是纯净库状态，
+  下次走 `sync.sh` 前建议先确认 `baseline.json` 与实际库的 MD5 一致。
 
 ---
 

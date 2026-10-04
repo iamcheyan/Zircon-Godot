@@ -173,7 +173,12 @@ public partial class NPCDialog : DXWindow
     public void ApplyLegacyEiLayout()
     {
         _legacyLayout = true;
-        Size = new Vector2I(552, 176);
+        // 2026-10-04：不再无条件把高度压回 176 —— 窗口高度已改为随内容行数动态
+        // 计算（ShowPage 里按 min(行数,8)*行距+留白 调整），这里重置会把刚算好的
+        // 高度打回固定值，导致下游按 Size.Y 定位的任务窗又摆错位置。
+        // 首次进入 legacy 布局（还没算过）时才用 176 作为初始高度。
+        if (Size.Y <= 0 || (int)Size.X != 552)
+            Size = new Vector2I(552, 176);
         _headerBackground.LibraryFile = LibraryFile.GameInter;
         _headerBackground.Index = 1100;
         // 与其余 10 个 legacy 窗相同的约定：把该帧 alpha 可见区原点对齐到窗口 (0,0)。
@@ -181,22 +186,28 @@ public partial class NPCDialog : DXWindow
         // 原先未设 Location（默认 (0,0)），系统性核查（逐个比对代码锚点与素材 alpha bbox）
         // 发现全仓只有本处与 BeltDialog 例外。
         _headerBackground.Location = new Vector2I(-64, -59);
-        _headerBackground.Size = MirSkin.GetSize(LibraryFile.GameInter, 1100);
-        _headerBackground.StretchImage = false;
+        // 2026-10-04：背景纵向拉伸以覆盖动态高度。F1100 素材可见高只有 138px，
+        // 而窗口高度随内容增长（最高 40+8*21+24=232），原来 StretchImage=false
+        // 只画 138px，剩下 94px 没有底框 —— 实机表现为「内容飘在木框外」，
+        // 且任务窗按 Size.Y 定位后压在飘出的内容上。
+        // 原版对话框本身可纵向拉伸，说明这张图就是可纵向拉伸使用的。
+        _headerBackground.StretchImage = true;
+        _headerBackground.Size = new Vector2I((int)Size.X, (int)Size.Y);
         _footerBackground.Visible = false;
-        _legacyStripArea.Location = new Vector2I(LegacyTextX, LegacyTextY);
-        _legacyStripArea.Size = new Vector2I(LegacyStripWidth, LegacyTextHeight);
+        // 文本/菜单条裁剪区按**当前窗口高**算，而不是固定 LegacyTextHeight(136)，
+        // 否则重新布局（ShowPage 末尾会再调一次本方法）会把动态高度打回旧值。
+        int curAreaH = Mathf.Max(_legacyPitch,
+            (int)Size.Y - LegacyTextY - LegacyTextBottomPad);
+        _legacyStripArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
+        _legacyStripArea.Size = new Vector2I(LegacyStripWidth, curAreaH);
         _legacyStripArea.Clip = true;
         _legacyStripArea.Visible = true;
         // 原版截图布局：主文本（正文+第一组选项）在**右列**（头像右侧，x=235），
-        // 溢出后剩余行进**左列**（头像下方，x=65 / y=152）。故主容器用右列几何，
-        // 第二列容器用左列几何并下移到头像之下。
-        _legacyStripArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
+        // 溢出后剩余行进**左列**（头像下方，x=65 / y=152）。
         _textArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
-        _textArea.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
+        _textArea.Size = new Vector2I(LegacyTextWidth, curAreaH);
         _textArea.Clip = true;
-        _textColumn2Area.Location = new Vector2I(LegacyTextX, LegacyPortraitBottom);
-        // 左列几何在 ShowPage 里随动态高度重算（见 ApplyLegacyColumn2Geometry）。
+        // 左列几何同样按当前窗口高算（见 ApplyLegacyColumn2Geometry）。
         ApplyLegacyColumn2Geometry(Size.Y);
         _textColumn2Area.Clip = true;
 
@@ -449,6 +460,8 @@ public partial class NPCDialog : DXWindow
                 Size = new Vector2I((int)Size.X, wantedHeight);
                 // 文本/菜单条裁剪区同步跟随，否则内容仍被旧的 136 高裁掉。
                 int areaH = wantedHeight - LegacyTextY - LegacyTextBottomPad;
+                // 背景跟着新高度拉伸，否则窗口变高而底框仍是 138px（内容飘在框外）。
+                _headerBackground.Size = new Vector2I((int)Size.X, wantedHeight);
                 _textArea.Size = new Vector2I(LegacyTextWidth, areaH);
                 _legacyStripArea.Size = new Vector2I(LegacyStripWidth, areaH);
                 // 左列（头像下方那段）也必须跟着新高度重算，否则它还停留在
@@ -543,6 +556,13 @@ public partial class NPCDialog : DXWindow
         if (_page.DialogType == NPCDialogType.Consignment && GameScene.IsConsignmentEnabled)
             GameScene.Game?.OpenConsignmentDialog();
         WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent());
+        // 2026-10-04 顺序修正：ShowPage 按正文高度重建尺寸；旧版 F1100 的协议回包
+        // 也必须先回到 552 宽的根框（否则会悄悄退回现代 380×204）。
+        // **必须在 OpenNPCQuestList 之前做完** —— 任务窗靠 _npcDialog.Size.Y 决定
+        // 摆在哪（对话窗下方），若此时尺寸还是动态值以外的中间态，任务窗就会
+        // 压住对话窗底部的菜单条（实机复现：菜单「Let's try something new」点不到）。
+        if (_legacyLayout)
+            ApplyLegacyEiLayout();
         if (_page.DialogType == NPCDialogType.None)
             GameScene.Game?.OpenNPCQuestList(GameScene.Game.NPCObjectId);
         else
@@ -554,10 +574,6 @@ public partial class NPCDialog : DXWindow
             else if (_page.DialogType == NPCDialogType.SocketCombine)
                 GameScene.Game?.OpenNPCSocketCombineDialog();
         }
-        // ShowPage 根据正文高度重建现代 NPC 尺寸；旧版 F1100 的协议回包也必须
-        // 回到固定 552×176 根框，否则真实打开 NPC 时会悄悄退回 380×204。
-        if (_legacyLayout)
-            ApplyLegacyEiLayout();
     }
 
     public void RepairResult(Library.Network.ServerPackets.NPCRepair packet) => _repair.RepairResult(packet);

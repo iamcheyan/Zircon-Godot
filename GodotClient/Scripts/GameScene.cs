@@ -699,6 +699,8 @@ public partial class GameScene : Control
         _npcQuestListDialog.Location = new Vector2I(
             _npcDialog?.Location.X ?? 0,
             (_npcDialog?.Location.Y ?? 0) + (int)(_npcDialog?.Size.Y ?? 204));
+
+
     }
 
     public void OpenNPCQuestDialog(QuestInfo quest)

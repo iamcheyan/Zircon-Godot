@@ -196,9 +196,10 @@ public partial class NPCDialog : DXWindow
         _textArea.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
         _textArea.Clip = true;
         _textColumn2Area.Location = new Vector2I(LegacyTextX, LegacyPortraitBottom);
-        _textColumn2Area.Size = new Vector2I(
-            LegacyTextColumn2X - LegacyTextX, LegacyTextHeight - (LegacyPortraitBottom - LegacyTextY));
+        // 左列几何在 ShowPage 里随动态高度重算（见 ApplyLegacyColumn2Geometry）。
+        ApplyLegacyColumn2Geometry(Size.Y);
         _textColumn2Area.Clip = true;
+
         // 关闭：证据中的 static hit-test 子控件位置 (7,141)。
         _closeButton.LibraryFile = LibraryFile.GameInter;
                 // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
@@ -450,6 +451,9 @@ public partial class NPCDialog : DXWindow
                 int areaH = wantedHeight - LegacyTextY - LegacyTextBottomPad;
                 _textArea.Size = new Vector2I(LegacyTextWidth, areaH);
                 _legacyStripArea.Size = new Vector2I(LegacyStripWidth, areaH);
+                // 左列（头像下方那段）也必须跟着新高度重算，否则它还停留在
+                // ApplyLegacyEiLayout 里的旧值（只有 24px = 1 行），溢出到左列的行会被裁掉。
+                ApplyLegacyColumn2Geometry(wantedHeight);
                 UpdateClientAreaForLegacySkin();
             }
             bool twoColumn = _text.LineCount > maxRightLines;
@@ -731,5 +735,19 @@ public partial class NPCDialog : DXWindow
     {
         base.Close();
         GameScene.Game?.SendNPCClose();
+    }
+
+    /// <summary>
+    /// 左列（头像下方的第二段）几何随窗口动态高度重算。
+    /// 2026-10-04：原先在 ApplyLegacyEiLayout 里用固定的 LegacyTextHeight(136) 算，
+    /// 而窗口高度已改为随行数动态变化（ShowPage 里调整），导致左列容器只有
+    /// 136-(152-40)=24px（1 行），溢出到左列的行放不下被裁掉。
+    /// </summary>
+    private void ApplyLegacyColumn2Geometry(float windowHeight)
+    {
+        int col2Top = LegacyPortraitBottom;
+        int col2Height = Mathf.Max(_legacyPitch, (int)windowHeight - col2Top - LegacyTextBottomPad);
+        _textColumn2Area.Location = new Vector2I(LegacyTextX, col2Top);
+        _textColumn2Area.Size = new Vector2I(LegacyTextColumn2X - LegacyTextX, col2Height);
     }
 }

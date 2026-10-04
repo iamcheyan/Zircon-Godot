@@ -690,17 +690,25 @@ public partial class GameScene : Control
 
     public void OpenNPCQuestList(uint objectId)
     {
+        // 2026-10-04: 原来在 OpenFor **之前**定位，而 OpenFor 内部会按内容调整
+        // 对话窗的动态高度（ShowPage 里 Size.Y 随行数变化），于是这里拿到的是
+        // 上一句的旧高度，任务窗会压住对话窗底部的菜单条（实机可见标题重叠、
+        // 菜单点不到）。改为先 OpenFor 让尺寸定下来，再按最终高度定位。
         if (_npcQuestListDialog == null || !_npcInfos.TryGetValue(objectId, out var npc)) return;
-        _npcQuestListDialog.Location = new Vector2I(_npcDialog?.Location.X ?? 0, (_npcDialog?.Location.Y ?? 0) + (int)(_npcDialog?.Size.Y ?? 204));
         _npcQuestListDialog.OpenFor(npc);
+        _npcQuestListDialog.Location = new Vector2I(
+            _npcDialog?.Location.X ?? 0,
+            (_npcDialog?.Location.Y ?? 0) + (int)(_npcDialog?.Size.Y ?? 204));
     }
 
     public void OpenNPCQuestDialog(QuestInfo quest)
     {
         if (_npcQuestDialog == null || quest == null) return;
         var listLocation = _npcQuestListDialog?.Location ?? Vector2I.Zero;
-        _npcQuestDialog.Location = new Vector2I(listLocation.X + (int)(_npcQuestListDialog?.Size.X ?? 240), listLocation.Y);
+        // 同样先 OpenFor（会按内容定尺寸）再按最终尺寸摆到列表窗右侧。
         _npcQuestDialog.OpenFor(quest);
+        _npcQuestDialog.Location = new Vector2I(
+            listLocation.X + (int)(_npcQuestListDialog?.Size.X ?? 240), listLocation.Y);
     }
 
     public void CloseNPCQuestDialogs()

@@ -11080,6 +11080,7 @@ public partial class GameScene : Control
         if (magic == null)
         {
             GD.Print($"[Magic] 未释放：当前 Set{MagicBarSpellSet} 没有绑定 {key}");
+            ReceiveChat($"当前快捷键未绑定技能，可按 E 打开技能书进行设置", MessageType.Hint);
             return;
         }
         if (magic.Info == null)
@@ -11091,7 +11092,11 @@ public partial class GameScene : Control
                 return;
             }
         }
-        if (PlayerLevel < magic.Info.NeedLevel1) return;
+        if (PlayerLevel < magic.Info.NeedLevel1)
+        {
+            ReceiveChat($"等级不足，无法使用技能 [{magic.Info.Local() ?? magic.Info.Name}]（需要等级 {magic.Info.NeedLevel1}）", MessageType.Hint);
+            return;
+        }
         if (magic.ItemRequired && !Equipment.Any(x => x?.Info?.ItemEffect == ItemEffect.MagicRing
                                                        && x.Info.Shape == magic.Info.Index))
             return;
@@ -11113,6 +11118,17 @@ public partial class GameScene : Control
                 if (enabled) _enabledToggleMagics.Add(magic.Info.Magic);
                 else _enabledToggleMagics.Remove(magic.Info.Magic);
                 SendMagicToggle(magic.Info.Magic, enabled);
+                return;
+            case MagicType.FlamingSword:
+            case MagicType.DragonRise:
+            case MagicType.BladeStorm:
+            case MagicType.DemonicRecovery:
+            case MagicType.DefensiveBlow:
+            case MagicType.OffensiveBlow:
+                if (Library.Time.Now < magic.NextCast || magic.Cost > _currentMP) return;
+                magic.NextCast = Library.Time.Now.AddSeconds(0.5D);
+                SendMagicToggle(magic.Info.Magic, true);
+                GD.Print($"[Magic] 激活技能强化/蓄力状态: {magic.Info.Name}");
                 return;
             case MagicType.FullBloom:
             case MagicType.WhiteLotus:
@@ -11437,6 +11453,13 @@ public partial class GameScene : Control
         if (IsWindowShortcut(windowBind))
         {
             HandleKeyBind(windowBind);
+            return;
+        }
+
+        // 技能书/技能窗口处于打开状态时，优先让技能窗口捕获快捷键绑定/解绑事件（F1~F12 / Shift+F1~F12 / Delete / Backspace）
+        if (_magicDialog != null && _magicDialog.Visible && _magicDialog.HandleKeyInput(key))
+        {
+            GetViewport()?.SetInputAsHandled();
             return;
         }
 

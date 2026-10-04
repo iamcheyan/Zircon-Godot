@@ -698,12 +698,28 @@ public partial class MagicDialog : DXWindow
             pair.Value.TextColour = pair.Key == school ? new Color(1f, 0.85f, 0.3f) : Colors.White;
     }
 
-    public override void _UnhandledKeyInput(InputEvent @event)
+    public static string SpellKeyText(Library.SpellKey key)
     {
-        if (!_legacyEiLayout || @event is not InputEventKey key || !key.Pressed || key.Echo)
-            return;
-        GD.Print($"[MagicLegacy] key-event key={key.Keycode} shift={key.ShiftPressed} ctrl={key.CtrlPressed} alt={key.AltPressed}");
-        if (key.CtrlPressed || key.AltPressed) return;
+        int value = (int)key;
+        if (value <= 0) return string.Empty;
+        return value > 12 ? $"S+F{value - 12}" : $"F{value}";
+    }
+
+    /// <summary>
+    /// 当技能书/技能窗口打开时，接收全局键盘快捷键绑定/解绑事件。
+    /// 由 GameScene._Input 在窗口早退拦截前优先调用。
+    /// 支持 F1~F12 / Shift+F1~F12 绑定，Delete / Backspace 清除，以及再次按下同键解绑。
+    /// </summary>
+    public bool HandleKeyInput(InputEventKey key)
+    {
+        if (key == null || !key.Pressed || key.Echo)
+            return false;
+
+        // 避免干扰 Ctrl+F1..F4 切换栏组，或 Alt 系统组合键
+        if (key.CtrlPressed || key.AltPressed)
+            return false;
+
+        bool isClearKey = key.Keycode is Key.Delete or Key.Backspace;
         int slot = key.Keycode switch
         {
             Key.F1 => 0, Key.F2 => 1, Key.F3 => 2, Key.F4 => 3,
@@ -711,36 +727,164 @@ public partial class MagicDialog : DXWindow
             Key.F9 => 8, Key.F10 => 9, Key.F11 => 10, Key.F12 => 11,
             _ => -1,
         };
-        if (slot < 0 || _legacySelectedSkill is not { } selected || selected.UserMagic == null)
-            return;
+
+        if (!isClearKey && slot < 0)
+            return false;
 
         var game = GameScene.Game;
-        if (game == null) return;
-        var spellKey = (Library.SpellKey)(slot + 1 + (key.ShiftPressed ? 12 : 0));
-        var magic = selected.UserMagic;
-        switch (game.MagicBarSpellSet)
+        if (game == null)
+            return false;
+
+        (MagicInfo Info, ClientUserMagic UserMagic)? targetSkill = null;
+
+        if (_legacyEiLayout)
         {
-            case 1: magic.Set1Key = spellKey; break;
-            case 2: magic.Set2Key = spellKey; break;
-            case 3: magic.Set3Key = spellKey; break;
-            case 4: magic.Set4Key = spellKey; break;
-        }
-        foreach (var pair in game.UserMagics)
-        {
-            if (pair.Key == selected.Info || pair.Value == null) continue;
-            switch (game.MagicBarSpellSet)
+            if (_legacySelectedSkill is { } selected && selected.UserMagic != null)
             {
-                case 1 when pair.Value.Set1Key == spellKey: pair.Value.Set1Key = Library.SpellKey.None; break;
-                case 2 when pair.Value.Set2Key == spellKey: pair.Value.Set2Key = Library.SpellKey.None; break;
-                case 3 when pair.Value.Set3Key == spellKey: pair.Value.Set3Key = Library.SpellKey.None; break;
-                case 4 when pair.Value.Set4Key == spellKey: pair.Value.Set4Key = Library.SpellKey.None; break;
+                targetSkill = selected;
+            }
+            else
+            {
+                // 若未明确选中，优先找鼠标当前悬停的技能行
+                var hoveredRow = _legacySkillRows.FirstOrDefault(r => r != null && r.IsVisibleInTree() && r.IsHovered);
+                if (hoveredRow?.Entry is { } hovered && hovered.UserMagic != null)
+                {
+                    targetSkill = hovered;
+                    _legacySelectedSkill = targetSkill;
+                    _legacyDetail?.SetSkill(_legacySelectedSkill);
+                }
+                else if (_legacyRuntimeEntries.Count > 0)
+                {
+                    // 若无悬停，默认选中当前页的第一个已学技能
+                    int pageStart = _legacyPage * LegacyPageSize;
+                    for (int i = pageStart; i < Math.Min(_legacyRuntimeEntries.Count, pageStart + LegacyPageSize); i++)
+                    {
+                        if (_legacyRuntimeEntries[i].UserMagic != null)
+                        {
+                            targetSkill = _legacyRuntimeEntries[i];
+                            _legacySelectedSkill = targetSkill;
+                            _legacyDetail?.SetSkill(_legacySelectedSkill);
+                            break;
+                        }
+                    }
+                }
             }
         }
-        game.SendMagicKey(selected.Info.Magic, magic.Set1Key, magic.Set2Key, magic.Set3Key, magic.Set4Key);
+        else
+        {
+            // 现代界面
+            var hoveredCell = _cells.FirstOrDefault(c => c != null && c.IsVisibleInTree() && c.IsHovered);
+            if (hoveredCell?.Entry is { } cellEntry && cellEntry.UserMagic != null)
+            {
+                targetSkill = cellEntry;
+            }
+            else
+            {
+                var first = _cells.FirstOrDefault(c => c?.Entry?.UserMagic != null);
+                if (first?.Entry is { } fe)
+                    targetSkill = fe;
+            }
+        }
+
+        if (targetSkill is not { } skill || skill.UserMagic == null || skill.Info == null)
+        {
+            GD.Print("[Magic] 快捷键绑定跳过：未选中已学习的技能");
+            return false;
+        }
+
+        var magic = skill.UserMagic;
+        var info = skill.Info;
+        int currentSet = game.MagicBarSpellSet;
+        var currentKey = currentSet switch
+        {
+            1 => magic.Set1Key,
+            2 => magic.Set2Key,
+            3 => magic.Set3Key,
+            4 => magic.Set4Key,
+            _ => Library.SpellKey.None,
+        };
+
+        Library.SpellKey newKey;
+        if (isClearKey)
+        {
+            newKey = Library.SpellKey.None;
+        }
+        else
+        {
+            var calculatedKey = (Library.SpellKey)(slot + 1 + (key.ShiftPressed ? 12 : 0));
+            // 如果按下的键与当前技能已绑定的按键完全相同，则视为解绑
+            newKey = (currentKey == calculatedKey) ? Library.SpellKey.None : calculatedKey;
+        }
+
+        // 设置当前技能在当前栏组的按键
+        switch (currentSet)
+        {
+            case 1: magic.Set1Key = newKey; break;
+            case 2: magic.Set2Key = newKey; break;
+            case 3: magic.Set3Key = newKey; break;
+            case 4: magic.Set4Key = newKey; break;
+        }
+
+        // 同一栏组互斥去重：如果其他技能也绑了该新键，将其清空
+        if (newKey != Library.SpellKey.None)
+        {
+            foreach (var pair in game.UserMagics)
+            {
+                if (pair.Key == info || pair.Value == null) continue;
+                switch (currentSet)
+                {
+                    case 1 when pair.Value.Set1Key == newKey: pair.Value.Set1Key = Library.SpellKey.None; break;
+                    case 2 when pair.Value.Set2Key == newKey: pair.Value.Set2Key = Library.SpellKey.None; break;
+                    case 3 when pair.Value.Set3Key == newKey: pair.Value.Set3Key = Library.SpellKey.None; break;
+                    case 4 when pair.Value.Set4Key == newKey: pair.Value.Set4Key = Library.SpellKey.None; break;
+                }
+            }
+        }
+
+        // 发送同步包持久化到服务端
+        game.SendMagicKey(info.Magic, magic.Set1Key, magic.Set2Key, magic.Set3Key, magic.Set4Key);
+
+        // 即时刷新 UI
         game.RefreshMagicBars();
-        GD.Print($"[MagicLegacy] bind skill={selected.Info.Name} set={game.MagicBarSpellSet} key={spellKey}");
-        GetViewport().SetInputAsHandled();
+        if (_legacyEiLayout)
+        {
+            foreach (var row in _legacySkillRows)
+                row.QueueRedraw();
+            _legacyDetail?.QueueRedraw();
+        }
+        else
+        {
+            foreach (var cell in _cells)
+                cell.QueueRedraw();
+        }
+
+        string skillName = info.Local() ?? info.Name ?? "技能";
+        if (newKey == Library.SpellKey.None)
+        {
+            GD.Print($"[Magic] 已解除技能 [{skillName}] 的 Set{currentSet} 快捷键绑定");
+            game.ReceiveChat($"已解除技能 [{skillName}] 的快捷键绑定", MessageType.Hint);
+        }
+        else
+        {
+            string keyName = SpellKeyText(newKey);
+            GD.Print($"[Magic] 绑定 [{skillName}] -> Set{currentSet} = {keyName}");
+            game.ReceiveChat($"已将技能 [{skillName}] 绑定至快捷键 {keyName}", MessageType.Hint);
+        }
+
+        return true;
     }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (@event is InputEventKey key)
+        {
+            if (HandleKeyInput(key))
+            {
+                GetViewport()?.SetInputAsHandled();
+            }
+        }
+    }
+
 
     private static List<(MagicInfo Info, ClientUserMagic UserMagic)> GetVisibleMagicInfos(GameScene game)
     {
@@ -792,6 +936,8 @@ public partial class LegacySkillRowView : DXControl
         MouseFilter = MouseFilterEnum.Stop;
         IsControl = true;
     }
+
+    public (MagicInfo Info, ClientUserMagic UserMagic)? Entry => _info != null ? (_info, _magic) : null;
 
     public void SetEntry(MagicInfo info, ClientUserMagic magic, bool selected)
     {
@@ -928,16 +1074,34 @@ public partial class LegacySkillRowView : DXControl
             DrawString(font, namePos, _info.Local() ?? _info.Name ?? string.Empty,
                 HorizontalAlignment.Left, 100 * canvasScale, drawSize,
                 new Color(0.24f, 0.24f, 0.24f, opacity));
-            // skill-tab-header-draw-evidence.json（F848）：原版左页每行只有
-            // 技能图标（MIcon.wil，帧取自记录 [skill+6]）+ 技能名（0x45DE50，
-            // 色 0x3C3C3C）+ 四边高亮，**没有**状态文本。此前我方在 y=29 多画
-            // 了一行「需 N 级」/「等级 N」，已移除。
-            // 未做：四边高亮的细节证据未给，暂不绘制。
+
+            // 绘制当前技能栏组所绑定的快捷键（如 [F1]、[F2]、[S+F1]）
+            var game = GameScene.Game;
+            if (game != null && _magic != null)
+            {
+                var key = game.MagicBarSpellSet switch
+                {
+                    1 => _magic.Set1Key,
+                    2 => _magic.Set2Key,
+                    3 => _magic.Set3Key,
+                    4 => _magic.Set4Key,
+                    _ => Library.SpellKey.None,
+                };
+                if (key != Library.SpellKey.None)
+                {
+                    string keyText = MagicDialog.SpellKeyText(key);
+                    Vector2 keyPos = new(135 * canvasScale, 14 * canvasScale);
+                    DrawString(font, keyPos, $"[{keyText}]",
+                        HorizontalAlignment.Right, 55 * canvasScale, drawSize,
+                        new Color(0.85f, 0.45f, 0.05f, opacity));
+                }
+            }
         }
         finally
         {
             DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
         }
+
     }
 }
 
@@ -1119,6 +1283,9 @@ public partial class MagicCellView : DXControl
         FocusMode = FocusModeEnum.Click;
         Size = new Vector2(369, 54);
     }
+
+    public (MagicInfo Info, ClientUserMagic UserMagic)? Entry => _info != null ? (_info, _magic) : null;
+
 
     // 点击: 解除当前栏组绑定 (原版 Image_MouseClick)
     public override void _GuiInput(InputEvent @event)

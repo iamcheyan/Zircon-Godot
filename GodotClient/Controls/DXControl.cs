@@ -153,7 +153,7 @@ public partial class DXControl : Control
     /// <summary>每帧更新 (供窗口逻辑用)</summary>
     public virtual void Process() { }
 
-    protected bool IsHovered { get; private set; }
+    public bool IsHovered { get; private set; }
     protected bool IsPressed { get; private set; }
 
     // ---- 树操作 ----

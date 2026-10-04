@@ -18,6 +18,80 @@ class Program
     {
         string root = Path.GetFullPath("Debug/ServerCore/Database/") + Path.DirectorySeparatorChar;
 
+        if (args.Length > 0 && args[0] == "--semantic-hash")
+        {
+            // MirDB 每次保存都会重写集合物理顺序，字节级 MD5 天然会变，
+            // 因此幂等性必须用「内容指纹」验证而非文件 MD5。
+            var sh = new Session(SessionMode.System, root);
+            sh.Initialize(typeof(ItemInfo).Assembly);
+            using var md5 = MD5.Create();
+            var sb = new System.Text.StringBuilder();
+            foreach (var z in sh.GetCollection<SafeZoneInfo>().Binding
+                         .OrderBy(x => x.Index)
+                         .Select(x => $"Z{x.Index}|{x.Region?.Map?.FileName}|{x.Region?.PointRegion?.Length}|{x.BindRegion?.PointRegion?.Length}|"
+                                     + string.Join(";", x.BindRegion?.PointRegion?.Select(p => $"{p.X},{p.Y}") ?? Array.Empty<string>())))
+                sb.AppendLine(z);
+            foreach (var m in sh.GetCollection<MovementInfo>().Binding
+                         .OrderBy(x => x.Index)
+                         .Select(x => $"M{x.Index}|{x.SourceRegion?.Map?.FileName}|{string.Join(";", x.SourceRegion?.PointRegion?.Select(p => $"{p.X},{p.Y}") ?? Array.Empty<string>())}"
+                                     + $"|{x.DestinationRegion?.Map?.FileName}|{string.Join(";", x.DestinationRegion?.PointRegion?.Select(p => $"{p.X},{p.Y}") ?? Array.Empty<string>())}|{(int)x.Icon}"))
+                sb.AppendLine(m);
+            foreach (var r in sh.GetCollection<MapRegion>().Binding
+                         .OrderBy(x => x.Index)
+                         .Select(x => $"R{x.Index}|{x.Map?.FileName}|{x.Description}|{x.PointRegion?.Length}"))
+                sb.AppendLine(r);
+            Console.WriteLine(Convert.ToHexString(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))).ToLowerInvariant());
+            return;
+        }
+
+        if (args.Length > 0 && (args[0] == "--fix-safezones" || args[0] == "--fix-dungeons"))
+        {
+            string mapDir = Path.GetFullPath("Debug/ServerCore/Map/") + Path.DirectorySeparatorChar;
+            bool dryRun = args.Contains("--dry-run");
+            if (args[0] == "--fix-safezones")
+            {
+                Console.WriteLine("=== 主城安全区全量对齐（真理源 StartPoint.txt）===");
+                SafeZoneFixer.Run(root, mapDir, dryRun);
+            }
+            else
+            {
+                Console.WriteLine("=== 地下城/洞窟层级连接全量打通（真理源 Mapinfo.txt）===");
+                DungeonFixer.Run(root, mapDir, dryRun);
+            }
+            if (!dryRun) { SyncSystemDb(root); Verify(root); }
+            return;
+        }
+
+        if (args.Length > 0 && args[0] == "--verify-cells")
+        {
+            // 对拍：MapCellMap 的判据必须与 ServerLibrary/Models/Map.cs Load() 完全一致
+            string mapDir = Path.GetFullPath("Debug/ServerCore/Map/") + Path.DirectorySeparatorChar;
+            foreach (string fn in args.Skip(1))
+            {
+                var m = MapCellMap.Load(mapDir, fn);
+                int walk = 0;
+                for (int x = 0; x < m.Width; x++)
+                for (int y = 0; y < m.Height; y++)
+                    if (m.IsWalkable(new Point(x, y))) walk++;
+                Console.WriteLine($"{fn}: {m.Width}x{m.Height} walkable={walk} ({100.0 * walk / (m.Width * m.Height):F1}%)");
+            }
+            return;
+        }
+
+        if (args.Length > 0 && args[0] == "--mapinfo")
+        {
+            var s2 = new Session(SessionMode.System, root);
+            s2.Initialize(typeof(ItemInfo).Assembly);
+            var all = s2.GetCollection<MapInfo>().Binding.OrderBy(m => m.FileName).ToList();
+            Console.WriteLine($"TOTAL {all.Count}");
+            if (args.Length > 1 && args[1] == "--all")
+                foreach (var m in all) Console.WriteLine($"{m.FileName}");
+            else
+                foreach (var m in all.Where(m => new[] { "0","1","2","4","5","8","9","01","02","41","74","81" }.Contains(m.FileName)))
+                    Console.WriteLine($"idx={m.Index,-5} file='{m.FileName}' desc='{m.Description}' allowRT={m.AllowRT}");
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "--audit")
         {
             Console.WriteLine("=== 开始对全游戏地图连接 (Movement) 与安全区 (SafeZone) 进行全面体检 ===");
@@ -418,11 +492,25 @@ class Program
         var mapCol = session.GetCollection<MapInfo>();
         var movementCol = session.GetCollection<MovementInfo>();
         var safezoneCol = session.GetCollection<SafeZoneInfo>();
+        var regionCol = session.GetCollection<MapRegion>();
 
         Console.WriteLine($"\n[1. 地图总体统计]");
         Console.WriteLine($"  - MapInfo 登记总数: {mapCol.Binding.Count}");
         Console.WriteLine($"  - SafeZoneInfo 登记总数: {safezoneCol.Binding.Count}");
         Console.WriteLine($"  - MovementInfo 登记总数: {movementCol.Binding.Count}");
+        Console.WriteLine($"  - MapRegion 登记总数: {regionCol.Binding.Count}");
+
+        // 孤立 MapRegion 检测：既不被 Movement 引用，也不被 SafeZone / NPC / Respawn 引用
+        int orphanRegions = 0;
+        foreach (var r in regionCol.Binding)
+        {
+            bool used = r.SourceMovements.Count > 0 || r.DestinationMovements.Count > 0
+                        || r.SafeZones.Count > 0 || r.BindSafeZones.Count > 0
+                        || r.NPCs.Count > 0 || r.Respawns.Count > 0
+                        || r.QuestTasks.Count > 0;
+            if (!used) orphanRegions++;
+        }
+        Console.WriteLine($"  - 孤立 MapRegion（无任何引用）: {orphanRegions}");
 
         // 1. SafeZone 坐标比对与分析
         Console.WriteLine($"\n[2. 安全区 (SafeZone) 现状审查]");
@@ -480,47 +568,78 @@ class Program
         }
         if (invalidCount == 0) Console.WriteLine("  ✔ 未发现任何 Source/Dest 为空的坏连接。");
 
-        // 3. 洞窟内部层级连通性普查
-        Console.WriteLine($"\n[4. 常见地下城/洞窟层级连接抽检]");
-        string[][] dungeonChains = new string[][]
-        {
-            new string[] { "天然洞穴", "D001", "D002", "D003", "D004" },
-            new string[] { "骷髅洞", "D011", "D012", "D013", "D014", "D015" },
-            new string[] { "比奇矿区", "D202", "D203" },
-            new string[] { "跳蚤洞/绝望谷", "D401", "D402", "D403", "D404", "D405", "D406" },
-            new string[] { "沃玛神殿", "D1001", "D1002", "D1003", "D1004" },
-            new string[] { "祖玛神殿", "D1101", "D1102", "D1103", "D1104", "D1105", "D1106", "D1107" },
-            new string[] { "石墓(猪洞)", "D1201", "D1202", "D1203", "D1204", "D1205", "D1206", "D1207" },
-            new string[] { "潘夜石窟", "D1401", "D1402", "D1403", "D1404", "D1405" }
-        };
+        // 3. 洞窟/层级连通性普查
+        //
+        // 抽检链不再硬编码：直接以官方 Mapinfo.txt 的真实拓扑为准。
+        // 旧版硬编码链包含官方配置中根本不存在的连接（例如 D202↔D203 在
+        // Mapinfo.txt 中零条连接行，跳蚤洞也并非 D401→D402 链式而是
+        // D401→D411/D413 星型），据此判「未连通」是审计口径错误而非数据缺陷。
+        Console.WriteLine($"\n[4. 地下城/洞窟层级连通性普查（真理源 Mapinfo.txt）]");
 
-        foreach (var chain in dungeonChains)
+        var official = Mud3Config.LoadConnections();
+        var registeredNames = mapCol.Binding.Select(m => m.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // 只审计两端都已登记且两图之间确有官方连接行的地图对
+        var pairs = official
+            .Where(c => registeredNames.Contains(c.SourceMap) && registeredNames.Contains(c.DestMap)
+                        && !string.Equals(c.SourceMap, c.DestMap, StringComparison.OrdinalIgnoreCase))
+            .Select(c => (c.SourceMap, c.DestMap))
+            .Distinct()
+            .OrderBy(p => p.SourceMap, StringComparer.Ordinal)
+            .ThenBy(p => p.DestMap, StringComparer.Ordinal)
+            .ToList();
+
+        // 判据必须与官方语义一致：Mud3 的单向行（官方本就没有回程行）不算缺陷，
+        // 只有「官方有回程行、本库却没有」才是真断连。
+        // 缺 .map 的地图无法做阻挡校验（铁律 3），其连接必然无法落地。
+        // 这类属环境限制而非库内缺陷，必须与真实断连分开统计，否则验收口径失真。
+        string mapDir = Path.GetFullPath("Debug/ServerCore/Map/") + Path.DirectorySeparatorChar;
+        bool HasMapFile(string fn) => File.Exists(Path.Combine(mapDir, fn + ".map"));
+        var mapsWithoutFile = registeredNames.Where(n => !HasMapFile(n))
+            .OrderBy(n => n, StringComparer.Ordinal).ToList();
+
+        int bidirectionalExpected = 0, ok = 0, officialOneWay = 0, broken = 0, blockedByMissingMap = 0;
+        foreach (var (a, b) in pairs)
         {
-            string name = chain[0];
-            Console.WriteLine($"  ▶ {name}:");
-            for (int i = 1; i < chain.Length; i++)
+            // registeredNames 用的是 OrdinalIgnoreCase，这里必须同口径比较，
+            // 否则官方文件里大小写不同的地图名会导致 First() 抛 NoMatch。
+            var mA = mapCol.Binding.First(m => string.Equals(m.FileName, a, StringComparison.OrdinalIgnoreCase));
+            var mB = mapCol.Binding.First(m => string.Equals(m.FileName, b, StringComparison.OrdinalIgnoreCase));
+            bool fwd = movementCol.Binding.Any(m => m.SourceRegion?.Map == mA && m.DestinationRegion?.Map == mB);
+            bool bwd = movementCol.Binding.Any(m => m.SourceRegion?.Map == mB && m.DestinationRegion?.Map == mA);
+            bool officialHasReverse = official.Any(c =>
+                string.Equals(c.SourceMap, b, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(c.DestMap, a, StringComparison.OrdinalIgnoreCase));
+
+            if (!officialHasReverse)
             {
-                string curr = chain[i];
-                var mCurr = mapCol.Binding.FirstOrDefault(m => m.FileName == curr);
-                if (mCurr == null)
-                {
-                    Console.WriteLine($"    - 地图 {curr} 在 System.db 中未注册！");
-                    continue;
-                }
-
-                if (i < chain.Length - 1)
-                {
-                    string next = chain[i + 1];
-                    var mNext = mapCol.Binding.FirstOrDefault(m => m.FileName == next);
-                    if (mNext != null)
-                    {
-                        var forward = movementCol.Binding.Any(m => m.SourceRegion?.Map == mCurr && m.DestinationRegion?.Map == mNext);
-                        var backward = movementCol.Binding.Any(m => m.SourceRegion?.Map == mNext && m.DestinationRegion?.Map == mCurr);
-                        string status = (forward && backward) ? "✔ 双向连通" : (forward ? "⚠️ 仅有单向去路" : "❌ 未连通");
-                        Console.WriteLine($"    - {curr} ↔ {next}: {status}");
-                    }
-                }
+                officialOneWay++;
+                if (!fwd && HasMapFile(a) && HasMapFile(b))
+                    Console.WriteLine($"    - {a} → {b}: ❌ 官方单向通道缺失");
+                continue;
             }
+
+            bidirectionalExpected++;
+            if (fwd && bwd) { ok++; continue; }
+            if (!HasMapFile(a) || !HasMapFile(b))
+            {
+                // 缺图 → 无法计算可行走落点，按铁律 3 不可写入
+                blockedByMissingMap++;
+                continue;
+            }
+            broken++;
+            Console.WriteLine($"    - {a} ↔ {b}: {(fwd ? "⚠️ 缺回程" : "❌ 未连通")}（官方有回程行）");
         }
+        Console.WriteLine($"  官方登记且本库已开放的地图对: {pairs.Count}");
+        Console.WriteLine($"  官方双向通道: {bidirectionalExpected}，其中已连通 {ok}，"
+            + $"因缺 .map 无法落地 {blockedByMissingMap}，真实断连 {broken}");
+        Console.WriteLine($"  官方单向通道: {officialOneWay}（Mud3 本即单向，不计为断连）");
+        if (mapsWithoutFile.Count > 0)
+            Console.WriteLine($"  ⚠️ 已登记但缺 .map 的地图 {mapsWithoutFile.Count} 张（经典清洗裁剪所致，"
+                + $"其连接按铁律 3 一律不写入）: {string.Join(", ", mapsWithoutFile.Take(20))}"
+                + (mapsWithoutFile.Count > 20 ? " …" : ""));
+        Console.WriteLine(broken == 0
+            ? "  ✔ 库内无真实断连（缺图导致的不可落地已单列）"
+            : $"  ❌ 仍有 {broken} 处真实断连");
     }
 }

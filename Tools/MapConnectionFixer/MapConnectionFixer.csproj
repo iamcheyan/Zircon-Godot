@@ -12,4 +12,8 @@
     <ProjectReference Include="..\..\ServerLibrary\ServerLibrary.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
+  </ItemGroup>
+
 </Project>

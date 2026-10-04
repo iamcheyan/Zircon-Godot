@@ -151,6 +151,9 @@ switch (mode)
         return RestoreNativeEntities.Run(root, backupPath);
     }
 
+    case "setupguards":
+        return SetupGuardsSystem.Run(root);
+
     case "charpos":
     {
         var users = new Session(SessionMode.Users, root, root + "Backup/");
@@ -226,6 +229,19 @@ switch (mode)
             {
                 Console.WriteLine($"Idx={m.Index,-4} Name='{m.MonsterName,-20}' Flag={m.Flag,-18} AI={m.AI,-3} Img={m.Image,-4} Lv={m.Level}");
             }
+        }
+        return ExitOk;
+    }
+
+    case "guards":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(GuardInfo).Assembly, typeof(MapInfo).Assembly, typeof(MonsterInfo).Assembly);
+        var guards = session.GetCollection<GuardInfo>().Binding;
+        Console.WriteLine($"Total GuardInfo in {root}: {guards.Count}");
+        foreach (var g in guards.Take(30))
+        {
+            Console.WriteLine($"Guard #{g.Index} Map='{g.Map?.Description}' ({g.Map?.FileName}) Monster='{g.Monster?.MonsterName}' ({g.X},{g.Y}) Dir={g.Direction}");
         }
         return ExitOk;
     }

@@ -1,4 +1,4 @@
-﻿using Library;
+using Library;
 using Library.Network;
 using Library.SystemModels;
 using Server.DBModels;
@@ -126,6 +126,8 @@ namespace Server.Models
         {
             switch (monsterInfo.AI)
             {
+                case -3:
+                    return new ArcherGuard { MonsterInfo = monsterInfo };
                 case -1:
                     return new Guard { MonsterInfo = monsterInfo };
                 case 1:

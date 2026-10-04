@@ -28,6 +28,7 @@ internal static class DropAligner
         "/home/tetsuya/mir2ei/Data/System.db",
         "/home/tetsuya/mir2ei/Database/System.db",
         "/home/tetsuya/development/zircon/System.db",
+        "/home/tetsuya/development/Debug/ServerCore/Database/System.db"
     };
 
     public static int Run(string root, bool sync)

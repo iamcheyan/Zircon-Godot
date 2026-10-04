@@ -159,6 +159,47 @@ switch (mode)
     case "grant":
         return GrantClassicSkills.Run(root);
 
+    case "syncbooks":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(MagicInfo).Assembly, typeof(ItemInfo).Assembly);
+        var magics = session.GetCollection<MagicInfo>().Binding;
+        var items = session.GetCollection<ItemInfo>();
+        var bookList = items.Binding.Where(i => i.ItemType == ItemType.Book).ToList();
+
+        int created = 0;
+        foreach (var m in magics)
+        {
+            var book = bookList.FirstOrDefault(b => b.Shape == m.Index || b.ItemName.Replace(" ", "").Equals(m.Name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+            if (book == null)
+            {
+                book = items.CreateNewObject();
+                book.ItemName = m.Name;
+                book.ItemType = ItemType.Book;
+                book.RequiredClass = m.RequiredClass;
+                book.Price = 1000;
+                book.Shape = m.Index;
+                book.Image = 70;
+                book.Weight = 1;
+                book.CanDrop = true;
+                book.CanSell = true;
+                book.CanTrade = true;
+                book.CanStore = true;
+                created++;
+                Console.WriteLine($"  [新建技能书] #{book.Index} {book.ItemName} for {m.Name} (Shape={m.Index})");
+            }
+            else
+            {
+                book.Shape = m.Index;
+                book.RequiredClass = m.RequiredClass;
+            }
+        }
+        session.Save(true);
+        Console.WriteLine($"技能书补齐完成: 新建 {created} 本，当前总技能书 {items.Binding.Count(i => i.ItemType == ItemType.Book)}");
+
+        return ShopAligner.Run(root, sync);
+    }
+
     default:
         Console.Error.WriteLine($"unknown mode: {mode}");
         return ExitFail;

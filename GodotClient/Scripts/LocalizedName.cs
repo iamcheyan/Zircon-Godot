@@ -48,7 +48,7 @@ public static class LocalizedName
 
     private static Dictionary<string, Dictionary<string, string>> ParseSection(JsonElement root, string section)
     {
-        var result = new Dictionary<string, Dictionary<string, string>>();
+        var result = new Dictionary<string, Dictionary<string, string>>(System.StringComparer.OrdinalIgnoreCase);
         if (!root.TryGetProperty(section, out var sec)) return result;
         foreach (var prop in sec.EnumerateObject())
         {
@@ -56,6 +56,12 @@ public static class LocalizedName
             if (prop.Value.TryGetProperty("zh", out var zh)) entry["zh"] = zh.GetString() ?? "";
             if (prop.Value.TryGetProperty("ja", out var ja)) entry["ja"] = ja.GetString() ?? "";
             result[prop.Name] = entry;
+
+            string compact = prop.Name.Replace(" ", "");
+            if (!result.ContainsKey(compact))
+            {
+                result[compact] = entry;
+            }
         }
         return result;
     }
@@ -72,11 +78,15 @@ public static class LocalizedName
     private static string Lookup(Dictionary<string, Dictionary<string, string>> table, string name, string fallback)
     {
         if (string.IsNullOrEmpty(name)) return fallback ?? "";
-        if (table != null && table.TryGetValue(name, out var entry))
+        if (table != null)
         {
-            string lang = LangCode;
-            if (entry.TryGetValue("zh", out var zh) && !string.IsNullOrWhiteSpace(zh) && lang == "CN") return zh;
-            if (entry.TryGetValue("ja", out var ja) && !string.IsNullOrWhiteSpace(ja) && lang == "JA") return ja;
+            if (table.TryGetValue(name, out var entry) ||
+                table.TryGetValue(name.Replace(" ", ""), out entry))
+            {
+                string lang = LangCode;
+                if (entry.TryGetValue("zh", out var zh) && !string.IsNullOrWhiteSpace(zh) && lang == "CN") return zh;
+                if (entry.TryGetValue("ja", out var ja) && !string.IsNullOrWhiteSpace(ja) && lang == "JA") return ja;
+            }
         }
         return fallback ?? name;
     }

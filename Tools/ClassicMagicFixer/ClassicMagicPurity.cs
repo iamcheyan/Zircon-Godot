@@ -43,9 +43,10 @@ internal static class ClassicMagicPurity
         "/home/tetsuya/mir2ei/Data/System.db",
         "/home/tetsuya/mir2ei/Database/System.db",
         "/home/tetsuya/development/zircon/System.db",
+        "/home/tetsuya/development/Debug/ServerCore/Database/System.db"
     };
 
-    // 17173 经典技能 → Zircon 引擎行映射（54 个，全部经 [MagicType] 实现验证）
+    // 17173 经典技能 → Zircon 引擎行映射（61 个，全部经 [MagicType] 实现验证）
     // NameZh 仅作审计对照；MagicInfo.Name 保持英文（[IsIdentity] 主键）
     private static readonly ClassicSkill[] ClassicSkills =
     [
@@ -73,8 +74,10 @@ internal static class ClassicMagicPurity
         new(RequiredClass.Wizard, "雷电术", MagicType.ThunderBolt, 20, new[] {16, 18, 20}, new[] {400, 500, 600}, 0, MagicSchool.Lightning, MagicProperty.Active, 6, 7, 7, 11, 15, 19),
         new(RequiredClass.Wizard, "冰月震天", MagicType.IceBlades, 78, new[] {17, 19, 21}, new[] {400, 500, 600}, 0, MagicSchool.Ice, MagicProperty.Active, 6, 7, 7, 11, 13, 17),
         new(RequiredClass.Wizard, "击风", MagicType.Cyclone, 146, new[] {18, 20, 22}, new[] {400, 500, 600}, 0, MagicSchool.Wind, MagicProperty.Active, 6, 6, 7, 11, 14, 18),
+        new(RequiredClass.Wizard, "地狱火", MagicType.ScortchedEarth, 16, new[] {20, 22, 24}, new[] {500, 600, 700}, 0, MagicSchool.Fire, MagicProperty.Active, 10, 10, 8, 12, 10, 14),
         new(RequiredClass.Wizard, "疾光电影", MagicType.LightningBeam, 18, new[] {21, 23, 25}, new[] {500, 600, 700}, 0, MagicSchool.Lightning, MagicProperty.Active, 15, 12, 12, 16, 14, 14),
         new(RequiredClass.Wizard, "冰沙掌", MagicType.FrozenEarth, 104, new[] {22, 24, 26}, new[] {500, 600, 700}, 0, MagicSchool.Ice, MagicProperty.Active, 15, 12, 12, 16, 12, 16),
+        new(RequiredClass.Wizard, "风震天", MagicType.BlowEarth, 144, new[] {23, 25, 27}, new[] {600, 700, 800}, 0, MagicSchool.Wind, MagicProperty.Active, 10, 10, 8, 12, 10, 14),
         new(RequiredClass.Wizard, "火墙", MagicType.FireWall, 42, new[] {24, 26, 28}, new[] {600, 700, 800}, 0, MagicSchool.Fire, MagicProperty.Active, 30, 22, 1, 6, 2, 9),
         new(RequiredClass.Wizard, "圣言术", MagicType.ExpelUndead, 62, new[] {26, 28, 30}, new[] {700, 800, 900}, 0, MagicSchool.Phantom, MagicProperty.Active, 30, 30, 0, 0, 0, 0),
         new(RequiredClass.Wizard, "异形换位", MagicType.GeoManipulation, 206, new[] {27, 29, 31}, new[] {800, 900, 1000}, 5000, MagicSchool.Phantom, MagicProperty.Active, 20, 25, 0, 0, 0, 0),
@@ -83,6 +86,9 @@ internal static class ClassicMagicPurity
         new(RequiredClass.Wizard, "地狱雷光", MagicType.LightningWave, 46, new[] {33, 35, 37}, new[] {1000, 1100, 1200}, 0, MagicSchool.Lightning, MagicProperty.Active, 20, 17, 14, 18, 14, 18),
         new(RequiredClass.Wizard, "冰咆哮", MagicType.IceStorm, 64, new[] {34, 36, 38}, new[] {1000, 1100, 1200}, 0, MagicSchool.Ice, MagicProperty.Active, 20, 19, 14, 18, 12, 16),
         new(RequiredClass.Wizard, "龙卷风", MagicType.DragonTornado, 142, new[] {35, 37, 39}, new[] {1000, 1100, 1200}, 0, MagicSchool.Wind, MagicProperty.Active, 20, 18, 14, 18, 13, 17),
+        new(RequiredClass.Wizard, "魄冰刺", MagicType.GreaterFrozenEarth, 114, new[] {38, 41, 44}, new[] {2000, 3000, 6000}, 0, MagicSchool.Ice, MagicProperty.Active, 25, 20, 15, 20, 15, 20),
+        new(RequiredClass.Wizard, "怒神霹雳", MagicType.ThunderStrike, 120, new[] {38, 41, 44}, new[] {2000, 3000, 6000}, 0, MagicSchool.Lightning, MagicProperty.Active, 30, 25, 18, 24, 16, 22),
+        new(RequiredClass.Wizard, "焰天火雨", MagicType.MeteorShower, 218, new[] {43, 46, 49}, new[] {4000, 6000, 12000}, 0, MagicSchool.Fire, MagicProperty.Active, 45, 35, 25, 35, 20, 30),
         new(RequiredClass.Wizard, "凝血离魂", MagicType.Renounce, 222, new[] {46, 48, 50}, new[] {8000, 12000, 24000}, 0, MagicSchool.Phantom, MagicProperty.Active, 10, 60, 0, 0, 0, 0),
         new(RequiredClass.Taoist, "治愈术", MagicType.Heal, 2, new[] {7, 9, 11}, new[] {100, 200, 300}, 0, MagicSchool.Holy, MagicProperty.Active, 2, 7, 0, 0, 11, 15),
         new(RequiredClass.Taoist, "精神力战法", MagicType.SpiritSword, 6, new[] {8, 10, 12}, new[] {100, 200, 300}, 0, MagicSchool.Physical, MagicProperty.Passive, 0, 0, 0, 0, 9, 9),
@@ -102,21 +108,12 @@ internal static class ClassicMagicPurity
         new(RequiredClass.Taoist, "超强召唤骷髅", MagicType.SummonJinSkeleton, 208, new[] {33, 35, 37}, new[] {1000, 1100, 1200}, 0, MagicSchool.Phantom, MagicProperty.Active, 25, 20, 0, 0, 0, 0),
         new(RequiredClass.Taoist, "猛虎强势", MagicType.BloodLust, 186, new[] {34, 36, 38}, new[] {1000, 1100, 1200}, 0, MagicSchool.Dark, MagicProperty.Active, 5, 10, 30, 50, 40, 120),
         new(RequiredClass.Taoist, "回生术", MagicType.Resurrection, 152, new[] {35, 37, 39}, new[] {500, 600, 700}, 0, MagicSchool.Holy, MagicProperty.Active, 100, 100, 10, 20, 15, 30),
+        new(RequiredClass.Taoist, "云寂术", MagicType.Purification, 138, new[] {38, 40, 42}, new[] {2000, 3000, 6000}, 0, MagicSchool.Holy, MagicProperty.Active, 20, 10, 0, 0, 0, 0),
+        new(RequiredClass.Taoist, "妙影无踪", MagicType.Transparency, 140, new[] {43, 46, 49}, new[] {4000, 6000, 12000}, 0, MagicSchool.Phantom, MagicProperty.Active, 30, 20, 0, 0, 0, 0),
         new(RequiredClass.Taoist, "移花接玉", MagicType.ReflectDamage, 250, new[] {48, 51, 54}, new[] {10000, 15000, 30000}, 120000, MagicSchool.Active, MagicProperty.Active, 50, 100, 30, 30, 90, 90),
     ];
 
-    // 引擎中不存在 [MagicType] 实现的经典技能：不写入 MagicInfo，
-    // 避免产生「扣蓝但无效果」的哑技能。待实现清单见 Unimplemented。
-    private static readonly (RequiredClass Class, string NameZh, string Reason)[] Unimplemented =
-    {
-        (RequiredClass.Wizard, "地狱火", "经典为法师火系；引擎仅有刺客系 MagicType.HellFire(411)，职业不符"),
-        (RequiredClass.Wizard, "魄冰刺", "引擎无任何对应 MagicType"),
-        (RequiredClass.Wizard, "怒神霹雳", "引擎无任何对应 MagicType"),
-        (RequiredClass.Wizard, "焰天火雨", "引擎无任何对应 MagicType（近似为 MeteorShower 流星火雨，元素/名称均不符）"),
-        (RequiredClass.Taoist, "云寂术", "引擎无任何对应 MagicType"),
-        (RequiredClass.Taoist, "妙影无踪", "引擎无任何对应 MagicType"),
-        (RequiredClass.Taoist, "阴阳法环", "引擎无任何对应 MagicType"),
-    };
+    private static readonly (RequiredClass Class, string NameZh, string Reason)[] Unimplemented = Array.Empty<(RequiredClass, string, string)>();
 
     internal static System.Collections.Generic.IReadOnlyList<ClassicSkill> ClassicSkillsTable() => ClassicSkills;
 

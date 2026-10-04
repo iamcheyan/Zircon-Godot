@@ -7086,7 +7086,7 @@
   },
   "Shoulder Dash": {
    "zh": "野蛮冲撞",
-   "ja": "野蛮突進"
+   "ja": "体当たり"
   },
   "Flaming Sword": {
    "zh": "烈火剑法",
@@ -7094,7 +7094,7 @@
   },
   "Dragon Rise": {
    "zh": "翔空剑法",
-   "ja": "龍影剣法"
+   "ja": "翔空剣法"
   },
   "Blade Storm": {
    "zh": "莲月剑法",
@@ -7102,7 +7102,7 @@
   },
   "Destructive Surge": {
    "zh": "十方斩",
-   "ja": "破血狂殺"
+   "ja": "十方斬"
   },
   "Interchange": {
    "zh": "乾坤大挪移",
@@ -7114,11 +7114,11 @@
   },
   "Beckon": {
    "zh": "斗转星移",
-   "ja": "召喚"
+   "ja": "斗転星移"
   },
   "Might": {
    "zh": "破血狂杀",
-   "ja": "蛮力"
+   "ja": "破血狂殺"
   },
   "Swift Blade": {
    "zh": "疾风剑法",
@@ -7134,7 +7134,7 @@
   },
   "Reflect Damage": {
    "zh": "移花接玉",
-   "ja": "移花接玉"
+   "ja": "移花接木"
   },
   "Fetter": {
    "zh": "束缚",
@@ -7158,23 +7158,23 @@
   },
   "Lightning Ball": {
    "zh": "霹雳掌",
-   "ja": "雷撃術"
+   "ja": "霹靂掌"
   },
   "Ice Bolt": {
    "zh": "冰月神掌",
-   "ja": "氷矢"
+   "ja": "氷月神掌"
   },
   "Gust Blast": {
    "zh": "风掌",
-   "ja": "突風衝撃"
+   "ja": "風掌"
   },
   "Repulsion": {
    "zh": "抗拒火环",
-   "ja": "抗拒火環"
+   "ja": "拒絶の炎"
   },
   "Electric Shock": {
    "zh": "诱惑之光",
-   "ja": "魅惑の光"
+   "ja": "誘惑の光"
   },
   "Teleportation": {
    "zh": "瞬息移动",
@@ -7186,15 +7186,15 @@
   },
   "Thunder Bolt": {
    "zh": "雷电术",
-   "ja": "雷霆電撃"
+   "ja": "雷電術"
   },
   "Ice Blades": {
    "zh": "冰月震天",
-   "ja": "氷刃術"
+   "ja": "氷月震天"
   },
   "Cyclone": {
    "zh": "击风",
-   "ja": "竜巻"
+   "ja": "撃風"
   },
   "Scorched Earth": {
    "zh": "焦土烈焰",
@@ -7202,15 +7202,15 @@
   },
   "Lightning Beam": {
    "zh": "疾光电影",
-   "ja": "雷光光線"
+   "ja": "疾光電影"
   },
   "Frozen Earth": {
    "zh": "冰沙掌",
-   "ja": "氷結大地"
+   "ja": "氷砂掌"
   },
   "Blow Earth": {
-   "zh": "大地崩裂",
-   "ja": "大地崩裂"
+   "zh": "风震天",
+   "ja": "風震天"
   },
   "Fire Wall": {
    "zh": "火墙",
@@ -7218,11 +7218,11 @@
   },
   "Expel Undead": {
    "zh": "圣言术",
-   "ja": "亡霊退散"
+   "ja": "聖言術"
   },
   "Geo Manipulation": {
    "zh": "异形换位",
-   "ja": "地脈操作"
+   "ja": "異形換位"
   },
   "Magic Shield": {
    "zh": "魔法盾",
@@ -7230,22 +7230,22 @@
   },
   "Fire Storm": {
    "zh": "爆裂火焰",
-   "ja": "火炎嵐"
+   "ja": "爆裂火炎"
   },
   "Lightning Wave": {
    "zh": "地狱雷光",
-   "ja": "雷撃波"
+   "ja": "地獄雷光"
   },
   "Ice Storm": {
    "zh": "冰咆哮",
-   "ja": "氷嵐"
+   "ja": "氷咆哮"
   },
   "Dragon Tornado": {
    "zh": "龙卷风",
-   "ja": "龍巻嵐"
+   "ja": "竜巻"
   },
   "Greater Frozen Earth": {
-   "zh": "强寒冰大地",
+   "zh": "魄冰刺",
    "ja": "大氷結大地"
   },
   "Chain Lightning": {
@@ -7253,7 +7253,7 @@
    "ja": "連鎖雷撃"
   },
   "Meteor Shower": {
-   "zh": "流星火雨",
+   "zh": "焰天火雨",
    "ja": "流星火雨"
   },
   "Renounce": {
@@ -7302,19 +7302,19 @@
   },
   "Spirit Sword": {
    "zh": "精神力战法",
-   "ja": "霊剣術"
+   "ja": "精神力戦法"
   },
   "Poison Dust": {
    "zh": "施毒术",
-   "ja": "毒術"
+   "ja": "施毒術"
   },
   "Explosive Talisman": {
    "zh": "灵魂火符",
-   "ja": "霊魂火符"
+   "ja": "魂の護符"
   },
   "Evil Slayer": {
    "zh": "月魂断玉",
-   "ja": "スケルトン召喚"
+   "ja": "月魂断玉"
   },
   "Invisibility": {
    "zh": "隐身术",
@@ -7322,27 +7322,27 @@
   },
   "Magic Resistance": {
    "zh": "幽灵盾",
-   "ja": "魔法抵抗"
+   "ja": "幽霊盾"
   },
   "Mass Invisibility": {
    "zh": "集体隐身术",
-   "ja": "群体隠身"
+   "ja": "集団隠身術"
   },
   "Greater Evil Slayer": {
    "zh": "月魂灵波",
-   "ja": "大スケルトン召喚"
+   "ja": "大月魂断玉"
   },
   "Resilience": {
    "zh": "神圣战甲术",
-   "ja": "堅忍"
+   "ja": "神聖甲冑術"
   },
   "Trap Octagon": {
    "zh": "困魔咒",
-   "ja": "困魔呪"
+   "ja": "八卦の罠"
   },
   "Combat Kick": {
    "zh": "空拳刀法",
-   "ja": "気功波"
+   "ja": "格闘蹴り"
   },
   "Elemental Superiority": {
    "zh": "元素压制",
@@ -7350,23 +7350,23 @@
   },
   "Mass Heal": {
    "zh": "群体治愈术",
-   "ja": "群体治癒"
+   "ja": "集団治癒術"
   },
   "Blood Lust": {
    "zh": "猛虎强势",
-   "ja": "嗜血術"
+   "ja": "血の渇望"
   },
   "Resurrection": {
    "zh": "回生术",
-   "ja": "復活術"
+   "ja": "回生術"
   },
   "Purification": {
-   "zh": "净化术",
-   "ja": "浄化術"
+   "zh": "云寂术",
+   "ja": "雲寂術"
   },
   "Transparency": {
-   "zh": "透明术",
-   "ja": "透明化"
+   "zh": "妙影无踪",
+   "ja": "妙影無蹤"
   },
   "Celestial Light": {
    "zh": "凝血离魂",
@@ -7843,6 +7843,190 @@
   },
   "Air Palm": {
    "zh": "空气掌"
+  },
+  "HalfMoon": {
+   "zh": "半月弯刀",
+   "ja": "半月刀法"
+  },
+  "ShoulderDash": {
+   "zh": "野蛮冲撞",
+   "ja": "体当たり"
+  },
+  "FlamingSword": {
+   "zh": "烈火剑法",
+   "ja": "烈火剣法"
+  },
+  "DragonRise": {
+   "zh": "翔空剑法",
+   "ja": "翔空剣法"
+  },
+  "BladeStorm": {
+   "zh": "莲月剑法",
+   "ja": "蓮月剣法"
+  },
+  "DestructiveSurge": {
+   "zh": "十方斩",
+   "ja": "十方斬"
+  },
+  "ReflectDamage": {
+   "zh": "移花接玉",
+   "ja": "移花接木"
+  },
+  "FireBall": {
+   "zh": "火球术",
+   "ja": "火球術"
+  },
+  "LightningBall": {
+   "zh": "霹雳掌",
+   "ja": "霹靂掌"
+  },
+  "IceBolt": {
+   "zh": "冰月神掌",
+   "ja": "氷月神掌"
+  },
+  "GustBlast": {
+   "zh": "风掌",
+   "ja": "風掌"
+  },
+  "ElectricShock": {
+   "zh": "诱惑之光",
+   "ja": "誘惑の光"
+  },
+  "AdamantineFireBall": {
+   "zh": "大火球",
+   "ja": "金剛火球"
+  },
+  "ThunderBolt": {
+   "zh": "雷电术",
+   "ja": "雷電術"
+  },
+  "IceBlades": {
+   "zh": "冰月震天",
+   "ja": "氷月震天"
+  },
+  "Scortched Earth": {
+   "zh": "地狱火",
+   "ja": "地獄火"
+  },
+  "ScortchedEarth": {
+   "zh": "地狱火",
+   "ja": "地獄火"
+  },
+  "LightningBeam": {
+   "zh": "疾光电影",
+   "ja": "疾光電影"
+  },
+  "BlowEarth": {
+   "zh": "风震天",
+   "ja": "風震天"
+  },
+  "FrozenEarth": {
+   "zh": "冰沙掌",
+   "ja": "氷砂掌"
+  },
+  "FireWall": {
+   "zh": "火墙",
+   "ja": "火炎壁"
+  },
+  "ExpelUndead": {
+   "zh": "圣言术",
+   "ja": "聖言術"
+  },
+  "GeoManipulation": {
+   "zh": "异形换位",
+   "ja": "異形換位"
+  },
+  "MagicShield": {
+   "zh": "魔法盾",
+   "ja": "魔法盾"
+  },
+  "FireStorm": {
+   "zh": "爆裂火焰",
+   "ja": "爆裂火炎"
+  },
+  "LightningWave": {
+   "zh": "地狱雷光",
+   "ja": "地獄雷光"
+  },
+  "IceStorm": {
+   "zh": "冰咆哮",
+   "ja": "氷咆哮"
+  },
+  "DragonTornado": {
+   "zh": "龙卷风",
+   "ja": "竜巻"
+  },
+  "GreaterFrozenEarth": {
+   "zh": "魄冰刺",
+   "ja": "大氷結大地"
+  },
+  "Thunder Strike": {
+   "zh": "怒神霹雳",
+   "ja": "怒神霹靂"
+  },
+  "ThunderStrike": {
+   "zh": "怒神霹雳",
+   "ja": "怒神霹靂"
+  },
+  "MeteorShower": {
+   "zh": "焰天火雨",
+   "ja": "流星火雨"
+  },
+  "SpiritSword": {
+   "zh": "精神力战法",
+   "ja": "精神力戦法"
+  },
+  "PoisonDust": {
+   "zh": "施毒术",
+   "ja": "施毒術"
+  },
+  "ExplosiveTalisman": {
+   "zh": "灵魂火符",
+   "ja": "魂の護符"
+  },
+  "EvilSlayer": {
+   "zh": "月魂断玉",
+   "ja": "月魂断玉"
+  },
+  "SummonSkeleton": {
+   "zh": "召唤骷髅",
+   "ja": "スケルトン召喚"
+  },
+  "MagicResistance": {
+   "zh": "幽灵盾",
+   "ja": "幽霊盾"
+  },
+  "MassInvisibility": {
+   "zh": "集体隐身术",
+   "ja": "集団隠身術"
+  },
+  "GreaterEvilSlayer": {
+   "zh": "月魂灵波",
+   "ja": "大月魂断玉"
+  },
+  "TrapOctagon": {
+   "zh": "困魔咒",
+   "ja": "八卦の罠"
+  },
+  "CombatKick": {
+   "zh": "空拳刀法",
+   "ja": "格闘蹴り"
+  },
+  "SummonShinsu": {
+   "zh": "召唤神兽",
+   "ja": "神獣召喚"
+  },
+  "MassHeal": {
+   "zh": "群体治愈术",
+   "ja": "集団治癒術"
+  },
+  "SummonJinSkeleton": {
+   "zh": "超强召唤骷髅",
+   "ja": "金スケルトン召喚"
+  },
+  "BloodLust": {
+   "zh": "猛虎强势",
+   "ja": "血の渇望"
   }
  },
  "maps": {

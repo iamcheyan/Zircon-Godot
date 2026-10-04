@@ -30,6 +30,7 @@ internal static class ShopAligner
         "/home/tetsuya/mir2ei/Data/System.db",
         "/home/tetsuya/mir2ei/Database/System.db",
         "/home/tetsuya/development/zircon/System.db",
+        "/home/tetsuya/development/Debug/ServerCore/Database/System.db"
     };
 
     /// <summary>Mud3 Market_Def 货架分类 → Zircon 物品英文名（药店/杂货/书店）。</summary>

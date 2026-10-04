@@ -1,0 +1,206 @@
+﻿mud3_id,map,x,y,name_zh,section
+17GoldenIsland_Island,Island02,95,135,生存游戏场美眉,生存游戏场
+24PR,0,459,395,啊琨,PR NPC
+01Meet_Bichon2,0,441,404,肉店老板,Bichun Castle
+02Weapon_Bichon2,0,423,395,老张,Bichun Castle
+04Potion_Bichon2,0,486,414,恩英,Bichun Castle
+04PotionMake_Bichon1,0,412,410,药剂师,Bichun Castle
+04PotionMake_Bichon2,0,413,409,老黄,Bichun Castle
+06Inn_Bichon,0,425,361,客栈店员,Bichun Castle
+09Reinstatement_Bichon,0,440,341,世玉,Bichun Castle
+09Tavern_Bichon,0,420,431,酒娘,Bichun Castle
+09NightMarket_Bichon,0,452,297,老生,Bichun Castle
+09ChangeMoney_Bichon,0,408,377,啊财,Bichun Castle
+09HairDying_Bichon,0,462,420,美容师,Bichun Castle
+10Material_Bichon,0,417,405,太俊,Bichun Castle
+13Move_Bichon2,0,507,313,六面神石,Bichun Castle
+13Move_Bichon3,0,370,336,六面神石,Bichun Castle
+13Move_Bichon4,0,379,444,六面神石,Bichun Castle
+14Doctor_Bichon,0,456,393,万事通,Bichun Castle
+14Quest_Bichon3,0,417,353,休班卫士1,Bichun Castle
+14Quest_Bichon4,0,447,465,休班卫士2,Bichun Castle
+14Quest_Bichon5,0,502,393,休班卫士3,Bichun Castle
+14Quest_Bichon6,0,472,361,比奇城城主,Bichun Castle
+14Quest_Bichon7,0,357,273,王小二,Bichun Castle
+14Quest_Bichon8,0,356,271,丽灵,Bichun Castle
+14Quest_Bichon9,0,355,326,啊旭,Bichun Castle
+14Quest_Bichon10,0,422,429,洪气霖,Bichun Castle
+14Quest_Bichon11,0,483,404,苏百花,Bichun Castle
+14Quest_Bichon12,0,517,395,母子石像,Bichun Castle
+14Quest_Bichon,0_003,27,35,石母,Bichun Castle
+15Magic_Bichon2,0,462,435,华龙断珠,Bichun Castle
+15Magic_Bichon3,0,449,433,比奇道长,Bichun Castle
+18Execution_Bichon,0,477,366,行政官员,Special Bichon NPC
+18Flag_Bichon,0,478,367,行会旗,Special Bichon NPC
+21WeddingMaker_Bichon,0,388,288,司仪,Special Bichon NPC
+01Meet_Kugkyung,01,425,274,肉店金老板,KugKyung Village
+02Weapon_Kugkyung,01,459,279,德秀,KugKyung Village
+03Armor_Kugkyung,01,442,296,顺子,KugKyung Village
+04Potion_Kugkyung,01,434,303,尹老人,KugKyung Village
+05Book_Kugkyung,01,445,319,老余,KugKyung Village
+06Inn_Kugkyung,01,471,279,赵老头,KugKyung Village
+07Grocery_Kugkyung,01,433,282,地摊商人,KugKyung Village
+08Accessory_Kugkyung,01,444,270,晓丽,KugKyung Village
+10Material_Kugkyung,01,431,307,啊辉,KugKyung Village
+10ChestnutMarket_Kugkyung,01,438,281,栗子商人,KugKyung Village
+13Move_Kugkyung1,01,456,216,六面神石,KugKyung Village
+13Move_Kugkyung2,01,411,287,六面神石,KugKyung Village
+13Move_Kugkyung3,01,463,356,六面神石,KugKyung Village
+14Doctor_Kugkyung,01,429,263,万事通,KugKyung Village
+14Quest_KugKyung1,01,461,257,上官小姐,KugKyung Village
+14Quest_KugKyung2,01,444,245,智善,KugKyung Village
+14Quest_Kugkyung3,01,476,284,无名商人,KugKyung Village
+14Quest_KugKyung,01_001,17,16,云发,KugKyung Village
+15Magic_Kugkyung1,01,456,302,龙血先生,KugKyung Village
+15Magic_KugKyung,01_003,5,8,龙血先生,KugKyung Village
+15Magic_Kugkyung2,01,104,203,黄河大侠,KugKyung Village
+17MobRush_kugkyung,01,424,312,满多,Special(Dice) NPC
+09CancleWeapon,01,422,262,啊彬,Special(Dice) NPC
+01Meet_Eunhang,02,228,194,许氏,Eunhang Village
+02Weapon_Eunhang,02,284,197,铁匠师傅,Eunhang Village
+03Armor_Eunhang,02,260,177,布店晓芙,Eunhang Village
+04Potion_Eunhang,02,273,189,许中医,Eunhang Village
+04PotionMake_Euhang,02,272,189,药剂师,Eunhang Village
+05Book_Eunhang,02,233,222,才石,Eunhang Village
+06Inn_Eunhang,02,250,190,啊雯,Eunhang Village
+07Grocery_Eunhang,02,236,205,地摊老周,Eunhang Village
+08Accessory_Eunhang,02,275,222,晓兰,Eunhang Village
+10Material_Eunhang,02,269,186,啊勋,Eunhang Village
+10ChestnutMarket_Eunhang,02,260,205,栗子商人,Eunhang Village
+13Move_Eunhang,02,249,144,六面神石,Eunhang Village
+14Doctor_Eunhang,02,264,195,万事通,Eunhang Village
+14Quest_Euhang,02,264,201,南宫小姐,Eunhang Village
+15Magic_Eunhang1,02,265,145,霹雳尊者,Eunhang Village
+15Magic_Eunhang2,02,353,212,化天先生,Eunhang Village
+15Magic_Euhang,02_004,25,41,霹雳尊者,Eunhang Village
+09Repair_Euhang,02,243,234,光秀,Special Euhang NPC
+09Bonus_Euhang,02,247,242,智善大师,Special Euhang NPC
+02Weapon_DoGwan,1_001,14,12,啊潘,DoGwan
+03Armor_DoGwan,1_003,13,16,啊浩,DoGwan
+04PotionMake_DoGwan,1_006,12,7,禄英,DoGwan
+04Potion_DoGwan,1_006,9,10,老药,DoGwan
+05Book_DoGwan,1_004,9,11,书神,DoGwan
+06Inn_DoGwan,1,396,116,啊天,DoGwan
+07Grocery_DoGwan,1_007,11,14,大老板,DoGwan
+08Accessory_DoGwan,1_005,9,11,峰儿,DoGwan
+14Quest_DoGwan,1_009,117,25,无名老人,DoGwan
+15Magic_DoGwan,1_011,91,14,清明子,DoGwan
+15Magic_DoGwan0,1_013,44,25,变异骷髅,DoGwan
+15Magic_DoGwan1,1_013,26,20,变异骷髅,DoGwan
+15Magic_DoGwan2,1_013,29,23,变异骷髅,DoGwan
+15Magic_DoGwan3,1_013,23,23,变异骷髅,DoGwan
+15Magic_DoGwan4,1_013,35,15,变异骷髅,DoGwan
+15Magic_DoGwan5,1_013,26,26,变异骷髅,DoGwan
+15Magic_DoGwan6,1_013,25,41,变异骷髅,DoGwan
+15Magic_DoGwan7,1_013,10,24,变异骷髅,DoGwan
+02Weapon_Sabuk,3,195,183,老胡,Sabuk Castle
+03Armor_Sabuk,3,229,150,双喜,Sabuk Castle
+04Potion_Sabuk,3,204,196,晶晶,Sabuk Castle
+06Inn_Sabuk,3,214,128,惠莲,Sabuk Castle
+07Grocery_Sabuk,3,229,168,园老板,Sabuk Castle
+08Accessory_Sabuk,3,211,183,多多,Sabuk Castle
+09RefineWeapon,3,198,180,啊翔,Sabuk Castle
+10Material_Sabuk,3,203,197,俞公,Sabuk Castle
+18ShooterMarket_Sabuk,3,72,161,定国,Sabuk Castle]  [Defense Allies
+18Manager_Sabuk,3,193,146,沙巴克管理员,Sabuk Castle
+13Move_Sabuk,3,71,140,六面神石,Sabuk Castle]  [Defense Allies
+04Potion_SabukWar,3,83,140,完美,Sabuk Castle]  [Defense Allies
+06Inn_SabukWar,3,95,150,武虎,Sabuk Castle]  [Defense Allies
+18MainFlag_Sabuk,3,205,157,沙巴克旗帜,Sabuk Castle]  [Flag
+18SubFlag_Sabuk,3,236,119,沙巴克旗帜,Sabuk Castle]  [Flag
+02Weapon_Oasis,4_001,7,13,王铁匠,Oasis Village
+03Armor_Oasis,4_004,9,8,织女,Oasis Village
+04Potion_Oasis,4_003,10,10,白老中医,Oasis Village
+06Inn_Oasis,4_003,8,15,绿洲仓库管家,Oasis Village
+08Astrologist_Oasis,4_005,14,22,梅山侠,Oasis Village
+10Material_Oasis,4_003,12,8,石宇,Oasis Village
+02Weapon_Samak1,5_002,8,17,勇汉,Samak Castle
+02Weapon_Samak2,5_002,7,19,忠云,Samak Castle
+03Armor_Samak,5_004,15,15,晓敏,Samak Castle
+04Potion_Samak,5_003,13,17,医神,Samak Castle
+06Inn_Samak,5_006,12,23,沙漠仓库管家,Samak Castle
+08Accessory_Samak,5_005,9,11,雪儿,Samak Castle
+09ChangeMoney_Samak,5_006,7,21,啊俊,Samak Castle
+15Magic_Samak2,5,199,203,小秀玉女,Samak Castle
+15Magic_Samak3,5,230,188,芙蓉仙子,Samak Castle
+07Grocery_Ant,6,284,723,啊全,Ant DG enter
+13Move_Ant,6,273,731,六面神石,Ant DG enter
+02Weapon_Mongchon,74,354,297,英龙,Mongchon Castle
+03Armor_Mongchon,74,324,277,晓薇,Mongchon Castle
+04Potion_Mongchon,74,289,289,凌峰,Mongchon Castle
+06Inn_Mongchon,74,323,310,丘叔,Mongchon Castle
+07Grocery_Mongchon,74,293,278,龙叔,Mongchon Castle
+08Accessory_Mongchon,74,311,273,善颖,Mongchon Castle
+10Material_Mongchon,74,287,290,啊贵,Mongchon Castle
+13Move_Mongchon1,74,349,329,六面神石,Mongchon Castle
+13Move_Mongchon2,74,271,267,六面神石,Mongchon Castle
+15Magic_Mongchon1,74,300,299,武术教头,Mongchon Castle
+15Magic_Mongchon2,74,290,299,雷翁断珠,Mongchon Castle
+15Magic_Mongchon3,74,297,295,盟重道长,Mongchon Castle
+15Magic_Mongchon4,74,324,108,泼皮路白,Mongchon Castle
+13Move_SukGak,75,184,90,六面神石,SukGak DG enter
+10Material_HalfNight,8,271,222,泼皮,HalfNight Village
+13Move_HalfNight2,8,113,463,六面神石,HalfNight Village
+13Move_HalfNight3,8,668,388,六面神石,HalfNight Village
+13Move_HalfNight4,8,448,579,六面神石,HalfNight Village
+13Move_HalfNight5,8,424,239,六面神石,HalfNight Village
+04Potion_RedZone,81,138,301,次庸,RedZone
+09Lucky_RedZone,81,119,297,小望,RedZone
+13Move_RedZone,81,129,265,六面神石,RedZone
+02Weapon_Encore,9,196,526,志成,Encore Village
+03Armor_Encore,9,204,628,晓惠,Encore Village
+04Potion_Encore,9,215,527,幽美,Encore Village
+05Book_Encore,9,174,581,玄浩,Encore Village
+06Inn_Encore,9,209,586,宝英,Encore Village
+07Grocery_Encore,9,199,559,啊成,Encore Village
+08Accessory_Encore,9,190,610,啊珠,Encore Village
+09HorseMarket_Encore,9,264,559,世山,Encore Village
+09Lucky_Encore,9,160,555,小英,Encore Village
+10Material_Encore,9,223,531,晓勇,Encore Village
+06Inn_SkeletonCave,D002,174,216,洞穴保管员,SkeletonCave
+07Grocery_SkeletonCave,DM001,4,6,奸商欧阳,SkeletonCave
+14Quest_SkeletonCave,DM002,14,22,无理的道士,SkeletonCave
+09NotBlocker_ZombieCave,D431,29,175,矿山老人,ZombieCave
+14Quest_ZombieCave,D404_002,22,11,署箭,ZombieCave
+14Quest_WoomaPalace,D022_001,64,21,书架,WoomaPalace
+04Potion_Zuma,D5071,20,23,魂滴,Zumasinjun  Rate:300%
+02Weapon_HalfTemple,D1110,27,13,司马云天,HalfTemple
+09WideUse_HalfTemple,D1110,7,24,司马武林,HalfTemple
+09Repair_HalfTemple,D1110,7,20,司马化林,HalfTemple
+13Move_HalfTemple1,D1110,15,18,六面神石,HalfTemple
+13Move_HalfTemple2,D1110,28,31,六面神石,HalfTemple
+13Move_HalfTemple,D1105,219,99,六面神石,HalfTemple
+02Weapon_SinGiSun,D9032,12,11,火郎,SinGiSun
+04Potion_SinGiSun,D9031,10,15,火天,SinGiSun
+14Quest_SinGiSun,D90323,16,8,霸王幽灵,SinGiSun
+01Meet_NuMa,41,126,86,瓦慈,NuMa
+02Weapon_Numa,41,145,82,图木勒,NuMa
+03Armor_Numa,41,141,108,儒帕,NuMa
+04Potion_Numa,41,168,125,啊莫,NuMa
+06Inn_Numa,41,168,84,啊勒,NuMa
+07Grocery_Numa,41,127,118,肃良佳,NuMa
+08Accessory_Numa,41,155,105,羽霞,NuMa
+10Material_Numa,41,141,90,禹老,NuMa
+09HorseMarket_Numa,41,147,106,牢牲,NuMa
+13Move_Numa,41,184,136,六面神石,NuMa
+17NuMaSahaka_Numa,41,148,84,夏柯,NuMa
+17Zaha_Numa,41,151,121,紫霞神女,NuMa
+20Gmatch,02,254,227,云中子,GuildWarEvent
+17Monsternpc,D16063,29,37,来历不明人,HonChonMado Quest
+17NumaMidBoss1,npcroom1,9,7,阿龙怪1,HonChonMado Quest
+17NumaMidBoss2,npcroom1,9,8,阿龙怪2,HonChonMado Quest
+17NumaMidBoss3,npcroom1,9,9,阿龙怪3,HonChonMado Quest
+17NumaMidBoss4,npcroom1,9,10,阿龙怪4,HonChonMado Quest
+17baska1,npcroom1,10,7,诺玛大法老1,HonChonMado Quest
+17baska2,npcroom1,10,8,诺玛大法老2,HonChonMado Quest
+17baska3,npcroom1,10,9,诺玛大法老3,HonChonMado Quest
+17baska4,npcroom1,10,10,诺玛大法老4,HonChonMado Quest
+17StoneNpc1,D1601,81,230,石像1,HonChonMado Quest
+17StoneNpc2,D1602,193,41,石像2,HonChonMado Quest
+17StoneNpc3,D16032,57,355,石像3,HonChonMado Quest
+17StoneNpc4,D1604,305,213,石像4,HonChonMado Quest
+17StoneNpc5,D1605,202,321,石像5,HonChonMado Quest
+17StoneNpcbox1,D16064,29,37,箱子1,HonChonMado Quest
+17NumaMagda,D1601,157,93,摩达,HonChonMado Quest
+17NumaMagda1,D16064,24,49,摩达1,HonChonMado Quest
+17Quest_HonChonmado,D16062,29,37,寂幻之刃,HonChonMado Quest

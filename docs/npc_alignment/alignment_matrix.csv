@@ -1,0 +1,295 @@
+﻿npc_index,npc_name,category,cur_map,cur_x,cur_y,target_map,target_x,target_y,target_name_zh,mud3_id,target_blocked,action,reason
+13,Mr. Kang,None,0_000,22,43,0,402,356,啊康,02Weapon_Bichon1,True,Migrate,"原版柜台内(阻挡格, 按原版保留)"
+14,Isaac,None,0_000,28,43,0,470,424,店员,05Book_Bichon,True,Migrate,"原版柜台内(阻挡格, 按原版保留)"
+15,David,None,0_000,22,45,0,397,363,药店老板,04Potion_Bichon1,True,Migrate,"原版柜台内(阻挡格, 按原版保留)"
+16,Lennard,None,0_000,28,45,0,450,413,杂货商,07Grocery_Bichon,False,Migrate,原版可行走点位
+17,Amy,None,0_000,22,49,0,414,349,恩实,08Accessory_Bichon,False,Migrate,原版可行走点位
+18,Loy,None,0_000,25,42,0,441,374,栗子商人,10ChestnutMarket_Bichon,False,Migrate,原版可行走点位
+19,Linda,None,0_000,22,47,0,480,407,怡美,03Armor_Bichon,False,Migrate,原版可行走点位
+20,Murphy,None,0_000,28,47,0,446,405,金氏,01Meet_Bichon1,False,Migrate,原版可行走点位
+21,Hardy,None,1,382,198,1,382,198,王铁匠,02Weapon_Wooma,,Retain,已位于原版权威点位
+22,Gresham,None,1,386,119,1,386,119,天星,10Material_DoGwan,,Retain,已位于原版权威点位
+23,Haylee,None,1,363,176,1,363,176,华玉,04Potion_Wooma,,Retain,已位于原版权威点位
+24,Cory,None,1,394,116,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+25,Flora,None,1,387,118,1,387,118,药神,04Potion_DoGwan2,,Retain,已位于原版权威点位
+26,Max,None,1,382,141,1,382,141,栗子商人,10ChestnutMarket_DoGwan,,Retain,已位于原版权威点位
+27,Melisa,None,1,393,113,1,393,113,药中,04Potion_DoGwan1,,Retain,已位于原版权威点位
+28,Rainier,None,1,366,182,1,366,182,钱老板,01Meet_DoGwan,,Retain,已位于原版权威点位
+30,Mr. Kim,None,2,351,219,2,351,219,铁匠啊力,02Weapon_SnakeVally,,Retain,已位于原版权威点位
+31,Henry,None,2,331,225,2,331,225,啊福,10Material_SnakeVally,,Retain,已位于原版权威点位
+32,Kacy,None,2,334,224,2,334,224,金中医,04Potion_SnakeVally,,Retain,已位于原版权威点位
+33,Seven,None,2,361,226,2,361,226,流浪卢,07Grocery_SnakeVally,,Retain,已位于原版权威点位
+34,Dakota,None,2,346,234,2,346,234,客栈保管员,06Inn_SnakeVally,,Retain,已位于原版权威点位
+35,Murray,None,2,337,223,2,337,223,蛇谷老太,14Quest_SnakeVally1,,Retain,已位于原版权威点位
+36,Sara,None,2,342,235,2,342,235,金莲,03Armor_SankeVally,,Retain,已位于原版权威点位
+37,Parker,None,2,343,219,2,343,219,蛇谷老人,09NotBlocker_SnakeVally,,Retain,已位于原版权威点位
+38,,None,0_000,28,49,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+39,Hexa Holy Stone,None,0,498,463,0,498,463,六面神石,13Move_Bichon1,,Retain,已位于原版权威点位
+41,Hexa Holy Stone,None,2,306,244,2,306,244,六面神石,13Move_SnakeVally1,,Retain,已位于原版权威点位
+42,Hexa Holy Stone,None,1,416,179,1,416,179,六面神石,13Move_DoGwan,,Retain,已位于原版权威点位
+43,Hexa Holy Stone,None,5,204,289,5,204,289,六面神石,13Move_Samak1,,Retain,已位于原版权威点位
+44,Hexa Holy Stone,None,4,435,83,4,435,83,六面神石,13Move_Oasis,,Retain,已位于原版权威点位
+45,Hexa Holy Stone,None,12,190,265,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+48,Jack,None,5,227,169,5,227,169,武功教头,15Magic_Samak1,,Retain,已位于原版权威点位
+50,Tasha,None,5,198,252,5,198,252,老郑,04PotionMake_Samak,,Retain,已位于原版权威点位
+52,Clinton,None,5,192,232,5,192,232,杂货商老李,07Grocery_Samak,,Retain,已位于原版权威点位
+56,Hexa Holy Stone,None,5,112,177,5,112,177,六面神石,13Move_Samak2,,Retain,已位于原版权威点位
+60,Glenn,None,5,189,252,5,189,252,铁汉,02Weapon_Samak,,Retain,已位于原版权威点位
+61,Grace,None,5,181,277,5,181,277,润真,03Shoes_Samak,,Retain,已位于原版权威点位
+62,Marshal,None,5,197,235,5,197,235,啊宋,10Material_Samak,,Retain,已位于原版权威点位
+63,Mandie,None,5,200,249,5,200,249,黄老板,01Meet_Samak,,Retain,已位于原版权威点位
+65,Tumur,None,4,438,52,4,438,52,屠夫,01Meet_Oasis,,Retain,已位于原版权威点位
+66,Imari,None,4,424,97,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+67,Solonga,None,4,470,67,4,470,67,洪老板,07Grocery_Oasis,,Retain,已位于原版权威点位
+68,Wooshas,None,4,426,95,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+69,Wooroy,None,4,426,99,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+70,Pat,None,4,428,75,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+76,Mr. Matt,None,8,224,210,8,224,210,啊胜,02Weapon_HalfNight,,Retain,已位于原版权威点位
+77,Dr. Park,None,8,282,224,8,282,224,成赫,04Potion_HalfNight,,Retain,已位于原版权威点位
+78,Lafayette,None,8,253,291,8,253,291,中叔,07Grocery_HalfNight,,Retain,已位于原版权威点位
+79,Cherrill,None,8,266,285,8,266,285,晓华,08Accessory_HalfNight,,Retain,已位于原版权威点位
+80,Mindy,None,8,249,257,8,249,257,晓洋,03Armor_HalfNight,,Retain,已位于原版权威点位
+81,Warren,None,12,188,265,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+82,Norman,None,12,190,263,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+83,Lawrence,None,12,190,267,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+84,Nancy,None,12,192,265,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+85,Livingston,None,12,188,263,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+86,Calla,None,12,188,267,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+88,Russ,None,0,375,304,0,375,304,义贤,09HorseMarket_Bichon,,Retain,已位于原版权威点位
+89,Hexa Holy Stone,None,D11031,197,257,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+90,Notice Board,None,0,473,428,0,473,428,图书管理员,14Quest_Bichon2,,Retain,已位于原版权威点位
+91,Notice Board,None,1,379,214,1,379,214,书堂玄震,14Quest_DoGwan2,,Retain,已位于原版权威点位
+92,Notice Board,None,2,360,208,2,360,208,蛇谷老矿夫,14Quest_SnakeVally2,,Retain,已位于原版权威点位
+93,Notice Board,None,4,428,97,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+94,Notice Board,None,12,192,263,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+95,Warrior Trainer,None,0,447,444,0,447,444,总教头,15Magic_Bichon1,,Retain,已位于原版权威点位
+96,Taoist Mentor,None,1,398,127,1,398,127,万事通,14Doctor_DoGwan,,Retain,已位于原版权威点位
+97,Wizard Teacher,None,2,347,193,2,347,193,断乔先生,15Magic_SnakeVally,,Retain,已位于原版权威点位
+98,Village Elder,None,4,426,97,4,426,97,唯我独尊,15Magic_Oasis,,Retain,已位于原版权威点位
+99,Dock Manager,None,12,192,267,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+100,Companion Manager,None,0,389,396,0,389,396,王大人,14Quest_Bichon1,,Retain,已位于原版权威点位
+101,Companion Manager,None,1,403,132,1,403,132,士官,14Quest_DoGwan1,,Retain,已位于原版权威点位
+102,Companion Manager,None,2,322,223,2,322,223,万事通,14Doctor_SnakeVally,,Retain,已位于原版权威点位
+103,Companion Manager,None,4,430,77,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+104,Companion Manager,None,12,186,265,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+105,Administrator,None,0,386,288,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+106,Jack,None,2,314,193,2,314,193,六面神石,13Move_SnakeVally2,,Retain,已位于原版权威点位
+118,Hexa Holy Stone,None,8,288,241,8,288,241,六面神石,13Move_HalfNight1,,Retain,已位于原版权威点位
+135,Mike,None,0,478,407,0,478,407,慧媛,03Shoes_Bichon,,Retain,已位于原版权威点位
+136,Payton,None,4,433,83,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+140,Chief Yonghyeon,None,8,231,260,8,231,260,满春,06Inn_HalfNight,,Retain,已位于原版权威点位
+141,14Quest_Bichon,None,0_003,27,35,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+142,01Meet_Kugkyung,None,01,425,274,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+143,02Weapon_Kugkyung,None,01,459,279,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+144,03Armor_Kugkyung,None,01,442,296,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+145,04Potion_Kugkyung,None,01,434,303,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+146,05Book_Kugkyung,None,01,445,319,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+147,06Inn_Kugkyung,None,01,471,279,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+148,07Grocery_Kugkyung,None,01,433,282,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+149,08Accessory_Kugkyung,None,01,444,270,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+150,10Material_Kugkyung,None,01,431,307,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+151,10ChestnutMarket_Kugkyung,None,01,438,281,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+152,13Move_Kugkyung1,None,01,456,216,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+153,13Move_Kugkyung2,None,01,411,287,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+154,13Move_Kugkyung3,None,01,463,356,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+155,14Doctor_Kugkyung,None,01,429,263,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+156,14Quest_KugKyung1,None,01,461,257,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+157,14Quest_KugKyung2,None,01,444,245,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+158,14Quest_Kugkyung3,None,01,476,284,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+159,14Quest_KugKyung,None,01_001,17,16,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+160,15Magic_Kugkyung1,None,01,456,302,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+161,15Magic_KugKyung,None,01_003,5,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+162,15Magic_Kugkyung2,None,01,104,203,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+163,17MobRush_kugkyung,None,01,424,312,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+164,09CancleWeapon,None,01,422,262,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+165,01Meet_Eunhang,None,02,228,194,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+166,02Weapon_Eunhang,None,02,284,197,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+167,03Armor_Eunhang,None,02,260,177,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+168,04Potion_Eunhang,None,02,273,189,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+169,04PotionMake_Euhang,None,02,272,189,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+170,05Book_Eunhang,None,02,233,222,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+171,06Inn_Eunhang,None,02,250,190,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+172,07Grocery_Eunhang,None,02,236,205,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+173,08Accessory_Eunhang,None,02,275,222,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+174,10Material_Eunhang,None,02,269,186,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+175,10ChestnutMarket_Eunhang,None,02,260,205,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+176,13Move_Eunhang,None,02,249,144,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+177,14Doctor_Eunhang,None,02,264,195,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+178,14Quest_Euhang,None,02,264,201,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+179,15Magic_Eunhang1,None,02,265,145,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+180,15Magic_Eunhang2,None,02,353,212,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+181,15Magic_Euhang,None,02_001,5,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+182,15Magic_Euhang,None,02_003,91,14,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+183,15Magic_Euhang,None,02_004,25,41,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+184,09Repair_Euhang,None,02,243,234,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+185,09Bonus_Euhang,None,02,247,242,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+186,02Weapon_DoGwan,None,1_001,14,12,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+187,03Armor_DoGwan,None,1_003,13,16,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+188,04PotionMake_DoGwan,None,1_006,12,7,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+189,04Potion_DoGwan,None,1_006,9,10,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+190,05Book_DoGwan,None,1_004,9,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+191,07Grocery_DoGwan,None,1_007,11,14,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+192,08Accessory_DoGwan,None,1_005,9,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+193,14Quest_DoGwan,None,1_009,117,25,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+194,15Magic_DoGwan,None,1_002,11,10,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+195,15Magic_DoGwan,None,1_008,5,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+196,15Magic_DoGwan,None,1_011,91,14,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+197,15Magic_DoGwan0,None,1_013,44,25,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+198,15Magic_DoGwan1,None,1_013,26,20,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+199,15Magic_DoGwan2,None,1_013,29,23,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+200,15Magic_DoGwan3,None,1_013,23,23,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+201,15Magic_DoGwan4,None,1_013,35,15,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+202,15Magic_DoGwan5,None,1_013,26,26,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+203,15Magic_DoGwan6,None,1_013,25,41,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+204,15Magic_DoGwan7,None,1_013,10,24,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+205,02Weapon_Oasis,None,4_001,7,13,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+206,03Armor_Oasis,None,4_004,9,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+207,04Potion_Oasis,None,4_003,10,10,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+208,06Inn_Oasis,None,4_003,8,15,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+209,08Astrologist_Oasis,None,4_005,14,22,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+210,10Material_Oasis,None,4_003,12,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+211,02Weapon_Samak1,None,5_002,8,17,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+212,02Weapon_Samak2,None,5_002,7,19,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+213,03Armor_Samak,None,5_004,15,15,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+214,04Potion_Samak,None,5_003,13,17,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+215,06Inn_Samak,None,5_006,12,23,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+216,08Accessory_Samak,None,5_005,9,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+217,09ChangeMoney_Samak,None,5_006,7,21,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+218,07Grocery_Ant,None,6,284,723,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+219,13Move_Ant,None,6,273,731,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+220,02Weapon_Mongchon,None,74,354,297,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+221,03Armor_Mongchon,None,74,324,277,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+222,04Potion_Mongchon,None,74,289,289,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+223,06Inn_Mongchon,None,74,323,310,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+224,07Grocery_Mongchon,None,74,293,278,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+225,08Accessory_Mongchon,None,74,311,273,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+226,10Material_Mongchon,None,74,287,290,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+227,13Move_Mongchon1,None,74,349,329,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+228,13Move_Mongchon2,None,74,271,267,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+229,15Magic_Mongchon1,None,74,300,299,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+230,15Magic_Mongchon2,None,74,290,299,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+231,15Magic_Mongchon3,None,74,297,295,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+232,15Magic_Mongchon4,None,74,324,108,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+233,13Move_SukGak,None,75,184,90,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+234,04Potion_RedZone,None,81,138,301,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+235,09Lucky_RedZone,None,81,119,297,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+236,13Move_RedZone,None,81,129,265,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+237,07Grocery_SkeletonCave,None,DM001,4,6,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+238,14Quest_SkeletonCave,None,D012_001,13,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+239,14Quest_SkeletonCave,None,E002_001,9,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+240,14Quest_SkeletonCave,None,E002,65,12,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+241,14Quest_SkeletonCave,None,DM002,14,22,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+242,09NotBlocker_ZombieCave,None,D431,29,175,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+243,14Quest_ZombieCave,None,E402_001,13,10,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+244,14Quest_ZombieCave,None,D404_002,22,11,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+245,14Quest_WoomaPalace,None,D023_001,17,21,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+246,14Quest_WoomaPalace,None,D022,207,47,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+247,14Quest_WoomaPalace,None,D022_001,64,21,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+248,04Potion_Zuma,None,D5071,20,23,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+249,02Weapon_HalfTemple,None,D1110,27,13,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+250,09WideUse_HalfTemple,None,D1110,7,24,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+251,09Repair_HalfTemple,None,D1110,7,20,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+252,13Move_HalfTemple1,None,D1110,15,18,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+253,13Move_HalfTemple2,None,D1110,28,31,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+254,13Move_HalfTemple,None,D11031,199,257,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+255,04Potion_SinGiSun,None,D90221,22,20,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+260,14Quest_SinGiSun,None,D900,45,58,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+261,14Quest_SinGiSun,None,D90323,16,8,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+262,01Meet_NuMa,None,41,126,86,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+263,02Weapon_Numa,None,41,145,82,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+264,03Armor_Numa,None,41,141,108,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+265,04Potion_Numa,None,41,168,125,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+266,06Inn_Numa,None,41,168,84,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+267,07Grocery_Numa,None,41,127,118,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+268,08Accessory_Numa,None,41,155,105,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+269,10Material_Numa,None,41,141,90,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+270,09HorseMarket_Numa,None,41,147,106,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+271,13Move_Numa,None,41,184,136,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+272,17NuMaSahaka_Numa,None,41,148,84,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+273,17Zaha_Numa,None,41,151,121,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+274,20Gmatch,None,02,254,227,,,,,,,Retain,原版既有点位且已核验 (A-精确(已在位))
+275,Hexa Holy Stone,None,3,222,119,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+276,Maddox,None,3,208,153,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+277,Perry,None,3,209,91,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+278,Kellen,None,3,211,148,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+279,Hexa Holy Stone,None,3,51,221,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+280,Denise,None,3,239,120,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+281,Mark,None,3,203,103,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+282,Kimberly,None,3,235,115,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+283,Jarvis,None,3,206,154,,,,,,,Pending,"无 Mud3 权威身份映射, 证据不足待复核"
+284,内测NPC,None,1,400,131,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+285,泡点系统,None,1,405,124,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+286,VIP,None,1,402,119,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+287,名望系统,None,1,396,126,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+288,功能NPC,None,1,400,119,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+289,功能NPC,None,02,247,191,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+290,功能NPC,None,0,459,358,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+291,钓鱼系统,None,1,396,133,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+292,钻石抽奖,None,1,391,113,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+293,天降宝箱,None,1,387,117,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+294,仓库系统,None,1,396,116,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+295,仓库系统,None,02,250,189,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+296,仓库系统,None,0,467,366,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+298,买卖商人,None,1,394,114,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+299,买卖商人,None,02,252,191,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+300,买卖商人,None,0,465,364,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+302,天下第一战,None,1,419,95,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+303,天下第一法,None,1,413,101,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+304,天下第一道,None,1,416,98,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+305,道观公告,None,1,428,98,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+306,合成大师,None,1,405,115,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+307,活动管理,None,1,398,128,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+308,沙城管家,None,1,394,124,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+309,化废为宝,None,1,403,133,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+310,经验化废,None,1,406,136,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+311,升级加点,None,02,245,242,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+312,结婚司仪,None,0,388,288,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+313,买马商人,None,0,463,362,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+314,美发专家,None,0,461,360,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+315,比奇官吏,None,0,469,368,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+316,行会旗帜,None,0,471,370,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+317,比赛评判,None,01_003,4,10,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+318,比赛评判,None,02_0011,5,8,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+319,比赛评判,None,1_012,5,8,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+320,My00DefaultNpc,None,z010,15,11,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+321,道观传送,None,1,407,131,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+322,传送银杏,None,02,247,144,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+323,传送比奇,None,0,466,372,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+328,传送土城,None,5,227,128,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+329,传送流放,None,81,127,265,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+330,潘业传送3,None,D11031,199,255,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+331,潘业传送4,None,D1115,358,353,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+332,绿洲沙漠,None,6,271,731,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+333,进进出出,None,1,409,112,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+336,神舰接待,None,d903,50,50,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+337,诺玛接待1,None,d1602,383,202,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+338,诺玛接待2,None,d1602,196,14,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+339,诺玛接待3,None,d1602,10,201,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+340,诺玛接待4,None,d1602,196,388,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+341,西沙接待,None,d2005,54,27,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+342,冰城接待,None,d2106,33,20,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+343,绝情接待1,None,8_002,77,76,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+344,绝情接待2,None,D2204,198,204,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+345,魔界接待,None,D0002_001,5,8,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+346,魔界接待1,None,D0002_004,5,24,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+347,群魔接待1,None,D2701,24,174,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+348,群魔接待2,None,D2701,181,17,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+349,群魔接待3,None,D2702,23,176,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+350,群魔接待4,None,D2702,182,16,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+351,异界接待1,None,d9091,160,94,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+352,异界接待2,None,d90921,56,25,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+353,异界接待3,None,d90922,175,157,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+354,异界接待4,None,d9093,51,49,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+355,邪恶之地,None,D006,27,26,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+356,邪恶接待1,None,D006,209,263,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+357,邪恶接待2,None,D007,260,37,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+358,龙穴接待1,None,D008,57,62,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+359,龙穴接待2,None,D30013,277,41,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+360,黑暗巢穴,None,EV002,41,42,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+361,青青草原,None,E003,41,42,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+362,幽暗森林,None,TNakwon_001,105,26,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+363,钓鱼岛,None,E004,41,39,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+364,血案接待,None,02_006,25,18,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+365,骑兵接待,None,02_0061,25,18,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+366,尊者接待,None,02_0062,25,18,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"
+367,杀人掠夺,None,1_014,25,18,,,,,,,Disable,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null"

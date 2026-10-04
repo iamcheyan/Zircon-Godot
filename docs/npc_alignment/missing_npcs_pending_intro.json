@@ -1,0 +1,1642 @@
+[
+  {
+    "mud3_id": "17GoldenIsland_Island",
+    "map": "Island02",
+    "x": 95,
+    "y": 135,
+    "name_zh": "生存游戏场美眉",
+    "section": "生存游戏场"
+  },
+  {
+    "mud3_id": "24PR",
+    "map": "0",
+    "x": 459,
+    "y": 395,
+    "name_zh": "啊琨",
+    "section": "PR NPC"
+  },
+  {
+    "mud3_id": "01Meet_Bichon2",
+    "map": "0",
+    "x": 441,
+    "y": 404,
+    "name_zh": "肉店老板",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "02Weapon_Bichon2",
+    "map": "0",
+    "x": 423,
+    "y": 395,
+    "name_zh": "老张",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "04Potion_Bichon2",
+    "map": "0",
+    "x": 486,
+    "y": 414,
+    "name_zh": "恩英",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "04PotionMake_Bichon1",
+    "map": "0",
+    "x": 412,
+    "y": 410,
+    "name_zh": "药剂师",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "04PotionMake_Bichon2",
+    "map": "0",
+    "x": 413,
+    "y": 409,
+    "name_zh": "老黄",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "06Inn_Bichon",
+    "map": "0",
+    "x": 425,
+    "y": 361,
+    "name_zh": "客栈店员",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "09Reinstatement_Bichon",
+    "map": "0",
+    "x": 440,
+    "y": 341,
+    "name_zh": "世玉",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "09Tavern_Bichon",
+    "map": "0",
+    "x": 420,
+    "y": 431,
+    "name_zh": "酒娘",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "09NightMarket_Bichon",
+    "map": "0",
+    "x": 452,
+    "y": 297,
+    "name_zh": "老生",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "09ChangeMoney_Bichon",
+    "map": "0",
+    "x": 408,
+    "y": 377,
+    "name_zh": "啊财",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "09HairDying_Bichon",
+    "map": "0",
+    "x": 462,
+    "y": 420,
+    "name_zh": "美容师",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "10Material_Bichon",
+    "map": "0",
+    "x": 417,
+    "y": 405,
+    "name_zh": "太俊",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "13Move_Bichon2",
+    "map": "0",
+    "x": 507,
+    "y": 313,
+    "name_zh": "六面神石",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "13Move_Bichon3",
+    "map": "0",
+    "x": 370,
+    "y": 336,
+    "name_zh": "六面神石",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "13Move_Bichon4",
+    "map": "0",
+    "x": 379,
+    "y": 444,
+    "name_zh": "六面神石",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Doctor_Bichon",
+    "map": "0",
+    "x": 456,
+    "y": 393,
+    "name_zh": "万事通",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon3",
+    "map": "0",
+    "x": 417,
+    "y": 353,
+    "name_zh": "休班卫士1",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon4",
+    "map": "0",
+    "x": 447,
+    "y": 465,
+    "name_zh": "休班卫士2",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon5",
+    "map": "0",
+    "x": 502,
+    "y": 393,
+    "name_zh": "休班卫士3",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon6",
+    "map": "0",
+    "x": 472,
+    "y": 361,
+    "name_zh": "比奇城城主",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon7",
+    "map": "0",
+    "x": 357,
+    "y": 273,
+    "name_zh": "王小二",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon8",
+    "map": "0",
+    "x": 356,
+    "y": 271,
+    "name_zh": "丽灵",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon9",
+    "map": "0",
+    "x": 355,
+    "y": 326,
+    "name_zh": "啊旭",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon10",
+    "map": "0",
+    "x": 422,
+    "y": 429,
+    "name_zh": "洪气霖",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon11",
+    "map": "0",
+    "x": 483,
+    "y": 404,
+    "name_zh": "苏百花",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon12",
+    "map": "0",
+    "x": 517,
+    "y": 395,
+    "name_zh": "母子石像",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "14Quest_Bichon",
+    "map": "0_003",
+    "x": 27,
+    "y": 35,
+    "name_zh": "石母",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "15Magic_Bichon2",
+    "map": "0",
+    "x": 462,
+    "y": 435,
+    "name_zh": "华龙断珠",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "15Magic_Bichon3",
+    "map": "0",
+    "x": 449,
+    "y": 433,
+    "name_zh": "比奇道长",
+    "section": "Bichun Castle"
+  },
+  {
+    "mud3_id": "18Execution_Bichon",
+    "map": "0",
+    "x": 477,
+    "y": 366,
+    "name_zh": "行政官员",
+    "section": "Special Bichon NPC"
+  },
+  {
+    "mud3_id": "18Flag_Bichon",
+    "map": "0",
+    "x": 478,
+    "y": 367,
+    "name_zh": "行会旗",
+    "section": "Special Bichon NPC"
+  },
+  {
+    "mud3_id": "21WeddingMaker_Bichon",
+    "map": "0",
+    "x": 388,
+    "y": 288,
+    "name_zh": "司仪",
+    "section": "Special Bichon NPC"
+  },
+  {
+    "mud3_id": "01Meet_Kugkyung",
+    "map": "01",
+    "x": 425,
+    "y": 274,
+    "name_zh": "肉店金老板",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "02Weapon_Kugkyung",
+    "map": "01",
+    "x": 459,
+    "y": 279,
+    "name_zh": "德秀",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "03Armor_Kugkyung",
+    "map": "01",
+    "x": 442,
+    "y": 296,
+    "name_zh": "顺子",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "04Potion_Kugkyung",
+    "map": "01",
+    "x": 434,
+    "y": 303,
+    "name_zh": "尹老人",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "05Book_Kugkyung",
+    "map": "01",
+    "x": 445,
+    "y": 319,
+    "name_zh": "老余",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "06Inn_Kugkyung",
+    "map": "01",
+    "x": 471,
+    "y": 279,
+    "name_zh": "赵老头",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "07Grocery_Kugkyung",
+    "map": "01",
+    "x": 433,
+    "y": 282,
+    "name_zh": "地摊商人",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "08Accessory_Kugkyung",
+    "map": "01",
+    "x": 444,
+    "y": 270,
+    "name_zh": "晓丽",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "10Material_Kugkyung",
+    "map": "01",
+    "x": 431,
+    "y": 307,
+    "name_zh": "啊辉",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "10ChestnutMarket_Kugkyung",
+    "map": "01",
+    "x": 438,
+    "y": 281,
+    "name_zh": "栗子商人",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "13Move_Kugkyung1",
+    "map": "01",
+    "x": 456,
+    "y": 216,
+    "name_zh": "六面神石",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "13Move_Kugkyung2",
+    "map": "01",
+    "x": 411,
+    "y": 287,
+    "name_zh": "六面神石",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "13Move_Kugkyung3",
+    "map": "01",
+    "x": 463,
+    "y": 356,
+    "name_zh": "六面神石",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "14Doctor_Kugkyung",
+    "map": "01",
+    "x": 429,
+    "y": 263,
+    "name_zh": "万事通",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "14Quest_KugKyung1",
+    "map": "01",
+    "x": 461,
+    "y": 257,
+    "name_zh": "上官小姐",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "14Quest_KugKyung2",
+    "map": "01",
+    "x": 444,
+    "y": 245,
+    "name_zh": "智善",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "14Quest_Kugkyung3",
+    "map": "01",
+    "x": 476,
+    "y": 284,
+    "name_zh": "无名商人",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "14Quest_KugKyung",
+    "map": "01_001",
+    "x": 17,
+    "y": 16,
+    "name_zh": "云发",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "15Magic_Kugkyung1",
+    "map": "01",
+    "x": 456,
+    "y": 302,
+    "name_zh": "龙血先生",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "15Magic_KugKyung",
+    "map": "01_003",
+    "x": 5,
+    "y": 8,
+    "name_zh": "龙血先生",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "15Magic_Kugkyung2",
+    "map": "01",
+    "x": 104,
+    "y": 203,
+    "name_zh": "黄河大侠",
+    "section": "KugKyung Village"
+  },
+  {
+    "mud3_id": "17MobRush_kugkyung",
+    "map": "01",
+    "x": 424,
+    "y": 312,
+    "name_zh": "满多",
+    "section": "Special(Dice) NPC"
+  },
+  {
+    "mud3_id": "09CancleWeapon",
+    "map": "01",
+    "x": 422,
+    "y": 262,
+    "name_zh": "啊彬",
+    "section": "Special(Dice) NPC"
+  },
+  {
+    "mud3_id": "01Meet_Eunhang",
+    "map": "02",
+    "x": 228,
+    "y": 194,
+    "name_zh": "许氏",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "02Weapon_Eunhang",
+    "map": "02",
+    "x": 284,
+    "y": 197,
+    "name_zh": "铁匠师傅",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "03Armor_Eunhang",
+    "map": "02",
+    "x": 260,
+    "y": 177,
+    "name_zh": "布店晓芙",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "04Potion_Eunhang",
+    "map": "02",
+    "x": 273,
+    "y": 189,
+    "name_zh": "许中医",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "04PotionMake_Euhang",
+    "map": "02",
+    "x": 272,
+    "y": 189,
+    "name_zh": "药剂师",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "05Book_Eunhang",
+    "map": "02",
+    "x": 233,
+    "y": 222,
+    "name_zh": "才石",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "06Inn_Eunhang",
+    "map": "02",
+    "x": 250,
+    "y": 190,
+    "name_zh": "啊雯",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "07Grocery_Eunhang",
+    "map": "02",
+    "x": 236,
+    "y": 205,
+    "name_zh": "地摊老周",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "08Accessory_Eunhang",
+    "map": "02",
+    "x": 275,
+    "y": 222,
+    "name_zh": "晓兰",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "10Material_Eunhang",
+    "map": "02",
+    "x": 269,
+    "y": 186,
+    "name_zh": "啊勋",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "10ChestnutMarket_Eunhang",
+    "map": "02",
+    "x": 260,
+    "y": 205,
+    "name_zh": "栗子商人",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "13Move_Eunhang",
+    "map": "02",
+    "x": 249,
+    "y": 144,
+    "name_zh": "六面神石",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "14Doctor_Eunhang",
+    "map": "02",
+    "x": 264,
+    "y": 195,
+    "name_zh": "万事通",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "14Quest_Euhang",
+    "map": "02",
+    "x": 264,
+    "y": 201,
+    "name_zh": "南宫小姐",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "15Magic_Eunhang1",
+    "map": "02",
+    "x": 265,
+    "y": 145,
+    "name_zh": "霹雳尊者",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "15Magic_Eunhang2",
+    "map": "02",
+    "x": 353,
+    "y": 212,
+    "name_zh": "化天先生",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "15Magic_Euhang",
+    "map": "02_004",
+    "x": 25,
+    "y": 41,
+    "name_zh": "霹雳尊者",
+    "section": "Eunhang Village"
+  },
+  {
+    "mud3_id": "09Repair_Euhang",
+    "map": "02",
+    "x": 243,
+    "y": 234,
+    "name_zh": "光秀",
+    "section": "Special Euhang NPC"
+  },
+  {
+    "mud3_id": "09Bonus_Euhang",
+    "map": "02",
+    "x": 247,
+    "y": 242,
+    "name_zh": "智善大师",
+    "section": "Special Euhang NPC"
+  },
+  {
+    "mud3_id": "02Weapon_DoGwan",
+    "map": "1_001",
+    "x": 14,
+    "y": 12,
+    "name_zh": "啊潘",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "03Armor_DoGwan",
+    "map": "1_003",
+    "x": 13,
+    "y": 16,
+    "name_zh": "啊浩",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "04PotionMake_DoGwan",
+    "map": "1_006",
+    "x": 12,
+    "y": 7,
+    "name_zh": "禄英",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "04Potion_DoGwan",
+    "map": "1_006",
+    "x": 9,
+    "y": 10,
+    "name_zh": "老药",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "05Book_DoGwan",
+    "map": "1_004",
+    "x": 9,
+    "y": 11,
+    "name_zh": "书神",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "06Inn_DoGwan",
+    "map": "1",
+    "x": 396,
+    "y": 116,
+    "name_zh": "啊天",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "07Grocery_DoGwan",
+    "map": "1_007",
+    "x": 11,
+    "y": 14,
+    "name_zh": "大老板",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "08Accessory_DoGwan",
+    "map": "1_005",
+    "x": 9,
+    "y": 11,
+    "name_zh": "峰儿",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "14Quest_DoGwan",
+    "map": "1_009",
+    "x": 117,
+    "y": 25,
+    "name_zh": "无名老人",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan",
+    "map": "1_011",
+    "x": 91,
+    "y": 14,
+    "name_zh": "清明子",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan0",
+    "map": "1_013",
+    "x": 44,
+    "y": 25,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan1",
+    "map": "1_013",
+    "x": 26,
+    "y": 20,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan2",
+    "map": "1_013",
+    "x": 29,
+    "y": 23,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan3",
+    "map": "1_013",
+    "x": 23,
+    "y": 23,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan4",
+    "map": "1_013",
+    "x": 35,
+    "y": 15,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan5",
+    "map": "1_013",
+    "x": 26,
+    "y": 26,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan6",
+    "map": "1_013",
+    "x": 25,
+    "y": 41,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "15Magic_DoGwan7",
+    "map": "1_013",
+    "x": 10,
+    "y": 24,
+    "name_zh": "变异骷髅",
+    "section": "DoGwan"
+  },
+  {
+    "mud3_id": "02Weapon_Sabuk",
+    "map": "3",
+    "x": 195,
+    "y": 183,
+    "name_zh": "老胡",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "03Armor_Sabuk",
+    "map": "3",
+    "x": 229,
+    "y": 150,
+    "name_zh": "双喜",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "04Potion_Sabuk",
+    "map": "3",
+    "x": 204,
+    "y": 196,
+    "name_zh": "晶晶",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "06Inn_Sabuk",
+    "map": "3",
+    "x": 214,
+    "y": 128,
+    "name_zh": "惠莲",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "07Grocery_Sabuk",
+    "map": "3",
+    "x": 229,
+    "y": 168,
+    "name_zh": "园老板",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "08Accessory_Sabuk",
+    "map": "3",
+    "x": 211,
+    "y": 183,
+    "name_zh": "多多",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "09RefineWeapon",
+    "map": "3",
+    "x": 198,
+    "y": 180,
+    "name_zh": "啊翔",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "10Material_Sabuk",
+    "map": "3",
+    "x": 203,
+    "y": 197,
+    "name_zh": "俞公",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "18ShooterMarket_Sabuk",
+    "map": "3",
+    "x": 72,
+    "y": 161,
+    "name_zh": "定国",
+    "section": "Sabuk Castle]  [Defense Allies"
+  },
+  {
+    "mud3_id": "18Manager_Sabuk",
+    "map": "3",
+    "x": 193,
+    "y": 146,
+    "name_zh": "沙巴克管理员",
+    "section": "Sabuk Castle"
+  },
+  {
+    "mud3_id": "13Move_Sabuk",
+    "map": "3",
+    "x": 71,
+    "y": 140,
+    "name_zh": "六面神石",
+    "section": "Sabuk Castle]  [Defense Allies"
+  },
+  {
+    "mud3_id": "04Potion_SabukWar",
+    "map": "3",
+    "x": 83,
+    "y": 140,
+    "name_zh": "完美",
+    "section": "Sabuk Castle]  [Defense Allies"
+  },
+  {
+    "mud3_id": "06Inn_SabukWar",
+    "map": "3",
+    "x": 95,
+    "y": 150,
+    "name_zh": "武虎",
+    "section": "Sabuk Castle]  [Defense Allies"
+  },
+  {
+    "mud3_id": "18MainFlag_Sabuk",
+    "map": "3",
+    "x": 205,
+    "y": 157,
+    "name_zh": "沙巴克旗帜",
+    "section": "Sabuk Castle]  [Flag"
+  },
+  {
+    "mud3_id": "18SubFlag_Sabuk",
+    "map": "3",
+    "x": 236,
+    "y": 119,
+    "name_zh": "沙巴克旗帜",
+    "section": "Sabuk Castle]  [Flag"
+  },
+  {
+    "mud3_id": "02Weapon_Oasis",
+    "map": "4_001",
+    "x": 7,
+    "y": 13,
+    "name_zh": "王铁匠",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "03Armor_Oasis",
+    "map": "4_004",
+    "x": 9,
+    "y": 8,
+    "name_zh": "织女",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "04Potion_Oasis",
+    "map": "4_003",
+    "x": 10,
+    "y": 10,
+    "name_zh": "白老中医",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "06Inn_Oasis",
+    "map": "4_003",
+    "x": 8,
+    "y": 15,
+    "name_zh": "绿洲仓库管家",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "08Astrologist_Oasis",
+    "map": "4_005",
+    "x": 14,
+    "y": 22,
+    "name_zh": "梅山侠",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "10Material_Oasis",
+    "map": "4_003",
+    "x": 12,
+    "y": 8,
+    "name_zh": "石宇",
+    "section": "Oasis Village"
+  },
+  {
+    "mud3_id": "02Weapon_Samak1",
+    "map": "5_002",
+    "x": 8,
+    "y": 17,
+    "name_zh": "勇汉",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "02Weapon_Samak2",
+    "map": "5_002",
+    "x": 7,
+    "y": 19,
+    "name_zh": "忠云",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "03Armor_Samak",
+    "map": "5_004",
+    "x": 15,
+    "y": 15,
+    "name_zh": "晓敏",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "04Potion_Samak",
+    "map": "5_003",
+    "x": 13,
+    "y": 17,
+    "name_zh": "医神",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "06Inn_Samak",
+    "map": "5_006",
+    "x": 12,
+    "y": 23,
+    "name_zh": "沙漠仓库管家",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "08Accessory_Samak",
+    "map": "5_005",
+    "x": 9,
+    "y": 11,
+    "name_zh": "雪儿",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "09ChangeMoney_Samak",
+    "map": "5_006",
+    "x": 7,
+    "y": 21,
+    "name_zh": "啊俊",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "15Magic_Samak2",
+    "map": "5",
+    "x": 199,
+    "y": 203,
+    "name_zh": "小秀玉女",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "15Magic_Samak3",
+    "map": "5",
+    "x": 230,
+    "y": 188,
+    "name_zh": "芙蓉仙子",
+    "section": "Samak Castle"
+  },
+  {
+    "mud3_id": "07Grocery_Ant",
+    "map": "6",
+    "x": 284,
+    "y": 723,
+    "name_zh": "啊全",
+    "section": "Ant DG enter"
+  },
+  {
+    "mud3_id": "13Move_Ant",
+    "map": "6",
+    "x": 273,
+    "y": 731,
+    "name_zh": "六面神石",
+    "section": "Ant DG enter"
+  },
+  {
+    "mud3_id": "02Weapon_Mongchon",
+    "map": "74",
+    "x": 354,
+    "y": 297,
+    "name_zh": "英龙",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "03Armor_Mongchon",
+    "map": "74",
+    "x": 324,
+    "y": 277,
+    "name_zh": "晓薇",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "04Potion_Mongchon",
+    "map": "74",
+    "x": 289,
+    "y": 289,
+    "name_zh": "凌峰",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "06Inn_Mongchon",
+    "map": "74",
+    "x": 323,
+    "y": 310,
+    "name_zh": "丘叔",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "07Grocery_Mongchon",
+    "map": "74",
+    "x": 293,
+    "y": 278,
+    "name_zh": "龙叔",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "08Accessory_Mongchon",
+    "map": "74",
+    "x": 311,
+    "y": 273,
+    "name_zh": "善颖",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "10Material_Mongchon",
+    "map": "74",
+    "x": 287,
+    "y": 290,
+    "name_zh": "啊贵",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "13Move_Mongchon1",
+    "map": "74",
+    "x": 349,
+    "y": 329,
+    "name_zh": "六面神石",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "13Move_Mongchon2",
+    "map": "74",
+    "x": 271,
+    "y": 267,
+    "name_zh": "六面神石",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "15Magic_Mongchon1",
+    "map": "74",
+    "x": 300,
+    "y": 299,
+    "name_zh": "武术教头",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "15Magic_Mongchon2",
+    "map": "74",
+    "x": 290,
+    "y": 299,
+    "name_zh": "雷翁断珠",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "15Magic_Mongchon3",
+    "map": "74",
+    "x": 297,
+    "y": 295,
+    "name_zh": "盟重道长",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "15Magic_Mongchon4",
+    "map": "74",
+    "x": 324,
+    "y": 108,
+    "name_zh": "泼皮路白",
+    "section": "Mongchon Castle"
+  },
+  {
+    "mud3_id": "13Move_SukGak",
+    "map": "75",
+    "x": 184,
+    "y": 90,
+    "name_zh": "六面神石",
+    "section": "SukGak DG enter"
+  },
+  {
+    "mud3_id": "10Material_HalfNight",
+    "map": "8",
+    "x": 271,
+    "y": 222,
+    "name_zh": "泼皮",
+    "section": "HalfNight Village"
+  },
+  {
+    "mud3_id": "13Move_HalfNight2",
+    "map": "8",
+    "x": 113,
+    "y": 463,
+    "name_zh": "六面神石",
+    "section": "HalfNight Village"
+  },
+  {
+    "mud3_id": "13Move_HalfNight3",
+    "map": "8",
+    "x": 668,
+    "y": 388,
+    "name_zh": "六面神石",
+    "section": "HalfNight Village"
+  },
+  {
+    "mud3_id": "13Move_HalfNight4",
+    "map": "8",
+    "x": 448,
+    "y": 579,
+    "name_zh": "六面神石",
+    "section": "HalfNight Village"
+  },
+  {
+    "mud3_id": "13Move_HalfNight5",
+    "map": "8",
+    "x": 424,
+    "y": 239,
+    "name_zh": "六面神石",
+    "section": "HalfNight Village"
+  },
+  {
+    "mud3_id": "04Potion_RedZone",
+    "map": "81",
+    "x": 138,
+    "y": 301,
+    "name_zh": "次庸",
+    "section": "RedZone"
+  },
+  {
+    "mud3_id": "09Lucky_RedZone",
+    "map": "81",
+    "x": 119,
+    "y": 297,
+    "name_zh": "小望",
+    "section": "RedZone"
+  },
+  {
+    "mud3_id": "13Move_RedZone",
+    "map": "81",
+    "x": 129,
+    "y": 265,
+    "name_zh": "六面神石",
+    "section": "RedZone"
+  },
+  {
+    "mud3_id": "02Weapon_Encore",
+    "map": "9",
+    "x": 196,
+    "y": 526,
+    "name_zh": "志成",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "03Armor_Encore",
+    "map": "9",
+    "x": 204,
+    "y": 628,
+    "name_zh": "晓惠",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "04Potion_Encore",
+    "map": "9",
+    "x": 215,
+    "y": 527,
+    "name_zh": "幽美",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "05Book_Encore",
+    "map": "9",
+    "x": 174,
+    "y": 581,
+    "name_zh": "玄浩",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "06Inn_Encore",
+    "map": "9",
+    "x": 209,
+    "y": 586,
+    "name_zh": "宝英",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "07Grocery_Encore",
+    "map": "9",
+    "x": 199,
+    "y": 559,
+    "name_zh": "啊成",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "08Accessory_Encore",
+    "map": "9",
+    "x": 190,
+    "y": 610,
+    "name_zh": "啊珠",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "09HorseMarket_Encore",
+    "map": "9",
+    "x": 264,
+    "y": 559,
+    "name_zh": "世山",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "09Lucky_Encore",
+    "map": "9",
+    "x": 160,
+    "y": 555,
+    "name_zh": "小英",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "10Material_Encore",
+    "map": "9",
+    "x": 223,
+    "y": 531,
+    "name_zh": "晓勇",
+    "section": "Encore Village"
+  },
+  {
+    "mud3_id": "06Inn_SkeletonCave",
+    "map": "D002",
+    "x": 174,
+    "y": 216,
+    "name_zh": "洞穴保管员",
+    "section": "SkeletonCave"
+  },
+  {
+    "mud3_id": "07Grocery_SkeletonCave",
+    "map": "DM001",
+    "x": 4,
+    "y": 6,
+    "name_zh": "奸商欧阳",
+    "section": "SkeletonCave"
+  },
+  {
+    "mud3_id": "14Quest_SkeletonCave",
+    "map": "DM002",
+    "x": 14,
+    "y": 22,
+    "name_zh": "无理的道士",
+    "section": "SkeletonCave"
+  },
+  {
+    "mud3_id": "09NotBlocker_ZombieCave",
+    "map": "D431",
+    "x": 29,
+    "y": 175,
+    "name_zh": "矿山老人",
+    "section": "ZombieCave"
+  },
+  {
+    "mud3_id": "14Quest_ZombieCave",
+    "map": "D404_002",
+    "x": 22,
+    "y": 11,
+    "name_zh": "署箭",
+    "section": "ZombieCave"
+  },
+  {
+    "mud3_id": "14Quest_WoomaPalace",
+    "map": "D022_001",
+    "x": 64,
+    "y": 21,
+    "name_zh": "书架",
+    "section": "WoomaPalace"
+  },
+  {
+    "mud3_id": "04Potion_Zuma",
+    "map": "D5071",
+    "x": 20,
+    "y": 23,
+    "name_zh": "魂滴",
+    "section": "Zumasinjun  Rate:300%"
+  },
+  {
+    "mud3_id": "02Weapon_HalfTemple",
+    "map": "D1110",
+    "x": 27,
+    "y": 13,
+    "name_zh": "司马云天",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "09WideUse_HalfTemple",
+    "map": "D1110",
+    "x": 7,
+    "y": 24,
+    "name_zh": "司马武林",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "09Repair_HalfTemple",
+    "map": "D1110",
+    "x": 7,
+    "y": 20,
+    "name_zh": "司马化林",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "13Move_HalfTemple1",
+    "map": "D1110",
+    "x": 15,
+    "y": 18,
+    "name_zh": "六面神石",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "13Move_HalfTemple2",
+    "map": "D1110",
+    "x": 28,
+    "y": 31,
+    "name_zh": "六面神石",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "13Move_HalfTemple",
+    "map": "D1105",
+    "x": 219,
+    "y": 99,
+    "name_zh": "六面神石",
+    "section": "HalfTemple"
+  },
+  {
+    "mud3_id": "02Weapon_SinGiSun",
+    "map": "D9032",
+    "x": 12,
+    "y": 11,
+    "name_zh": "火郎",
+    "section": "SinGiSun"
+  },
+  {
+    "mud3_id": "04Potion_SinGiSun",
+    "map": "D9031",
+    "x": 10,
+    "y": 15,
+    "name_zh": "火天",
+    "section": "SinGiSun"
+  },
+  {
+    "mud3_id": "14Quest_SinGiSun",
+    "map": "D90323",
+    "x": 16,
+    "y": 8,
+    "name_zh": "霸王幽灵",
+    "section": "SinGiSun"
+  },
+  {
+    "mud3_id": "01Meet_NuMa",
+    "map": "41",
+    "x": 126,
+    "y": 86,
+    "name_zh": "瓦慈",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "02Weapon_Numa",
+    "map": "41",
+    "x": 145,
+    "y": 82,
+    "name_zh": "图木勒",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "03Armor_Numa",
+    "map": "41",
+    "x": 141,
+    "y": 108,
+    "name_zh": "儒帕",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "04Potion_Numa",
+    "map": "41",
+    "x": 168,
+    "y": 125,
+    "name_zh": "啊莫",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "06Inn_Numa",
+    "map": "41",
+    "x": 168,
+    "y": 84,
+    "name_zh": "啊勒",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "07Grocery_Numa",
+    "map": "41",
+    "x": 127,
+    "y": 118,
+    "name_zh": "肃良佳",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "08Accessory_Numa",
+    "map": "41",
+    "x": 155,
+    "y": 105,
+    "name_zh": "羽霞",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "10Material_Numa",
+    "map": "41",
+    "x": 141,
+    "y": 90,
+    "name_zh": "禹老",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "09HorseMarket_Numa",
+    "map": "41",
+    "x": 147,
+    "y": 106,
+    "name_zh": "牢牲",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "13Move_Numa",
+    "map": "41",
+    "x": 184,
+    "y": 136,
+    "name_zh": "六面神石",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "17NuMaSahaka_Numa",
+    "map": "41",
+    "x": 148,
+    "y": 84,
+    "name_zh": "夏柯",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "17Zaha_Numa",
+    "map": "41",
+    "x": 151,
+    "y": 121,
+    "name_zh": "紫霞神女",
+    "section": "NuMa"
+  },
+  {
+    "mud3_id": "20Gmatch",
+    "map": "02",
+    "x": 254,
+    "y": 227,
+    "name_zh": "云中子",
+    "section": "GuildWarEvent"
+  },
+  {
+    "mud3_id": "17Monsternpc",
+    "map": "D16063",
+    "x": 29,
+    "y": 37,
+    "name_zh": "来历不明人",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMidBoss1",
+    "map": "npcroom1",
+    "x": 9,
+    "y": 7,
+    "name_zh": "阿龙怪1",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMidBoss2",
+    "map": "npcroom1",
+    "x": 9,
+    "y": 8,
+    "name_zh": "阿龙怪2",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMidBoss3",
+    "map": "npcroom1",
+    "x": 9,
+    "y": 9,
+    "name_zh": "阿龙怪3",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMidBoss4",
+    "map": "npcroom1",
+    "x": 9,
+    "y": 10,
+    "name_zh": "阿龙怪4",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17baska1",
+    "map": "npcroom1",
+    "x": 10,
+    "y": 7,
+    "name_zh": "诺玛大法老1",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17baska2",
+    "map": "npcroom1",
+    "x": 10,
+    "y": 8,
+    "name_zh": "诺玛大法老2",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17baska3",
+    "map": "npcroom1",
+    "x": 10,
+    "y": 9,
+    "name_zh": "诺玛大法老3",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17baska4",
+    "map": "npcroom1",
+    "x": 10,
+    "y": 10,
+    "name_zh": "诺玛大法老4",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpc1",
+    "map": "D1601",
+    "x": 81,
+    "y": 230,
+    "name_zh": "石像1",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpc2",
+    "map": "D1602",
+    "x": 193,
+    "y": 41,
+    "name_zh": "石像2",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpc3",
+    "map": "D16032",
+    "x": 57,
+    "y": 355,
+    "name_zh": "石像3",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpc4",
+    "map": "D1604",
+    "x": 305,
+    "y": 213,
+    "name_zh": "石像4",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpc5",
+    "map": "D1605",
+    "x": 202,
+    "y": 321,
+    "name_zh": "石像5",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17StoneNpcbox1",
+    "map": "D16064",
+    "x": 29,
+    "y": 37,
+    "name_zh": "箱子1",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMagda",
+    "map": "D1601",
+    "x": 157,
+    "y": 93,
+    "name_zh": "摩达",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17NumaMagda1",
+    "map": "D16064",
+    "x": 24,
+    "y": 49,
+    "name_zh": "摩达1",
+    "section": "HonChonMado Quest"
+  },
+  {
+    "mud3_id": "17Quest_HonChonmado",
+    "map": "D16062",
+    "x": 29,
+    "y": 37,
+    "name_zh": "寂幻之刃",
+    "section": "HonChonMado Quest"
+  }
+]

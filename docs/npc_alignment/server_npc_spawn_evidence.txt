@@ -1,0 +1,3 @@
+[2026年10月4日星期日 04:04:27]: [NPC-DIAG] Bichon Town [0] regions=114 npcs=16
+[2026年10月4日星期日 04:04:27]: [NPC-DIAG] Banya Village [2] regions=55 npcs=13
+[2026年10月4日星期日 04:04:27]: [NPC-DIAG] Lost Paradise [1] regions=116 npcs=12

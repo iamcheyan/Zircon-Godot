@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <AssemblyName>NpcAligner</AssemblyName>
+    <RootNamespace>NpcAligner</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Zircon 源码根：优先环境变量，缺省用仓库内相对路径（zircon 目录名小写） -->
+    <ZirconRoot Condition="'$(ZirconRoot)' == '' and '$(MIR3_ZIRCON_ROOT)' != ''">$(MIR3_ZIRCON_ROOT)</ZirconRoot>
+    <ZirconRoot Condition="'$(ZirconRoot)' == ''">../../</ZirconRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 正斜杠：MSBuild 在 Linux 上把反斜杠当普通字符 -->
+    <ProjectReference Include="$(ZirconRoot)LibraryCore/LibraryCore.csproj" />
+    <ProjectReference Include="$(ZirconRoot)ServerLibrary/ServerLibrary.csproj" />
+  </ItemGroup>
+</Project>

@@ -305,7 +305,9 @@ public partial class NPCDialog : DXWindow
         {
             raw = ApplyLegacyFColor(raw);
             raw = ExtractLegacyNpcImg(raw, out _legacyNpcFaceFrame);
-            if (_legacyNpcFaceFrame < 0 && GameScene.Game?.CurrentNPCInfo?.FaceImage > 0)
+            // FaceImage 是 NPCface.wil 的原始帧号，帧 0 也是有效头像。
+            // 旧判断 > 0 会把最常见的零号头像误判成“没有头像”。
+            if (_legacyNpcFaceFrame < 0 && GameScene.Game?.CurrentNPCInfo?.FaceImage >= 0)
             {
                 _legacyNpcFaceFrame = GameScene.Game.CurrentNPCInfo.FaceImage;
             }
@@ -615,7 +617,8 @@ public partial class NPCDialog : DXWindow
         _legacyNpcFace.Index = _legacyNpcFaceFrame;
         var size = MirSkin.GetSize(LibraryFile.NPCImage, _legacyNpcFaceFrame);
         _legacyNpcFace.Size = size;
-        _legacyNpcFace.Location = new Vector2I(25, 20);
+        // 原版 NPCIMG 帧绘制在 NPC 对话窗局部坐标 (40,30)。
+        _legacyNpcFace.Location = new Vector2I(40, 30);
         if (_legacyNpcFace.GetParent() == null) AddControl(_legacyNpcFace);
         _legacyNpcFace.Visible = true;
     }

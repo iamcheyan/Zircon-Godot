@@ -39,8 +39,10 @@ public partial class NPCGoodsPanel : DXControl
     //   · 列表的 x 与宽度（证据只给 rowsY）；此处用 x=4、宽 250
     //   · 26 个槽位 +0x660 stride 0x24=36 的列分布（证据只给 stride，未给列 x）
     private bool _legacyEiLayout;
-    private int _rowHeight = 43;   // 原版 NPCGoodsDialog 行距
+    private int _rowHeight = 43;
     private int _rowInsetY = 1;    // 首行在列表内的 y 偏移
+    private int _visibleRows = 7;
+    private int _rowWidth = 204;
     private DXImageControl _legacyBackground;
 
     public NPCGoodsPanel()
@@ -104,10 +106,10 @@ public partial class NPCGoodsPanel : DXControl
         _guildFunds.Enabled = _guildFunds.Visible && GameScene.Game?.HasGuild == true;
         _scroll.Value = 0;
         // legacy（旧版 EI 商店窗）的根尺寸/列表/按钮几何由 ApplyLegacyEiLayout 固定，
-        // 这里不能按现代公式重算，否则会覆盖掉 300x304 与行距 46。
+        // 这里不能按现代公式重算，否则会覆盖掉 F1000 五行布局。
         if (_legacyEiLayout)
         {
-            _scroll.MaxValue = Math.Max(0, _goods.Count * _rowHeight - 2);
+            _scroll.MaxValue = _goods.Count * _rowHeight;
             RefreshRows();
             Visible = _goods.Count > 0 || _hasSellableTypes;
             return;
@@ -136,20 +138,22 @@ public partial class NPCGoodsPanel : DXControl
     public void ApplyLegacyEiLayout()
     {
         _legacyEiLayout = true;
-        _rowHeight = 46;
+        _rowHeight = 48;
         _rowInsetY = 0;
+        _visibleRows = 5;
+        _rowWidth = 238;
         // 2026-10-04: 素材实测 F1000 alpha 可见区 300x307（wilsdk 解码 bbox
         // (106,102,406,409)），窗口原写 304 会切掉底部 3px 底框。
         Size = new Vector2I(300, 307);
         _frame.Visible = false;
         _legacyBackground.Visible = true;
-        // 列表：5 行、行距 46、首行 y=40（证据 rowsY 40/86/132/178/224）。
-        // x 与宽度证据未给，取 4/250 以塞进 300 宽且不与 close(266) 重叠。
-        _list.Location = new Vector2I(4, 40);
-        _list.Size = new Vector2I(250, 230);
-        _scroll.Location = new Vector2I(254, 40);
-        _scroll.Size = new Vector2I(19, 228);
-        _scroll.VisibleSize = 230;
+        // F1000 alpha 区域内的五个烘焙行框位于 x=22、y=22/70/118/166/214；
+        // 旧实现把七行现代列表从 y=40 开始绘制，商品图标落在行框下方。
+        _list.Location = new Vector2I(21, 22);
+        _list.Size = new Vector2I(240, 240);
+        _scroll.Location = new Vector2I(264, 22);
+        _scroll.Size = new Vector2I(19, 238);
+        _scroll.VisibleSize = 240;
         _scroll.Change = _rowHeight;
         // close 帧 1010/1011 @ (266,270) 28x26；confirm 帧 1012/1013 @ (127,267) 48x20。
         _buy.Location = new Vector2I(127, 267);
@@ -172,14 +176,20 @@ public partial class NPCGoodsPanel : DXControl
             && _legacyBackground.LibraryFile == LibraryFile.GameInter
             && _legacyBackground.Index == 1000
             && _legacyBackground.Location == new Vector2I(-106, -102)
-            && _rowHeight == 46
-            && _list.Location == new Vector2I(4, 40)
+            && _rowHeight == 48
+            && _visibleRows == 5
+            && _rowWidth == 238
+            && _list.Location == new Vector2I(21, 22)
+            && _list.Size == new Vector2I(240, 240)
+            && _scroll.Location == new Vector2I(264, 22)
+            && _scroll.Size == new Vector2I(19, 238)
+            && _scroll.VisibleSize == 240 && _scroll.Change == 48
             && _buy.Location == new Vector2I(127, 267)
             && _buy.Size == new Vector2I(48, 20)
             // 2026-10-01：原版 arg8=-1（换 F1012 美术已烘焙进 F1000）-> 端口不叠画，
             // 只保留按下态 1013。判据随之更正（原断言 _buy.Index==1012 编码的是叠画行为）。
             && _buy.Index == -1 && _buy.HoverIndex == -1 && _buy.PressedIndex == 1013;
-        details = $"size={Size} frame={_legacyBackground.Index}@{_legacyBackground.Location} rowHeight={_rowHeight} list={_list.Location}/{_list.Size} buy={_buy.Location}/{_buy.Size}#{_buy.Index}";
+        details = $"size={Size} frame={_legacyBackground.Index}@{_legacyBackground.Location} rows={_visibleRows} rowHeight={_rowHeight} list={_list.Location}/{_list.Size} buy={_buy.Location}/{_buy.Size}#{_buy.Index}";
         return ok;
     }
 
@@ -313,7 +323,7 @@ public partial class NPCGoodsPanel : DXControl
     {
         foreach (var row in _rows) { _list.RemoveControl(row); row.QueueFree(); } _rows.Clear();
         int first = _scroll.Value / _rowHeight;
-        for (int i = first; i < _goods.Count && i < first + 7; i++)
+        for (int i = first; i < _goods.Count && i < first + _visibleRows; i++)
         {
             var good = _goods[i];
             long cost = good.CostFor(_currency, 1);
@@ -322,25 +332,29 @@ public partial class NPCGoodsPanel : DXControl
             {
                 Text = string.Empty, FontSize = 9, TextColour = selectedRow ? new Color(1f, .85f, .3f) : Colors.White,
                 BackColour = selectedRow ? new Color(.22f, .16f, .07f, .75f) : Colors.Transparent,
-                Border = selectedRow, BorderColour = new Color(1f, .85f, .3f),
+                Border = selectedRow && !_legacyEiLayout, BorderColour = new Color(1f, .85f, .3f),
                 LibraryFile = LibraryFile.Interface, Index = -1,
-                Location = new Vector2I(1, (i - first) * _rowHeight + _rowInsetY), Size = new Vector2I(204, 40),
+                Location = new Vector2I(_legacyEiLayout ? 0 : 1, (i - first) * _rowHeight + _rowInsetY),
+                Size = new Vector2I(_legacyEiLayout ? _rowWidth : 204, _legacyEiLayout ? 46 : 40),
             };
             row.AddControl(new DXImageControl
             {
-                LibraryFile = LibraryFile.StoreItem, Index = good.Item.Image, Location = new Vector2I(2, 2),
+                LibraryFile = LibraryFile.StoreItem, Index = good.Item.Image,
+                Location = _legacyEiLayout ? new Vector2I(4, 4) : new Vector2I(2, 2),
                 Size = new Vector2I(36, 36), FixedSize = true, IsControl = false,
             });
             row.AddControl(new DXLabel
             {
                 Text = good.Item.Local(), FontSize = 9, TextColour = row.TextColour,
-                Location = new Vector2I(41, 3), Size = new Vector2I(145, 17), IsControl = false,
+                Location = _legacyEiLayout ? new Vector2I(50, 4) : new Vector2I(41, 3),
+                Size = new Vector2I(_legacyEiLayout ? 180 : 145, 17), IsControl = false,
             });
             if (_currency?.DropItem != null)
                 row.AddControl(new DXImageControl
                 {
                     LibraryFile = LibraryFile.Ground, Index = _currency.DropItem.Image,
-                    Location = new Vector2I(41, 22), Size = new Vector2I(16, 16), FixedSize = true, IsControl = false,
+                    Location = _legacyEiLayout ? new Vector2I(50, 25) : new Vector2I(41, 22),
+                    Size = new Vector2I(16, 16), FixedSize = true, IsControl = false,
                 });
             // 旧版 NPCGoodsPanel.UpdateCosts：余额不足时价格变红，否则黄色。
             long balance = GameScene.Game?.Currencies.FirstOrDefault(x =>
@@ -350,11 +364,12 @@ public partial class NPCGoodsPanel : DXControl
             {
                 Text = $"{cost:#,##0}", FontSize = 9,
                 TextColour = afford ? new Color(1f, .85f, .3f) : Colors.Red,
-                Location = new Vector2I(60, 21), Size = new Vector2I(125, 17), IsControl = false,
+                Location = _legacyEiLayout ? new Vector2I(70, 25) : new Vector2I(60, 21),
+                Size = new Vector2I(150, 17), IsControl = false,
             });
             // 旧版 UpdateColours 的 RequirementLabel：可装备/使用物品显示 Can use Item（青绿），
             // 否则 Cannot use Item（红）。
-            if (good.Item.ItemType is ItemType.Consumable or ItemType.Scroll or ItemType.Weapon
+            if (!_legacyEiLayout && good.Item.ItemType is ItemType.Consumable or ItemType.Scroll or ItemType.Weapon
                 or ItemType.Armour or ItemType.Helmet or ItemType.Necklace or ItemType.Bracelet
                 or ItemType.Ring or ItemType.Shoes or ItemType.Poison or ItemType.Amulet
                 or ItemType.DarkStone or ItemType.Bundle or ItemType.Torch)

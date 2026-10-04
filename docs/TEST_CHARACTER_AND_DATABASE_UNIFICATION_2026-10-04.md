@@ -54,8 +54,8 @@ SERVER_DIR="$ROOT/../Debug/ServerCore"
 为彻底解决混乱，本次操作严格遵循写库纪律（**停服 -> 备份 -> 写入 -> 读回校验**）：
 
 1. **优雅停服**：向正在运行的服务端发送 `SIGTERM`，确认进程完全释放端口 7000。
-2. **备份旧数据**：
-   - 将 70 级道士库备份至：`/home/tetsuya/development/Debug/ServerCore/Database/Users.db.bak-70taoist-20261004`。
+2. **清理混淆旧数据**：
+   - 彻底删除导致混淆的 70 级道士旧库及其备份（`/home/tetsuya/development/Debug/ServerCore/Database/Users.db.bak-70taoist-20261004`），防止后续再次误用。
 3. **全域覆盖统一**：
    - 提取包含 **255 级、全技能、裁决战神套神装** 的纯净测试角色数据；
    - 统一写入上述 3 处核心位置：

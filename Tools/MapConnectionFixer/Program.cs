@@ -18,6 +18,17 @@ class Program
     {
         string root = Path.GetFullPath("Debug/ServerCore/Database/") + Path.DirectorySeparatorChar;
 
+        if (args.Length > 0 && args[0] == "--export-maps")
+        {
+            string dbRoot = Path.Combine(MapExporter.RepoRoot(), "Debug", "ServerCore", "Database")
+                           + Path.DirectorySeparatorChar;
+            var exp = new Session(SessionMode.System, dbRoot);
+            exp.Initialize(typeof(ItemInfo).Assembly);
+            string outPath = args.Length > 1 ? args[1] : "maps_export.json";
+            MapExporter.Run(exp, outPath);
+            return;
+        }
+
         if (args.Length > 0 && args[0] == "--semantic-hash")
         {
             // MirDB 每次保存都会重写集合物理顺序，字节级 MD5 天然会变，
@@ -593,8 +604,15 @@ class Program
         // 只有「官方有回程行、本库却没有」才是真断连。
         // 缺 .map 的地图无法做阻挡校验（铁律 3），其连接必然无法落地。
         // 这类属环境限制而非库内缺陷，必须与真实断连分开统计，否则验收口径失真。
-        string mapDir = Path.GetFullPath("Debug/ServerCore/Map/") + Path.DirectorySeparatorChar;
-        bool HasMapFile(string fn) => File.Exists(Path.Combine(mapDir, fn + ".map"));
+        string mapDir = MapExporter.RepoRoot() + "/Debug/ServerCore/Map/";
+        // Linux 区分大小写：System.db 登记 d807，官方写 D807，磁盘是 d807.map。
+        // 不做大小写不敏感匹配会把这些图误判为「缺地图文件」。
+        var diskMapNames = Directory.EnumerateFiles(mapDir, "*.map")
+            .Select(Path.GetFileNameWithoutExtension)
+            .Where(n => n != null)
+            .Select(n => n!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        bool HasMapFile(string fn) => diskMapNames.Contains(fn);
         var mapsWithoutFile = registeredNames.Where(n => !HasMapFile(n))
             .OrderBy(n => n, StringComparer.Ordinal).ToList();
 

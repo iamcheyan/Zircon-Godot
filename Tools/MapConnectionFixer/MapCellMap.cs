@@ -31,9 +31,19 @@ internal sealed class MapCellMap
     {
         if (Cache.TryGetValue(fileName, out var cached)) return cached;
 
+        // System.db 登记 d807，磁盘是 d807.map，而 Mud3 官方写 D807。
+        // Linux 区分大小写，直接 File.Exists 组合路径会漏掉这些图，
+        // 导致它们的连接被误判为「无落点」而整批跳过。
         string path = Path.Combine(mapDir, fileName + ".map");
         if (!File.Exists(path))
-            throw new FileNotFoundException($"map file missing: {path}", path);
+        {
+            string hit = Directory.EnumerateFiles(mapDir, "*.map").FirstOrDefault(p =>
+                string.Equals(Path.GetFileNameWithoutExtension(p), fileName,
+                              StringComparison.OrdinalIgnoreCase));
+            if (hit == null)
+                throw new FileNotFoundException($"map file missing: {path}", path);
+            path = hit;
+        }
 
         byte[] bytes = File.ReadAllBytes(path);
 

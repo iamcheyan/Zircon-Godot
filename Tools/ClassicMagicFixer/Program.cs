@@ -65,6 +65,50 @@ switch (mode)
     case "apply":
         return ClassicMagicPurity.Run(root, sync);
 
+    case "items":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(MagicInfo).Assembly, typeof(ItemInfo).Assembly);
+        Console.WriteLine("Index\tName\tClass\tType\tPrice\tShape\tEffect");
+        foreach (var it in session.GetCollection<ItemInfo>().Binding.OrderBy(x => x.Index))
+            Console.WriteLine($"{it.Index}\t{it.ItemName}\t{(int)it.RequiredClass}\t{(int)it.ItemType}\t{it.Price}\t{it.Shape}\t{(int)it.ItemEffect}");
+        return ExitOk;
+    }
+
+    case "mons":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(MonsterInfo).Assembly);
+        foreach (var m in session.GetCollection<MonsterInfo>().Binding.OrderBy(x => x.Index))
+            Console.WriteLine($"{m.Index}\t{m.MonsterName}");
+        return ExitOk;
+    }
+
+    case "dropinspect":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(ItemInfo).Assembly, typeof(MonsterInfo).Assembly);
+        var idx2name = session.GetCollection<MonsterInfo>().Binding.ToDictionary(m => m.Index, m => m.MonsterName);
+        var iname = session.GetCollection<ItemInfo>().Binding.ToDictionary(i => i.Index, i => i.ItemName);
+        foreach (var n in new[] { "Black Boar", "Ghoul Champion", "Uma King", "Zuma King" })
+        {
+            var m = idx2name.Values.FirstOrDefault(x => x == n);
+            var row = session.GetCollection<MonsterInfo>().Binding.FirstOrDefault(x => x.MonsterName == n);
+            if (row == null) { Console.WriteLine($"missing monster {n}"); continue; }
+            Console.WriteLine($"=== {n} (idx {row.Index}) ===");
+            foreach (var d in session.GetCollection<DropInfo>().Binding.Where(d => d.Monster?.Index == row.Index).OrderBy(d => d.Chance))
+                Console.WriteLine($"  1/{d.Chance,4} qty {d.Amount,3} {iname.GetValueOrDefault(d.Item?.Index ?? 0, "???")}");
+        }
+        return ExitOk;
+    }
+
+    case "drops":
+        return DropAligner.Run(root, !args.Contains("--no-sync", StringComparer.OrdinalIgnoreCase));
+
+    case "restore":
+        if (args.Length < 3) { Console.Error.WriteLine("restore needs <SourceRoot> <TargetRoot>"); return ExitFail; }
+        return RestoreClassicItems.Run(Path.GetFullPath(args[2]), root);
+
     case "grant":
         return GrantClassicSkills.Run(root);
 
@@ -72,3 +116,5 @@ switch (mode)
         Console.Error.WriteLine($"unknown mode: {mode}");
         return ExitFail;
 }
+
+internal partial class Program { }

@@ -17,6 +17,14 @@ class Program
     static void Main(string[] args)
     {
         string root = Path.GetFullPath("Debug/ServerCore/Database/") + Path.DirectorySeparatorChar;
+
+        if (args.Length > 0 && args[0] == "--audit")
+        {
+            Console.WriteLine("=== 开始对全游戏地图连接 (Movement) 与安全区 (SafeZone) 进行全面体检 ===");
+            AuditAll(root);
+            return;
+        }
+
         Console.WriteLine("=== 开始修复比奇 (0) 地图连接点与安全区坐标 ===");
 
         FixMapConnectionsAndSafeZone(root);
@@ -400,5 +408,119 @@ class Program
             }
         }
         return valid;
+    }
+
+    static void AuditAll(string root)
+    {
+        var session = new Session(SessionMode.System, root);
+        session.Initialize(typeof(ItemInfo).Assembly);
+
+        var mapCol = session.GetCollection<MapInfo>();
+        var movementCol = session.GetCollection<MovementInfo>();
+        var safezoneCol = session.GetCollection<SafeZoneInfo>();
+
+        Console.WriteLine($"\n[1. 地图总体统计]");
+        Console.WriteLine($"  - MapInfo 登记总数: {mapCol.Binding.Count}");
+        Console.WriteLine($"  - SafeZoneInfo 登记总数: {safezoneCol.Binding.Count}");
+        Console.WriteLine($"  - MovementInfo 登记总数: {movementCol.Binding.Count}");
+
+        // 1. SafeZone 坐标比对与分析
+        Console.WriteLine($"\n[2. 安全区 (SafeZone) 现状审查]");
+        var originalStartPoints = new Dictionary<string, (int x, int y)>
+        {
+            { "01", (439, 304) },
+            { "02", (265, 207) },
+            { "0",  (458, 398) },
+            { "1",  (423, 102) },
+            { "2",  (342, 222) },
+            { "4",  (457, 77) },
+            { "41", (167, 94) },
+            { "5",  (216, 185) },
+            { "74", (315, 287) },
+            { "8",  (237, 273) },
+            { "9",  (193, 572) },
+            { "81", (130, 273) }
+        };
+
+        foreach (var sz in safezoneCol.Binding)
+        {
+            var map = sz.Region?.Map ?? sz.BindRegion?.Map;
+            var regPt = sz.Region?.PointRegion?.FirstOrDefault();
+            var bindPt = sz.BindRegion?.PointRegion?.FirstOrDefault();
+            string fn = map?.FileName ?? "未知";
+            string desc = map?.Description ?? "无描述";
+
+            string status = "正常";
+            if (originalStartPoints.TryGetValue(fn, out var orig))
+            {
+                // 计算与原版中心的距离
+                if (bindPt != null)
+                {
+                    int dist = Math.Max(Math.Abs(bindPt.Value.X - orig.x), Math.Abs(bindPt.Value.Y - orig.y));
+                    if (dist > 30) status = $"⚠️ 距离原版({orig.x},{orig.y})偏差较大 (Δ={dist})";
+                    else status = $"✔ 与原版相符({orig.x},{orig.y})";
+                }
+            }
+            Console.WriteLine($"  SafeZone #{sz.Index,-3} | 地图: {fn,-10} ({desc,-12}) | Region点数:{sz.Region?.PointRegion?.Length,4} | Bind首点:{bindPt} | {status}");
+        }
+
+        // 2. 坏连接与孤儿连接审查
+        Console.WriteLine($"\n[3. 异常连接 (Movement) 扫描]");
+        int invalidCount = 0;
+        foreach (var m in movementCol.Binding)
+        {
+            bool badSource = m.SourceRegion == null || m.SourceRegion.Map == null || m.SourceRegion.PointRegion == null || m.SourceRegion.PointRegion.Length == 0;
+            bool badDest = m.DestinationRegion == null || m.DestinationRegion.Map == null || m.DestinationRegion.PointRegion == null || m.DestinationRegion.PointRegion.Length == 0;
+
+            if (badSource || badDest)
+            {
+                invalidCount++;
+                Console.WriteLine($"  ⚠️ 坏连接 Movement #{m.Index}: Source={m.SourceRegion?.Map?.FileName} ({m.SourceRegion?.Description}), Dest={m.DestinationRegion?.Map?.FileName} ({m.DestinationRegion?.Description})");
+            }
+        }
+        if (invalidCount == 0) Console.WriteLine("  ✔ 未发现任何 Source/Dest 为空的坏连接。");
+
+        // 3. 洞窟内部层级连通性普查
+        Console.WriteLine($"\n[4. 常见地下城/洞窟层级连接抽检]");
+        string[][] dungeonChains = new string[][]
+        {
+            new string[] { "天然洞穴", "D001", "D002", "D003", "D004" },
+            new string[] { "骷髅洞", "D011", "D012", "D013", "D014", "D015" },
+            new string[] { "比奇矿区", "D202", "D203" },
+            new string[] { "跳蚤洞/绝望谷", "D401", "D402", "D403", "D404", "D405", "D406" },
+            new string[] { "沃玛神殿", "D1001", "D1002", "D1003", "D1004" },
+            new string[] { "祖玛神殿", "D1101", "D1102", "D1103", "D1104", "D1105", "D1106", "D1107" },
+            new string[] { "石墓(猪洞)", "D1201", "D1202", "D1203", "D1204", "D1205", "D1206", "D1207" },
+            new string[] { "潘夜石窟", "D1401", "D1402", "D1403", "D1404", "D1405" }
+        };
+
+        foreach (var chain in dungeonChains)
+        {
+            string name = chain[0];
+            Console.WriteLine($"  ▶ {name}:");
+            for (int i = 1; i < chain.Length; i++)
+            {
+                string curr = chain[i];
+                var mCurr = mapCol.Binding.FirstOrDefault(m => m.FileName == curr);
+                if (mCurr == null)
+                {
+                    Console.WriteLine($"    - 地图 {curr} 在 System.db 中未注册！");
+                    continue;
+                }
+
+                if (i < chain.Length - 1)
+                {
+                    string next = chain[i + 1];
+                    var mNext = mapCol.Binding.FirstOrDefault(m => m.FileName == next);
+                    if (mNext != null)
+                    {
+                        var forward = movementCol.Binding.Any(m => m.SourceRegion?.Map == mCurr && m.DestinationRegion?.Map == mNext);
+                        var backward = movementCol.Binding.Any(m => m.SourceRegion?.Map == mNext && m.DestinationRegion?.Map == mCurr);
+                        string status = (forward && backward) ? "✔ 双向连通" : (forward ? "⚠️ 仅有单向去路" : "❌ 未连通");
+                        Console.WriteLine($"    - {curr} ↔ {next}: {status}");
+                    }
+                }
+            }
+        }
     }
 }

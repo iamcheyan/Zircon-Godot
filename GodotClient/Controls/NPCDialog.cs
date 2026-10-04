@@ -305,12 +305,6 @@ public partial class NPCDialog : DXWindow
         {
             raw = ApplyLegacyFColor(raw);
             raw = ExtractLegacyNpcImg(raw, out _legacyNpcFaceFrame);
-            // FaceImage 是 NPCface.wil 的原始帧号，帧 0 也是有效头像。
-            // 旧判断 > 0 会把最常见的零号头像误判成“没有头像”。
-            if (_legacyNpcFaceFrame < 0 && GameScene.Game?.CurrentNPCInfo?.FaceImage >= 0)
-            {
-                _legacyNpcFaceFrame = GameScene.Game.CurrentNPCInfo.FaceImage;
-            }
         }
 
         bool hasFace = _legacyLayout && _legacyNpcFaceFrame >= 0;
@@ -478,11 +472,12 @@ public partial class NPCDialog : DXWindow
 
         WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent());
 
-        if (_page.DialogType == NPCDialogType.None)
-            GameScene.Game?.OpenNPCQuestList(GameScene.Game.NPCObjectId);
-        else
+        // 暂停 NPC 对话附带的任务列表与详情窗口；任务数据和任务系统保留。
+        // 原版 NPC 对话通过脚本中的 NPCIMG/<frame> 指定头像，不能用 NPCInfo
+        // 的 FaceImage 默认值代替，否则所有未显式配置的 NPC 都显示帧 0。
+        GameScene.Game?.CloseNPCQuestDialogs();
+        if (_page.DialogType != NPCDialogType.None)
         {
-            GameScene.Game?.CloseNPCQuestDialogs();
             GameScene.Game?.CloseNPCSocketDialogs();
             if (_page.DialogType == NPCDialogType.Socketing)
                 GameScene.Game?.OpenNPCSocketDialog();

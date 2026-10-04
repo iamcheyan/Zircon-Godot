@@ -150,7 +150,7 @@ internal static class SetupGuardsSystem
             archerSpawns.Add((mapMongchon, 279, 172, MirDirection.UpRight));
             archerSpawns.Add((mapMongchon, 242, 166, MirDirection.UpLeft));
             archerSpawns.Add((mapMongchon, 249, 163, MirDirection.UpLeft));
-            archerSpawns.Add((mapMongchon, 287, 203, MirDirection.DownRight));
+            archerSpawns.Add((mapMongchon, 286, 203, MirDirection.DownRight));
             archerSpawns.Add((mapMongchon, 291, 207, MirDirection.DownRight));
             archerSpawns.Add((mapMongchon, 225, 235, MirDirection.DownLeft));
             archerSpawns.Add((mapMongchon, 231, 241, MirDirection.DownLeft));

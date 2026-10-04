@@ -1,0 +1,10 @@
+== 修复前（2026-10-04 14:42:49，银杏山谷[02] 进图）
+12:[Sunday, 04 October 2026 14:42:49]: Failed to spawn Guard Map:银杏山谷, Location: 287, 203
+
+== 修复后（2026-10-04 15:01:56，银杏山谷[02] 进图）
+[Sunday, 04 October 2026 15:01:00]: Map loaded: Bichon Town [0]
+[Sunday, 04 October 2026 15:01:00]: Map loaded: Banya Village [2]
+[Sunday, 04 October 2026 15:01:00]: Map loaded: Lost Paradise [1]
+[Sunday, 04 October 2026 15:01:00]: Network Started. Listen: 127.0.0.1:7000
+[Sunday, 04 October 2026 15:01:56]: Map loaded: 银杏山谷 [02]
+Failed to spawn 计数: 0

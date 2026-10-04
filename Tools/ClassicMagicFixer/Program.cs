@@ -154,6 +154,24 @@ switch (mode)
     case "setupguards":
         return SetupGuardsSystem.Run(root);
 
+    case "guardfix":
+        return GuardAligner.Run(root, args.Contains("--dry-run"), !args.Contains("--no-sync"));
+
+    case "guardaudit":
+        return GuardAligner.Run(root, dryRun: true, sync: false);
+
+    case "guarddump":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(GuardInfo).Assembly, typeof(MapInfo).Assembly, typeof(MonsterInfo).Assembly);
+        var rows = session.GetCollection<GuardInfo>().Binding;
+        Console.WriteLine($"TOTAL\t{rows.Count}");
+        Console.WriteLine("Index\tMapFile\tMapDesc\tMonster\tX\tY\tDirection");
+        foreach (var g in rows.OrderBy(g => g.Map?.FileName).ThenBy(g => g.Index))
+            Console.WriteLine($"{g.Index}\t{g.Map?.FileName}\t{g.Map?.Description}\t{g.Monster?.MonsterName}\t{g.X}\t{g.Y}\t{g.Direction}");
+        return ExitOk;
+    }
+
     case "charpos":
     {
         var users = new Session(SessionMode.Users, root, root + "Backup/");

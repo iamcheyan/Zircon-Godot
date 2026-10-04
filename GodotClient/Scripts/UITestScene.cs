@@ -883,6 +883,24 @@ public partial class UITestScene : Control
         var dialog = new MagicDialog();
         bool valid = dialog.AuditLayout(out string details);
         GD.Print(valid ? $"[UIMagicAudit] PASS {details}" : $"[UIMagicAudit] FAIL {details}");
+
+        // 快捷键文本映射测试
+        bool keyTextOk = MagicDialog.SpellKeyText(Library.SpellKey.Spell01) == "F1"
+            && MagicDialog.SpellKeyText(Library.SpellKey.Spell12) == "F12"
+            && MagicDialog.SpellKeyText(Library.SpellKey.Spell13) == "S+F1"
+            && MagicDialog.SpellKeyText(Library.SpellKey.Spell24) == "S+F12"
+            && MagicDialog.SpellKeyText(Library.SpellKey.None) == string.Empty;
+
+        // 快捷键事件分发解析测试 (F1~F12, Delete/Backspace, 同键解绑)
+        bool keyFilterCtrl = !dialog.HandleKeyInput(new InputEventKey { Keycode = Key.F1, Pressed = true, CtrlPressed = true });
+        bool keyFilterEcho = !dialog.HandleKeyInput(new InputEventKey { Keycode = Key.F1, Pressed = true, Echo = true });
+        bool keyFilterUnpressed = !dialog.HandleKeyInput(new InputEventKey { Keycode = Key.F1, Pressed = false });
+        bool keyFilterInvalid = !dialog.HandleKeyInput(new InputEventKey { Keycode = Key.A, Pressed = true });
+
+        GD.Print(keyTextOk && keyFilterCtrl && keyFilterEcho && keyFilterUnpressed && keyFilterInvalid
+            ? "[UIMagicHotkeyAudit] PASS keyText/filter/ctrl-guard/echo-guard"
+            : $"[UIMagicHotkeyAudit] FAIL keyText={keyTextOk} ctrl={keyFilterCtrl} echo={keyFilterEcho} unpressed={keyFilterUnpressed} invalid={keyFilterInvalid}");
+
         dialog.QueueFree();
     }
 

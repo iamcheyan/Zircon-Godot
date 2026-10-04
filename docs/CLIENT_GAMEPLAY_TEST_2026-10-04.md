@@ -27,9 +27,8 @@
 | NPC 对话 | ✅ 正常（多页文本 + 选项翻页 + 子面板） |
 | 商店买卖 | ✅ 正常（商品列表/价格 + 购买成功） |
 | GM 命令 | ✅ 可用（`@move` / `@monster`，经聊天框输入） |
-| **发现并修复的 bug** | **1 个（严重）：legacy 背包丢弃后格子永久锁死** |
-| 发现但未修复 | 服务端/客户端 System.db 地图表不一致（见第四节） |
-| 其它发现 | `AGENTS.md` 的 `@spawn` 命令名有误，实为 `@monster`（见第五节） |
+| **发现并修复的 bug** | **2 个**：① legacy 背包丢弃后格子永久锁死（第三节）② 4 份 System.db 不一致、服务端读到清洗前旧库（第四节） |
+| 其它发现 | `AGENTS.md` 的 `@spawn` 命令名有误，实为 `@monster`（已修正，见第五节） |
 
 ---
 
@@ -224,7 +223,7 @@ F1000 背景里，位置 `(127,267)` 48×20）：
 
 ---
 
-## 四、发现但**未修复**：服务端 / 客户端 System.db 地图表不一致
+## 四、已修复：服务端 / 客户端 System.db 不一致
 
 测试 GM 传送时发现：**部分地图客户端加载不了，角色会停在旧地图上但坐标已被改写**
 （客户端与服务端位置失联）。
@@ -242,43 +241,72 @@ F1000 背景里，位置 `(127,267)` 48×20）：
 查表；查不到只打印一行错误就 `return`，**不切图、不回滚坐标**，于是客户端停在
 旧地图上渲染新坐标 —— 玩家与服务端失联。
 
-### 根因：两个 System.db 不同步
+### 根因：4 份 System.db 里只有 2 份是清洗后的纯净库
 
-| 库 | 路径 | 大小 | 有 `D201` |
+`docs/DATABASE_CLASSIC_PURITY_CLEANUP_PLAN.md` 规定纯净库要**原子安装到 4 处**，
+实测只有 2 处生效，服务端读到的那份还是**清洗前的旧库**：
+
+| 路径 | 实测 MD5 | 状态 | MapInfo |
 |---|---|---|---|
-| 服务端 | `Debug/ServerCore/Database/System.db` | 5.75 MB | ✅ |
-| 客户端 | `Debug/Client/Data/System.db` | 11.2 MB | ❌ |
+| `Debug/ServerCore/Database/System.db` | `f6f470fe` | ❌ 清洗前旧库 | 244 |
+| `/home/tetsuya/mir2ei/Data/System.db`（客户端） | `9e7d11d4` | ✅ 纯净库 | 627 |
+| `/home/tetsuya/mir2ei/Database/System.db` | `9e7d11d4` | ✅ 纯净库 | 627 |
+| `System.db`（仓库根） | `96b212b1` | ❌ 清洗前旧库 | 244 |
 
-客户端 `MapInfo` 共 627 条且索引有大量缺口（缺 10、11、15、21–27…136…）。
-服务端 `MapInfo` 含客户端没有的条目，`MapIndex=136`(D201)、`26`(D101) 即属此类。
+两库的差异远不止地图：
 
-`mir2ei/ARCHIVED_ASSETS_MANIFEST.md` §5 也印证了这个顺序：
-> 「数据库未登记死重地图（167 个文件）：磁盘 `Map/` 原存 794 张，而 `System.db`
-> 登记的仅 627 张……已全部移入归档」
+| 表 | 纯净库（客户端/工作区） | 旧库（服务端） |
+|---|---:|---:|
+| MapInfo | **627** | 244 |
+| MapRegion | 5010 | 1666 |
+| ItemInfo | **326** | 1078 |
+| MonsterInfo | **116** | 309 |
+| MagicInfo | **59** | 174 |
+| NPCInfo | 294 | 125 |
 
-—— 即**客户端库被当作基准**剔掉了 167 张地图文件，而服务端库仍保留这些地图。
+MapInfo 按索引只有 59 条重合、按文件名 88 条重合（其中 29 条**同名不同索引**）。
+`Tools/dbeditor/workspace/MapInfo.json` 是同步流程的源头，它正是 **627 条**——
+即纯净库才是预期终态，服务端库只是**没跟上同步**。
 
-### 影响
+### 修复
 
-- `AGENTS.md` 的「常用矿区传送（测试用）」里 `@move D201`、`@move D101` **不可用**；
-  `@move D202` / `@move D203` 正常。
-- 任何**服务端有、客户端没有**的地图（含传送门/任务目的地指向的图）都会让
-  客户端卡在旧图。玩家会看到自己在错误的地图上移动。
+```bash
+# 1. 停服（AGENTS.md：服务端运行中绝不写 System.db）
+pkill -TERM -f ServerCore.dll
+# 2. 备份（服务端库 + 根库 + Users.db）→ Backup/pre-dbsync-<时间戳>/
+# 3. 把纯净库安装到落后的两处
+install -m 0644 /home/tetsuya/mir2ei/Data/System.db Debug/ServerCore/Database/System.db
+install -m 0644 /home/tetsuya/mir2ei/Data/System.db System.db
+# 4. 重启服务端
+```
 
-### 为什么不在这里修
+修复后 4 处 MD5 全部为 `9e7d11d40c2b0a08d10c0f2fae50d02f`。
 
-1. 正确修法是**同步两库**（`Tools/dbeditor/sync.sh` 的流程），属数据操作，
-   不是代码改动；
-2. `AGENTS.md` 明确要求「**服务端运行中绝不写 System.db**」，当前服务端在跑；
-3. 同步会重写两库、影响用户既有数据，需在停服并备份后由用户确认执行。
+### 验证（实机）
 
-**建议**：停服 → 用 dbeditor 同步双库（或按需把缺失地图补进客户端库）→
-重启后复测 `@move D201` / `@move D101`。
+| 项目 | 结果 |
+|---|---|
+| 服务端启动 | ✅ 1 秒，无孤儿外键/空引用报错 |
+| 客户端登录进游戏 | ✅ `StartGame` 完成，0 异常 |
+| `@move 01`（EI 地图，索引 610） | ✅ 服务端 `Map loaded: 边境城市 [01]`；客户端切图成功，标签 `边境城市 : [373,289]` |
+| `@move D201` / `@move D101` | ✅ 服务端明确回 `Could not find map with index: D201`，**客户端不再失联** |
 
-### 附：客户端对「找不到地图」的容错（可另议）
+> 即：客户端有的 627 张图服务端现在都能服务；客户端没有的图服务端直接拒绝，
+> 不会再出现「停在旧图、坐标被改写」的静默失联。
 
-当前实现只打日志不切图也不回滚坐标，导致静默失联。更稳的做法是保留原图与
-原坐标，并把错误显式提示给玩家。这条属于**独立的小改动**，本次未动。
+### 副作用（已处理）
+
+测试角色 `TestHero` 背包里大量物品来自旧库（如 `Healing Potion`、`Demon Hunter's
+Shroud (M)`），在纯净库里没有对应 `ItemInfo`，换库后被服务端清掉
+（负重 1007 → 160）。已用 `@make` 补回基础可测装备
+（`WarBlade` / `IronSword` / `RejuvenationPotion 50` / `ArmouredBracerOfAncientKingdom`）。
+
+### 遗留
+
+- 客户端对「找不到地图」仍只打日志、不切图也不回滚坐标。现在服务端已不会下发
+  这类 `MapChanged`，但作为**独立的小改动**仍值得加固（保留原图与原坐标并提示）。
+- 服务端 `chinese_alias.json` 仍是旧库规模（1073 物品 / 425 怪物别名），
+  多于纯净库的 326 / 116；多余别名无害，但可另行清理。
 
 ---
 
@@ -292,7 +320,7 @@ Command @SPAWN does not exist.
 ```
 实际命令名取自 `SpawnMonster.VALUE`，即 **`@monster <名字> [数量]`**
 （`ServerLibrary/Envir/Commands/Command/Admin/SpawnMob.cs:10`）。
-建议把 `AGENTS.md` 里的 `@spawn 怪物 数量` 改成 `@monster 怪物 [数量]`。
+**已修正**：`AGENTS.md` 的 `@spawn 怪物 数量` 已改为 `@monster 怪物 [数量]`。
 
 已实测确认：`@monster Pig 3` 在身前刷出 3 只猪（`@spawn` 则报不存在）。
 怪物名须与服务端 `MonsterInfo.MonsterName` 完全一致（如 `Pig` / `Guard` /

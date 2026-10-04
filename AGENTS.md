@@ -63,7 +63,7 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 
 | 命令 | 用途 | 示例 |
 |------|------|------|
-| `@move 地图  x  y` | 传送到地图指定坐标（省略坐标=随机点） | `@move D201`、`@move D201 54 287` |
+| `@move 地图  x  y` | 传送到地图指定坐标（省略坐标=随机点） | `@move D202`、`@move D202 54 287` |
 | `@goto 角色名` | 传送到某角色身边 | `@goto TestHero` |
 | `@recall 角色名` | 把某角色拉到身边 | `@recall TestHero` |
 
@@ -88,7 +88,7 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 |------|------|------|
 | `@make 物品名` | 刷物品到背包 | `@make 金创药` |
 | `@giveHorse` | 给马 | `@giveHorse` |
-| `@spawn 怪物 数量` | 刷怪 | `@spawn GhostSorcerer 5` |
+| `@monster 怪物 [数量]` | 刷怪（注意：**不是** `@spawn`） | `@monster GhostSorcerer 5` |
 | `@setCompanionLevel/Stat` | 宠物等级/属性 | `@setCompanionLevel` |
 | `@setHermitStat` | 隐士属性 | `@setHermitStat` |
 
@@ -108,11 +108,17 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 
 ### 常用矿区传送（测试用）
 
+> 数据库已于 2026-10-03 做「经典纯净」清洗（见
+> `docs/DATABASE_CLASSIC_PURITY_CLEANUP_PLAN.md`），部分地图已从 `System.db`
+> 移除。**传送前先用下面的命令确认地图仍登记在库里**，否则服务端会回
+> `Could not find map with index: <名>`（客户端不会切图）。
+
 ```
-@move D201    ← 废矿1层（僵尸洞，黑/熔岩地砖）
-@move D202    ← 废矿2层
-@move D203    ← 废矿3层
-@move D101    ← 比奇矿洞1层
+@move D202    ← 废矿2层（Deserted Mine Lv 2）
+@move D203    ← 废矿3层（Deserted Mine Lv 3）
+
+# 已随清洗移除、现在不可用：D201（废矿1层）、D101（比奇矿洞1层）
+# 查当前可用地图：见 `System.db` 的 MapInfo 表（客户端库与服务端库必须一致）
 ```
 
 ## 工作约定
@@ -177,7 +183,18 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 - **无头验证配方**：Xvfb :100 + openbox + godot-mono（/tmp/godot-mono）+ scrot；用户参数在 `--` 之后；4K 缩放测试用 ZIRCON_UI_SCALE=2
 - **构建**：`dotnet build GodotClient/ZirconClient.csproj`（仓库根目录执行；增量有缓存坑用 --no-incremental）
 - **服务端口表**：7000 ServerCore / 8810 dbeditor / 8820 uieditor / 8822 webclient / 8800 dbviewer / 8899 mapviewer / 8765 wilviewer / 8830 yomu / 8831 fudoki / 80 svc-dashboard
-- **写库纪律**：服务端运行中绝不写 System.db；双库（服务端+客户端）同步写；写前备份；round-trip 读回验证。工具模板见 Mir3-Research/AGENTS.md
+- **写库纪律**：服务端运行中绝不写 System.db；写前备份；round-trip 读回验证。工具模板见 Mir3-Research/AGENTS.md
+  - **System.db 必须保持 4 处完全一致**（MD5 相同）。漏掉任何一处都会造成
+    客户端/服务端的地图或物品索引错位：
+    ```
+    Debug/ServerCore/Database/System.db    ← 服务端实际读取（相对 ServerCore 可执行目录）
+    /home/tetsuya/mir2ei/Data/System.db    ← 客户端读取（Debug/Client -> mir2ei 软链）
+    /home/tetsuya/mir2ei/Database/System.db
+    /home/tetsuya/development/zircon/System.db
+    ```
+  - 症状：服务端库比客户端库「旧」时，`@move` 到客户端没有的地图会让**客户端停在
+    旧图但坐标已被改写**（玩家与服务端失联）；服务端库缺少客户端的地图时，那些
+    地图无法进入。诊断与修复记录见 `docs/CLIENT_GAMEPLAY_TEST_2026-10-04.md` 第四节。
 - **goal 体系**：omp goal 跑在 tmux（一 goal 一会话）；goal_watchdog.sh GOALS 数组注册（id|jsonl|tmux会话|workdir|label）；终态自动回收记 ~/.omp/logs/goal-completed.log
 
 ---

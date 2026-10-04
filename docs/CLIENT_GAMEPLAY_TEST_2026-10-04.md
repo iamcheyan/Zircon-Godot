@@ -301,10 +301,15 @@ Shroud (M)`），在纯净库里没有对应 `ItemInfo`，换库后被服务端�
 （负重 1007 → 160）。已用 `@make` 补回基础可测装备
 （`WarBlade` / `IronSword` / `RejuvenationPotion 50` / `ArmouredBracerOfAncientKingdom`）。
 
+### 客户端加固（已修）
+
+`ShowMapChanged()` 原先无条件改 `_playerMapIndex` 再 `LoadPlayerMap()`；查不到图时
+只打日志就 `return`，于是客户端**自称在新图、实际渲染旧图**。现已改为：切换前先
+在客户端 `MapInfo` 里校验目标索引，不存在就保持当前地图与 `_playerMapIndex` 不变，
+打印明确错误并在状态栏提示（`e08c8c24`）。
+
 ### 遗留
 
-- 客户端对「找不到地图」仍只打日志、不切图也不回滚坐标。现在服务端已不会下发
-  这类 `MapChanged`，但作为**独立的小改动**仍值得加固（保留原图与原坐标并提示）。
 - 服务端 `chinese_alias.json` 仍是旧库规模（1073 物品 / 425 怪物别名），
   多于纯净库的 326 / 116；多余别名无害，但可另行清理。
 

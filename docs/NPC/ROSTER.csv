@@ -1,0 +1,295 @@
+﻿idx,name,name_zh,map,map_cn,x,y,category,service,mud3_id,active
+13,Mr. Kang,啊康,0,比奇县,402,356,武器店,武器买卖、修理,02Weapon_Bichon1,True
+14,Isaac,店员,0,比奇县,470,424,书店,书刊买卖,05Book_Bichon,True
+15,David,药店老板,0,比奇县,397,363,药店,常规药买卖,04Potion_Bichon1,True
+16,Lennard,杂货商,0,比奇县,450,413,杂货商,杂货买卖,07Grocery_Bichon,True
+17,Amy,恩实,0,比奇县,414,349,首饰店,首饰买卖、修理,08Accessory_Bichon,True
+18,Loy,栗子商人,0,比奇县,441,374,收购商,珍宝收购,10ChestnutMarket_Bichon,True
+19,Linda,怡美,0,比奇县,480,407,防具店,护甲买卖、修理,03Armor_Bichon,True
+20,Murphy,金氏,0,比奇县,446,405,屠夫/肉店,肉类买卖、收购,01Meet_Bichon1,True
+21,Hardy,王铁匠,1,道馆,382,198,武器店,武器买卖、修理,02Weapon_Wooma,True
+22,Gresham,天星,1,道馆,386,119,材料商,材料买卖,10Material_DoGwan,True
+23,Haylee,华玉,1,道馆,363,176,药店,常规药买卖,04Potion_Wooma,True
+24,Cory,,1,道馆,394,116,原版ID命名,,,True
+25,Flora,药神,1,道馆,387,118,药店,常规药买卖,04Potion_DoGwan2,True
+26,Max,栗子商人,1,道馆,382,141,收购商,珍宝收购,10ChestnutMarket_DoGwan,True
+27,Melisa,药中,1,道馆,393,113,药店,常规药买卖,04Potion_DoGwan1,True
+28,Rainier,钱老板,1,道馆,366,182,屠夫/肉店,肉类买卖、收购,01Meet_DoGwan,True
+30,Mr. Kim,铁匠啊力,2,毒蛇山谷,351,219,武器店,武器买卖、修理,02Weapon_SnakeVally,True
+31,Henry,啊福,2,毒蛇山谷,331,225,材料商,材料买卖,10Material_SnakeVally,True
+32,Kacy,金中医,2,毒蛇山谷,334,224,药店,常规药买卖,04Potion_SnakeVally,True
+33,Seven,流浪卢,2,毒蛇山谷,361,226,杂货商,杂货买卖,07Grocery_SnakeVally,True
+34,Dakota,客栈保管员,2,毒蛇山谷,346,234,客栈/仓库,仓储、休息,06Inn_SnakeVally,True
+35,Murray,蛇谷老太,2,毒蛇山谷,337,223,任务 NPC,任务发布/推进,14Quest_SnakeVally1,True
+36,Sara,金莲,2,毒蛇山谷,342,235,防具店,护甲买卖、修理,03Armor_SankeVally,True
+37,Parker,蛇谷老人,2,毒蛇山谷,343,219,路引,路引发放,09NotBlocker_SnakeVally,True
+38,(无名),,0,比奇县,408,377,未命名,,,True
+39,Hexa Holy Stone,六面神石,0,比奇县,498,463,传送,传送神石,13Move_Bichon1,True
+41,Hexa Holy Stone,六面神石,2,毒蛇山谷,306,244,传送,传送神石,13Move_SnakeVally1,True
+42,Hexa Holy Stone,六面神石,1,道馆,416,179,传送,传送神石,13Move_DoGwan,True
+43,Hexa Holy Stone,六面神石,5,沙漠土城,204,289,传送,传送神石,13Move_Samak1,True
+44,Hexa Holy Stone,六面神石,4,绿洲,435,83,传送,传送神石,13Move_Oasis,True
+45,Hexa Holy Stone,,12,灌木林,190,265,传送,传送神石,,True
+48,Jack,武功教头,5,沙漠土城,227,169,技能导师,职业技能传授,15Magic_Samak1,True
+50,Tasha,老郑,5,沙漠土城,198,252,药剂师,特殊药制造,04PotionMake_Samak,True
+52,Clinton,杂货商老李,5,沙漠土城,192,232,杂货商,杂货买卖,07Grocery_Samak,True
+56,Hexa Holy Stone,六面神石,5,沙漠土城,112,177,传送,传送神石,13Move_Samak2,True
+60,Glenn,铁汉,5,沙漠土城,189,252,武器店,武器买卖、修理,02Weapon_Samak,True
+61,Grace,润真,5,沙漠土城,181,277,鞋店,鞋类买卖,03Shoes_Samak,True
+62,Marshal,啊宋,5,沙漠土城,197,235,材料商,材料买卖,10Material_Samak,True
+63,Mandie,黄老板,5,沙漠土城,200,249,屠夫/肉店,肉类买卖、收购,01Meet_Samak,True
+65,Tumur,屠夫,4,绿洲,438,52,屠夫/肉店,肉类买卖、收购,01Meet_Oasis,True
+66,Imari,,4,绿洲,424,97,原版ID命名,,,True
+67,Solonga,洪老板,4,绿洲,470,67,杂货商,杂货买卖,07Grocery_Oasis,True
+68,Wooshas,,4,绿洲,426,95,原版ID命名,,,True
+69,Wooroy,,4,绿洲,426,99,原版ID命名,,,True
+70,Pat,,4,绿洲,428,75,原版ID命名,,,True
+76,Mr. Matt,啊胜,8,潘夜岛,224,210,武器店,武器买卖、修理,02Weapon_HalfNight,True
+77,Dr. Park,成赫,8,潘夜岛,282,224,药店,常规药买卖,04Potion_HalfNight,True
+78,Lafayette,中叔,8,潘夜岛,253,291,杂货商,杂货买卖,07Grocery_HalfNight,True
+79,Cherrill,晓华,8,潘夜岛,266,285,首饰店,首饰买卖、修理,08Accessory_HalfNight,True
+80,Mindy,晓洋,8,潘夜岛,249,257,防具店,护甲买卖、修理,03Armor_HalfNight,True
+81,Warren,,12,灌木林,188,265,原版ID命名,,,True
+82,Norman,,12,灌木林,190,263,原版ID命名,,,True
+83,Lawrence,,12,灌木林,190,267,原版ID命名,,,True
+84,Nancy,,12,灌木林,192,265,原版ID命名,,,True
+85,Livingston,,12,灌木林,188,263,原版ID命名,,,True
+86,Calla,,12,灌木林,188,267,原版ID命名,,,True
+88,Russ,义贤,0,比奇县,375,304,马市,马匹交易,09HorseMarket_Bichon,True
+89,Hexa Holy Stone,,D11031,潘夜神殿3层西部,197,257,传送,传送神石,,True
+90,Notice Board,图书管理员,0,比奇县,473,428,任务 NPC,任务发布/推进,14Quest_Bichon2,True
+91,Notice Board,书堂玄震,1,道馆,379,214,任务 NPC,任务发布/推进,14Quest_DoGwan2,True
+92,Notice Board,蛇谷老矿夫,2,毒蛇山谷,360,208,任务 NPC,任务发布/推进,14Quest_SnakeVally2,True
+93,Notice Board,,4,绿洲,428,97,其他,,,True
+94,Notice Board,,12,灌木林,192,263,其他,,,True
+95,Warrior Trainer,总教头,0,比奇县,447,444,技能导师,职业技能传授,15Magic_Bichon1,True
+96,Taoist Mentor,万事通,1,道馆,398,127,万事通,情报问答,14Doctor_DoGwan,True
+97,Wizard Teacher,断乔先生,2,毒蛇山谷,347,193,技能导师,职业技能传授,15Magic_SnakeVally,True
+98,Village Elder,唯我独尊,4,绿洲,426,97,技能导师,职业技能传授,15Magic_Oasis,True
+99,Dock Manager,,12,灌木林,192,267,其他,,,True
+100,Companion Manager,王大人,0,比奇县,389,396,任务 NPC,任务发布/推进,14Quest_Bichon1,True
+101,Companion Manager,士官,1,道馆,403,132,任务 NPC,任务发布/推进,14Quest_DoGwan1,True
+102,Companion Manager,万事通,2,毒蛇山谷,322,223,万事通,情报问答,14Doctor_SnakeVally,True
+103,Companion Manager,,4,绿洲,430,77,其他,,,True
+104,Companion Manager,,12,灌木林,186,265,其他,,,True
+105,Administrator,,0,比奇县,386,288,原版ID命名,,,True
+106,Jack,六面神石,2,毒蛇山谷,314,193,传送,传送神石,13Move_SnakeVally2,True
+118,Hexa Holy Stone,六面神石,8,潘夜岛,288,241,传送,传送神石,13Move_HalfNight1,True
+135,Mike,慧媛,0,比奇县,478,407,鞋店,鞋类买卖,03Shoes_Bichon,True
+136,Payton,,4,绿洲,433,83,原版ID命名,,,True
+140,Chief Yonghyeon,满春,8,潘夜岛,231,260,客栈/仓库,仓储、休息,06Inn_HalfNight,True
+141,14Quest_Bichon,,0_003,比奇县,27,35,任务 NPC,任务发布/推进,,True
+142,01Meet_Kugkyung,,01,边境城市,425,274,屠夫/肉店,肉类买卖、收购,,True
+143,02Weapon_Kugkyung,,01,边境城市,459,279,武器店,武器买卖、修理,,True
+144,03Armor_Kugkyung,,01,边境城市,442,296,防具店,护甲买卖、修理,,True
+145,04Potion_Kugkyung,,01,边境城市,434,303,药店,常规药买卖,,True
+146,05Book_Kugkyung,,01,边境城市,445,319,书店,书刊买卖,,True
+147,06Inn_Kugkyung,,01,边境城市,471,279,客栈/仓库,仓储、休息,,True
+148,07Grocery_Kugkyung,,01,边境城市,433,282,杂货商,杂货买卖,,True
+149,08Accessory_Kugkyung,,01,边境城市,444,270,首饰店,首饰买卖、修理,,True
+150,10Material_Kugkyung,,01,边境城市,431,307,材料商,材料买卖,,True
+151,10ChestnutMarket_Kugkyung,,01,边境城市,438,281,收购商,珍宝收购,,True
+152,13Move_Kugkyung1,,01,边境城市,456,216,传送,传送神石,,True
+153,13Move_Kugkyung2,,01,边境城市,411,287,传送,传送神石,,True
+154,13Move_Kugkyung3,,01,边境城市,463,356,传送,传送神石,,True
+155,14Doctor_Kugkyung,,01,边境城市,429,263,万事通,情报问答,,True
+156,14Quest_KugKyung1,,01,边境城市,461,257,任务 NPC,任务发布/推进,,True
+157,14Quest_KugKyung2,,01,边境城市,444,245,任务 NPC,任务发布/推进,,True
+158,14Quest_Kugkyung3,,01,边境城市,476,284,任务 NPC,任务发布/推进,,True
+159,14Quest_KugKyung,,01_001,志善屋,17,16,任务 NPC,任务发布/推进,,True
+160,15Magic_Kugkyung1,,01,边境城市,456,302,技能导师,职业技能传授,,True
+161,15Magic_KugKyung,,01_003,试练场,5,8,技能导师,职业技能传授,,True
+162,15Magic_Kugkyung2,,01,边境城市,104,203,技能导师,职业技能传授,,True
+163,17MobRush_kugkyung,,01,边境城市,424,312,活动 NPC,活动/事件,,True
+164,09CancleWeapon,,01,边境城市,422,262,修理工,武器修理,,True
+165,01Meet_Eunhang,,02,银杏山谷,228,194,屠夫/肉店,肉类买卖、收购,,True
+166,02Weapon_Eunhang,,02,银杏山谷,284,197,武器店,武器买卖、修理,,True
+167,03Armor_Eunhang,,02,银杏山谷,260,177,防具店,护甲买卖、修理,,True
+168,04Potion_Eunhang,,02,银杏山谷,273,189,药店,常规药买卖,,True
+169,04PotionMake_Euhang,,02,银杏山谷,272,189,药剂师,特殊药制造,,True
+170,05Book_Eunhang,,02,银杏山谷,233,222,书店,书刊买卖,,True
+171,06Inn_Eunhang,,02,银杏山谷,250,190,客栈/仓库,仓储、休息,,True
+172,07Grocery_Eunhang,,02,银杏山谷,236,205,杂货商,杂货买卖,,True
+173,08Accessory_Eunhang,,02,银杏山谷,275,222,首饰店,首饰买卖、修理,,True
+174,10Material_Eunhang,,02,银杏山谷,269,186,材料商,材料买卖,,True
+175,10ChestnutMarket_Eunhang,,02,银杏山谷,260,205,收购商,珍宝收购,,True
+176,13Move_Eunhang,,02,银杏山谷,249,144,传送,传送神石,,True
+177,14Doctor_Eunhang,,02,银杏山谷,264,195,万事通,情报问答,,True
+178,14Quest_Euhang,,02,银杏山谷,264,201,任务 NPC,任务发布/推进,,True
+179,15Magic_Eunhang1,,02,银杏山谷,265,145,技能导师,职业技能传授,,True
+180,15Magic_Eunhang2,,02,银杏山谷,353,212,技能导师,职业技能传授,,True
+181,15Magic_Euhang,,02_001,试练场,5,8,技能导师,职业技能传授,,True
+182,15Magic_Euhang,,02_003,试练场,91,14,技能导师,职业技能传授,,True
+183,15Magic_Euhang,,02_004,试练场,25,41,技能导师,职业技能传授,,True
+184,09Repair_Euhang,,02,银杏山谷,243,234,修理工,装备修理,,True
+185,09Bonus_Euhang,,02,银杏山谷,247,242,属性加成,属性加成,,True
+186,02Weapon_DoGwan,,1_001,武器仓库,14,12,武器店,武器买卖、修理,,True
+187,03Armor_DoGwan,,1_003,洗衣住居,13,16,防具店,护甲买卖、修理,,True
+188,04PotionMake_DoGwan,,1_006,药剂师住居,12,7,药剂师,特殊药制造,,True
+189,04Potion_DoGwan,,1_006,药剂师住居,9,10,药店,常规药买卖,,True
+190,05Book_DoGwan,,1_004,书房,9,11,书店,书刊买卖,,True
+191,07Grocery_DoGwan,,1_007,仓库,11,14,杂货商,杂货买卖,,True
+192,08Accessory_DoGwan,,1_005,物品研究所,9,11,首饰店,首饰买卖、修理,,True
+193,14Quest_DoGwan,,1_009,无名老人隐居地,117,25,任务 NPC,任务发布/推进,,True
+194,15Magic_DoGwan,,1_002,本馆,11,10,技能导师,职业技能传授,,True
+195,15Magic_DoGwan,,1_008,试练场,5,8,技能导师,职业技能传授,,True
+196,15Magic_DoGwan,,1_011,试练场,91,14,技能导师,职业技能传授,,True
+197,15Magic_DoGwan0,,1_013,试练场,44,25,技能导师,职业技能传授,,True
+198,15Magic_DoGwan1,,1_013,试练场,26,20,技能导师,职业技能传授,,True
+199,15Magic_DoGwan2,,1_013,试练场,29,23,技能导师,职业技能传授,,True
+200,15Magic_DoGwan3,,1_013,试练场,23,23,技能导师,职业技能传授,,True
+201,15Magic_DoGwan4,,1_013,试练场,35,15,技能导师,职业技能传授,,True
+202,15Magic_DoGwan5,,1_013,试练场,26,26,技能导师,职业技能传授,,True
+203,15Magic_DoGwan6,,1_013,试练场,25,41,技能导师,职业技能传授,,True
+204,15Magic_DoGwan7,,1_013,试练场,10,24,技能导师,职业技能传授,,True
+205,02Weapon_Oasis,,4_001,武器店,7,13,武器店,武器买卖、修理,,True
+206,03Armor_Oasis,,4_004,布匹店,9,8,防具店,护甲买卖、修理,,True
+207,04Potion_Oasis,,4_003,中药商,10,10,药店,常规药买卖,,True
+208,06Inn_Oasis,,4_003,中药商,8,15,客栈/仓库,仓储、休息,,True
+209,08Astrologist_Oasis,,4_005,占卜屋,14,22,占卜屋,占卜,,True
+210,10Material_Oasis,,4_003,中药商,12,8,材料商,材料买卖,,True
+211,02Weapon_Samak1,,5_002,武器商,8,17,武器店,武器买卖、修理,,True
+212,02Weapon_Samak2,,5_002,武器商,7,19,武器店,武器买卖、修理,,True
+213,03Armor_Samak,,5_004,服饰店,15,15,防具店,护甲买卖、修理,,True
+214,04Potion_Samak,,5_003,药房,13,17,药店,常规药买卖,,True
+215,06Inn_Samak,,5_006,仓库,12,23,客栈/仓库,仓储、休息,,True
+216,08Accessory_Samak,,5_005,饰品店,9,11,首饰店,首饰买卖、修理,,True
+217,09ChangeMoney_Samak,,5_006,仓库,7,21,兑换商,货币兑换,,True
+218,07Grocery_Ant,,6,沙漠,284,723,杂货商,杂货买卖,,True
+219,13Move_Ant,,6,沙漠,273,731,传送,传送神石,,True
+220,02Weapon_Mongchon,,74,盟重县,354,297,武器店,武器买卖、修理,,True
+221,03Armor_Mongchon,,74,盟重县,324,277,防具店,护甲买卖、修理,,True
+222,04Potion_Mongchon,,74,盟重县,289,289,药店,常规药买卖,,True
+223,06Inn_Mongchon,,74,盟重县,323,310,客栈/仓库,仓储、休息,,True
+224,07Grocery_Mongchon,,74,盟重县,293,278,杂货商,杂货买卖,,True
+225,08Accessory_Mongchon,,74,盟重县,311,273,首饰店,首饰买卖、修理,,True
+226,10Material_Mongchon,,74,盟重县,287,290,材料商,材料买卖,,True
+227,13Move_Mongchon1,,74,盟重县,349,329,传送,传送神石,,True
+228,13Move_Mongchon2,,74,盟重县,271,267,传送,传送神石,,True
+229,15Magic_Mongchon1,,74,盟重县,300,299,技能导师,职业技能传授,,True
+230,15Magic_Mongchon2,,74,盟重县,290,299,技能导师,职业技能传授,,True
+231,15Magic_Mongchon3,,74,盟重县,297,295,技能导师,职业技能传授,,True
+232,15Magic_Mongchon4,,74,盟重县,324,108,技能导师,职业技能传授,,True
+233,13Move_SukGak,,75,石阁庙,184,90,传送,传送神石,,True
+234,04Potion_RedZone,,81,流放岛,138,301,药店,常规药买卖,,True
+235,09Lucky_RedZone,,81,流放岛,119,297,幸运服务,幸运服务,,True
+236,13Move_RedZone,,81,流放岛,129,265,传送,传送神石,,True
+237,07Grocery_SkeletonCave,,DM001,奸商,4,6,杂货商,杂货买卖,,True
+238,14Quest_SkeletonCave,,D012_001,天然洞穴2层,13,11,任务 NPC,任务发布/推进,,True
+239,14Quest_SkeletonCave,,E002_001,半兽天然洞穴,9,11,任务 NPC,任务发布/推进,,True
+240,14Quest_SkeletonCave,,E002,半兽天然洞穴,65,12,任务 NPC,任务发布/推进,,True
+241,14Quest_SkeletonCave,,DM002,王陵,14,22,任务 NPC,任务发布/推进,,True
+242,09NotBlocker_ZombieCave,,D431,北部矿山入口,29,175,路引,路引发放,,True
+243,14Quest_ZombieCave,,E402_001,连接通路,13,10,任务 NPC,任务发布/推进,,True
+244,14Quest_ZombieCave,,D404_002,废矿矿山地下2层,22,11,任务 NPC,任务发布/推进,,True
+245,14Quest_WoomaPalace,,D023_001,沃玛神殿师徒关,17,21,任务 NPC,任务发布/推进,,True
+246,14Quest_WoomaPalace,,D022,沃玛神殿1层,207,47,任务 NPC,任务发布/推进,,True
+247,14Quest_WoomaPalace,,D022_001,沃玛神殿1层,64,21,任务 NPC,任务发布/推进,,True
+248,04Potion_Zuma,,D5071,祖玛神殿6层大厅,20,23,药店,常规药买卖,,True
+249,02Weapon_HalfTemple,,D1110,潘夜神殿大厅,27,13,武器店,武器买卖、修理,,True
+250,09WideUse_HalfTemple,,D1110,潘夜神殿大厅,7,24,万能服务,多功能服务,,True
+251,09Repair_HalfTemple,,D1110,潘夜神殿大厅,7,20,修理工,装备修理,,True
+252,13Move_HalfTemple1,,D1110,潘夜神殿大厅,15,18,传送,传送神石,,True
+253,13Move_HalfTemple2,,D1110,潘夜神殿大厅,28,31,传送,传送神石,,True
+254,13Move_HalfTemple,,D11031,潘夜神殿3层西部,199,257,传送,传送神石,,True
+255,04Potion_SinGiSun,,D90221,医务室,22,20,药店,常规药买卖,,True
+260,14Quest_SinGiSun,,D900,神舰入口,45,58,任务 NPC,任务发布/推进,,True
+261,14Quest_SinGiSun,,D90323,海图室,16,8,任务 NPC,任务发布/推进,,True
+262,01Meet_NuMa,,41,诺玛村庄,126,86,屠夫/肉店,肉类买卖、收购,,True
+263,02Weapon_Numa,,41,诺玛村庄,145,82,武器店,武器买卖、修理,,True
+264,03Armor_Numa,,41,诺玛村庄,141,108,防具店,护甲买卖、修理,,True
+265,04Potion_Numa,,41,诺玛村庄,168,125,药店,常规药买卖,,True
+266,06Inn_Numa,,41,诺玛村庄,168,84,客栈/仓库,仓储、休息,,True
+267,07Grocery_Numa,,41,诺玛村庄,127,118,杂货商,杂货买卖,,True
+268,08Accessory_Numa,,41,诺玛村庄,155,105,首饰店,首饰买卖、修理,,True
+269,10Material_Numa,,41,诺玛村庄,141,90,材料商,材料买卖,,True
+270,09HorseMarket_Numa,,41,诺玛村庄,147,106,马市,马匹交易,,True
+271,13Move_Numa,,41,诺玛村庄,184,136,传送,传送神石,,True
+272,17NuMaSahaka_Numa,,41,诺玛村庄,148,84,活动 NPC,活动/事件,,True
+273,17Zaha_Numa,,41,诺玛村庄,151,121,活动 NPC,活动/事件,,True
+274,20Gmatch,,02,银杏山谷,254,227,活动 NPC,活动/赛事,,True
+275,Hexa Holy Stone,,3,沙巴克城,222,119,传送,传送神石,,True
+276,Maddox,,3,沙巴克城,208,153,原版ID命名,,,True
+277,Perry,,3,沙巴克城,209,91,原版ID命名,,,True
+278,Kellen,,3,沙巴克城,211,148,原版ID命名,,,True
+279,Hexa Holy Stone,,3,沙巴克城,51,221,传送,传送神石,,True
+280,Denise,,3,沙巴克城,239,120,原版ID命名,,,True
+281,Mark,,3,沙巴克城,203,103,原版ID命名,,,True
+282,Kimberly,,3,沙巴克城,235,115,原版ID命名,,,True
+283,Jarvis,,3,沙巴克城,206,154,原版ID命名,,,True
+284,内测NPC,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+285,泡点系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+286,VIP,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+287,名望系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+288,功能NPC,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+289,功能NPC,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+290,功能NPC,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+291,钓鱼系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+292,钻石抽奖,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+293,天降宝箱,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+294,仓库系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+295,仓库系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+296,仓库系统,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+298,买卖商人,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+299,买卖商人,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+300,买卖商人,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+302,天下第一战,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+303,天下第一法,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+304,天下第一道,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+305,道观公告,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+306,合成大师,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+307,活动管理,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+308,沙城管家,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+309,化废为宝,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+310,经验化废,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+311,升级加点,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+312,结婚司仪,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+313,买马商人,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+314,美发专家,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+315,比奇官吏,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+316,行会旗帜,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+317,比赛评判,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+318,比赛评判,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+319,比赛评判,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+320,My00DefaultNpc,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+321,道观传送,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+322,传送银杏,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+323,传送比奇,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+328,传送土城,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+329,传送流放,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+330,潘业传送3,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+331,潘业传送4,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+332,绿洲沙漠,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+333,进进出出,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+336,神舰接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+337,诺玛接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+338,诺玛接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+339,诺玛接待3,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+340,诺玛接待4,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+341,西沙接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+342,冰城接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+343,绝情接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+344,绝情接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+345,魔界接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+346,魔界接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+347,群魔接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+348,群魔接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+349,群魔接待3,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+350,群魔接待4,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+351,异界接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+352,异界接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+353,异界接待3,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+354,异界接待4,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+355,邪恶之地,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+356,邪恶接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+357,邪恶接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+358,龙穴接待1,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+359,龙穴接待2,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+360,黑暗巢穴,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+361,青青草原,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+362,幽暗森林,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+363,钓鱼岛,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+364,血案接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+365,骑兵接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+366,尊者接待,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False
+367,杀人掠夺,,,,,,已软停用,"经典版无此 NPC (Merchant.txt 查无 + 现代功能名), 软停用 Region=null",,False

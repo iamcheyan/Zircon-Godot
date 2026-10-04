@@ -51,15 +51,36 @@ public partial class NPCDialog : DXWindow
     // 本实现按该静态路径接入关闭与行级上下滚动；mode=1 且 overflow=1
     // 的 14px 分支需要原版 token/layout state，当前 NPCPage 不暴露该状态，
     // 因此普通/长文本统一采用证据中的默认 21px 行距。
-    // 2026-10-04 像素级核查：第一列 x=150 避开 NPCFace 头像(可见区窗口坐标 64..161)，
-    // 第二列 0x131=305 为绝对窗口坐标。反汇编 "x = 0x131 - 0x6B when line >= 7"
-    // 的 0x6B 语义未定（198 与两列布局矛盾），维持 305，待真机对照后定论。
-    private const int LegacyTextX = 150;
-    private const int LegacyTextY = 40;
-    private const int LegacyTextWidth = 149;
-    private const int LegacyTextColumn2X = 305;
-    private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40
-    private const int LegacyStripWidth = 384;  // F1101=383, F1102=384 可见宽度
+    // 2026-10-04 原版截图实测（用户提供的原版 EI 客户端「打造绝世武器」NPC 对话，
+    // 见 docs/NPC/LEGACY_DIALOG_GEOMETRY.md §6）。截图窗口暗区宽 610px 对应
+    // F1100 可见宽 384px，放大比 610/384 = 1.59。据此换算：
+    //   头像      占 x 0..97      （NPCface 素材可见宽 97，绘制在窗口左上）
+    //   左列文字  x = 118         （在头像右侧，不与头像重叠）
+    //   右列文字  x = 235         （右缘 235+149=384，正好贴 F1100 可见区右缘）
+    // 两列间距 117，与反汇编 0x131/0x131-0x6B 的间距 107 同量级（截图经缩放，
+    // 量测有 ±10px 误差），三者在 384 内自洽。
+    //
+    // 此前取值 150/305 的问题：305+149=454 越出可见宽 384（右列被右缘裁断），
+    // 且 150 之后正文与头像争同一区域，实机截图可见每行开头数个字被头像压住。
+    // 2026-10-04 原版截图对照（用户提供的原版 EI 客户端「打造绝世武器」NPC 对话，
+    // 见 docs/NPC/LEGACY_DIALOG_GEOMETRY.md §6）。截图窗口暗区宽 610px 对应
+    // F1100 可见宽 384px，放大比 1.59。据此换算出的三段布局：
+    //   头像      窗口左上，占据上部
+    //   右列      正文 + 第一组选项，在头像右侧
+    //   左列      第二组选项，**在头像下方**（不是头像右侧）
+    //
+    // Godot 侧注意：DXImageControl 不做原版 WIL 的 offsetX/offsetY 处理
+    // （那是 DirectX 的锚点语义），所以 (40,30) 就是左上角，可见区 40..140 / 30..152。
+    // 左列因此必须落在头像底部之下，否则每行开头会被头像压住（自测截图可见）。
+    // 头像占窗口 y 30..152（绘制点 LegacyNpcFacePosition.Y=30 + 素材高 122）。
+    // 原版截图里左列（第二组选项）落在**头像底部之下**，故左列区域单独下移。
+    private const int LegacyPortraitBottom = 152;
+    private const int LegacyTextX = 65;         // 左列 x（头像下方）
+    private const int LegacyTextY = 40;         // 右列 y（顶部起排）
+    private const int LegacyTextWidth = 149;    // 右列换行门 0x95
+    private const int LegacyTextColumn2X = 235; // 右列：右缘 235+149=384 贴可见区右缘
+    private const int LegacyTextHeight = 136;   // 根框底部 176 - 文本原点 40
+    private const int LegacyStripWidth = 384;   // F1101=383, F1102=384 可见宽度
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
     private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
     // 原版 0x440AA0 扫描器（npc-window-render-evidence.json::dialogue_text_layout_contract）：
@@ -162,11 +183,16 @@ public partial class NPCDialog : DXWindow
         _legacyStripArea.Size = new Vector2I(LegacyStripWidth, LegacyTextHeight);
         _legacyStripArea.Clip = true;
         _legacyStripArea.Visible = true;
-        _textArea.Location = new Vector2I(LegacyTextX, LegacyTextY);
+        // 原版截图布局：主文本（正文+第一组选项）在**右列**（头像右侧，x=235），
+        // 溢出后剩余行进**左列**（头像下方，x=65 / y=152）。故主容器用右列几何，
+        // 第二列容器用左列几何并下移到头像之下。
+        _legacyStripArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
+        _textArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
         _textArea.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
         _textArea.Clip = true;
-        _textColumn2Area.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
-        _textColumn2Area.Size = new Vector2I(LegacyTextWidth, LegacyTextHeight);
+        _textColumn2Area.Location = new Vector2I(LegacyTextX, LegacyPortraitBottom);
+        _textColumn2Area.Size = new Vector2I(
+            LegacyTextColumn2X - LegacyTextX, LegacyTextHeight - (LegacyPortraitBottom - LegacyTextY));
         _textColumn2Area.Clip = true;
         // 关闭：证据中的 static hit-test 子控件位置 (7,141)。
         _closeButton.LibraryFile = LibraryFile.GameInter;
@@ -289,11 +315,12 @@ public partial class NPCDialog : DXWindow
             && _headerBackground.Index == 1100
             // 背景锚点 = alpha 可见区原点 -(64,59)（素材实测 F1100 bbox 原点 (64,59)）。
             && _headerBackground.Location == new Vector2I(-64, -59)
-            && _legacyStripArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
+            && _legacyStripArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
             && _legacyStripArea.Size == new Vector2I(LegacyStripWidth, LegacyTextHeight)
             && _legacyStripArea.Clip
-            && _textArea.Location == new Vector2I(LegacyTextX, LegacyTextY)
+            && _textArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
             && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
+            && _textColumn2Area.Location == new Vector2I(LegacyTextX, LegacyPortraitBottom)
             && _closeButton.Index == 161
             && _closeButton.Location == new Vector2I(7, 141)
             && _closeButton.Size == new Vector2I(28, 26)

@@ -505,7 +505,8 @@ public partial class LegacyHudLayoutLab : Control
 
             // 继续下滚到触底
             int guard = 0;
-            while (_npc.LegacyEiSelfState().Line < _npc.LegacyEiSelfState().MaxLine && guard < 20)
+            // 2026-10-04: 左列改用 117px 换行后行数 18 -> 23，滚动上限同步放宽。
+            while (_npc.LegacyEiSelfState().Line < _npc.LegacyEiSelfState().MaxLine && guard < 60)
             {
                 await ClickControl(_npc.LegacyScrollDownButton);
                 guard++;

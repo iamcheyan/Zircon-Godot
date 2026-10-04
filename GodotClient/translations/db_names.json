@@ -7157,19 +7157,19 @@
    "ja": "火球術"
   },
   "Lightning Ball": {
-   "zh": "雷电术",
+   "zh": "霹雳掌",
    "ja": "雷撃術"
   },
   "Ice Bolt": {
-   "zh": "冰箭术",
+   "zh": "冰月神掌",
    "ja": "氷矢"
   },
   "Gust Blast": {
-   "zh": "狂风冲击",
+   "zh": "风掌",
    "ja": "突風衝撃"
   },
   "Repulsion": {
-   "zh": "击退狂暴",
+   "zh": "抗拒火环",
    "ja": "抗拒火環"
   },
   "Electric Shock": {
@@ -7177,7 +7177,7 @@
    "ja": "魅惑の光"
   },
   "Teleportation": {
-   "zh": "乾坤大挪移",
+   "zh": "瞬息移动",
    "ja": "瞬間移動"
   },
   "Adamantine Fire Ball": {
@@ -7185,15 +7185,15 @@
    "ja": "金剛火球"
   },
   "Thunder Bolt": {
-   "zh": "雷霆电击",
+   "zh": "雷电术",
    "ja": "雷霆電撃"
   },
   "Ice Blades": {
-   "zh": "冰刃术",
+   "zh": "冰月震天",
    "ja": "氷刃術"
   },
   "Cyclone": {
-   "zh": "龙卷风",
+   "zh": "击风",
    "ja": "竜巻"
   },
   "Scorched Earth": {
@@ -7205,7 +7205,7 @@
    "ja": "雷光光線"
   },
   "Frozen Earth": {
-   "zh": "寒冰大地",
+   "zh": "冰沙掌",
    "ja": "氷結大地"
   },
   "Blow Earth": {
@@ -7217,11 +7217,11 @@
    "ja": "火炎壁"
   },
   "Expel Undead": {
-   "zh": "驱逐亡灵",
+   "zh": "圣言术",
    "ja": "亡霊退散"
   },
   "Geo Manipulation": {
-   "zh": "地脉操纵",
+   "zh": "异形换位",
    "ja": "地脈操作"
   },
   "Magic Shield": {
@@ -7229,11 +7229,11 @@
    "ja": "魔法盾"
   },
   "Fire Storm": {
-   "zh": "火焰风暴",
+   "zh": "爆裂火焰",
    "ja": "火炎嵐"
   },
   "Lightning Wave": {
-   "zh": "雷电波",
+   "zh": "地狱雷光",
    "ja": "雷撃波"
   },
   "Ice Storm": {
@@ -7241,7 +7241,7 @@
    "ja": "氷嵐"
   },
   "Dragon Tornado": {
-   "zh": "龙卷风暴",
+   "zh": "龙卷风",
    "ja": "龍巻嵐"
   },
   "Greater Frozen Earth": {
@@ -7313,7 +7313,7 @@
    "ja": "霊魂火符"
   },
   "Evil Slayer": {
-   "zh": "召唤骷髅",
+   "zh": "月魂断玉",
    "ja": "スケルトン召喚"
   },
   "Invisibility": {
@@ -7329,11 +7329,11 @@
    "ja": "群体隠身"
   },
   "Greater Evil Slayer": {
-   "zh": "强召唤骷髅",
+   "zh": "月魂灵波",
    "ja": "大スケルトン召喚"
   },
   "Resilience": {
-   "zh": "坚韧",
+   "zh": "神圣战甲术",
    "ja": "堅忍"
   },
   "Trap Octagon": {
@@ -7341,7 +7341,7 @@
    "ja": "困魔呪"
   },
   "Combat Kick": {
-   "zh": "气功波",
+   "zh": "空拳刀法",
    "ja": "気功波"
   },
   "Elemental Superiority": {
@@ -7349,15 +7349,15 @@
    "ja": "元素支配"
   },
   "Mass Heal": {
-   "zh": "群体治愈",
+   "zh": "群体治愈术",
    "ja": "群体治癒"
   },
   "Blood Lust": {
-   "zh": "嗜血术",
+   "zh": "猛虎强势",
    "ja": "嗜血術"
   },
   "Resurrection": {
-   "zh": "复活术",
+   "zh": "回生术",
    "ja": "復活術"
   },
   "Purification": {
@@ -7589,7 +7589,7 @@
    "ja": "鏡像"
   },
   "Summon Jin Skeleton": {
-   "zh": "召唤金骷髅",
+   "zh": "超强召唤骷髅",
    "ja": "金スケルトン召喚"
   },
   "Summon Shinsu": {

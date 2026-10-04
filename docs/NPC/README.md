@@ -10,6 +10,7 @@
 | **每个城市有哪些 NPC、在哪个坐标** | [`ROSTER.md`](ROSTER.md) |
 | **这些 NPC 分别干什么、卖什么** | [`FUNCTIONS.md`](FUNCTIONS.md) |
 | 这次对齐做了什么、怎么做的 | [`WORK_LOG.md`](WORK_LOG.md) |
+| **这些 NPC 有什么问题、缺什么** | [`ANALYSIS.md`](ANALYSIS.md) |
 | 验收结论 | [`ACCEPTANCE.md`](ACCEPTANCE.md) |
 | 原版有但还没有的 NPC | `missing_npcs_pending_intro.json`（205 条） |
 
@@ -25,6 +26,7 @@
 |---|---|
 | `ROSTER.md` | 逐地图 NPC 坐标明细（58 张图，每图一张表） |
 | `FUNCTIONS.md` | 职能分类：6 大类 / 28 个职能，说明各自卖什么、干什么 |
+| `ANALYSIS.md` | **问题清单与优先级**：58 个 NPC 显示英文名、比奇缺 3 项业态、软停用风险等 |
 | `ROSTER.csv` | 机读版，294 条（含软停用），字段：idx/name/name_zh/map/map_cn/x/y/category/service/mud3_id/active |
 | `WORK_LOG.md` | 完整工作记录：探索发现、6 步 SOP、踩坑、遗留项 |
 | `ACCEPTANCE.md` | 7 项硬指标验收结论 |

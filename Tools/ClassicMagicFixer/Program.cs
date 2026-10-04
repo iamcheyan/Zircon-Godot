@@ -9,6 +9,8 @@ using MirDB;
 // Usage:
 //   ClassicMagicFixer dump  <RootDir>              # full MagicInfo dump, no writes
 //   ClassicMagicFixer apply <RootDir> [--no-sync]  # purge to the 54 classic skills
+//   ClassicMagicFixer auditdeps <RootDir>          # validate runtime monster/skill data dependencies
+//   ClassicMagicFixer restoredeps <TargetRoot> <SourceRoot> # restore retained runtime monster dependencies
 //
 // <RootDir> is the directory holding System.db. It is resolved to an absolute path
 // and must already contain a non-empty System.db: a typo must fail loudly instead of
@@ -139,6 +141,16 @@ switch (mode)
         if (args.Length < 3) { Console.Error.WriteLine("restore needs <SourceRoot> <TargetRoot>"); return ExitFail; }
         return RestoreClassicItems.Run(Path.GetFullPath(args[2]), root);
 
+    case "auditdeps":
+        return RuntimeDataAudit.Run(root);
+
+    case "restorenative":
+    {
+        string defaultBackup = "/home/tetsuya/development/zircon/Debug/ServerCore/Database/Backup/classic-purity-20261003-snapshot/ServerCore_Database_System.db";
+        string backupPath = args.Length >= 3 ? Path.GetFullPath(args[2]) : defaultBackup;
+        return RestoreNativeEntities.Run(root, backupPath);
+    }
+
     case "charpos":
     {
         var users = new Session(SessionMode.Users, root, root + "Backup/");
@@ -198,6 +210,24 @@ switch (mode)
         Console.WriteLine($"技能书补齐完成: 新建 {created} 本，当前总技能书 {items.Binding.Count(i => i.ItemType == ItemType.Book)}");
 
         return ShopAligner.Run(root, sync);
+    }
+
+    case "monsdetail":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(MonsterInfo).Assembly);
+        Console.WriteLine($"Total monsters in {root}: {session.GetCollection<MonsterInfo>().Binding.Count}");
+        foreach (var m in session.GetCollection<MonsterInfo>().Binding.OrderBy(x => x.Index))
+        {
+            if (m.Flag != MonsterFlag.None || m.MonsterName.Contains("Skeleton", StringComparison.OrdinalIgnoreCase)
+                || m.MonsterName.Contains("Shinsu", StringComparison.OrdinalIgnoreCase)
+                || m.MonsterName.Contains("Larva", StringComparison.OrdinalIgnoreCase)
+                || m.MonsterName.Contains("Bone", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Idx={m.Index,-4} Name='{m.MonsterName,-20}' Flag={m.Flag,-18} AI={m.AI,-3} Img={m.Image,-4} Lv={m.Level}");
+            }
+        }
+        return ExitOk;
     }
 
     default:

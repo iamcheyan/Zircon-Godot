@@ -1429,7 +1429,28 @@ namespace Server.Envir
 
                         connection = Connections[i];
 
-                        connection.Process();
+                        try
+                        {
+                            connection.Process();
+                        }
+                        catch (Exception ex)
+                        {
+                            // A bad player packet must not stop the authoritative world loop.
+                            // SConnection already records packet-handler exceptions; this adds
+                            // context for failures thrown elsewhere in connection processing.
+                            Log($"Connection {connection.SessionID} ({connection.IPAddress}) failed; disconnecting that session.");
+                            Log(ex.ToString());
+
+                            try
+                            {
+                                connection.SendDisconnect(new G.Disconnect { Reason = DisconnectReason.Crashed });
+                            }
+                            catch (Exception disconnectException)
+                            {
+                                Log($"Connection {connection.SessionID} cleanup failed: {disconnectException}");
+                                connection.Disconnect();
+                            }
+                        }
                         bytesSent += connection.TotalBytesSent;
                         bytesReceived += connection.TotalBytesReceived;
                     }

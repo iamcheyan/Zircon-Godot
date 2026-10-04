@@ -25,15 +25,14 @@ namespace Server.Models.Magics
                 Ob = null
             };
 
-            if (!Player.UseAmulet(2, 0))
+            var info = SEnvir.MonsterInfoList.Binding.FirstOrDefault(x => x.Flag == MonsterFlag.JinSkeleton);
+            if (info == null || !Player.UseAmulet(2, 0))
             {
                 response.Cast = false;
                 return response;
             }
 
             var delay = SEnvir.Now.AddMilliseconds(500);
-
-            var info = SEnvir.MonsterInfoList.Binding.First(x => x.Flag == MonsterFlag.JinSkeleton);
 
             ActionList.Add(new DelayedAction(delay, ActionType.DelayMagic, Type, CurrentMap, Functions.Move(CurrentLocation, direction, -1), info));
 

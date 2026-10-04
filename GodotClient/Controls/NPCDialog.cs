@@ -51,11 +51,11 @@ public partial class NPCDialog : DXWindow
     // 本实现按该静态路径接入关闭与行级上下滚动；mode=1 且 overflow=1
     // 的 14px 分支需要原版 token/layout state，当前 NPCPage 不暴露该状态，
     // 因此普通/长文本统一采用证据中的默认 21px 行距。
+    // 2026-10-04 像素级核查：第一列 x=150 避开 NPCFace 头像(可见区窗口坐标 64..161)，
+    // 第二列 0x131=305 为绝对窗口坐标。反汇编 "x = 0x131 - 0x6B when line >= 7"
+    // 的 0x6B 语义未定（198 与两列布局矛盾），维持 305，待真机对照后定论。
     private const int LegacyTextX = 150;
     private const int LegacyTextY = 40;
-    // N5 证据 npc-dialog-family-evidence.json：type-1 文本的换行门是 0x95 = 149px，
-    // 行数 >=7 时切到第二列（x = 0x131 = 305）。此前用 290 是自推导值，在任一
-    // 背景原点下都会越出 F1100 可见面板右缘（384）。
     private const int LegacyTextWidth = 149;
     private const int LegacyTextColumn2X = 305;
     private const int LegacyTextHeight = 136; // 根框底部 176 - 文本原点 40

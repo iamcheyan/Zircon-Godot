@@ -39,6 +39,20 @@ public static class LibraryCache
         return lib;
     }
 
+    private static ZlLibrary _legacyDoll;
+
+    public static ZlLibrary GetLegacyDoll()
+    {
+        Init();
+        if (_legacyDoll != null) return _legacyDoll;
+        string fullPath = Path.Combine(DataPath, "LegacyDoll.Zl");
+        fullPath = ResolvePath(fullPath);
+        if (!File.Exists(fullPath)) return null;
+
+        _legacyDoll = new ZlLibrary(fullPath);
+        return _legacyDoll;
+    }
+
     private static string ResolvePath(string fullPath)
     {
         if (File.Exists(fullPath)) return fullPath;
@@ -58,5 +72,7 @@ public static class LibraryCache
         foreach (var lib in _cache.Values)
             lib?.Dispose();
         _cache.Clear();
+        _legacyDoll?.Dispose();
+        _legacyDoll = null;
     }
 }

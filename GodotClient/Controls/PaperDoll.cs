@@ -32,6 +32,7 @@ public partial class PaperDoll : Control
     private ZlLibrary _equip;
     private ZlLibrary _equipEffect;
     private ZlLibrary _gameInter;
+    private ZlLibrary _legacyDoll;
     private bool _inspect;
     private MirGender _inspectGender;
     private MirClass _inspectClass;
@@ -78,6 +79,7 @@ public partial class PaperDoll : Control
         _equip = LibraryCache.Get(LibraryFile.Equip);
         _equipEffect = LibraryCache.Get(LibraryFile.EquipEffect_UI);
         _gameInter = LibraryCache.Get(LibraryFile.GameInter);
+        _legacyDoll = LibraryCache.GetLegacyDoll();
     }
 
     public override void _Process(double delta)
@@ -129,6 +131,12 @@ public partial class PaperDoll : Control
         if (!hideBody && costume == null && HasInfo(armour))
             DrawEquipmentEffect(armour, gender, true);
 
+        // 判定是否属于经典旧版纸娃娃链路:
+        // 1. 刺客职业除外（无旧版底模，统一走新版底模）
+        // 2. 未穿时装 且 (未穿衣服 或 穿戴的是经典旧版 16 款服装之一)
+        bool isLegacy = playerClass != MirClass.Assassin && costume == null && (armour == null || IsLegacyArmour(armour));
+        int legacyArmourIndex = (isLegacy && HasInfo(armour)) ? ResolveLegacyArmourIndex(armour) : -1;
+
         // 1. 刺客女特殊发型
         if (!hideBody && playerClass == MirClass.Assassin && gender == MirGender.Female
             && hairType == 1 && helmet == null)
@@ -136,11 +144,14 @@ public partial class PaperDoll : Control
             DrawImage(_progUse, 1160, ToGodot(hairColour));
         }
 
-        // 2. 裸身 (男0/女1)
+        // 2. 裸身 (旧版 0男/1女；新版使用 ProgUse 0男/1女)
         if (!hideBody)
         {
             int bodyIndex = gender == MirGender.Male ? 0 : 1;
-            DrawImage(_progUse, bodyIndex, Colors.White);
+            if (isLegacy && _legacyDoll != null)
+                DrawImage(_legacyDoll, bodyIndex, Colors.White);
+            else
+                DrawImage(_progUse, bodyIndex, Colors.White);
         }
 
         // 3. 衣服 / 时装
@@ -152,8 +163,16 @@ public partial class PaperDoll : Control
             }
             else if (HasInfo(armour))
             {
-                DrawImage(_equip, armour.Info.Image, Colors.White);
-                DrawImageOverlay(_equip, armour.Info.Image, ToGodot(armour.Colour));
+                if (isLegacy && legacyArmourIndex >= 0 && _legacyDoll != null)
+                {
+                    DrawImage(_legacyDoll, legacyArmourIndex, Colors.White);
+                    DrawImageOverlay(_equip, armour.Info.Image, ToGodot(armour.Colour));
+                }
+                else
+                {
+                    DrawImage(_equip, armour.Info.Image, Colors.White);
+                    DrawImageOverlay(_equip, armour.Info.Image, ToGodot(armour.Colour));
+                }
             }
 
             // 4. 武器
@@ -311,6 +330,26 @@ public partial class PaperDoll : Control
             1003 => 1400, 1013 => 1420,
             _ => -1,
         };
+
+    /// <summary>判定是否属于原版传奇3经典 16 款衣服区间。</summary>
+    private static bool IsLegacyArmour(ClientUserItem armour)
+    {
+        if (armour?.Info == null) return false;
+        int img = armour.Info.Image;
+        return img is 940 or 941 or 950 or 951 or 952 or 980 or 981 or 990 or 991
+            or 1000 or 1001 or 1010 or 1011 or 1020 or 1021 or 1030 or 1031;
+    }
+
+    /// <summary>解析旧版纸娃娃中的贴图帧，兼容 System.db 中布衣女(951)与轻盔女(952)的历史偏移。</summary>
+    private static int ResolveLegacyArmourIndex(ClientUserItem armour)
+    {
+        if (armour?.Info == null) return -1;
+        if (armour.Info.ItemName?.Contains("Commoner Outfit (F)") == true || armour.Info.ItemName?.Contains("布衣（女）") == true)
+            return 950;
+        if (armour.Info.ItemName?.Contains("Light Armour (F)") == true || armour.Info.ItemName?.Contains("轻型盔甲（女）") == true)
+            return 951;
+        return armour.Info.Image;
+    }
 
     private static Color ToGodot(System.Drawing.Color c)
         => new Color(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);

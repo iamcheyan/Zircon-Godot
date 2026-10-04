@@ -784,8 +784,10 @@ public partial class SelectScene : Control
         if (aura != null)
         {
             int auraIndex = idx + 40;     // 特效块 = 角色块 + 40
-            Vector2I auraSize = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex);
-            bool hasAura = auraSize.X > 4 || auraSize.Y > 2; // 排除 4x2 等空白占位
+            // 仅以 EI 原版 WIL 为准判定"是否有特效帧"——避免 `MirSkin.GetSize`
+            // 通过 ZL 回退把现代 Zircon 角色动画（典型 F1560/F1740/F1440/F480 等）
+            // 当成 EI 特效显示在选角屏上，造成"旧资源瞬闪"。
+            bool hasAura = MirSkin.LegacyWilHasFrame(LibraryFile.Interface1c, auraIndex);
             bool isSelected = _legacySelectedIndex == slot;
             bool showAura = isSelected && hasAura;
             if (aura.Visible != showAura) aura.Visible = showAura;
@@ -1717,8 +1719,10 @@ public partial class SelectScene : Control
             if (aura != null)
             {
                 int auraIndex = frame + 40;
-                Vector2I auraSize = MirSkin.GetSize(LibraryFile.Interface1c, auraIndex);
-                bool hasAura = auraSize.X > 4 || auraSize.Y > 2; // 排除 4x2 等空白占位
+                // 仅以 EI 原版 WIL 为准判定"是否有特效帧"，理由与
+                // `SyncLegacySlotGeometry` 同：ZL 回退会把现代 ZL 角色帧
+                // 当成 EI 特效层画在建角预览槽位上（瞬闪）。
+                bool hasAura = MirSkin.LegacyWilHasFrame(LibraryFile.Interface1c, auraIndex);
                 bool showAura = selected && hasAura;
                 if (aura.Visible != showAura) aura.Visible = showAura;
                 if (showAura && aura.Index != auraIndex) aura.Index = auraIndex;

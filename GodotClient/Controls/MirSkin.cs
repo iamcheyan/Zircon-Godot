@@ -282,6 +282,32 @@ public static class MirSkin
         if (index >= lib.Images.Length || lib.Images[index] == null) return Vector2I.Zero;
         return new Vector2I(lib.Images[index].Width, lib.Images[index].Height);
     }
+    /// <summary>
+    /// 仅查 EI 原版 WIL（WIX offset > 0 且帧头 W/H > 0），
+    /// **不**回退到现代 .Zl 素材。
+    ///
+    /// EI 旧版 UI 把 WIX offset 0 视为"此索引无图"（= 绘制跳过），
+    /// 而现代 ZL 在同索引上常有另一套完全不同的素材（典型例：Interface1c[1560..]
+    /// 是 Zircon 上游新角色动画，但 EI 选角屏的 +40 块本来在该索引上就是空帧）。
+    /// 双层回退管线（`LEGACY_ITEM_GRID_AND_TEXTURE_ARCHITECTURE.md`）仅在
+    /// **索引超出 WIL 帧数**或 WIL 完全不存在时回退；blank WIL ≠ 缺图。
+    ///
+    /// 选角 / 建角屏的 +40 特效层门控（`SyncLegacySlotGeometry`、
+    /// `SyncLegacyCreateFrameIndexes`）走这里判断"是否真的有 EI 特效帧"，
+    /// 是 EI 旧版的**正本语义**，避免现代 ZL 角色帧经 `DXImageControl.DrawControl`
+    /// → `GetTexture` → ZL 回退路径泄漏到选角屏。
+    /// </summary>
+    public static bool LegacyWilHasFrame(LibraryFile file, int index)
+    {
+        if (index < 0) return false;
+        if (!LegacyUiRequested) return false;
+        var legacy = GetLegacyWilLibrary(file);
+        if (legacy == null || index >= legacy.Count) return false;
+        // `LegacyWilLibrary.GetSize` 已经按 WIX offset > 0 且 W/H > 0 判定；
+        // 4x2 是 EI 自身的占位帧（不视为真实内容，但尺寸非零，故再卡一道 > 4/> 2）。
+        var size = legacy.GetSize(index);
+        return size.X > 4 && size.Y > 2;
+    }
 
     public static Vector2I GetOffset(LibraryFile file, int index)
     {

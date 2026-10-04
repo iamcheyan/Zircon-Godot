@@ -1193,6 +1193,8 @@ public static class Lang
     public static string NPCSocketPanelsNoneLabel3 => Current.NPCSocketPanelsNoneLabel3;
     public static string NPCSocketPanelsRarityLabel => Current.NPCSocketPanelsRarityLabel;
     public static string NPCUi357Label => Current.NPCUi357Label;
+    public static string GoodsCanUseItemLabel => Current.GoodsCanUseItemLabel;
+    public static string GoodsCannotUseItemLabel => Current.GoodsCannotUseItemLabel;
     public static string QuestAcceptLabel => Current.QuestAcceptLabel;
     public static string QuestEndLabel => Current.QuestEndLabel;
     public static string QuestNoneLabel => Current.QuestNoneLabel;

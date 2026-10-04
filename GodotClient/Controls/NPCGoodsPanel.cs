@@ -138,7 +138,9 @@ public partial class NPCGoodsPanel : DXControl
         _legacyEiLayout = true;
         _rowHeight = 46;
         _rowInsetY = 0;
-        Size = new Vector2I(300, 304);
+        // 2026-10-04: 素材实测 F1000 alpha 可见区 300x307（wilsdk 解码 bbox
+        // (106,102,406,409)），窗口原写 304 会切掉底部 3px 底框。
+        Size = new Vector2I(300, 307);
         _frame.Visible = false;
         _legacyBackground.Visible = true;
         // 列表：5 行、行距 46、首行 y=40（证据 rowsY 40/86/132/178/224）。
@@ -165,7 +167,7 @@ public partial class NPCGoodsPanel : DXControl
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = _legacyEiLayout
-            && Size == new Vector2I(300, 304)
+            && Size == new Vector2I(300, 307)
             && _legacyBackground.Visible && !_frame.Visible
             && _legacyBackground.LibraryFile == LibraryFile.GameInter
             && _legacyBackground.Index == 1000
@@ -360,7 +362,7 @@ public partial class NPCGoodsPanel : DXControl
                 bool canUse = GameScene.Game?.CanUseItem(new ClientUserItem(good.Item, 1)) == true;
                 row.AddControl(new DXLabel
                 {
-                    Text = canUse ? "Can use Item" : "Cannot use Item",
+                    Text = canUse ? Lang.GoodsCanUseItemLabel : Lang.GoodsCannotUseItemLabel,
                     FontSize = 8,
                     TextColour = canUse ? Colors.Aquamarine : Colors.Red,
                     Location = new Vector2I(41, 33), Size = new Vector2I(160, 15), IsControl = false,

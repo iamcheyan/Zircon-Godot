@@ -1214,6 +1214,8 @@ namespace ZirconClient.Translations
         public override string NPCSocketPanelsNoneLabel3 { get; set; } = "{0} を使用できません。対象アイテムはすでに3つのソケットが解放されています。";
         public override string NPCSocketPanelsRarityLabel { get; set; } = "{0} を使用できません。レアリティが選択した対象と一致しません。";
         public override string NPCUi357Label { get; set; } = "オプション {0}";
+        public override string GoodsCanUseItemLabel { get; set; } = "使用可能";
+        public override string GoodsCannotUseItemLabel { get; set; } = "使用不可";
         public override string QuestAcceptLabel { get; set; } = "[{0}] {1}  [クリックで受諾]";
         public override string QuestEndLabel { get; set; } = "終了：";
         public override string QuestNoneLabel { get; set; } = "固定アイテム報酬なし";

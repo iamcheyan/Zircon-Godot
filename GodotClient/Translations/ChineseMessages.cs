@@ -1214,6 +1214,8 @@ namespace ZirconClient.Translations
         public override string NPCSocketPanelsNoneLabel3 { get; set; } = "无法使用 {0}，目标物品已解锁三个镶嵌孔。";
         public override string NPCSocketPanelsRarityLabel { get; set; } = "无法使用 {0}，其稀有度与所选目标不符。";
         public override string NPCUi357Label { get; set; } = "选项 {0}";
+        public override string GoodsCanUseItemLabel { get; set; } = "可以使用";
+        public override string GoodsCannotUseItemLabel { get; set; } = "无法使用";
         public override string QuestAcceptLabel { get; set; } = "[{0}] {1}  [点击接受]";
         public override string QuestEndLabel { get; set; } = "结束：";
         public override string QuestNoneLabel { get; set; } = "无固定物品奖励";

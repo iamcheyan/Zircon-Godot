@@ -1215,6 +1215,8 @@ namespace ZirconClient.Translations
         public override string NPCSocketPanelsNoneLabel3 { get; set; } = "Cannot use {0}, the target item already has three sockets unlocked.";
         public override string NPCSocketPanelsRarityLabel { get; set; } = "Cannot use {0}, its rarity does not match the selected target.";
         public override string NPCUi357Label { get; set; } = "Option {0}";
+        public override string GoodsCanUseItemLabel { get; set; } = "Can use Item";
+        public override string GoodsCannotUseItemLabel { get; set; } = "Cannot use Item";
         public override string QuestAcceptLabel { get; set; } = "[{0}] {1}  [Click to Accept]";
         public override string QuestEndLabel { get; set; } = "End:";
         public override string QuestNoneLabel { get; set; } = "No fixed item reward";

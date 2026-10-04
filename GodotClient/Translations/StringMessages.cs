@@ -1214,6 +1214,8 @@ namespace ZirconClient.Translations
         public abstract string NPCSocketPanelsNoneLabel3 { get; set; }
         public abstract string NPCSocketPanelsRarityLabel { get; set; }
         public abstract string NPCUi357Label { get; set; }
+        public abstract string GoodsCanUseItemLabel { get; set; }
+        public abstract string GoodsCannotUseItemLabel { get; set; }
         public abstract string QuestAcceptLabel { get; set; }
         public abstract string QuestEndLabel { get; set; }
         public abstract string QuestNoneLabel { get; set; }

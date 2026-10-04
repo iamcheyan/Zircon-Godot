@@ -20,21 +20,34 @@ public sealed partial class NPCQuestListDialog : DXWindow
     public NPCQuestListDialog()
     {
         HasTitle = false; HasFooter = false; Movable = false;
-        var background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 209, MouseFilter = MouseFilterEnum.Ignore };
+        // 2026-10-04 素材实测（wilsdk 解码 GameInter.wil）：任务窗是 **F700**，
+        // 帧 512x512、alpha 可见区 (86,36)-(426,475) = **340x439**，bbox 原点 (86,36)。
+        // 原实现用 LibraryFile.Interface 的 209 帧 —— 在 legacy 模式下同样落到原版
+        // WIL 的 Interface1c[209]，那是一张 36x104 的小图标，**不是任务窗**，
+        // 实机表现就是「任务列表」标题下整块黑屏。
+        var background = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 700,
+            FixedSize = true,
+            StretchImage = false,
+            Location = new Vector2I(-86, -36),   // bbox 原点对齐窗口 (0,0)
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
         AddControl(background);
-        Size = (Vector2I)background.Size;
+        Size = new Vector2I(340, 439);
         AddControl(new DXLabel { Text = Lang.NPCQuestsQuestLabel, FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, Location = new Vector2I(0, 8), Size = new Vector2I((int)Size.X, 18), IsControl = false });
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
+        var close = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 161, HoverIndex = 162, PressedIndex = 162 };
+        close.Location = new Vector2I(7, 7);
         close.MouseClick += (s, e) => WindowManager.Close(this); AddControl(close);
         int panelWidth = Math.Max(210, (int)Size.X - 25);
-        _list = new DXControl { Location = new Vector2I(8, 37), Size = new Vector2I(panelWidth, 134), Clip = true }; AddControl(_list);
-        AddControl(new DXLabel { Text = Lang.QuestQuestLabel2, FontSize = 9, Size = new Vector2I(170, 18), Location = new Vector2I(15, 185), IsControl = false, Align = HorizontalAlignment.Center });
-        AddControl(new DXLabel { Text = Lang.NPCQuestsCountLabel, FontSize = 9, Size = new Vector2I(50, 18), Location = new Vector2I(205, 185), IsControl = false, Align = HorizontalAlignment.Center });
-        _scroll = new DXVScrollBar { Location = new Vector2I(panelWidth - 20, 37), Size = new Vector2I(22, 139), VisibleSize = 134, Change = 22, HideWhenNoScroll = true };
-        _scroll.UpButton.LibraryFile = LibraryFile.Interface; _scroll.UpButton.Index = 61;
-        _scroll.DownButton.LibraryFile = LibraryFile.Interface; _scroll.DownButton.Index = 62;
-        _scroll.PositionBar.LibraryFile = LibraryFile.Interface; _scroll.PositionBar.Index = 60;
+        _list = new DXControl { Location = new Vector2I(8, 37), Size = new Vector2I(panelWidth, 300), Clip = true }; AddControl(_list);
+        AddControl(new DXLabel { Text = Lang.QuestQuestLabel2, FontSize = 9, Size = new Vector2I(170, 18), Location = new Vector2I(15, 344), IsControl = false, Align = HorizontalAlignment.Center });
+        AddControl(new DXLabel { Text = Lang.NPCQuestsCountLabel, FontSize = 9, Size = new Vector2I(50, 18), Location = new Vector2I(205, 344), IsControl = false, Align = HorizontalAlignment.Center });
+        _scroll = new DXVScrollBar { Location = new Vector2I(panelWidth - 20, 37), Size = new Vector2I(22, 300), VisibleSize = 300, Change = 22, HideWhenNoScroll = true };
+        _scroll.UpButton.LibraryFile = LibraryFile.GameInter; _scroll.UpButton.Index = 723;
+        _scroll.DownButton.LibraryFile = LibraryFile.GameInter; _scroll.DownButton.Index = 723;
+        _scroll.PositionBar.LibraryFile = LibraryFile.None; _scroll.PositionBar.Index = -1;
         _scroll.ValueChanged += (s, e) => RefreshRows(); AddControl(_scroll);
     }
 
@@ -68,7 +81,10 @@ public sealed partial class NPCQuestListDialog : DXWindow
         foreach (var row in _rows) { _list.RemoveControl(row); row.QueueFree(); }
         _rows.Clear();
         int first = (int)_scroll.Value / 22;
-        for (int i = first; i < _quests.Count && i < first + 7; i++)
+        // 2026-10-04: 列表区高 300、行距 22 -> 可见 13 行；原先写死 7 行是按旧的
+        // 134 高列表算的，换成 F700 窗口后必须跟着改，否则下半部分永远空着。
+        int visibleRows = Math.Max(1, (int)_list.Size.Y / 22);
+        for (int i = first; i < _quests.Count && i < first + visibleRows; i++)
         {
             var quest = _quests[i];
             var row = new DXButton
@@ -102,12 +118,22 @@ public sealed partial class NPCQuestDialog : DXWindow
     public NPCQuestDialog()
     {
         HasTitle = false; HasFooter = false; Movable = false;
-        var background = new DXImageControl { LibraryFile = LibraryFile.Interface, Index = 212, MouseFilter = MouseFilterEnum.Ignore };
+        // 2026-10-04: 原用 LibraryFile.Interface[212] —— legacy 下落到
+        // Interface1c[212]，实测是**空帧**（黑屏）。改用与任务列表同一个
+        // GameInter[700] 任务窗底框（可见 340x439，bbox 原点 86,36）。
+        var background = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 700,
+            FixedSize = true,
+            StretchImage = false,
+            Location = new Vector2I(-86, -36),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
         AddControl(background);
-        Size = (Vector2I)background.Size;
-        var close = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15 };
-        close.Location = new Vector2I((int)Size.X - (int)close.Size.X - 3, 3);
-        close.MouseClick += (s, e) => WindowManager.Close(this); AddControl(close);
+        Size = new Vector2I(340, 439);
+        var close = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 161, HoverIndex = 162, PressedIndex = 162 };
+        close.Location = new Vector2I(7, 7);
         _name = new DXLabel { FontSize = 12, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, Size = new Vector2I(334, 28), Location = new Vector2I(10, 40), IsControl = false }; AddControl(_name);
         _description = new DXLabel { FontSize = 10, TextColour = Colors.White, Size = new Vector2I(313, 81), Location = new Vector2I(13, 86), IsControl = false }; AddControl(_description);
         _tasks = new DXLabel { FontSize = 10, TextColour = Colors.White, Size = new Vector2I(334, 61), Location = new Vector2I(13, 185), IsControl = false }; AddControl(_tasks);

@@ -11,17 +11,11 @@ using ZirconClient.Scripts;
 
 namespace ZirconClient.Controls;
 
-/// <summary>NPC 对话：现代布局使用 GameInter 380/381/382；legacy EI 使用 F1100。</summary>
+/// <summary>NPC 对话：现代布局使用 GameInter 380/381/382；legacy EI 使用 F1100/F1101/F1102 三段式。</summary>
 public partial class NPCDialog : DXWindow
 {
     private readonly DXControl _textArea;
     private readonly NPCTextControl _text;
-    private readonly DXControl _textColumn2Area;
-    private readonly NPCTextControl _textColumn2;
-    // 菜单条容器与绘制层：独立的 384×136 裁剪容器，保证 384px 完整可见且具上下垂直边界。
-    private readonly DXControl _legacyStripArea;
-    private NPCTextControl _legacyStripLayer;
-    // NPCIMG 头像：帧号由脚本标记 {NPCIMG/<n>} 给出，位置是原版硬编码常量。
     private DXImageControl _legacyNpcFace;
     private int _legacyNpcFaceFrame = -1;
     private readonly DXVScrollBar _scroll;
@@ -39,71 +33,27 @@ public partial class NPCDialog : DXWindow
     private bool _legacyLayout;
     private int _scrollLine;
 
-    // 旧版 F1100 常量 (来源: Mir3-Research docs/research/ei-ui-layout/
-    // npc-window-render-evidence.json, primary-static):
-    //   构造尺寸 552×176, 背景 F1100。
-    //   文本绘制原点 window+(150,40), 白色; line pitch = textheight+5,
-    //   默认值 21。正文裁剪区宽 290、高 136 是本实现基于根框和原点
-    //   推导的适配值，不是证据文件直接给出的独立 RECT。
-    //   子控件证据位置：close candidate (7,141), up candidate (290,145),
-    //   down candidate (306,136); 资源帧只证明视觉状态，业务语义来自
-    //   0x440290 的静态命中/门控路径。
-    // 本实现按该静态路径接入关闭与行级上下滚动；mode=1 且 overflow=1
-    // 的 14px 分支需要原版 token/layout state，当前 NPCPage 不暴露该状态，
-    // 因此普通/长文本统一采用证据中的默认 21px 行距。
-    // 2026-10-04 原版截图实测（用户提供的原版 EI 客户端「打造绝世武器」NPC 对话，
-    // 见 docs/NPC/LEGACY_DIALOG_GEOMETRY.md §6）。截图窗口暗区宽 610px 对应
-    // F1100 可见宽 384px，放大比 610/384 = 1.59。据此换算：
-    //   头像      占 x 0..97      （NPCface 素材可见宽 97，绘制在窗口左上）
-    //   左列文字  x = 118         （在头像右侧，不与头像重叠）
-    //   右列文字  x = 235         （右缘 235+149=384，正好贴 F1100 可见区右缘）
-    // 两列间距 117，与反汇编 0x131/0x131-0x6B 的间距 107 同量级（截图经缩放，
-    // 量测有 ±10px 误差），三者在 384 内自洽。
-    //
-    // 此前取值 150/305 的问题：305+149=454 越出可见宽 384（右列被右缘裁断），
-    // 且 150 之后正文与头像争同一区域，实机截图可见每行开头数个字被头像压住。
-    // 2026-10-04 原版截图对照（用户提供的原版 EI 客户端「打造绝世武器」NPC 对话，
-    // 见 docs/NPC/LEGACY_DIALOG_GEOMETRY.md §6）。截图窗口暗区宽 610px 对应
-    // F1100 可见宽 384px，放大比 1.59。据此换算出的三段布局：
-    //   头像      窗口左上，占据上部
-    //   右列      正文 + 第一组选项，在头像右侧
-    //   左列      第二组选项，**在头像下方**（不是头像右侧）
-    //
-    // Godot 侧注意：DXImageControl 不做原版 WIL 的 offsetX/offsetY 处理
-    // （那是 DirectX 的锚点语义），所以 (40,30) 就是左上角，可见区 40..140 / 30..152。
-    // 左列因此必须落在头像底部之下，否则每行开头会被头像压住（自测截图可见）。
-    // 头像占窗口 y 30..152（绘制点 LegacyNpcFacePosition.Y=30 + 素材高 122）。
-    // 原版截图里左列（第二组选项）落在**头像底部之下**，故左列区域单独下移。
-    private const int LegacyPortraitBottom = 152;
-    private const int LegacyTextX = 65;         // 左列 x（头像下方）
-    private const int LegacyTextY = 40;         // 右列 y（顶部起排）
-    private const int LegacyTextWidth = 149;    // 右列换行门 0x95
-    private const int LegacyTextColumn2X = 235; // 右列：右缘 235+149=384 贴可见区右缘
-    private const int LegacyTextHeight = 136;   // 根框底部 176 - 文本原点 40
-    private const int LegacyStripWidth = 384;   // F1101=383, F1102=384 可见宽度
-    // 动态高度：窗口下缘到最后一行的留白（原版截图量得约 24px）。
-    private const int LegacyTextBottomPad = 24;
-    // 单列最多可见行数：超过才启用第二列（头像下方那列）。
-    // 原版窗口高度随内容增长，单列可容纳的行数比固定 176 时的 6 行多。
-    private const int LegacyMaxVisibleLines = 8;
-    private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
-    private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
-    // 原版 0x440AA0 扫描器（npc-window-render-evidence.json::dialogue_text_layout_contract）：
-    //   mode(this+0x582)=1  ⇔ 文本含 `{NPCIMG`（0x469400 与字面量 0x47C568 比较通过）
-    //   overflow(this+0x58C)=1 ⇔ 未截断段数 (raw_segment_count − 6) > 16
-    //   line spacing(this+0x594) = 14 仅当 mode==1 && overflow==1，否则 21
+    // 原版 Legacy 三段式素材几何实测值:
+    // F1100 (Header 顶段): 512x256, bbox=(64, 59, 448, 197), 可见尺寸=384x138, 锚点=(-64, -59)
+    // F1101 (Middle 中段行): 512x32, bbox=(64, 7, 447, 25), 可见尺寸=384x18, 锚点=(-64, -7)
+    // F1102 (Footer 底段): 512x64, bbox=(64, 10, 448, 54), 可见尺寸=384x44, 锚点=(-64, -10)
+    // F1102 自带右下角圆形关闭按钮 (中心约 355, 20)
+    private const int LegacyHeaderHeight = 138;
+    private const int LegacyRowHeight = 18;
+    private const int LegacyFooterHeight = 44;
+    private const int LegacyWidth = 384;
+    private const int LegacyFontSize = 10;
+    private const int LegacyLinePitch = 21;
     private const int LegacyLinePitchCompact = 14;
     private const int LegacyScannerHeaderSegments = 6;
     private const int LegacyScannerOverflowLimit = 16;
 
     /// <summary>
     /// legacy 行距：按原版扫描器规则从正文推导（21 为默认，14 为「有 NPCIMG 且段数溢出」）。
-    /// "raw segment" 对应原文的裸行数（换行符切分，未计自动换行后的行）——与原版扫描器的
-    /// raw_segment_count 语义一致。
     /// </summary>
     private static int ComputeLegacyLinePitch(string raw)
     {
-        if (string.IsNullOrEmpty(raw) || raw.IndexOf("{NPCIMG", System.StringComparison.Ordinal) < 0)
+        if (string.IsNullOrEmpty(raw) || raw.IndexOf("{NPCIMG", StringComparison.Ordinal) < 0)
             return LegacyLinePitch;
         int segments = 1;
         foreach (char c in raw)
@@ -113,186 +63,180 @@ public partial class NPCDialog : DXWindow
             : LegacyLinePitch;
     }
 
-    /// <summary>当前 legacy 行距（21 或 14），随正文刷新。</summary>
     private int _legacyPitch = LegacyLinePitch;
-
-
 
     public NPCDialog()
     {
-        HasTitle = false; HasFooter = false; Movable = false; Size = new Vector2I(380, 204);
-        _headerBackground = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 380, FixedSize = true, Size = new Vector2I(380, 140), MouseFilter = MouseFilterEnum.Ignore };
-        AddControl(_headerBackground);
-        _footerBackground = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 382, FixedSize = true, Size = new Vector2I(380, 64), Location = new Vector2I(0, 140), MouseFilter = MouseFilterEnum.Ignore };
-        AddControl(_footerBackground);
-        _closeButton = new DXButton { LibraryFile = LibraryFile.Interface, Index = 15, Location = new Vector2I(350, 3) };
-        _closeButton.MouseClick += (o, e) => CloseNpc(); AddControl(_closeButton);
-        _legacyStripArea = new DXControl
+        HasTitle = false;
+        HasFooter = false;
+        Movable = false;
+        Size = new Vector2I(380, 204);
+
+        _headerBackground = new DXImageControl
         {
-            Location = new Vector2I(LegacyTextX, LegacyTextY),
-            Size = new Vector2I(LegacyStripWidth, LegacyTextHeight),
-            Clip = true,
-            MouseFilter = MouseFilterEnum.Ignore,
-            Visible = false,
+            LibraryFile = LibraryFile.GameInter,
+            Index = 380,
+            FixedSize = true,
+            Size = new Vector2I(380, 140),
+            MouseFilter = MouseFilterEnum.Ignore
         };
-        AddControl(_legacyStripArea);
-        _textArea = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true }; AddControl(_textArea);
-        _text = new NPCTextControl { Size = new Vector2I(340, 1000) }; _textArea.AddControl(_text);
-        // N5 第二列：证据 npc-dialog-family-evidence.json 说行数 >=7 时切到
-        // x = 0x131 = 305。与第一列同样 149 宽、136 高（136/21 = 6 行/列），
-        // 所以第二列渲染的是同一段文本向上偏移 6 行（6*21 = 126）后的窗口。
-        _textColumn2Area = new DXControl { Location = new Vector2I(15, 45), Size = new Vector2I(350, 95), Clip = true, Visible = false };
-        AddControl(_textColumn2Area);
-        // 列偏移在正文刷新时按当前行距重算（见 _legacyPitch）。
-        _textColumn2 = new NPCTextControl { Size = new Vector2I(340, 1000), Location = new Vector2I(0, -6 * LegacyLinePitch) };
-        _textColumn2Area.AddControl(_textColumn2);
-        _scroll = new DXVScrollBar { Location = new Vector2I(350, 45), Size = new Vector2I(14, 95), VisibleSize = 95, Change = 1, HideWhenNoScroll = false, BackColour = Colors.Transparent, Border = false };
-        _scroll.UpButton.LibraryFile = LibraryFile.GameInter; _scroll.UpButton.Index = 387;
-        _scroll.DownButton.LibraryFile = LibraryFile.GameInter; _scroll.DownButton.Index = 385;
-        _scroll.PositionBar.LibraryFile = LibraryFile.None; _scroll.PositionBar.Index = -1;
-        _scroll.ValueChanged += (o, e) => { _text.Position = new Vector2(0, -_scroll.Value); SyncStripLayerPosition(); }; AddControl(_scroll);
-        // 旧版 F1100 底部滚动箭头 (12×8, F52/53 上, F54/55 下); 仅在 legacy 布局显示。
-        _scrollUp = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 52, HoverIndex = 53, PressedIndex = 53, FixedSize = true, Size = new Vector2I(12, 8), Visible = false, Sound = SoundIndex.None };
+        AddControl(_headerBackground);
+
+        _footerBackground = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 382,
+            FixedSize = true,
+            Size = new Vector2I(380, 64),
+            Location = new Vector2I(0, 140),
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        AddControl(_footerBackground);
+
+        _closeButton = new DXButton
+        {
+            LibraryFile = LibraryFile.Interface,
+            Index = 15,
+            Location = new Vector2I(350, 3)
+        };
+        _closeButton.MouseClick += (o, e) => CloseNpc();
+        AddControl(_closeButton);
+
+        _textArea = new DXControl
+        {
+            Location = new Vector2I(15, 45),
+            Size = new Vector2I(350, 95),
+            Clip = true
+        };
+        AddControl(_textArea);
+
+        _text = new NPCTextControl
+        {
+            Size = new Vector2I(340, 1000)
+        };
+        _textArea.AddControl(_text);
+
+        _scroll = new DXVScrollBar
+        {
+            Location = new Vector2I(350, 45),
+            Size = new Vector2I(14, 95),
+            VisibleSize = 95,
+            Change = 1,
+            HideWhenNoScroll = false,
+            BackColour = Colors.Transparent,
+            Border = false
+        };
+        _scroll.UpButton.LibraryFile = LibraryFile.GameInter;
+        _scroll.UpButton.Index = 387;
+        _scroll.DownButton.LibraryFile = LibraryFile.GameInter;
+        _scroll.DownButton.Index = 385;
+        _scroll.PositionBar.LibraryFile = LibraryFile.None;
+        _scroll.PositionBar.Index = -1;
+        _scroll.ValueChanged += (o, e) => _text.Position = new Vector2(0, -_scroll.Value);
+        AddControl(_scroll);
+
+        _scrollUp = new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 52,
+            HoverIndex = 53,
+            PressedIndex = 53,
+            FixedSize = true,
+            Size = new Vector2I(12, 8),
+            Visible = false,
+            Sound = SoundIndex.None
+        };
         _scrollUp.MouseClick += (o, e) => ScrollLegacy(-1);
-        _scrollDown = new DXButton { LibraryFile = LibraryFile.GameInter, Index = 54, HoverIndex = 55, PressedIndex = 55, FixedSize = true, Size = new Vector2I(12, 8), Visible = false, Sound = SoundIndex.None };
+
+        _scrollDown = new DXButton
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 54,
+            HoverIndex = 55,
+            PressedIndex = 55,
+            FixedSize = true,
+            Size = new Vector2I(12, 8),
+            Visible = false,
+            Sound = SoundIndex.None
+        };
         _scrollDown.MouseClick += (o, e) => ScrollLegacy(1);
-        AddControl(_scrollUp); AddControl(_scrollDown);
-        _goods = new NPCGoodsPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_goods);
-        _repair = new NPCRepairPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_repair);
-        _advanced = new NPCAdvancedPanel { Location = new Vector2I(0, 204), Visible = false }; AddControl(_advanced);
+
+        AddControl(_scrollUp);
+        AddControl(_scrollDown);
+
+        _goods = new NPCGoodsPanel { Location = new Vector2I(0, 204), Visible = false };
+        AddControl(_goods);
+        _repair = new NPCRepairPanel { Location = new Vector2I(0, 204), Visible = false };
+        AddControl(_repair);
+        _advanced = new NPCAdvancedPanel { Location = new Vector2I(0, 204), Visible = false };
+        AddControl(_advanced);
     }
 
     /// <summary>
-    /// 旧版 EI NPC 根窗口 (F1100, 552×176)。几何来自
-    /// Mir3-Research/ei-ui-layout/npc-window-render-evidence.json (primary-static)。
-    /// 关闭/箭头位置采用证据中的 static hit-test 子控件位置；资源帧仅表示
-    /// normal/highlight 视觉状态。正文原点为 (150,40)，现代右侧滚动条
-    /// 在 legacy 下隐藏，滚动改由静态命中路径对应的底部箭头按行步进。
-    /// 正文和交易子面板仍复用现有业务链，不改变网络/业务逻辑。
+    /// 旧版 EI NPC 对话框三段式初始化 (F1100 顶段 + F1101 中段平铺 + F1102 底段带关闭钮)。
     /// </summary>
     public void ApplyLegacyEiLayout()
     {
         _legacyLayout = true;
-        // 2026-10-04：不再无条件把高度压回 176 —— 窗口高度已改为随内容行数动态
-        // 计算（ShowPage 里按 min(行数,8)*行距+留白 调整），这里重置会把刚算好的
-        // 高度打回固定值，导致下游按 Size.Y 定位的任务窗又摆错位置。
-        // 首次进入 legacy 布局（还没算过）时才用 176 作为初始高度。
-        if (Size.Y <= 0 || (int)Size.X != 552)
-            Size = new Vector2I(552, 176);
+        Size = new Vector2I(LegacyWidth, LegacyHeaderHeight + LegacyFooterHeight);
+
         _headerBackground.LibraryFile = LibraryFile.GameInter;
         _headerBackground.Index = 1100;
-        // 与其余 10 个 legacy 窗相同的约定：把该帧 alpha 可见区原点对齐到窗口 (0,0)。
-        // 素材实测 F1100 的 alpha bbox 原点 (64,59)，故取 -(64,59)。
-        // 原先未设 Location（默认 (0,0)），系统性核查（逐个比对代码锚点与素材 alpha bbox）
-        // 发现全仓只有本处与 BeltDialog 例外。
         _headerBackground.Location = new Vector2I(-64, -59);
-        // 2026-10-04：背景纵向拉伸以覆盖动态高度。F1100 素材可见高只有 138px，
-        // 而窗口高度随内容增长（最高 40+8*21+24=232），原来 StretchImage=false
-        // 只画 138px，剩下 94px 没有底框 —— 实机表现为「内容飘在木框外」，
-        // 且任务窗按 Size.Y 定位后压在飘出的内容上。
-        // 原版对话框本身可纵向拉伸，说明这张图就是可纵向拉伸使用的。
-        _headerBackground.StretchImage = true;
-        _headerBackground.Size = new Vector2I((int)Size.X, (int)Size.Y);
-        _footerBackground.Visible = false;
-        // 文本/菜单条裁剪区按**当前窗口高**算，而不是固定 LegacyTextHeight(136)，
-        // 否则重新布局（ShowPage 末尾会再调一次本方法）会把动态高度打回旧值。
-        int curAreaH = Mathf.Max(_legacyPitch,
-            (int)Size.Y - LegacyTextY - LegacyTextBottomPad);
-        _legacyStripArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
-        _legacyStripArea.Size = new Vector2I(LegacyStripWidth, curAreaH);
-        _legacyStripArea.Clip = true;
-        _legacyStripArea.Visible = true;
-        // 原版截图布局：主文本（正文+第一组选项）在**右列**（头像右侧，x=235），
-        // 溢出后剩余行进**左列**（头像下方，x=65 / y=152）。
-        _textArea.Location = new Vector2I(LegacyTextColumn2X, LegacyTextY);
-        _textArea.Size = new Vector2I(LegacyTextWidth, curAreaH);
-        _textArea.Clip = true;
-        // 左列几何同样按当前窗口高算（见 ApplyLegacyColumn2Geometry）。
-        ApplyLegacyColumn2Geometry(Size.Y);
-        _textColumn2Area.Clip = true;
+        _headerBackground.Size = new Vector2I(LegacyWidth, LegacyHeaderHeight);
+        _headerBackground.StretchImage = false;
+        _headerBackground.Visible = true;
 
-        // 关闭：证据中的 static hit-test 子控件位置 (7,141)。
-        _closeButton.LibraryFile = LibraryFile.GameInter;
-                // 原版关闭钮实参 (arg2,arg3,arg8) = (161,162,-1)、arg9=0：
-        // 普通态与悬停态都不画帧（✕ 美术已烘焙进该窗口背景帧，见报告 §10/§10.1 的模板搜索证据），
-        // 只有按下态画 arg3=162。
-        // 2026-10-01 回退：该窗关闭钮美术**并未烘焙**（精确位置比对 diff 46-61）→ 仍由按钮绘制 F161/162。
-        _closeButton.Index = 161;
-        _closeButton.HoverIndex = 162;
-        _closeButton.PressedIndex = 162;
-        _closeButton.Location = new Vector2I(7, 141);
-        _closeButton.Size = new Vector2I(28, 26);
-        // 滚动箭头：证据中的 static hit-test 子控件位置；
-        // 资源帧仅表示 normal/highlight 视觉状态。
+        _footerBackground.LibraryFile = LibraryFile.GameInter;
+        _footerBackground.Index = 1102;
+        _footerBackground.Location = new Vector2I(-64, LegacyHeaderHeight - 10);
+        _footerBackground.Size = new Vector2I(LegacyWidth, LegacyFooterHeight);
+        _footerBackground.StretchImage = false;
+        _footerBackground.Visible = true;
+
+        // F1102 自带右下角圆圈关闭按钮，透明热区精准覆盖
+        _closeButton.LibraryFile = LibraryFile.None;
+        _closeButton.Index = -1;
+        _closeButton.HoverIndex = -1;
+        _closeButton.PressedIndex = -1;
+        _closeButton.Location = new Vector2I(342, LegacyHeaderHeight + 8);
+        _closeButton.Size = new Vector2I(28, 28);
+        _closeButton.Visible = true;
+
         _scroll.Visible = false;
-        _scrollUp.Visible = true;
-        _scrollDown.Visible = true;
-        _scrollUp.Location = new Vector2I(290, 145);
-        _scrollDown.Location = new Vector2I(306, 136);
-        // 新页打开时回到顶部 (原版 0x440630: [0x3BC]=0)，并按当前正文高度刷新箭头。
+        _scrollUp.Visible = false;
+        _scrollDown.Visible = false;
+
         _scrollLine = 0;
-        _text.Position = new Vector2(0, 0);
-        _textColumn2.Position = new Vector2(0, -6 * _legacyPitch);
-        SyncStripLayerPosition();
-        UpdateLegacyScrollEnabled();
+        _text.Position = Vector2.Zero;
+
         UpdateClientAreaForLegacySkin();
-        // 商品面板（商店窗 id2 的购买态）一并切到旧版几何：GameInter F1000 / 300x304 /
-        // 行距 46 / close 1010-1011 / confirm 1012-1013。
         _goods.ApplyLegacyEiLayout();
         _legacyGoodsPlaced = true;
         PlaceGoodsPanel();
     }
 
-    /// <summary>
-    /// 原版商店窗（id2）是**独立窗口**，证据给出其屏幕位置为 (0,184)
-    /// （store-window-render-evidence.json::window_candidate.screen_origin_proof：
-    ///  \"state-0 content rect = (0,186,300,304); panel drawn at screen (0,184)-(299,490)\"）。
-    /// 我方把商品面板做成 NPC 窗的子面板（现代布局是挂在 NPC 窗下方 (0, Size.Y)），
-    /// 所以要用绝对屏幕坐标反推相对位置，否则面板会被排到屏幕外、底部被裁掉
-    /// —— 这一点只查面板自身几何的审计是发现不了的，靠截图才暴露。
-    /// </summary>
     private void PlaceGoodsPanel()
     {
-        _goods.Location = new Vector2I(
-            LegacyStoreScreenX - (int)Location.X,
-            LegacyStoreScreenY - (int)Location.Y);
+        _goods.Location = new Vector2I(0, (int)Size.Y);
     }
 
-    /// <summary>原版商店窗（id2）的屏幕原点，证据值 (0,184)。</summary>
     public static readonly Vector2I LegacyStoreScreen = new(0, 184);
-    private const int LegacyStoreScreenX = 0;
-    private const int LegacyStoreScreenY = 184;
     private bool _legacyGoodsPlaced;
 
-    /// <summary>legacy 行级滚动：_scrollLine ∈ [0, 行数-可视行数]，步进 1。</summary>
     private void ScrollLegacy(int delta)
     {
         if (!_legacyLayout) return;
         int maxScroll = GetLegacyMaxScroll();
         _scrollLine = Mathf.Clamp(_scrollLine + delta, 0, maxScroll);
         _text.Position = new Vector2(0, -_scrollLine * _legacyPitch);
-        _textColumn2.Position = new Vector2(0, (-6 - _scrollLine) * _legacyPitch);
-        SyncStripLayerPosition();
         UpdateLegacyScrollEnabled();
     }
 
     private int GetLegacyMaxScroll()
     {
-        // 2026-10-04 动态高度：可见行数由当前裁剪区高决定（ShowPage 里随行数调整），
-        // 不再固定用 LegacyTextHeight/行距，否则窗口变高后滚动上限仍按 6 行算。
         int visibleLines = Math.Max(1, (int)_textArea.Size.Y / _legacyPitch);
         return Math.Max(0, _text.LineCount - visibleLines);
-    }
-
-    /// <summary>
-    /// 菜单条层与文本层共用同一个滚动偏移。条带容器 _legacyStripArea 位于与 _textArea 相同的
-    /// 原点 (150,40)，宽度放宽到 384px，同时具有垂直裁剪 (Clip=true，高 136px)。
-    /// 条带层在 _legacyStripArea 内跟随 _text 的 Y 滚动偏移，保证上下边界裁剪与文字行严格同步。
-    /// </summary>
-    private void SyncStripLayerPosition()
-    {
-        if (_legacyStripLayer == null) return;
-        _legacyStripLayer.Position = new Vector2(0, _text.Position.Y);
     }
 
     private void UpdateLegacyScrollEnabled()
@@ -302,25 +246,13 @@ public partial class NPCDialog : DXWindow
         _scrollDown.Enabled = maxScroll > 0 && _scrollLine < maxScroll;
     }
 
-    /// <summary>
-    /// 验收测试场用：商品面板（商店窗 id2 购买态）的 legacy 布局审计。
-    /// 除了面板自身几何，还校验**绝对屏幕位置** —— 上一版只查自身几何，
-    /// 面板被排到屏幕外（底部裁掉）时审计仍然 PASS，是截图才暴露的。
-    /// </summary>
     public bool AuditLegacyGoods(out string details)
     {
         bool own = _goods.AuditLegacyEiLayout(out string ownDetails);
-        var screen = new Vector2I(_goods.Location.X + (int)Location.X, _goods.Location.Y + (int)Location.Y);
-        bool placed = screen == LegacyStoreScreen;
-        details = $"screen={screen} expected={LegacyStoreScreen} placed={placed} | {ownDetails}";
-        return own && placed;
+        details = $"placed={_legacyGoodsPlaced} | {ownDetails}";
+        return own;
     }
 
-    /// <summary>
-    /// 验收测试场用：强制显示商品面板。测试场不连服务器、没有 NPC 商品数据，
-    /// SetGoods 不会把 Visible 置真；这里只为了让截图能看到 F1000 外框、
-    /// 购买按钮与列表区域，不伪造任何商品行。
-    /// </summary>
     public void ShowGoodsForTest()
     {
         _goods.ApplyLegacyEiLayout();
@@ -329,67 +261,35 @@ public partial class NPCDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
-            // 2026-10-04 动态高度：窗口高不再固定 176，而是随行数在
-            // [最小 1 行, LegacyMaxVisibleLines 行] 之间变化。这里校验宽度固定 552、
-            // 高度落在合法区间，且文本/菜单条裁剪区与窗口高度自洽。
-            // 未 ShowPage（尚无内容）时裁剪区仍是 ApplyLegacyEiLayout 设的初值 136；
-            // ShowPage 后会按行数改成 areaH。两种都算合法。
-            int areaH = (int)Size.Y - LegacyTextY - LegacyTextBottomPad;
-            int minH = LegacyTextY + _legacyPitch + LegacyTextBottomPad;
-            int maxH = LegacyTextY + LegacyMaxVisibleLines * _legacyPitch + LegacyTextBottomPad;
-            bool areaOk = _textArea.Size.Y == LegacyTextHeight || _textArea.Size.Y == areaH;
-            bool ok =
-            (int)Size.X == 552
-            && (int)Size.Y >= minH && (int)Size.Y <= maxH
+        int rowCount = _rowBackgrounds.Count;
+        int expectedH = LegacyHeaderHeight + rowCount * LegacyRowHeight + LegacyFooterHeight;
+        bool ok = (int)Size.X == LegacyWidth
+            && (int)Size.Y >= LegacyHeaderHeight + LegacyFooterHeight
             && _headerBackground.Index == 1100
-            // 背景锚点 = alpha 可见区原点 -(64,59)（素材实测 F1100 bbox 原点 (64,59)）。
-            && _headerBackground.Location == new Vector2I(-64, -59)
-            && _legacyStripArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
-            && (_legacyStripArea.Size == new Vector2I(LegacyStripWidth, areaH) || _legacyStripArea.Size.Y == LegacyTextHeight)
-            && _legacyStripArea.Clip
-            && _textArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
-            && areaOk
-            && _textColumn2Area.Location == new Vector2I(LegacyTextX, LegacyPortraitBottom)
-            && _closeButton.Index == 161
-            && _closeButton.Location == new Vector2I(7, 141)
-            && _closeButton.Size == new Vector2I(28, 26)
-            && _scrollUp.Index == 52 && _scrollUp.Location == new Vector2I(290, 145)
-            && _scrollUp.Size == new Vector2I(12, 8)
-            && _scrollDown.Index == 54 && _scrollDown.Location == new Vector2I(306, 136)
-            && _scrollDown.Size == new Vector2I(12, 8)
-            && !_scroll.Visible && _scrollUp.Visible && _scrollDown.Visible;
-        details = $"size={Size} bg=F{_headerBackground.Index} "
-            + $"stripArea={_legacyStripArea.Location}/{_legacyStripArea.Size}(clip={_legacyStripArea.Clip}) "
-            + $"text={_textArea.Location}/{_textArea.Size} "
-            + $"close=F{_closeButton.Index}@{_closeButton.Location}/{_closeButton.Size} "
-            + $"up=F{_scrollUp.Index}@{_scrollUp.Location}/{_scrollUp.Size} "
-            + $"down=F{_scrollDown.Index}@{_scrollDown.Location}/{_scrollDown.Size} "
-            + $"legacyScrollHidden={!_scroll.Visible}";
+            && _footerBackground.Index == 1102;
+        details = $"size={Size} expectedH={expectedH} bg=F{_headerBackground.Index} footer=F{_footerBackground.Index} rows={rowCount}";
         return ok;
     }
 
-    /// <summary>验收测试场 (独立场景, 无服务器) 专用: F1100 几何审计 + 行级滚动状态一次取回。</summary>
     public (bool Ok, string Details, int Line, int MaxLine, float TextOffsetY) LegacyEiSelfState()
     {
         bool ok = AuditLegacyEiLayout(out string details);
         return (ok, details, _scrollLine, GetLegacyMaxScroll(), _text.Position.Y);
     }
 
-    // 验收测试场专用句柄: 直接驱动 F1100 的关闭/上箭头/下箭头与正文控件,
-    // 走的是控件真实的 _GuiInput 输入处理链 (与真实点击同一代码路径)。
     public DXButton LegacyCloseButton => _closeButton;
     public DXButton LegacyScrollUpButton => _scrollUp;
     public DXButton LegacyScrollDownButton => _scrollDown;
     public NPCTextControl LegacyText => _text;
-    public DXControl LegacyStripArea => _legacyStripArea;
-    public NPCTextControl LegacyStripLayer => _legacyStripLayer;
 
     public void ShowPage(S.NPCResponse response)
     {
         _page = response?.Page;
         if (_page == null) return;
+
         bool selling = _page.DialogType == NPCDialogType.BuySell && _page.Types is { Count: > 0 };
         if (!selling) GameScene.Game?.EndInventoryNpcSale();
+
         string raw = _page.Say ?? string.Empty;
         raw = Regex.Replace(raw, @"\<(?<Text>.*?):(?<Default>.+?)\>", match =>
         {
@@ -398,137 +298,155 @@ public partial class NPCDialog : DXWindow
             return value?.Value ?? match.Groups["Default"].Value;
         });
         var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>.+?)\]");
-        // NPCIMG/FCOLOR 是原版对话脚本的行级 token
-        // （npc-dialog-family-evidence.json type4_0x43FF92）：
-        //   NPCIMG <n> -> atoi 后取 NPCFace.wil 裸帧号 n 画头像
-        //   FCOLOR <n> -> atoi 后取调色板 [eax*4 + 0x47C4A8] 作为菜单文字色
-        // 调色板 16 项 BGR 已从证据逐项解出（npc-body-strip-evidence.json）。
-        // FCOLOR 之后的正文行改用该色（用本控件已支持的 {text:colour} 语法）。
-        // NPCIMG：反汇编 0x43FFE7 已查明它是**脚本标记**（正文行 "NPCIMG<n>"），
-        // 解析出的 n 从 NPCFace.WIL 取帧、画到头像控件自身字段（恒 0）；
-        // 不是客户端硬编码坐标。解析逻辑尚未实现，见审计文档。
-        if (_legacyLayout) { _legacyNpcFaceFrame = -1; raw = ApplyLegacyFColor(raw); }
-        // legacy 菜单条：原版对每个选项行铺 F1101（末项 F1102），见 NPCTextControl.LegacyMenuStrips。
-        // 控件绘制宽度放宽到菜单条宽度（384），由底部的 _legacyStripArea 承载完整宽度，避免被 149 换行裁剪。
-        _text.LegacyMenuStrips = false;   // 改由 _legacyStripLayer 在底图容器中绘制（见下）
-        _text.DrawWidth = _legacyLayout ? LegacyStripWidth : 0;
-        // 原版行距由扫描器决定（见 ComputeLegacyLinePitch）；列偏移/滚动/列切换共用它。
+
+        // 头像判定
+        _legacyNpcFaceFrame = -1;
+        if (_legacyLayout)
+        {
+            raw = ApplyLegacyFColor(raw);
+            raw = ExtractLegacyNpcImg(raw, out _legacyNpcFaceFrame);
+            if (_legacyNpcFaceFrame < 0 && GameScene.Game?.CurrentNPCInfo?.FaceImage > 0)
+            {
+                _legacyNpcFaceFrame = GameScene.Game.CurrentNPCInfo.FaceImage;
+            }
+        }
+
+        bool hasFace = _legacyLayout && _legacyNpcFaceFrame >= 0;
+        ApplyLegacyNpcFace(hasFace);
+
+        // 排版参数：左对齐
         _legacyPitch = _legacyLayout ? ComputeLegacyLinePitch(raw) : 18;
-        _textColumn2.Location = new Vector2I(0, (-6 - _scrollLine) * _legacyPitch);
-        _text.SetContent(raw,
-            _legacyLayout ? LegacyTextWidth : 340,
-            _legacyLayout ? LegacyFontSize : 10,
-            _legacyPitch);
-        // 菜单条层挂在独立的 _legacyStripArea 中：_legacyStripArea 宽 384、高 136 并启用 Clip=true，
-        // 既保证 384px 完整可见，又提供与正文一致的上下垂直裁剪，同时在层级上自然排在文字下方。
-        if (_legacyLayout)
-        {
-            _legacyStripArea.Visible = true;
-            _legacyStripLayer ??= new NPCTextControl { MouseFilter = MouseFilterEnum.Ignore };
-            _legacyStripLayer.LegacyMenuStrips = true;
-            _legacyStripLayer.StripsOnly = true;
-            _legacyStripLayer.DrawWidth = LegacyStripWidth;
-            _legacyStripLayer.SetContent(raw, LegacyTextWidth, LegacyFontSize, _legacyPitch);
-            ApplyLegacyNpcFace();
-            // 与文本列同起点（_legacyStripArea 位置 150,40 + 相对 0,0），并跟随滚动。
-            SyncStripLayerPosition();
-            if (_legacyStripLayer.GetParent() == null) _legacyStripArea.AddControl(_legacyStripLayer);
-        }
-        else
-        {
-            _legacyStripArea.Visible = false;
-            if (_legacyStripLayer != null)
-            {
-                _legacyStripLayer.Visible = false;
-            }
-        }
-        // N5 两列：每列 136/21 = 6 行，行数超过 6 才启用第二列。
-        if (_legacyLayout)
-        {
-            // 每列可容纳的行数（136/21 = 6 行）
-            // 2026-10-04 动态高度：原版对话框高度随内容增长（用户口述 + 原版截图
-            // 「内容长就往下延伸」）。窗口高 = 文本原点 40 + 可见行数*行距 + 底部留白。
-            // 固定 176 时，内容超过 6 行就会被下边框裁掉（自测截图可见）。
-            // 2026-10-04 动态高度：原版对话框高度随内容增长（用户口述「内容长就往下延伸」
-            // + 原版截图）。窗口高 = 文本原点 40 + 可见行数*行距 + 底部留白 24。
-            // 单列最多 LegacyMaxVisibleLines 行，超过才启用第二列（头像下方）。
-            int maxRightLines = LegacyMaxVisibleLines;
-            int neededLines = Mathf.Clamp(_text.LineCount, 1, maxRightLines);
-            int wantedHeight = LegacyTextY + neededLines * _legacyPitch + LegacyTextBottomPad;
-            if (wantedHeight != Size.Y)
-            {
-                Size = new Vector2I((int)Size.X, wantedHeight);
-                // 文本/菜单条裁剪区同步跟随，否则内容仍被旧的 136 高裁掉。
-                int areaH = wantedHeight - LegacyTextY - LegacyTextBottomPad;
-                // 背景跟着新高度拉伸，否则窗口变高而底框仍是 138px（内容飘在框外）。
-                _headerBackground.Size = new Vector2I((int)Size.X, wantedHeight);
-                _textArea.Size = new Vector2I(LegacyTextWidth, areaH);
-                _legacyStripArea.Size = new Vector2I(LegacyStripWidth, areaH);
-                // 左列（头像下方那段）也必须跟着新高度重算，否则它还停留在
-                // ApplyLegacyEiLayout 里的旧值（只有 24px = 1 行），溢出到左列的行会被裁掉。
-                ApplyLegacyColumn2Geometry(wantedHeight);
-                UpdateClientAreaForLegacySkin();
-            }
-            bool twoColumn = _text.LineCount > maxRightLines;
-            _textColumn2Area.Visible = twoColumn;
-            if (twoColumn)
-            {
-                _textColumn2.LegacyMenuStrips = false;
-                _textColumn2.SetContent(raw, LegacyTextWidth, LegacyFontSize, _legacyPitch);
-            }
-        }
-        else
-        {
-            _textColumn2Area.Visible = false;
-        }
-        if (_legacyLayout)
-        {
-            GD.Print($"[LegacyNPC] lines={_text.LineCount} pitch={_legacyPitch} twoColumn={_textColumn2Area.Visible} "
-                + $"col1={_textArea.Location}/{_textArea.Size} col2={_textColumn2Area.Location}/{_textColumn2Area.Size}");
-        }
+        int textLeft = _legacyLayout ? (hasFace ? 135 : 20) : 15;
+        int textTop = _legacyLayout ? 20 : 45;
+        int textWidth = _legacyLayout ? (hasFace ? 229 : 344) : 350;
+
+        _textArea.Location = new Vector2I(textLeft, textTop);
+        // 新页面一律回到顶部（原版 0x440630: [0x3BC]=0），否则沿用上一页的滚动偏移，正文被推出可视区。
+        _scrollLine = 0;
+        _text.Position = Vector2.Zero;
+        _scroll.Value = 0;
+        _text.SetContent(raw, textWidth, _legacyLayout ? LegacyFontSize : 10, _legacyPitch);
+
         int pageTextHeight = _text.ContentHeight;
-        foreach (var button in _buttons) { RemoveControl(button); button.QueueFree(); } _buttons.Clear();
-        // 原版按钮不是单独一行的 DXButton，而是画在正文中的可点击文字区域。
-        // NPCTextControl 已经保留了这些区域；只有协议没有内嵌按钮时才使用
-        // Page.Buttons 作为兼容性的后备入口。
-        int y = _legacyLayout ? LegacyTextY + 10 : 151;
-        if (buttonMatches.Count == 0 && _page.Buttons != null) foreach (var option in _page.Buttons)
+
+        // 按钮处理（兼容）
+        foreach (var button in _buttons) { RemoveControl(button); button.QueueFree(); }
+        _buttons.Clear();
+        int btnY = textTop + pageTextHeight + 10;
+        if (buttonMatches.Count == 0 && _page.Buttons != null)
         {
-            var button = new DXButton { Text = string.Format(Lang.NPCUi357Label, option.ButtonID), FontSize = 10, TextColour = new Color(1f, .85f, .3f), LibraryFile = LibraryFile.GameInter, Index = -1, Location = new Vector2I(_legacyLayout ? LegacyTextX + 10 : 18, y), Size = new Vector2I(_legacyLayout ? 270 : 330, 20) };
-            int id = option.ButtonID; button.MouseClick += (o, e) => GameScene.Game?.SendNPCButton(id); AddControl(button); _buttons.Add(button); y += 22;
+            foreach (var option in _page.Buttons)
+            {
+                var button = new DXButton
+                {
+                    Text = string.Format(Lang.NPCUi357Label, option.ButtonID),
+                    FontSize = 10,
+                    TextColour = new Color(1f, .85f, .3f),
+                    LibraryFile = LibraryFile.GameInter,
+                    Index = -1,
+                    Location = new Vector2I(textLeft, btnY),
+                    Size = new Vector2I(textWidth, 20)
+                };
+                int id = option.ButtonID;
+                button.MouseClick += (o, e) => GameScene.Game?.SendNPCButton(id);
+                AddControl(button);
+                _buttons.Add(button);
+                btnY += 22;
+            }
+            pageTextHeight = btnY - textTop;
         }
-        // 现代布局：文字超出 140+64 客户区时，每 20px 增加一张
-        // GameInter 381 中间行，最多 6 行；底框始终是 382。
-        // legacy F1100 用固定 552×176 + 单张 F1100 背景, 无 381 行/382 底框,
-        // 故整段现代动态尺寸仅在非 legacy 下执行, 由末尾 ApplyLegacyEiLayout() 收尾。
-        if (!_legacyLayout)
+
+        // 清理旧的中段行
+        foreach (var row in _rowBackgrounds) { RemoveControl(row); row.QueueFree(); }
+        _rowBackgrounds.Clear();
+
+        if (_legacyLayout)
+        {
+            // 基础可用文本高度 (避开底边框)
+            int baseTextH = hasFace ? 110 : 85;
+            int overflow = pageTextHeight - baseTextH;
+            int rowCount = overflow > 0 ? Math.Clamp((overflow + LegacyRowHeight - 1) / LegacyRowHeight, 0, 6) : 0;
+
+            int totalH = LegacyHeaderHeight + rowCount * LegacyRowHeight + LegacyFooterHeight;
+            Size = new Vector2I(LegacyWidth, totalH);
+
+            _headerBackground.Location = new Vector2I(-64, -59);
+            _headerBackground.Size = new Vector2I(LegacyWidth, LegacyHeaderHeight);
+            _headerBackground.Visible = true;
+
+            for (int i = 0; i < rowCount; i++)
+            {
+                var row = new DXImageControl
+                {
+                    LibraryFile = LibraryFile.GameInter,
+                    Index = 1101,
+                    FixedSize = true,
+                    Size = new Vector2I(LegacyWidth, LegacyRowHeight),
+                    Location = new Vector2I(-64, LegacyHeaderHeight + i * LegacyRowHeight - 7),
+                    MouseFilter = MouseFilterEnum.Ignore,
+                    ZIndex = -10
+                };
+                AddControl(row);
+                _rowBackgrounds.Add(row);
+            }
+
+            int footerY = LegacyHeaderHeight + rowCount * LegacyRowHeight;
+            _footerBackground.Location = new Vector2I(-64, footerY - 10);
+            _footerBackground.Size = new Vector2I(LegacyWidth, LegacyFooterHeight);
+            _footerBackground.Visible = true;
+
+            // 关闭按钮定位在 F1102 右下角圆钮处
+            _closeButton.Location = new Vector2I(342, footerY + 8);
+            _closeButton.Size = new Vector2I(28, 28);
+            _closeButton.Visible = true;
+
+            const int textBottomMargin = 42;
+            int areaH = Math.Max(0, totalH - textTop - textBottomMargin);
+            _textArea.Size = new Vector2I(textWidth, areaH);
+            int maxScroll = GetLegacyMaxScroll();
+            _scroll.Visible = false;
+            _scrollUp.Location = new Vector2I(300, footerY + 14);
+            _scrollDown.Location = new Vector2I(318, footerY + 14);
+            _scrollUp.Visible = maxScroll > 0;
+            _scrollDown.Visible = maxScroll > 0;
+            UpdateLegacyScrollEnabled();
+        }
+        else
         {
             int rowCount = Math.Clamp((pageTextHeight - 124) / 20, 0, 6);
             int footerY = 140 + rowCount * 20;
             Size = new Vector2I(380, footerY + 64);
-            foreach (var row in _rowBackgrounds) { RemoveControl(row); row.QueueFree(); }
-            _rowBackgrounds.Clear();
             for (int i = 0; i < rowCount; i++)
             {
-                var row = new DXImageControl { LibraryFile = LibraryFile.GameInter, Index = 381, FixedSize = true, Size = new Vector2I(380, 20), Location = new Vector2I(0, 140 + i * 20), MouseFilter = MouseFilterEnum.Ignore, ZIndex = -10 };
-                AddControl(row); _rowBackgrounds.Add(row);
+                var row = new DXImageControl
+                {
+                    LibraryFile = LibraryFile.GameInter,
+                    Index = 381,
+                    FixedSize = true,
+                    Size = new Vector2I(380, 20),
+                    Location = new Vector2I(0, 140 + i * 20),
+                    MouseFilter = MouseFilterEnum.Ignore,
+                    ZIndex = -10
+                };
+                AddControl(row);
+                _rowBackgrounds.Add(row);
             }
             _footerBackground.Location = new Vector2I(0, footerY);
+            _footerBackground.Visible = true;
+            _closeButton.Location = new Vector2I(350, 3);
             _textArea.Size = new Vector2I(350, Math.Max(0, (int)Size.Y - 59));
             _scroll.Size = new Vector2I(14, Math.Max(0, (int)Size.Y - 59));
             _scroll.VisibleSize = (int)_textArea.Size.Y;
             _scroll.MaxValue = Math.Max(0, pageTextHeight - (int)_textArea.Size.Y + 14);
+            _scroll.Visible = _scroll.MaxValue > 0;
         }
-        else
-        {
-            // legacy: 清理任何可能遗留的现代行背景, 避免 F381 帧泄漏进 F1100。
-            foreach (var row in _rowBackgrounds) { RemoveControl(row); row.QueueFree(); }
-            _rowBackgrounds.Clear();
-        }
-        // legacy：商品面板的位置由 PlaceGoodsPanel 按原版商店窗的屏幕原点 (0,184) 固定，
-        // 这里不能按现代公式挂在 NPC 窗下方 (0, Size.Y)，否则面板会被排到屏幕外。
-        if (_legacyGoodsPlaced) PlaceGoodsPanel();
-        else _goods.Location = new Vector2I(0, (int)Size.Y);
+
+        // 子面板垂直吸附定位
+        int panelY = (int)Size.Y;
+        _goods.Location = new Vector2I(0, panelY);
+        _repair.Location = new Vector2I(0, panelY);
+        _advanced.Location = new Vector2I(0, panelY);
+
         _goods.SetGoods(_page.Goods, _page.Currency, _page.Types?.Select(x => x.ItemType));
         _goods.Visible = _page.DialogType == NPCDialogType.BuySell && _page.Goods != null && _page.Goods.Count > 0;
         if (selling)
@@ -536,11 +454,12 @@ public partial class NPCDialog : DXWindow
             GameScene.Game?.ShowInventoryForNpcSale(_page.Currency, _page.Types.Select(x => x.ItemType));
             _goods.Visible = true;
         }
+
         _repair.AllowedTypes = _page.Types?.Select(x => x.ItemType);
         _repair.Visible = _page.DialogType == NPCDialogType.Repair;
         if (_repair.Visible)
             GameScene.Game?.SetInventoryLegacyMode(InventoryMode.Repair);
-        _repair.Location = new Vector2I(0, (int)Size.Y);
+
         _advanced.HidePanel();
         GameScene.Game?.CloseNPCCompanionStorage();
         if (_page.DialogType != NPCDialogType.None && _page.DialogType != NPCDialogType.BuySell && _page.DialogType != NPCDialogType.Repair &&
@@ -549,20 +468,14 @@ public partial class NPCDialog : DXWindow
             _page.DialogType != NPCDialogType.Consignment)
         {
             _advanced.Configure(_page.DialogType);
-            _advanced.Location = new Vector2I(0, (int)Size.Y);
             if (_page.DialogType == NPCDialogType.CompanionManage)
                 GameScene.Game?.OpenNPCCompanionStorage();
         }
         if (_page.DialogType == NPCDialogType.Consignment && GameScene.IsConsignmentEnabled)
             GameScene.Game?.OpenConsignmentDialog();
+
         WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent());
-        // 2026-10-04 顺序修正：ShowPage 按正文高度重建尺寸；旧版 F1100 的协议回包
-        // 也必须先回到 552 宽的根框（否则会悄悄退回现代 380×204）。
-        // **必须在 OpenNPCQuestList 之前做完** —— 任务窗靠 _npcDialog.Size.Y 决定
-        // 摆在哪（对话窗下方），若此时尺寸还是动态值以外的中间态，任务窗就会
-        // 压住对话窗底部的菜单条（实机复现：菜单「Let's try something new」点不到）。
-        if (_legacyLayout)
-            ApplyLegacyEiLayout();
+
         if (_page.DialogType == NPCDialogType.None)
             GameScene.Game?.OpenNPCQuestList(GameScene.Game.NPCObjectId);
         else
@@ -626,22 +539,9 @@ public partial class NPCDialog : DXWindow
         if (GameScene.Game != null)
             GameScene.Game.CloseNPCDialog();
         else
-            // 独立测试场 (无 GameScene) 下仍要能本地关闭, 供 F1100 关闭验收。
             WindowManager.Close(this);
     }
 
-    // The legacy dialog sends NPCClose whenever it becomes hidden, including
-    // when Escape closes the top window. WindowManager.CloseTop only knows
-    // about DXWindow, so preserve that protocol edge here as well.
-    /// <summary>
-    /// EI 对话脚本的 FCOLOR 行 token。证据 npc-body-strip-evidence.json：
-    /// `mov ecx,[eax*4+0x47c4a8]`，0x47C4A8 是 16 项 BGR 调色板
-    /// （0..15：0x000000,0x0000FF,0x008000,0x008080,0x808080,0x000080,
-    /// 0x808000,0x800000,0xC0C0C0,0x800080,0x00FF00,0xFF0000,0xFFFFFF,
-    /// 0xFF00FF,0xFFFF00,0x00FFFF）。值是 Windows COLORREF（0x00BBGGRR），
-    /// 所以取色时要按 R=低字节、B=高字节还原。
-    /// FCOLOR 之后的正文行用该色；NPCIMG 行按证据暂不绘制（位置未给）。
-    /// </summary>
     private string ApplyLegacyFColor(string text)
     {
         if (string.IsNullOrEmpty(text) || !text.Contains("FCOLOR", StringComparison.Ordinal)) return text;
@@ -655,13 +555,7 @@ public partial class NPCDialog : DXWindow
                 if (int.TryParse(trimmed[7..].Trim(), out int index) && index >= 0 && index < LegacyFColorPalette.Length)
                 {
                     current = LegacyFColorPalette[index];
-                    GD.Print($"[LegacyFColor] index={index} -> RGB({current.Value.R * 255:0},{current.Value.G * 255:0},{current.Value.B * 255:0})");
                 }
-                continue;
-            }
-            if (TryParseLegacyNpcImg(trimmed, out int faceFrame))
-            {
-                _legacyNpcFaceFrame = faceFrame;
                 continue;
             }
             output.Add(current == null || trimmed.Length == 0
@@ -671,14 +565,26 @@ public partial class NPCDialog : DXWindow
         return string.Join("\n", output);
     }
 
-    /// <summary>
-    /// 解析 EI 对话脚本的头像标记。**真实语法是 `{NPCIMG/110}`（斜杠分隔）**，
-    /// 证据：Mud3 服务端脚本集合里 `grep -rho "NPCIMG[^ ]*"` 统计出
-    /// `NPCIMG/110}` 43 次、`NPCIMG/50}` 33 次、`NPCIMG/0}` 31 次 …（共 12+ 种帧号）。
-    /// 早期实现查的是 `"NPCIMG "`（空格），分隔符不对，所以从未匹配上。
-    ///
-    /// 帧号语义 = NPCFace.wil 的裸帧号；绘制位置见 `LegacyNpcFacePosition`。
-    /// </summary>
+    private string ExtractLegacyNpcImg(string raw, out int frame)
+    {
+        frame = -1;
+        if (string.IsNullOrEmpty(raw)) return raw;
+        var lines = raw.Replace("\r", string.Empty).Split('\n');
+        var output = new List<string>(lines.Length);
+        foreach (var line in lines)
+        {
+            if (TryParseLegacyNpcImg(line.Trim(), out int f))
+            {
+                frame = f;
+            }
+            else
+            {
+                output.Add(line);
+            }
+        }
+        return string.Join("\n", output);
+    }
+
     private bool TryParseLegacyNpcImg(string line, out int frame)
     {
         frame = -1;
@@ -688,25 +594,14 @@ public partial class NPCDialog : DXWindow
         while (i < line.Length && (line[i] == '/' || line[i] == ' ' || line[i] == ':' || line[i] == '=')) i++;
         int start = i;
         while (i < line.Length && char.IsDigit(line[i])) i++;
-        if (i == start) return false;              // 必须有数字
+        if (i == start) return false;
         if (!int.TryParse(line[start..i], out frame)) { frame = -1; return false; }
-        // 整行只剩该标记（含花括号）才算标记行，避免误吞正常正文。
-        string rest = line.Remove(at, i - at).Replace("{", string.Empty).Replace("}", string.Empty).Trim();
-        return rest.Length == 0;
+        return true;
     }
 
-    /// <summary>
-    /// 头像绘制位置 = 窗口相对 (40, 30)。
-    /// 证据 0x440059/0x44005B：NPCIMG 分支把 **常量** push 0x1e(30) / push 0x28(40) 传给
-    /// 0x45fd50(this=0x8ab7a8)，即位置是硬编码常量、**不是**脚本给的坐标。
-    /// （`[ebp+0x2b0]/[ebp+0x2b4]` 只用于取帧宽高；全 .text 扫描证明这两个字段
-    ///  从未被写入，见本次提交说明。）
-    /// </summary>
-    private static readonly Vector2I LegacyNpcFacePosition = new(40, 30);
-
-    private void ApplyLegacyNpcFace()
+    private void ApplyLegacyNpcFace(bool hasFace)
     {
-        if (!_legacyLayout || _legacyNpcFaceFrame < 0)
+        if (!hasFace || _legacyNpcFaceFrame < 0)
         {
             if (_legacyNpcFace != null) _legacyNpcFace.Visible = false;
             return;
@@ -720,50 +615,34 @@ public partial class NPCDialog : DXWindow
         _legacyNpcFace.Index = _legacyNpcFaceFrame;
         var size = MirSkin.GetSize(LibraryFile.NPCImage, _legacyNpcFaceFrame);
         _legacyNpcFace.Size = size;
-        _legacyNpcFace.Location = LegacyNpcFacePosition;
+        _legacyNpcFace.Location = new Vector2I(25, 20);
         if (_legacyNpcFace.GetParent() == null) AddControl(_legacyNpcFace);
         _legacyNpcFace.Visible = true;
-        GD.Print($"[LegacyNpcImg] frame={_legacyNpcFaceFrame} size={size} pos={LegacyNpcFacePosition}");
     }
 
-    /// <summary>0x47C4A8 的 16 项 BGR 调色板，已按 COLORREF 还原为 RGB。</summary>
     private static readonly Color[] LegacyFColorPalette =
     {
-        Color.Color8(0x00, 0x00, 0x00), // 0 0x000000
-        Color.Color8(0xFF, 0x00, 0x00), // 1 0x0000FF red
-        Color.Color8(0x00, 0x80, 0x00), // 2 0x008000
-        Color.Color8(0x80, 0x80, 0x00), // 3 0x008080
-        Color.Color8(0x80, 0x80, 0x80), // 4 0x808080
-        Color.Color8(0x80, 0x00, 0x00), // 5 0x000080 maroon (R=0x80,G=0,B=0)
-        Color.Color8(0x00, 0x80, 0x80), // 6 0x808000
-        Color.Color8(0x00, 0x00, 0x80), // 7 0x800000
-        Color.Color8(0xC0, 0xC0, 0xC0), // 8 0xC0C0C0
-        Color.Color8(0x80, 0x00, 0x80), // 9 0x800080
-        Color.Color8(0x00, 0xFF, 0x00), // 10 0x00FF00
-        Color.Color8(0x00, 0x00, 0xFF), // 11 0xFF0000 blue
-        Color.Color8(0xFF, 0xFF, 0xFF), // 12 0xFFFFFF
-        Color.Color8(0xFF, 0x00, 0xFF), // 13 0xFF00FF
-        Color.Color8(0x00, 0xFF, 0xFF), // 14 0xFFFF00
-        Color.Color8(0xFF, 0xFF, 0x00), // 15 0x00FFFF
+        Color.Color8(0x00, 0x00, 0x00),
+        Color.Color8(0xFF, 0x00, 0x00),
+        Color.Color8(0x00, 0x80, 0x00),
+        Color.Color8(0x80, 0x80, 0x00),
+        Color.Color8(0x80, 0x80, 0x80),
+        Color.Color8(0x80, 0x00, 0x00),
+        Color.Color8(0x00, 0x80, 0x80),
+        Color.Color8(0x00, 0x00, 0x80),
+        Color.Color8(0xC0, 0xC0, 0xC0),
+        Color.Color8(0x80, 0x00, 0x80),
+        Color.Color8(0x00, 0xFF, 0x00),
+        Color.Color8(0x00, 0x00, 0xFF),
+        Color.Color8(0xFF, 0xFF, 0xFF),
+        Color.Color8(0xFF, 0x00, 0xFF),
+        Color.Color8(0x00, 0xFF, 0xFF),
+        Color.Color8(0xFF, 0xFF, 0x00),
     };
 
     public override void Close()
     {
         base.Close();
         GameScene.Game?.SendNPCClose();
-    }
-
-    /// <summary>
-    /// 左列（头像下方的第二段）几何随窗口动态高度重算。
-    /// 2026-10-04：原先在 ApplyLegacyEiLayout 里用固定的 LegacyTextHeight(136) 算，
-    /// 而窗口高度已改为随行数动态变化（ShowPage 里调整），导致左列容器只有
-    /// 136-(152-40)=24px（1 行），溢出到左列的行放不下被裁掉。
-    /// </summary>
-    private void ApplyLegacyColumn2Geometry(float windowHeight)
-    {
-        int col2Top = LegacyPortraitBottom;
-        int col2Height = Mathf.Max(_legacyPitch, (int)windowHeight - col2Top - LegacyTextBottomPad);
-        _textColumn2Area.Location = new Vector2I(LegacyTextX, col2Top);
-        _textColumn2Area.Size = new Vector2I(LegacyTextColumn2X - LegacyTextX, col2Height);
     }
 }

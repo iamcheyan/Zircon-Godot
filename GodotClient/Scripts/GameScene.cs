@@ -118,6 +118,7 @@ public partial class GameScene : Control
     private readonly Dictionary<uint, NPCInfo> _npcInfos = new();
     private uint _npcObjectId;
     public uint NPCObjectId => _npcObjectId;
+    public NPCInfo CurrentNPCInfo => _npcInfos.TryGetValue(_npcObjectId, out var info) ? info : null;
     private GroupDialog _groupDialog;
     private GroupHealthPanel _groupHealthPanel;
     private double _statusRefreshMs;

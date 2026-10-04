@@ -153,13 +153,8 @@ public sealed partial class NPCTextControl : DXControl
             return rows;
         }
     }
-    /// <summary>只画菜单条、不画文字（外置菜单条层用；置位可避免重复渲染一份文本）。</summary>
-    public bool StripsOnly { get; set; }
-
     protected override void DrawControl()
     {
-        if (LegacyMenuStrips) DrawLegacyMenuStrips();
-        if (StripsOnly) return;   // 纯菜单条层：不重复绘制文字（否则会多出一份文本）
         var font = MirSkin.GetFont();
         if (font == null) return;
         foreach (var glyph in _glyphs)
@@ -168,36 +163,12 @@ public sealed partial class NPCTextControl : DXControl
                 ? Colors.Red
                 : glyph.Colour;
             DrawString(font, glyph.Position, glyph.Text, HorizontalAlignment.Left, -1, glyph.FontSize, colour);
-        }
-    }
-
-    /// <summary>
-    /// 按原版规则给每个选项行铺菜单条：末项 F1102、其余 F1101。
-    ///
-    /// 两个实测坑（见审计文档「两次失败定位」）：
-    /// 1. **不能用 MirSkin.GetOffset** —— 它返回 WIL **header offset**（F1101 是 (7,-44)），
-    ///    而美术可见区实际从画布 **(64,7)** 开始（alpha bbox 实测）。
-    ///    用 header offset 会把条子画到偏低约 95px 的位置。
-    ///    故这里用实测的 alpha bbox 原点。
-    /// 2. 控件宽度必须是菜单条宽度（383），否则被父容器裁掉。
-    /// </summary>
-    private static readonly Vector2I Frame1101VisibleOrigin = new(64, 7);
-    private static readonly Vector2I Frame1102VisibleOrigin = new(64, 10);
-
-    private void DrawLegacyMenuStrips()
-    {
-        var rows = MenuRows;
-        if (rows.Count == 0) return;
-        for (int i = 0; i < rows.Count; i++)
-        {
-            int frame = i == rows.Count - 1 ? 1102 : 1101;
-            var tex = MirSkin.GetTexture(LibraryFile.GameInter, frame);
-            if (tex == null) continue;
-            // alpha bbox 原点：把可见区左上角对齐到该行命中区的左上角。
-            var origin = frame == 1102 ? Frame1102VisibleOrigin : Frame1101VisibleOrigin;
-            var rect = rows[i].Rect;
-            var pos = new Vector2(rect.Position.X - origin.X, rect.Position.Y - origin.Y);
-            DrawTexture(tex, pos, Colors.White);
+            if (glyph.ButtonId >= 0)
+            {
+                // 原版 FState.pas:6960 下划线对齐
+                float y = glyph.Position.Y + 2;
+                DrawLine(new Vector2(glyph.HitBox.Position.X, y), new Vector2(glyph.HitBox.Position.X + glyph.HitBox.Size.X, y), colour, 1.0f);
+            }
         }
     }
 

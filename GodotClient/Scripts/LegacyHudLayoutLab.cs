@@ -538,8 +538,17 @@ public partial class LegacyHudLayoutLab : Control
             await ClickControl(_npc.LegacyCloseButton);
             await AwaitFrames(2);
             Check(!_npc.Visible, "dialog closed after close-button click");
-            string s5 = Shot("npc-f1100-self-05-closed.png");
-            GD.Print($"[NpcF1100SelfTest] shot {s5}");
+            // 模式 B: 无头像普通商贩 (如肉铺老板) 纯文本左对齐测试
+            if (page != null)
+            {
+                page.Say = "欢迎光临本店，\n我做这一行好多年了，什么部位最好吃我一清二楚。\n\n有什么能帮您的？\n[浏览商店:1]\n[随便看看:2]";
+                var plainResp = new S.NPCResponse { Page = page, ObjectID = 100 };
+                WindowManager.Open(_npc, _canvas);
+                _npc.ShowPage(plainResp);
+                await AwaitFrames(3);
+                string s6 = Shot("npc-f1100-self-06-no-portrait.png");
+                GD.Print($"[NpcF1100SelfTest] shot {s6}");
+            }
 
             bool pass = fail.Count == 0;
             GD.Print($"[NpcF1100SelfTest] {(pass ? "PASS" : "FAIL")} failures={fail.Count} {string.Join(" | ", fail)}");

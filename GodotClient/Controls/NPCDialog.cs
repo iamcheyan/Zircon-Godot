@@ -81,6 +81,11 @@ public partial class NPCDialog : DXWindow
     private const int LegacyTextColumn2X = 235; // 右列：右缘 235+149=384 贴可见区右缘
     private const int LegacyTextHeight = 136;   // 根框底部 176 - 文本原点 40
     private const int LegacyStripWidth = 384;   // F1101=383, F1102=384 可见宽度
+    // 动态高度：窗口下缘到最后一行的留白（原版截图量得约 24px）。
+    private const int LegacyTextBottomPad = 24;
+    // 单列最多可见行数：超过才启用第二列（头像下方那列）。
+    // 原版窗口高度随内容增长，单列可容纳的行数比固定 176 时的 6 行多。
+    private const int LegacyMaxVisibleLines = 8;
     private const int LegacyFontSize = 10;    // ScaledSize -> 12px 点阵
     private const int LegacyLinePitch = 21;   // evidence default_line_spacing_px
     // 原版 0x440AA0 扫描器（npc-window-render-evidence.json::dialogue_text_layout_contract）：
@@ -261,7 +266,9 @@ public partial class NPCDialog : DXWindow
 
     private int GetLegacyMaxScroll()
     {
-        int visibleLines = LegacyTextHeight / _legacyPitch;
+        // 2026-10-04 动态高度：可见行数由当前裁剪区高决定（ShowPage 里随行数调整），
+        // 不再固定用 LegacyTextHeight/行距，否则窗口变高后滚动上限仍按 6 行算。
+        int visibleLines = Math.Max(1, (int)_textArea.Size.Y / _legacyPitch);
         return Math.Max(0, _text.LineCount - visibleLines);
     }
 
@@ -310,16 +317,26 @@ public partial class NPCDialog : DXWindow
 
     public bool AuditLegacyEiLayout(out string details)
     {
-        bool ok =
-            Size == new Vector2I(552, 176)
+            // 2026-10-04 动态高度：窗口高不再固定 176，而是随行数在
+            // [最小 1 行, LegacyMaxVisibleLines 行] 之间变化。这里校验宽度固定 552、
+            // 高度落在合法区间，且文本/菜单条裁剪区与窗口高度自洽。
+            // 未 ShowPage（尚无内容）时裁剪区仍是 ApplyLegacyEiLayout 设的初值 136；
+            // ShowPage 后会按行数改成 areaH。两种都算合法。
+            int areaH = (int)Size.Y - LegacyTextY - LegacyTextBottomPad;
+            int minH = LegacyTextY + _legacyPitch + LegacyTextBottomPad;
+            int maxH = LegacyTextY + LegacyMaxVisibleLines * _legacyPitch + LegacyTextBottomPad;
+            bool areaOk = _textArea.Size.Y == LegacyTextHeight || _textArea.Size.Y == areaH;
+            bool ok =
+            (int)Size.X == 552
+            && (int)Size.Y >= minH && (int)Size.Y <= maxH
             && _headerBackground.Index == 1100
             // 背景锚点 = alpha 可见区原点 -(64,59)（素材实测 F1100 bbox 原点 (64,59)）。
             && _headerBackground.Location == new Vector2I(-64, -59)
             && _legacyStripArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
-            && _legacyStripArea.Size == new Vector2I(LegacyStripWidth, LegacyTextHeight)
+            && (_legacyStripArea.Size == new Vector2I(LegacyStripWidth, areaH) || _legacyStripArea.Size.Y == LegacyTextHeight)
             && _legacyStripArea.Clip
             && _textArea.Location == new Vector2I(LegacyTextColumn2X, LegacyTextY)
-            && _textArea.Size == new Vector2I(LegacyTextWidth, LegacyTextHeight)
+            && areaOk
             && _textColumn2Area.Location == new Vector2I(LegacyTextX, LegacyPortraitBottom)
             && _closeButton.Index == 161
             && _closeButton.Location == new Vector2I(7, 141)
@@ -416,7 +433,26 @@ public partial class NPCDialog : DXWindow
         // N5 两列：每列 136/21 = 6 行，行数超过 6 才启用第二列。
         if (_legacyLayout)
         {
-            bool twoColumn = _text.LineCount > LegacyTextHeight / _legacyPitch;
+            // 每列可容纳的行数（136/21 = 6 行）
+            // 2026-10-04 动态高度：原版对话框高度随内容增长（用户口述 + 原版截图
+            // 「内容长就往下延伸」）。窗口高 = 文本原点 40 + 可见行数*行距 + 底部留白。
+            // 固定 176 时，内容超过 6 行就会被下边框裁掉（自测截图可见）。
+            // 2026-10-04 动态高度：原版对话框高度随内容增长（用户口述「内容长就往下延伸」
+            // + 原版截图）。窗口高 = 文本原点 40 + 可见行数*行距 + 底部留白 24。
+            // 单列最多 LegacyMaxVisibleLines 行，超过才启用第二列（头像下方）。
+            int maxRightLines = LegacyMaxVisibleLines;
+            int neededLines = Mathf.Clamp(_text.LineCount, 1, maxRightLines);
+            int wantedHeight = LegacyTextY + neededLines * _legacyPitch + LegacyTextBottomPad;
+            if (wantedHeight != Size.Y)
+            {
+                Size = new Vector2I((int)Size.X, wantedHeight);
+                // 文本/菜单条裁剪区同步跟随，否则内容仍被旧的 136 高裁掉。
+                int areaH = wantedHeight - LegacyTextY - LegacyTextBottomPad;
+                _textArea.Size = new Vector2I(LegacyTextWidth, areaH);
+                _legacyStripArea.Size = new Vector2I(LegacyStripWidth, areaH);
+                UpdateClientAreaForLegacySkin();
+            }
+            bool twoColumn = _text.LineCount > maxRightLines;
             _textColumn2Area.Visible = twoColumn;
             if (twoColumn)
             {

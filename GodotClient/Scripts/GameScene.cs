@@ -11307,10 +11307,36 @@ public partial class GameScene : Control
 
         if (_net?.Connection?.Connected != true) return;
 
-        if (AutoLoginArgs.LegacyUi
-            ? _legacyChatDialog?.HandleGlobalKey(key, _uiLayer) == true
-            : _chatTextBox?.HandleGlobalKey(key) == true)
+        // 原版 PageUp / PageDown 翻页聊天记录（ClMain.pas VK_PRIOR / VK_NEXT）
+        if (key.Keycode == Key.Pageup && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
+        {
+            if (_legacyChatDialog?.Visible == true)
+                _legacyChatDialog.ScrollBy(19);
+            else
+                _chatLog?.ScrollPage(-1);
+            GetViewport()?.SetInputAsHandled();
             return;
+        }
+        if (key.Keycode == Key.Pagedown && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
+        {
+            if (_legacyChatDialog?.Visible == true)
+                _legacyChatDialog.ScrollBy(-19);
+            else
+                _chatLog?.ScrollPage(1);
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
+        if (_legacyChatDialog?.Visible == true)
+        {
+            if (_legacyChatDialog.HandleGlobalKey(key, _uiLayer))
+                return;
+        }
+        else
+        {
+            if (_chatTextBox?.HandleGlobalKey(key) == true)
+                return;
+        }
 
         // EI 的 Q 与 Ctrl+Q 都切换背包 id0；原版打开时另有状态复位调用，
         // 该复位尚未对应到 Zircon 字段，先保留为单独审计缺口。

@@ -76,6 +76,11 @@ public sealed partial class ChatTextBox : DXWindow
         };
         _input.HistoryUp += () => NavigateHistory(true);
         _input.HistoryDown += () => NavigateHistory(false);
+        _input.Canceled += () =>
+        {
+            _input.Text = string.Empty;
+            _input.ReleaseFocus();
+        };
         AddControl(_input);
     }
     /// <summary>
@@ -209,7 +214,7 @@ public sealed partial class ChatTextBox : DXWindow
             GetViewport()?.SetInputAsHandled();
             return true;
         }
-        if (key.Unicode == '@' || (key.Unicode == '!' && key.ShiftPressed))
+        if (key.Unicode == '@' || key.Unicode == '!')
         {
             OpenChat();
             _input.Text = key.Unicode == '!' ? "!" : "@";

@@ -402,15 +402,16 @@ public sealed partial class LegacyChatDialog : DXWindow
     {
         if (!key.Pressed) return false;
         if (_input.HasFocus) return true;
+        if (!Visible) return false;
         if (ClientSettings.ShiftOpenChat && key.ShiftPressed && key.Keycode is >= Key.Key0 and <= Key.Key9)
         {
-            OpenChat(parent);
+            _input.GrabFocus();
             GetViewport()?.SetInputAsHandled();
             return true;
         }
         if (key.Keycode is Key.Enter or Key.Space or Key.Slash || key.Unicode == '@' || key.Unicode == '!')
         {
-            OpenChat(parent);
+            _input.GrabFocus();
             if (key.Keycode == Key.Slash) _input.Text = "/";
             else if (key.Unicode == '@' || key.Unicode == '!') _input.Text = ((char)key.Unicode).ToString();
             _input.CaretColumn = _input.Text.Length;
@@ -516,7 +517,7 @@ public sealed partial class LegacyChatDialog : DXWindow
         ScrollBy(mouseEvent.Delta > 0 ? 1 : -1);
     }
 
-    private void ScrollBy(int rows) => SetScrollOffset(_scrollOffset + rows);
+    public void ScrollBy(int rows) => SetScrollOffset(_scrollOffset + rows);
 
     private void SetScrollOffset(int value)
     {

@@ -25,6 +25,9 @@ public partial class ChatLogPanel : Control
     private double _idleSeconds;
     private bool _legacyHudLayout;
     private LegacyUiFrame _legacyBackdrop;
+    private DXControl _legacyScrollClip;
+    private DXImageControl _legacyScrollTrack;
+    private LegacyGaugeDragSurface _legacyGaugeDrag;
     private const float LegacyHudChatOpacity = 1f;
     private const int MaxLines = 250;
  
@@ -101,40 +104,91 @@ public partial class ChatLogPanel : Control
         // 文本区仍是原版聊天区域宽度 (354)；面板多出来的那一列只为让
         // ClipContents 放行压在右侧木桩上的锁链滚动条，不参与文本排版。
         _textArea.Size = LegacyHudLayout.ChatLogSize;
-        // 原版聊天面板的滚动条贴在面板右缘，并且**常驻显示** —— 用户确认
-        // 「它是一直都在的」，不能像现代 ChatTab 那样 HideWhenNoScroll。
-        const int legacyScrollWidth = 14;
-        // 位置：用户确认「锁链现在结束的位置，再往右一点点，才是它该开始的位置，
-        // 它应该压在右边那根木桩上」—— 即整体右移一个滚动条宽度。
+
+        // 隐藏 DXVScrollBar 默认外观，视觉由 F68 锁链呈现，DXVScrollBar 仅作为纯逻辑状态存储
         _scroll.Position = new Vector2I(LegacyHudLayout.ChatLogSize.X + 2, 0);
-        _scroll.Size = new Vector2I(legacyScrollWidth, (int)Size.Y);
+        _scroll.Size = new Vector2I(12, (int)Size.Y);
         _scroll.VisibleSize = (int)Size.Y;
         _scroll.Change = 14;
+        _scroll.Border = false;
+        _scroll.BackColour = Colors.Transparent;
+        _scroll.UpButton.Visible = false;
+        _scroll.DownButton.Visible = false;
+        _scroll.PositionBar.Visible = false;
         _scroll.HideWhenNoScroll = false;
-        _scroll.Visible = true;
-        // EI 素材里没有 Interface.wil（DXVScrollBar 默认的 44/45/46 取不到图）。
-        // 轨道改用原版聊天框右侧那条锁链：GameInter F68 (12x154) 按原生尺寸绘制，
-        // 其内部烤好的橙红圆点（原生 y 62..77）就是滑块，随滚动一起移动。
-        _scroll.LegacyChainTrack = true;
-        _scroll.LegacyChainLibrary = LibraryFile.GameInter;
-        _scroll.LegacyChainIndex = 68;
-        if (MirSkin.GetSize(LibraryFile.GameInter, 68) != Vector2I.Zero)
+        _scroll.Visible = false;
+
+        // 锁链剪裁框（对齐包裹已修复的 F280 模型）：限定在 12x74 黑槽内，裁掉多余锁链
+        _legacyScrollClip ??= new DXControl
         {
-            // 滑块不再画整条锁链（那会把锁链当滑块拉伸），只保留圆点大小的拖拽热区。
-            _scroll.PositionBar.LibraryFile = LibraryFile.GameInter;
-            _scroll.PositionBar.Index = -1;
-            _scroll.PositionBar.Size = new Vector2I(12, 16);
-        }
-        GD.Print($"[LegacyChatPanel] scrollbar pos={_scroll.Position} size={_scroll.Size} "
-            + $"art=GameInter[68] size={MirSkin.GetSize(LibraryFile.GameInter, 68)} "
-            + $"chainTrack={_scroll.LegacyChainTrack} dotY={_scroll.LegacyChainDotY} "
-            + $"thumbArt={_scroll.PositionBar.Index} "
-            + $"visible={_scroll.Visible}");
+            Location = new Vector2I(LegacyHudLayout.ChatLogSize.X + 2, 0),
+            Size = new Vector2I(12, (int)Size.Y),
+            Clip = true,
+            IsControl = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_legacyScrollClip.GetParent() == null) AddChild(_legacyScrollClip);
+
+        // 锁链贴图 GameInter F68（12x154，y≈75 烤有一颗橙红圆点=滑块）
+        _legacyScrollTrack ??= new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 68,
+            FixedSize = true,
+            StretchImage = false,
+            Size = new Vector2I(12, 154),
+            Location = new Vector2I(0, -38),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        if (_legacyScrollTrack.GetParent() == null) _legacyScrollClip.AddControl(_legacyScrollTrack);
+
+        // 交互命中面覆盖整条锁链槽，点击/拖动/滚轮都直接驱动滚动
+        _legacyGaugeDrag ??= new LegacyGaugeDragSurface
+        {
+            Location = new Vector2I(LegacyHudLayout.ChatLogSize.X + 2, 0),
+            Size = new Vector2I(12, (int)Size.Y),
+            Pad = 8f,
+            MouseFilter = MouseFilterEnum.Stop,
+        };
+        _legacyGaugeDrag.SetTarget(_scroll);
+        if (_legacyGaugeDrag.GetParent() == null) AddChild(_legacyGaugeDrag);
+
+        _scroll.ValueChanged -= OnScrollValueChanged;
+        _scroll.ValueChanged += OnScrollValueChanged;
+
         // EI 的 F50 常驻聊天面板必须显示系统消息；现代 ChatTab 的默认
         // 配置会隐藏 System，但该过滤器不能沿用到 legacy HUD。
         GetTabSettings().EnabledTypes.Add(MessageType.System);
         ApplySettings();
         RebuildVisibleLines(false);
+        RefreshLegacyChainPosition();
+    }
+
+    private void RefreshLegacyChainPosition()
+    {
+        if (!_legacyHudLayout || _scroll == null || _legacyScrollTrack == null || _legacyScrollClip == null) return;
+        int range = _scroll.MaxValue - _scroll.MinValue - _scroll.VisibleSize;
+        float t = range > 0
+            ? Mathf.Clamp((_scroll.Value - _scroll.MinValue) / (float)range, 0f, 1f)
+            : 0f;
+        const int bakedDotY = 75; // GameInter Frame 68 橙红圆点中心
+        const float pad = 8f;
+        float trackH = (float)_legacyScrollClip.Size.Y;
+        float travel = Mathf.Max(1f, trackH - pad * 2f);
+        float thumbY = pad + t * travel;
+        _legacyScrollTrack.Location = new Vector2I(0, (int)Math.Round(thumbY - bakedDotY));
+    }
+
+    private void OnScrollValueChanged(object sender, EventArgs e)
+    {
+        UpdateLines();
+        RefreshLegacyChainPosition();
+    }
+
+    public void ScrollPage(int direction)
+    {
+        if (_scroll == null) return;
+        _scroll.Value += direction * Math.Max(14, (int)_textArea.Size.Y - 14);
     }
 
     public int MessageCount => _messages.Count;
@@ -461,7 +515,9 @@ public partial class ChatLogPanel : Control
 
         if (_legacyHudLayout)
         {
-            _scroll.Visible = true;
+            _scroll.Visible = false;
+            if (_legacyScrollClip != null) _legacyScrollClip.Visible = true;
+            if (_legacyGaugeDrag != null) _legacyGaugeDrag.Visible = true;
             return;
         }
 
@@ -481,7 +537,7 @@ public partial class ChatLogPanel : Control
     }
 
     /// <summary>供 GameScene 布局回归审计使用；透明主聊天不应留下悬浮滚动条。</summary>
-    public bool IsScrollChromeVisible => _scroll?.Visible == true;
+    public bool IsScrollChromeVisible => _legacyHudLayout ? _legacyScrollClip?.Visible == true : _scroll?.Visible == true;
 
     private void RebuildVisibleLines(bool keepBottom)
     {
@@ -517,12 +573,14 @@ public partial class ChatLogPanel : Control
                 MeasureTextHeight(displayText, (int)line.Size.X, line.FontSize, _legacyHudLayout ? 14 : 16));
             _textArea.AddControl(line);
             _lines.Add(line);
+            line.MouseWheel += _scroll.DoMouseWheel;
             AttachPlayerNameAction(line, message.Type);
             AddLinkedItemLabels(line, message.Text, displayText, message.LinkedItems);
         }
         _scroll.MaxValue = Mathf.Max(_scroll.VisibleSize, _lines.Sum(line => (int)line.Size.Y) + 4);
         if (keepBottom) _scroll.Value = _scroll.MaxValue;
         UpdateLines();
+        RefreshLegacyChainPosition();
         UpdateChromeVisibility(_textArea.Opacity);
         QueueRedraw();
     }
@@ -670,6 +728,7 @@ public partial class ChatLogPanel : Control
                 linked.TextColour = new Color(1f, .9f, .25f);
                 linked.QueueRedraw();
             };
+            linked.MouseWheel += _scroll.DoMouseWheel;
             line.AddControl(linked);
             _linkedLabels.Add(linked);
         }

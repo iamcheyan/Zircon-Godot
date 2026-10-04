@@ -46,6 +46,31 @@ internal static class MapExporter
                                     StringComparison.OrdinalIgnoreCase));
     }
 
+
+    /// <summary>按 db_names.json 的 maps 段把内部名解析为中文显示名。</summary>
+    private static string LookupDbNameZh(string internalName)
+    {
+        if (string.IsNullOrEmpty(internalName)) return null;
+        string path = Path.Combine(RepoRoot(), "GodotClient", "translations", "db_names.json");
+        if (!_dbNames.TryGetValue(path, out var doc))
+        {
+            try
+            {
+                using var d = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+                var table = new Dictionary<string, string>(StringComparer.Ordinal);
+                if (d.RootElement.TryGetProperty("maps", out var maps))
+                    foreach (var p in maps.EnumerateObject())
+                        if (p.Value.TryGetProperty("zh", out var zh))
+                            table[p.Name] = zh.GetString() ?? "";
+                _dbNames[path] = table;
+            }
+            catch { _dbNames[path] = new Dictionary<string, string>(); }
+        }
+        return _dbNames[path].TryGetValue(internalName, out var v) && v.Length > 0 ? v : null;
+    }
+
+    private static readonly Dictionary<string, Dictionary<string, string>> _dbNames = new();
+
     public static void Run(Session session, string outPath)
     {
         var mapCol = session.GetCollection<MapInfo>().Binding;
@@ -77,6 +102,10 @@ internal static class MapExporter
                 ["id"] = fn,
                 ["index"] = m.Index,
                 ["name"] = m.Description ?? fn,
+                // 游戏内 UI 走 LocalizedName.Local(MapInfo)：按 Description 查
+                // db_names.json 的 maps 段取 zh。网站必须用同一张表，否则
+                // 会出现「网页显示英文、游戏内显示中文」的不一致。
+                ["nameZh"] = LookupDbNameZh(m.Description),
                 ["category"] = Classify(fn),
                 ["allowRT"] = m.AllowRT,
                 ["hasMapFile"] = HasMapFile(fn),

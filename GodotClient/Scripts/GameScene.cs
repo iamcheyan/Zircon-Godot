@@ -2036,6 +2036,17 @@ public partial class GameScene : Control
     private void ShowMapChanged()
     {
         _hasPendingMapChanged = false;
+        // 目标地图必须先存在于客户端 MapInfo 才切。否则保持当前地图与
+        // _playerMapIndex 不变，只提示错误 —— 不能让客户端「自称在新图、实际
+        // 渲染旧图」，那会让玩家坐标画在错误的地图上（服务端与客户端
+        // System.db 不一致时就会走到这里，见 docs/CLIENT_GAMEPLAY_TEST_2026-10-04.md）。
+        if (Globals.MapInfoList?.Binding.FirstOrDefault(m => m.Index == _pendingMapIndex) == null)
+        {
+            GD.PrintErr($"[Game] 地图切换被拒: 客户端 MapInfo 无 MapIndex={_pendingMapIndex}，"
+                + $"保持当前地图 MapIndex={_playerMapIndex}");
+            _statusLabel.Text = string.Format(Lang.GameUi597Label, _pendingMapIndex);
+            return;
+        }
         _playerMapIndex = _pendingMapIndex;
         _playerInstanceIndex = _pendingInstanceIndex;
         GD.Print($"[Game] 地图切换: MapIndex={_pendingMapIndex} InstanceIndex={_pendingInstanceIndex}");

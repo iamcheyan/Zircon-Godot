@@ -1,5 +1,6 @@
 using ClassicMagicFixer;
 using Library;
+using Server.DBModels;
 using Library.SystemModels;
 using MirDB;
 
@@ -102,12 +103,58 @@ switch (mode)
         return ExitOk;
     }
 
+    case "shop":
+        return ShopAligner.Run(root, !args.Contains("--no-sync", StringComparer.OrdinalIgnoreCase));
+
+    case "maplist":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(NPCInfo).Assembly);
+        foreach (var m in session.GetCollection<MapInfo>().Binding.OrderBy(x => x.Index).Take(12))
+            Console.WriteLine($"idx={m.Index,-4} file='{m.FileName}' desc='{m.Description}'");
+        return ExitOk;
+    }
+
+    case "npcpos":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(NPCInfo).Assembly);
+        foreach (var n in session.GetCollection<NPCInfo>().Binding
+                 .Where(x => x.EntryPage != null && x.Region?.Map != null)
+                 .OrderBy(x => x.Region.Map.Description).ThenBy(x => x.NPCName))
+        {
+            var pts = n.Region.PointRegion;
+            Console.WriteLine($"{n.Region.Map.Description,-18} {n.NPCName,-22} region='{n.Region.ServerDescription}' points={pts.Length} first={(pts.Length>0? $"{pts[0].X},{pts[0].Y}":"-")}");
+        }
+        return ExitOk;
+    }
+
+    case "npcs":
+        return ShopAuditor.Run(root);
+
     case "drops":
         return DropAligner.Run(root, !args.Contains("--no-sync", StringComparer.OrdinalIgnoreCase));
 
     case "restore":
         if (args.Length < 3) { Console.Error.WriteLine("restore needs <SourceRoot> <TargetRoot>"); return ExitFail; }
         return RestoreClassicItems.Run(Path.GetFullPath(args[2]), root);
+
+    case "charpos":
+    {
+        var users = new Session(SessionMode.Users, root, root + "Backup/");
+        users.Initialize(typeof(AccountInfo).Assembly, typeof(MagicInfo).Assembly, typeof(MapInfo).Assembly, typeof(ItemInfo).Assembly);
+        foreach (var c in users.GetCollection<CharacterInfo>().Binding.Where(c => c.CharacterName == "TestHero"))
+            Console.WriteLine($"TestHero map={c.CurrentMap?.FileName} loc=({c.CurrentLocation.X},{c.CurrentLocation.Y})");
+        return ExitOk;
+    }
+
+    case "tp":
+        if (args.Length < 6) { Console.Error.WriteLine("tp needs <RootDir> <char> <mapFile> <x> <y>"); return ExitFail; }
+        return TeleportTool.Run(root, args[2], args[3], int.Parse(args[4]), int.Parse(args[5]));
+
+    case "gm":
+        if (args.Length < 3) { Console.Error.WriteLine("gm needs <RootDir> <account>"); return ExitFail; }
+        return AccountGrantor.Run(root, args[2]);
 
     case "grant":
         return GrantClassicSkills.Run(root);

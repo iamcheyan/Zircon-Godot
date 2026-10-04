@@ -1,0 +1,15 @@
+--- page 'Warrior Books' owner=(无入口 NPC) dialog=BuySell goods=13 currency=Gold
+    Beckon                                   rate=1 baseCost=1000 idx=0
+    Blade Storm                              rate=1 baseCost=1000 idx=0
+    Defiance                                 rate=1 baseCost=1000 idx=0
+    Destructive Surge                        rate=1 baseCost=1000 idx=0
+    Dragon Rise                              rate=1 baseCost=1000 idx=0
+    Flaming Sword                            rate=1 baseCost=1000 idx=0
+    Half Moon                                rate=1 baseCost=1000 idx=0
+    Interchange                              rate=1 baseCost=1000 idx=0
+    Might                                    rate=1 baseCost=1000 idx=0
+    Shoulder Dash                            rate=1 baseCost=1000 idx=0
+    Slaying                                  rate=1 baseCost=1000 idx=0
+    Swordsmanship                            rate=1 baseCost=1000 idx=0
+    Thrusting                                rate=1 baseCost=1000 idx=0
+--- page 'Wizard Books' owner=(无入口 NPC) dialog=BuySell goods=22 currency=Gold

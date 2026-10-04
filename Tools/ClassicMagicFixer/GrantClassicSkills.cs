@@ -11,6 +11,61 @@ namespace ClassicMagicFixer;
 /// ClassicSkills 白名单重发 TestHero 的全套经典技能。
 /// 用法: GrantClassicSkills <DatabaseRoot>
 /// </summary>
+internal static class TeleportTool
+{
+    /// <summary>把角色移动到指定地图坐标（仅用于实机验证前的定位）。</summary>
+    public static int Run(string root, string characterName, string mapFileName, int x, int y)
+    {
+        var system = new Session(SessionMode.System, root, root + "Backup/");
+        system.Initialize(typeof(MagicInfo).Assembly, typeof(MapInfo).Assembly);
+        var map = system.GetCollection<MapInfo>().Binding
+            .FirstOrDefault(m => string.Equals(m.FileName, mapFileName, StringComparison.OrdinalIgnoreCase));
+        if (map == null) { Console.WriteLine($"map '{mapFileName}' not found"); return 1; }
+        int mapIndex = map.Index;
+
+        var users = new Session(SessionMode.Users, root, root + "Backup/");
+        users.Initialize(typeof(MagicInfo).Assembly, typeof(AccountInfo).Assembly);
+        var hero = users.GetCollection<CharacterInfo>().Binding.FirstOrDefault(c => c.CharacterName == characterName);
+        if (hero == null) { Console.WriteLine($"character '{characterName}' not found"); return 1; }
+
+        // CurrentMap 是 Users 库里的 MapInfo 引用，必须用 Users 库自己的集合对象
+        var usersMap = users.GetCollection<MapInfo>().Binding
+            .FirstOrDefault(m => string.Equals(m.FileName, mapFileName, StringComparison.OrdinalIgnoreCase));
+        if (usersMap == null) { Console.WriteLine($"map '{mapFileName}' missing in Users.db"); return 1; }
+
+        hero.CurrentMap = usersMap;
+        hero.CurrentLocation = new System.Drawing.Point(x, y);
+        users.Save(true);
+        Console.WriteLine($"{characterName} -> map '{map.FileName}' (idx {mapIndex}) @ ({x},{y})");
+        return 0;
+    }
+}
+
+internal static class AccountGrantor
+{
+    /// <summary>把指定账号的 Admin 置为 true（GM），用于实机验证 @ 命令。</summary>
+    public static int Run(string root, string accountName)
+    {
+        var session = new Session(SessionMode.Users, root, root + "Backup/");
+        session.Initialize(typeof(MagicInfo).Assembly, typeof(AccountInfo).Assembly);
+
+        var accounts = session.GetCollection<AccountInfo>().Binding;
+        foreach (var a in accounts)
+        {
+            bool isTarget = a.EMailAddress.Equals(accountName, StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine($"  {a.EMailAddress,-30} Admin={a.Admin}");
+            if (isTarget && !a.Admin)
+            {
+                a.Admin = true;
+                Console.WriteLine($"    -> 已授予 GM");
+            }
+        }
+
+        session.Save(true);
+        return 0;
+    }
+}
+
 internal static class GrantClassicSkills
 {
     public static int Run(string root)

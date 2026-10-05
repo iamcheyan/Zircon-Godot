@@ -96,8 +96,11 @@ for arg in "$@"; do
     fi
 done
 
-SERVER_DIR="$ROOT/../Debug/ServerCore"
-[ -d "$SERVER_DIR" ] || SERVER_DIR="$ROOT/Debug/ServerCore"
+# Local server runtime belongs to this checkout. A sibling ../Debug/ServerCore
+# can be an old deployment with a different System.db, which accepts login but
+# leaves the client/server map and character definitions out of sync.
+SERVER_DIR="$ROOT/Debug/ServerCore"
+[ -d "$SERVER_DIR" ] || SERVER_DIR="$ROOT/../Debug/ServerCore"
 SERVER_LOG="/tmp/servercore_login.log"
 
 # 端口配置：macOS ControlCenter 占 7000 时自动使用 7001
@@ -401,6 +404,26 @@ if [ -n "$REMOTE_SERVER_IP" ]; then
     echo "  服务端: $REMOTE_SERVER_IP (${REMOTE_SSH_TARGET} SSH；经本地隧道连接)"
 fi
 echo "══════════════════════════════════════"
+
+# The client reads System.db from EI_BASE/Data while ServerCore reads
+# Database/System.db from its working directory. Refuse to start against a
+# mismatched database: login can succeed even though gameplay indices differ.
+if [ -z "$REMOTE_SERVER_IP" ]; then
+    SERVER_SYSTEM_DB="$SERVER_DIR/Database/System.db"
+    CLIENT_SYSTEM_DB="$EI_BASE/Data/System.db"
+    if [ ! -f "$SERVER_SYSTEM_DB" ] || [ ! -f "$CLIENT_SYSTEM_DB" ]; then
+        echo "缺少客户端或服务端 System.db，停止启动：" >&2
+        echo "  服务端：$SERVER_SYSTEM_DB" >&2
+        echo "  客户端：$CLIENT_SYSTEM_DB" >&2
+        exit 1
+    fi
+    if ! cmp -s "$SERVER_SYSTEM_DB" "$CLIENT_SYSTEM_DB"; then
+        echo "客户端与服务端 System.db 不一致，停止启动：" >&2
+        echo "  服务端：$SERVER_SYSTEM_DB" >&2
+        echo "  客户端：$CLIENT_SYSTEM_DB" >&2
+        exit 1
+    fi
+fi
 
 # ---------- 1. 强制杀掉游戏相关进程 ----------
 echo ""

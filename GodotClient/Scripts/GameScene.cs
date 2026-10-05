@@ -11288,6 +11288,23 @@ public partial class GameScene : Control
         if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
             return;
 
+        // Tab 在原版大地图键位缺失的客户端中用于开关完整地图。
+        // GameScene._Input 早于 Control 输入回调，因此必须先检查自定义聊天
+        // 输入框的焦点；原生 LineEdit/TextEdit 则由上面的统一焦点保护处理。
+        // 不标记输入框中的 Tab 为 handled，让控件继续处理制表/焦点导航。
+        if (key.Keycode == Key.Tab && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
+        {
+            if (_legacyChatDialog?.InputHasFocus == true || _chatTextBox?.InputHasFocus == true)
+                return;
+
+            if (_bigMap?.Visible == true)
+                _bigMap.Visible = false;
+            else
+                OpenBigMap();
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
         // EI 的字母热键是**裸字母**语义：原版每个字母分支只调 GetKeyState 判
         // 「键是否按下」，不检查 Ctrl（hotkey-label-handler-consistency.json
         // kbd_letter_cases），标题里的 (Ctrl+X, X) 只是提示文案。所以裸 R 与

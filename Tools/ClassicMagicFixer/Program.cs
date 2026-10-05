@@ -152,7 +152,7 @@ switch (mode)
     }
 
     case "setupguards":
-        return SetupGuardsSystem.Run(root);
+        return SetupGuardsSystem.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 
     case "guardfix":
         return GuardAligner.Run(root, args.Contains("--dry-run"), !args.Contains("--no-sync"));

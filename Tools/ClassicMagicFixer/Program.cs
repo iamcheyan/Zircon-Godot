@@ -154,6 +154,14 @@ switch (mode)
     case "setupguards":
         return SetupGuardsSystem.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 
+    case "guardlayout":
+    {
+        string? mapPath = null;
+        int mp = Array.FindIndex(args, a => a.Equals("--map-path", StringComparison.OrdinalIgnoreCase));
+        if (mp >= 0 && mp + 1 < args.Length) mapPath = args[mp + 1];
+        return GuardLayoutRestore.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase), mapPath);
+    }
+
     case "guardfix":
         return GuardAligner.Run(root, args.Contains("--dry-run"), !args.Contains("--no-sync"));
 

@@ -340,9 +340,60 @@ public partial class LegacyHudLayoutLab : Control
         if (magicSelfTest)
         {
             WindowManager.Open(_magic, _canvas);
+            // 选中第一行技能：走与真实点击完全相同的
+            // RefreshLegacySkillRows -> LegacySkillRowView.Selected ->
+            // _legacySelectedSkill -> _legacyDetail 链。
             int id = _magic.SelectFirstLegacySkillForTest();
-            GD.Print($"[LegacyMagicSelfTest] selectedSkillId={id} "
-                + $"paragraph={(LegacySkillRowView.LegacyMagicExpParagraph(_magic?.SelectedSkillNameForTest) == null ? "null" : "ok")}");
+            string selectedName = _magic.SelectedSkillNameForTest;
+            string selectedParagraph = LegacySkillRowView.LegacyMagicExpParagraph(selectedName);
+
+            // 覆盖率统计：右页取 Magic.exp 段落的两条依据 ——
+            //   1) 技能名（段落首行 `[名字]`，见 skill-window-render-loop-evidence.json）；
+            //   2) 名字对不上时按 EI 技能 ID 回退（`ID = Icon/2 + 1`，
+            //      见 GODOT_UI_OPEN_DECISIONS_2026-09-29.md §B-5）。
+            // 编号 >50 的技能是 EI Magic.exp 没有的现代技能，右页只能走合成兜底，
+            // 这部分只统计、不算失败。
+            // 用**生产同一套**判定（LegacySkillDetailView.ResolveLegacyParagraph）
+            // 统计右页段落覆盖率与来源，避免自检另写一套逻辑。
+            int byName = 0, byIdOnly = 0, unsupported = 0;
+            var idRecovered = new List<string>();
+            foreach (var info in Globals.MagicInfoList?.Binding ?? Enumerable.Empty<MagicInfo>())
+            {
+                if (info == null) continue;
+                string name = info.Local() ?? info.Name;
+                (string paragraph, string source) = LegacySkillDetailView.ResolveLegacyParagraph(name, info.Icon);
+                if (source == "name")
+                {
+                    byName++;
+                    continue;
+                }
+                if (source == "id")
+                {
+                    byIdOnly++;
+                    idRecovered.Add($"{name}#{LegacySkillRowView.LegacyEiSkillIdFromIcon(info.Icon)}->{paragraph.Split('\n')[0].Trim()}");
+                    continue;
+                }
+                unsupported++;
+            }
+
+            var selectedInfo = Globals.MagicInfoList?.Binding?.FirstOrDefault(x => x?.Index == id);
+            (string Paragraph, string Source) resolvedSelected =
+                LegacySkillDetailView.ResolveLegacyParagraph(selectedName, selectedInfo?.Icon ?? -1);
+            // 通过条件：① 选中链生效；② 选中技能能拿到段落（名或 EI ID 任一路径）；
+            // ③ 存在「按名取不到、按 EI ID 取回」的译名差异技能，且回退结果确实取自
+            //    Magic.exp 段落（首行以 '[' 起）—— 只靠 name 路径会漏掉这些技能。
+            bool fallbackOk = byIdOnly > 0
+                && idRecovered.Count == byIdOnly
+                && idRecovered.All(x => x.Contains("->["));
+            bool ok = id >= 0 && !string.IsNullOrEmpty(selectedName)
+                && resolvedSelected.Paragraph != null
+                && fallbackOk;
+            GD.Print($"[LegacyMagicSelfTest] {(ok ? "PASS" : "FAIL")} selectedSkillId={id} "
+                + $"selected='{selectedName}' paragraphSrc={resolvedSelected.Source} "
+                + $"coverage(name={byName},idFallback={byIdOnly},unsupported={unsupported}) "
+                + $"idRecovered=[{string.Join(",", idRecovered.Take(10))}]");
+            GetTree().Quit(ok ? 0 : 1);
+            return;
         }
     }
 

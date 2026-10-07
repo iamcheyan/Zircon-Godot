@@ -409,16 +409,18 @@ public partial class MagicDialog : DXWindow
 
     public int SelectFirstLegacySkillForTest()
     {
-        if (_legacySkillRows.Count == 0)
+        if (_legacyRuntimeEntries.Count == 0)
         {
             // 独立测试场没有玩家已学技能（不连服务器）、GameScene.Game 也为 null，
             // 所以直接取 DB 的 Globals.MagicInfoList 注入一条「未学习」行 ——
             // 走的仍是与真实路径完全相同的 RefreshLegacySkillRows -> 行 Selected 链。
+            // 注意不能用 `_legacySkillRows.Count == 0` 判定：ApplyLegacyEiLayout 会预建
+            // 6 个空行视图，实验室里那一栏恒非 0，此前导致本自检空转（恒返回 -1）。
             var infos = Globals.MagicInfoList?.Binding;
             if (infos == null || infos.Count == 0) return -1;
             RefreshLegacySkillRows(new[] { (infos[0], (ClientUserMagic)null) });
         }
-        if (_legacySkillRows.Count == 0) return -1;
+        if (_legacyRuntimeEntries.Count == 0) return -1;
         _legacyPage = 0;
         _legacySkillRows[0].RaiseSelectedForTest();
         return _legacySelectedSkill?.Info?.Index ?? -1;
@@ -971,6 +973,28 @@ public partial class LegacySkillRowView : DXControl
         return _legacyMagicExpByName.TryGetValue(skillName.Trim(), out string text) ? text : null;
     }
 
+
+    /// <summary>
+    /// EI 技能 ID ↔ Zircon <c>MagicInfo.Icon</c>：EI 技能书帧 = <c>2*ID-2</c>，
+    /// 即 <c>Icon</c> 本身是 EI 书页帧号 ⇒ <c>ID = Icon/2 + 1</c>
+    /// （2026-09-29 逐条名称交叉验证，见 GODOT_UI_OPEN_DECISIONS_2026-09-29.md §B-5）。
+    /// </summary>
+    public static int LegacyEiSkillIdFromIcon(int icon) => icon / 2 + 1;
+
+    /// <summary>
+    /// 按 EI 技能 ID 取 Magic.exp 段落。**名称匹配失败时的回退**：
+    /// Zircon 的本地化名与 EI 段落名的译法可能不同（例如 Zircon「瞬息移动」↔ EI
+    /// `#21 [瞬间移动]`、「地狱火」↔ `#9 [地域火]`，2026-10-07 实测），
+    /// 此时按名匹配为 null，而按 ID 能取回 EI 原文。
+    /// &gt;50 的 ID 是 EI Magic.exp 没有的现代技能，返回 null（调用方走合成兜底）。
+    /// </summary>
+    public static string LegacyMagicExpParagraphById(int eiSkillId)
+    {
+        if (eiSkillId <= 0) return null;
+        EnsureLegacyMagicExpLoaded();
+        return _legacyMagicExp.TryGetValue(eiSkillId, out string text) ? text : null;
+    }
+
     private static void EnsureLegacyMagicExpLoaded()
     {
         if (_legacyMagicExpLoaded) return;
@@ -1135,6 +1159,24 @@ public partial class LegacySkillDetailView : DXControl
         QueueRedraw();
     }
 
+
+    /// <summary>
+    /// 右页段落来源判定（名 → EI 技能 ID 回退）：
+    /// ① 段落首行 `[名字]` 与技能名一致 → 用名字索引；
+    /// ② 译名不同导致按名取不到时，用 EI 技能 ID（<c>Icon/2+1</c>）取回 EI 原文
+    ///    （例：Zircon「瞬息移动」↔ EI `#21 [瞬间移动]`、「地狱火」↔ `#9 [地域火]`，
+    ///    2026-10-07 实测）；③ 两者都取不到（EI Magic.exp 没有的现代技能）→ null，
+    ///    调用方退回按当前状态拼行。
+    /// </summary>
+    public static (string Paragraph, string Source) ResolveLegacyParagraph(string skillName, int icon)
+    {
+        string byName = LegacySkillRowView.LegacyMagicExpParagraph(skillName);
+        if (byName != null) return (byName, "name");
+        string byId = LegacySkillRowView.LegacyMagicExpParagraphById(
+            LegacySkillRowView.LegacyEiSkillIdFromIcon(icon));
+        return byId != null ? (byId, "id") : (null, "fallback");
+    }
+
     public override void _Draw()
     {
         var font = MirSkin.GetFont();
@@ -1152,12 +1194,13 @@ public partial class LegacySkillDetailView : DXControl
             // 元素 :/修炼N级需要等级 :/- 修炼值 :/说明 :），段号即技能 id。
             // 且 count==1 时是「一行流文本＝一行渲染、无自动换行」。
             // 现代模式仍用下面这套按当前状态拼的行。
-            string paragraph = LegacyEiLayout
-                ? LegacySkillRowView.LegacyMagicExpParagraph(info?.Local() ?? info?.Name)
-                : null;
+            (string Paragraph, string Source) resolved = LegacyEiLayout && info != null
+                ? ResolveLegacyParagraph(info.Local() ?? info.Name, info.Icon)
+                : (null, null);
+            string paragraph = resolved.Paragraph;
             if (LegacyEiLayout)
             {
-                GD.Print($"[LegacyMagicDetail] id={info?.Index ?? -1} paragraph={(string.IsNullOrEmpty(paragraph) ? "null" : paragraph.Replace("\n", " / ").Substring(0, Math.Min(60, paragraph.Replace("\n", " / ").Length)))}");
+                GD.Print($"[LegacyMagicDetail] id={info?.Index ?? -1} src={resolved.Source ?? "fallback"} paragraph={(string.IsNullOrEmpty(paragraph) ? "null" : paragraph.Replace("\n", " / ").Substring(0, Math.Min(60, paragraph.Replace("\n", " / ").Length)))}");
             }
             if (!string.IsNullOrEmpty(paragraph))
             {

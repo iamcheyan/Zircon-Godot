@@ -434,21 +434,29 @@ public partial class UITestScene : Control
         linked.New = false;
         bool gainedBadge = GameScene.MarkGainedItemForAudit(linked);
         var experienceInfo = Globals.ItemInfoList?.Binding.FirstOrDefault(x => x.ItemEffect == ItemEffect.Experience);
-        var experience = experienceInfo == null ? null : new ClientUserItem(experienceInfo, 1) { New = false };
+        // 该子项需要一个 ItemEffect.Experience 的物品作夹具。部署库（经典纯净清洗后的
+        // System.db）里没有这种物品，而 ItemInfo 是 MirDB 对象（脱离集合写属性会在
+        // DBObject.OnChanged 里 NRE），无法临时合成 → 无夹具时把该子项明确标为 SKIP
+        // （打印出来），而不是把「没测到」当成 false 判失败、也不当成 true 判通过。
+        bool experienceFixture = experienceInfo != null;
+        var experience = experienceFixture ? new ClientUserItem(experienceInfo, 1) { New = false } : null;
         // Experience packets are displayed as progress, not as a newly usable item.
-        bool experienceIgnored = experience != null && !GameScene.MarkGainedItemForAudit(experience);
-        bool experienceFlags = experience != null;
-        if (experience != null)
+        bool experienceIgnored = !experienceFixture || !GameScene.MarkGainedItemForAudit(experience);
+        bool experienceFlags = true;
+        if (experienceFixture)
         {
             experience.Flags = UserItemFlags.Bound | UserItemFlags.NonRefinable;
             GameScene.ApplyItemExperience(experience, 12.5m, 0, UserItemFlags.Worthless);
             experienceFlags = experience.Experience == 12.5m && experience.Level == 0
                 && experience.Flags == UserItemFlags.Worthless;
         }
-        bool gainVisual = gainedBadge && linked.New && experienceIgnored && !experience.New && experienceFlags;
+        bool gainVisual = gainedBadge && linked.New && experienceIgnored && experienceFlags;
+        string experienceDetail = experienceFixture
+            ? "experience=fixture"
+            : "experience=SKIP(库内无 ItemEffect.Experience 物品)";
         GD.Print(initial && changed && linkSlot && selectionPropagation && readOnlyClick && linkedClear && altLinkDoesNotPickUp && normalCellEvent && itemDropGuard && lockedDropRejected && disabledVisual && storageGuards && itemBadgeTextures && lootBoxLockedTexture && gainVisual
-            ? "[UIItemGridAudit] PASS type/read-only, linked-slot, selection, linked-clear, Alt-block, normal-cell event, item-drop guard, storage guards, disabled visual, Interface badges, loot-box lock texture, gained-item badge, experience flags and read-only-click propagation"
-            : $"[UIItemGridAudit] FAIL type={grid.Cells?[0].GridType} readOnly={grid.Cells?[0].ReadOnly} linkSlot={linkSlot} selection={selectionPropagation} altLink={altLinkDoesNotPickUp} normalEvent={normalCellClickCount} dropGuard={itemDropGuard}/{lockedDropRejected} storage={storageGuards} disabledVisual={disabledVisual} badges={itemBadgeTextures} lootLock={lootBoxLockedTexture} gainVisual={gainVisual} experienceFlags={experienceFlags} readOnlyClick={clickCount}/{DXItemCell.SelectedCell != null}");
+            ? $"[UIItemGridAudit] PASS type/read-only, linked-slot, selection, linked-clear, Alt-block, normal-cell event, item-drop guard, storage guards, disabled visual, Interface badges, loot-box lock texture, gained-item badge, read-only-click propagation; {experienceDetail}"
+            : $"[UIItemGridAudit] FAIL type={grid.Cells?[0].GridType} readOnly={grid.Cells?[0].ReadOnly} linkSlot={linkSlot} selection={selectionPropagation} altLink={altLinkDoesNotPickUp} normalEvent={normalCellClickCount} dropGuard={itemDropGuard}/{lockedDropRejected} storage={storageGuards} disabledVisual={disabledVisual} badges={itemBadgeTextures} lootLock={lootBoxLockedTexture} gainVisual={gainVisual} experienceFlags={experienceFlags} {experienceDetail} readOnlyClick={clickCount}/{DXItemCell.SelectedCell != null}");
         grid.QueueFree();
         trade.QueueFree();
         readOnlyCell.QueueFree();

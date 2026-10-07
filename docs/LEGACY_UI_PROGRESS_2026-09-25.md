@@ -216,3 +216,34 @@
 |---|---|---|---|
 | 1 | 技能书右页 `Magic.exp` 段落：名优先 + EI 技能 ID 回退（修译名差异） | `79a051a3` | `dotnet build GodotClient/ZirconClient.csproj` 0 错误；`--legacy-magic-selftest` PASS：`selectedSkillId=1`、`coverage(name=47,idFallback=2,unsupported=12)`、回退命中 `瞬息移动→#21[瞬间移动]`、`地狱火→#9[地域火]`；`--legacy-audit` 全 PASS |
 | 2 | `UIItemGridAudit` 的 Experience 子项在缺夹具时显式 SKIP（不再假 FAIL） | `8a75e994` | `dotnet build` 0 错误；`--ui-audit` 全 PASS，结果行带 `experience=SKIP(库内无 ItemEffect.Experience 物品)` |
+| 3 | 本附录（基线与过期条目核对） | `e75b9755` | 纯文档 |
+| 4 | `GroupDialog.AuditLayout` 按 legacy/现代两套几何分别判定 | `521c80a4` | `UITestScene --group-audit` 由 FAIL→PASS（`legacy=False`, `240×424`）；`LegacyHudLayoutLab --legacy-audit` 仍全 PASS（`group legacy=True`, `256×244`） |
+| 5 | `CharacterDialog.AuditLayout` 底图判据改回当前 EI 底图 `GameInter[200]` | `8a6314b5` | `--character-audit` 由 FAIL→PASS（`background=GameInter[200] grid=17`） |
+| 6 | `UICompanionAudit` 食物子项缺夹具时显式 SKIP | `ad19b36d` | `--companion-audit` PASS（`food-cooldown=SKIP mounted-shape=SKIP foods=SKIP(...)`） |
+| 7 | 补回第 6 项误删的 `details` 尾段（`ad19b36d` 的替换范围吃掉了 `details +=`） | `51e6525a` | 同上，PASS 行重新带 `operation=… food-cooldown=… foods=…` |
+
+### 本轮额外发现（现代 UI 审计，遗留自旧版底图迁移，已修）
+
+- `--group-audit`／`--character-audit`／`--companion-audit` 在开工时**恒 FAIL**：
+  - `GroupDialog.AuditLayout` 被 legacy-ui 提交 `6db446c4` 整组改写成 legacy 值，却仍被 UITestScene 的现代实例调用；
+  - `CharacterDialog.AuditLayout` 仍断言被迁移掉的 `Interface[110]`（现为 EI 底图 `GameInter[200]`）；
+  - `UICompanionAudit` 与 `UIItemGridAudit` 的子项依赖部署库夹具（`CompanionFood`／`ItemEffect.Experience` 物品），库内没有时一律算 false。
+- 另：`--legacy-npc-selftest` 会**重写仓库内 6 张 tracked 截图**（`.artifacts/npc-f1100-acceptance-2026-09-25/*.png`）。本轮跑过一次后已用 `git show HEAD:<path>` 逐字节还原，工作树对 `.artifacts` 干净。**下一次跑该自检前请注意此副作用**（或改为输出到 /tmp）。
+
+### 仍未完成 / 阻塞（本轮未改）
+
+- `[!]` 技能书根尺寸：主初始化 `296×332` 与当前 `452×380` profile 的关系需原版运行态对象（对象级 SetRect 导出）才能闭合。
+- `[ ]` 技能书左页 6 个命中 RECT 的具体写入值 / 分类链表成员排序：写入点不在右页渲染循环 `0x43A440` 内（见 `skill-window-render-loop-evidence.json` 的 `unresolved`）；需继续反汇编或真机命中回归。当前仍是候选几何 `(55, 26+46i)/145×36`。
+- `[~]` 技能书 `440/441`（`(399,340)`）：现接 `Close()`，依据是美术判读（小叉）；**原版该钮的直接行为证据仍缺**。
+- `[!]` 目标框 HP 条（B-8）：帧号 `10000+` 的库由服务端数据在运行期构建，本机不可得。
+- `[!]` 确认框输入框最终位置（B-11）：`[0x8AB7F0]` RECT 运行期值不可静态获得。
+- `[!]` 窗口背景点击语义（B-1）、任务列表 entry 文本来源（B-7）：仍需调用者/协议证据。
+- 联机与真实交互回归（NPC 买卖/修理、仓库/交易、任务窗真实数据、第二玩家交易、聊天 IME 与长行/上限）**本轮未复测**：机器上有正在运行的 `Bot01` 客户端与 7000 端口，按纪律不接管。
+- 用户 dirty 文件边界：`GodotClient/Controls/NPCDialog.cs`、`GodotClient/Scripts/GameScene.cs` **本轮未改**（HUD 聊天视觉、NPC 对话/商店的改动点若落在其中，只能留待用户先提交）。
+
+### 建议下一批顺序
+
+1. 技能书左页 6 个命中 RECT：用 `Mir3-Research/Tools/reverse-engineering/disasm_capstone.py`（只读 exe）在 `0x439150`/`0x439250` 找 `[esi+0x7C…]` 写入点；拿到后替换 `MagicDialog.LegacySkillRowY` 候选值。
+2. 隔离服务端（DB 副本，非 7000）跑 legacy 联机回归：组队/行会/仓库/交易/任务 + 背包买卖与修理。
+3. 把「依赖部署库夹具」的审计子项按本轮建立的方式统一成显式 SKIP（可加一条约定到 `docs/VERIFICATION.md`）。
+4. 需要 Windows 运行时才能闭合的三项（B-8 血条库、B-11 输入框 RECT、B-1 背景点击）单列一个 goal，先取 `0x8AB7B0+0x40` RECT 与 `0x5600FC+type*0x144` 库指针。

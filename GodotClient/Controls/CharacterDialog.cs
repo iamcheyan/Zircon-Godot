@@ -1244,13 +1244,17 @@ public partial class CharacterDialog : DXWindow
     public bool AuditLayout(out string details)
     {
         bool valid = Size == OwnSize
-            && _background.Index == 110
+            // 底图：旧版窗口底图迁移（fork 的 "合并 fork master 旧版窗口底图迁移"）之后，
+            // 本 fork 的角色窗恒用 EI 的 GameInter F200，不再用 Interface F110；旧断言
+            // 写的是被迁移掉的现代值，故 --character-audit 一直 FAIL（其余子项本就一致）。
+            && _background.LibraryFile == LibraryFile.GameInter && _background.Index == 200
             && _doll.Position == new Vector2(130, 280)
             && Grid.Length == 17
             && _marriageIcon.Position == new Vector2(96, 105)
             && _marriageLabel.Position == new Vector2(112, 100)
             && _fameControl.Position == new Vector2(235, 61);
-        details = $"size={Size} grid={Grid.Length} doll={_doll.Position} name={_characterNameLabel.Size}/{_guildNameLabel.Size}/{_guildRankLabel.Size} "
+        details = $"size={Size} background={_background.LibraryFile}[{_background.Index}] "
+            + $"grid={Grid.Length} doll={_doll.Position} name={_characterNameLabel.Size}/{_guildNameLabel.Size}/{_guildRankLabel.Size} "
             + $"nameY=0/{_guildNameLabel.Position.Y}/{_guildRankLabel.Position.Y} marriage={_marriageIcon.Position}/{_marriageLabel.Position} fame={_fameControl.Position}";
         return valid;
     }

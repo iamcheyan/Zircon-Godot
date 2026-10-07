@@ -183,3 +183,36 @@
 - `[~]` 已完成 Xvfb `:100` + openbox + godot-mono + scrot 的 1024×768 全 viewport 运行证据：正文打开、选项 hover/click、下滚一行、滚动触底、上滚、关闭按钮和 Escape 关闭均有截图。证据目录：`Zircon/.artifacts/npc-f1100-acceptance-2026-09-26/`，运行日志为 `runtime-log.txt`。
 - `[~]` 本次最早运行独立 `LegacyHudLayoutLab --legacy-npc-selftest` 时，旧的临时 `new NPCPage { Say = ... }` 曾因没有 MirDB Collection 触发 `DBObject.OnChanged` 空引用；随后发现工作树已有用户未提交的 harness 修订，改为优先复用绑定页面并提供私有字段回退。本 goal 未修改或提交该文件/其 `2026-09-25` 未跟踪截图；本批次正式结论仍以 `GameScene` 已绑定页面响应路径为准。
 - `[~]` 原版 `mode=1 && overflow=1` 的 14px 行距分支需要 token/layout state；当前 `NPCPage` 路径统一使用 primary-static 默认 21px，不能宣称该分支已复原。目标 EI EXE/WIL/WIX 版本身份阻塞仍按全局规则保留。
+
+## 2026-10-06 WorkBuddy 夜间批次（实际执行日 2026-10-07）
+
+### 第零批 · 本轮基线与差异清单（实测，非推断）
+
+- 仓库/分支：`/home/tetsuya/development/zircon`，`master`；开工时 `HEAD` = `origin/master` = `ca58566a`（= 委派提交）。
+- 开工时 `git status --short --branch` 为 `## master...origin/master`（无 ahead/behind），另有下列 dirty/untracked **用户资产，本轮全程未编辑、未暂存、未删除**：
+  - modified：`GodotClient/Controls/NPCDialog.cs`、`GodotClient/Scripts/GameScene.cs`
+  - untracked：`Backup/`、`GodotClient/core.29029`、`GodotClient/core.7595`、`core.21895`、`core.29762`、`core.3753`、`System.db.bak-npcface-20261005-220511`、`Tools/CharPosSetter/`、`Tools/NpcFaceWriter/`、`Tools/npc_faces.py`、`docs/MAP_NAMING_ALIGNMENT_REPORT_2026-10-04.md`、`docs/screenshots/gear/`、`docs/screenshots/guards/positions/`
+- 运行中进程（只读确认，未杀/未重启/未抢占）：`godot-mono --path GodotClient … --user Bot01 … --window`（127.0.0.1:7000）两实例。
+- 本轮验证环境：独立 Xvfb `:150`/`:151` + `godot-mono --path GodotClient`（不占用上述实例的显示/账号/数据库）。
+- 数据边界：未写 `System.db`/`Users.db`。仅把 `mir2ei/Data/System.db` **复制**到 `/tmp/dbprobe/` 想用研究工具读物品表，但 Mir3-Research 的 `Tools/SystemDbProbe` 因该仓库自身 `obj/` 产物缺失无法构建 → 放弃该路径，未改动任何库。
+
+过期条目核对（本文件写于 2026-09-25，其后 2026-10-01/02/03 的提交已解决多项；下列为**本轮读码/实测核对过**的差异项）：
+
+| 本文件条目 | 现状 | 证据 |
+|---|---|---|
+| 技能书「EI 技能 ID→MIcon 逐项映射」`[ ]` | 已闭合 | `GODOT_UI_OPEN_DECISIONS_2026-09-29.md` §B-5；本文件第 106 行已改 `[x]` |
+| 技能书「右页详情与 `Magic.exp` ID 绑定」`[ ]` | 部分闭合（本轮补了译名差异回退） | 本文件第 107 行；提交 `79a051a3` |
+| 技能书「技能书与常驻 MagicBar 关系」`[ ]` | 已闭合（cap2/B toggle 12 槽，帧 `1000+Icon/2`） | §B-5 残余闭合；本文件第 108 行 |
+| 技能书 8 页签红色高亮丢失 | 已修复 | `docs/EI_SKILLBOOK_TAB_HIGHLIGHT_FIX_2026-10-02.md` |
+| 背包「F161/162、F264/265、F267/268 真实语义」`[ ]` | 语义已定：装饰性子控件、单击只播音、模式由服务端消息切换；Godot 侧已有 `_legacyModeTabHotspot`（`Sound=ButtonC`，`(176,286)`）并被 `--legacy-audit` 断言 | `inventory-mode-tabs-evidence.json`；`InventoryDialog.cs` |
+| 背包 tooltip（图标/文字/锚点/裁切） | 底色/裁切已有原版值并自检通过 | `GameScene.cs` 的 `0x329696` 橄榄黄底；`--legacy-tooltip-selftest` PASS |
+| 主 HUD caption 三态帧 `[~]` | 已修复（普通/悬停不叠画，按下取 arg3） | §S-3（`4ac1c1dc`） |
+| 其它窗口（NPC/任务/组队/行会/仓库/设置/公告/坐骑/退出）`[ ]` | 已实现，且有离线几何/状态审计 | 本轮 `LegacyHudLayoutLab --legacy-audit` 19 项子审计全 PASS；**联机/真实交互本轮未复测** |
+| 第 185 行「NPC 14px 行距分支未复原」 | 已过时 | `9491984a` 已实现；本轮读码确认 `NPCDialog.cs` 的 `ComputeLegacyLinePitch` 在用 |
+
+### 本轮提交（每项独立提交 + push，SHA 经 `git ls-remote origin refs/heads/master` 核验）
+
+| # | 内容 | commit | 验证 |
+|---|---|---|---|
+| 1 | 技能书右页 `Magic.exp` 段落：名优先 + EI 技能 ID 回退（修译名差异） | `79a051a3` | `dotnet build GodotClient/ZirconClient.csproj` 0 错误；`--legacy-magic-selftest` PASS：`selectedSkillId=1`、`coverage(name=47,idFallback=2,unsupported=12)`、回退命中 `瞬息移动→#21[瞬间移动]`、`地狱火→#9[地域火]`；`--legacy-audit` 全 PASS |
+| 2 | `UIItemGridAudit` 的 Experience 子项在缺夹具时显式 SKIP（不再假 FAIL） | `8a75e994` | `dotnet build` 0 错误；`--ui-audit` 全 PASS，结果行带 `experience=SKIP(库内无 ItemEffect.Experience 物品)` |

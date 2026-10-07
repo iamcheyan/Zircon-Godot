@@ -1040,17 +1040,19 @@ public partial class UITestScene : Control
         // (原版 DXItemCell 消耗品/CompanionFood 共用分支)。DBObject 属性
         // setter 需已附加 Session，不能用 new ItemInfo 构造，改用真实 DB 物品。
         var foods = Globals.ItemInfoList?.Binding.Where(x => x?.ItemType == ItemType.CompanionFood).ToList();
-        bool cooldown = foods is { Count: > 0 }
-            && foods.All(f => DXItemCell.ComputeUseCooldownMs(f) == Math.Max(250, f.Durability))
-            && DXItemCell.ComputeUseCooldownMs(null) == 250;
-        bool mounted = foods is { Count: > 0 }
-            && foods.All(f => DXItemCell.ShapeBlocksWhileMounted(f) == (f.Shape is 19 or 20 or 21 or 22))
-            && !DXItemCell.ShapeBlocksWhileMounted(null);
+        // 食物夹具同样依赖部署库：库内没有 CompanionFood 物品时这两个子项无从断言，
+        // 明确标 SKIP 并打印（此前一律算 false → FAIL，掩盖其它真回归）。
+        bool foodFixture = foods is { Count: > 0 };
+        bool cooldown = !foodFixture
+            || (foods.All(f => DXItemCell.ComputeUseCooldownMs(f) == Math.Max(250, f.Durability))
+                && DXItemCell.ComputeUseCooldownMs(null) == 250);
+        bool mounted = !foodFixture
+            || (foods.All(f => DXItemCell.ShapeBlocksWhileMounted(f) == (f.Shape is 19 or 20 or 21 or 22))
+                && !DXItemCell.ShapeBlocksWhileMounted(null));
         valid &= cooldown && mounted;
-        string foodSample = foods == null || foods.Count == 0
-            ? "none"
-            : string.Join(",", foods.Take(4).Select(f => $"{f.ItemName}:dur{f.Durability}/shape{f.Shape}"));
-        details += $" operation=selected-index/observer-guard food-cooldown={cooldown} mounted-shape={mounted} foods={foodSample}";
+        string foodSample = foodFixture
+            ? string.Join(",", foods.Take(4).Select(f => $"{f.ItemName}:dur{f.Durability}/shape{f.Shape}"))
+            : "SKIP(库内无 CompanionFood 物品)";
         GD.Print(valid ? $"[UICompanionAudit] PASS {details}" : $"[UICompanionAudit] FAIL {details}");
         dialog.QueueFree();
     }

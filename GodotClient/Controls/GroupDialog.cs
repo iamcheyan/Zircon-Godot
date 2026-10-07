@@ -384,41 +384,51 @@ public partial class GroupDialog : DXWindow
         if (_inviteButton != null) _inviteButton.Visible = false;
     }
 
+    /// <summary>
+    /// 组队窗几何自检。legacy（`ApplyLegacyEiLayout`，EI F900 256×244）与现代
+    /// （构造默认 240×424）是**两套几何**，判定必须按当前模式取各自的值 ——
+    /// 只写 legacy 值会让 UITestScene 的 `--group-audit`（现代实例）永远 FAIL。
+    /// </summary>
     public bool AuditLayout(out string details)
     {
-        // legacy 把三个动作按钮移到 EI 的底部热区 (17,197)/(80,197)/(159,197)；
-        // 现代值 (81,217)/(173,217) 已过期。_optionsButton 在 legacy 下隐藏，
-        // 位置不参与判定。
-        bool buttons = _removeButton.Location == new Vector2I(80, 197)
-            && _lfgButton.Location == new Vector2I(159, 197)
-            && _allowCheck.Location == new Vector2I(166, 40);
-        // legacy 故意让成员面板铺满窗口：EI 把成员名直接画在窗口坐标里，
-        // 没有独立的 101px 裁剪框（见 ApplyLegacyEiLayout 的注释）。
-        // 此处旧值 (13,60)/(194,148) 已过期，改为与实现一致。
-        bool members = _memberPanel.Location == Vector2I.Zero
-            && _memberPanel.Size == Size;
+        // 动作钮：legacy 移到 EI 底部热区 (17,197)/(80,197)/(159,197)；现代 (81,217)/(173,217)。
+        // `_optionsButton` 在 legacy 下隐藏，位置不参与判定。
+        bool buttons = _legacyEiLayout
+            ? _removeButton.Location == new Vector2I(80, 197)
+                && _lfgButton.Location == new Vector2I(159, 197)
+            : _removeButton.Location == new Vector2I(81, 217)
+                && _optionsButton.Location == new Vector2I(173, 217);
+        bool allow = _allowCheck.Location == new Vector2I(166, 40);
+        // 成员面板：legacy 故意铺满窗口（EI 把成员名直接画在窗口坐标里，
+        // 没有独立的 101px 裁剪框）；现代保留 (13,60)/(194,148) 的裁剪框。
+        bool members = _legacyEiLayout
+            ? _memberPanel.Location == Vector2I.Zero && _memberPanel.Size == Size
+            : _memberPanel.Location == new Vector2I(13, 60) && _memberPanel.Size == new Vector2I(194, 148);
+        // LFG 三列固定宽行与滚动轨在两套模式下同值。
         bool lfg = _lfgScroll.Location == new Vector2I(210, 268)
             && _lfgScroll.Size == new Vector2I(24, 140)
             && _lfgScroll.VisibleSize == 5
             && _lfgRows.Count == 5
             && _lfgRows[0].Location == new Vector2I(13, 293)
             && _lfgRows[4].Location == new Vector2I(13, 377);
-        // GROUP-07：邀请输入框与提交按钮必须保持同一行、相对偏移 +135。
-        // 只移输入框会让按钮留在现代位置，用户输入后无处提交。
-        // GROUP-07：legacy 下输入框占用「邀请」动作按钮的位置，靠回车提交；
-        // 不得出现"输入框在一处、提交控件在另一处"的脱离（原始缺陷）。
+        // GROUP-07：输入框与提交控件必须同行、不得脱离。
+        // 现代：按钮 = 输入框 + (135,0)；legacy：输入框占用「邀请」钮位 (17,197)、
+        // 提交改由回车，按钮就地隐藏但仍与输入框同点。
         bool inviteRow = _inviteButton != null
-            && _inviteName.Location == new Vector2I(17, 197)
-            && _inviteName.Size == new Vector2I(60, 20)
-            && _inviteButton.Location == _inviteName.Location;
-        details = $"size={Size} members={_memberPanel.Location}/{_memberPanel.Size} "
+            && (_legacyEiLayout
+                ? _inviteName.Location == new Vector2I(17, 197)
+                    && _inviteName.Size == new Vector2I(60, 20)
+                    && _inviteButton.Location == _inviteName.Location
+                : _inviteName.Location == new Vector2I(14, 260)
+                    && _inviteName.Size == new Vector2I(130, 23)
+                    && _inviteButton.Location == _inviteName.Location + new Vector2I(135, 0));
+        Vector2I expectedSize = _legacyEiLayout ? new Vector2I(256, 244) : new Vector2I(240, 424);
+        details = $"legacy={_legacyEiLayout} size={Size} members={_memberPanel.Location}/{_memberPanel.Size} "
             + $"remove={_removeButton.Location} options={_optionsButton.Location} allow={_allowCheck.Location} "
             + $"lfg={_lfgRows.Count} "
             + $"scroll={_lfgScroll.Location}/{_lfgScroll.VisibleSize} "
-            + $"inviteInput={_inviteName.Location} inviteBtn={_inviteButton?.Location.ToString() ?? "null"}";
-        // 尺寸以 F900 构造证据的 256x244 为准（测试场 roots 检查同值）；
-        // 旧的 240x424 是早期误值。
-        return Size == new Vector2I(256, 244) && buttons && members && lfg && inviteRow;
+            + $"inviteInput={_inviteName.Location}/{_inviteName.Size} inviteBtn={_inviteButton?.Location.ToString() ?? "null"}";
+        return Size == expectedSize && buttons && allow && members && lfg && inviteRow;
     }
 }
 

@@ -1053,6 +1053,9 @@ public partial class UITestScene : Control
         string foodSample = foodFixture
             ? string.Join(",", foods.Take(4).Select(f => $"{f.ItemName}:dur{f.Durability}/shape{f.Shape}"))
             : "SKIP(库内无 CompanionFood 物品)";
+        details += foodFixture
+            ? $" operation=selected-index/observer-guard food-cooldown={cooldown} mounted-shape={mounted} foods={foodSample}"
+            : " operation=selected-index/observer-guard food-cooldown=SKIP mounted-shape=SKIP foods=SKIP(库内无 CompanionFood 物品)";
         GD.Print(valid ? $"[UICompanionAudit] PASS {details}" : $"[UICompanionAudit] FAIL {details}");
         dialog.QueueFree();
     }

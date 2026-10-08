@@ -60,7 +60,7 @@ internal static class GuardLayoutRestore
 卫士1   02       274,236     : 3
 卫士1   02       229,239     : 5
 卫士1   02       227,237     : 5
-卫士1   1        371,160     : 5
+卫士1   1        372,162     : 3
 卫士1   1        375,164     : 5
 卫士1   1        368,112     : 7
 卫士1   1        372,108     : 7
@@ -277,7 +277,7 @@ internal static class GuardLayoutRestore
 
     private static string ResolveMonster(string mapFile) => mapFile switch
     {
-        "1" => "TownGuard",     // 道馆：保留 Zircon 锦衣卫模型（原版点位 卫士1）
+        "1" => "ForestGuard",   // 道馆：白日门带刀侍卫（原版点位 卫士1）
         "74" => "ForestGuard",  // 盟重县：保留 Zircon 森林护卫模型
         "4" or "5" => "SandGuard", // 绿洲 / 沙漠土城：原版即沙漠战士
         _ => "Guard"            // 比奇 / 毒蛇山谷 / 边境城市 / 银杏山谷 / 潘夜岛 / D71601

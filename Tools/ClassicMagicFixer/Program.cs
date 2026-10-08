@@ -151,6 +151,9 @@ switch (mode)
         return RestoreNativeEntities.Run(root, backupPath);
     }
 
+    case "hexastone":
+        return HexaStoneAligner.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
+
     case "setupguards":
         return SetupGuardsSystem.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 

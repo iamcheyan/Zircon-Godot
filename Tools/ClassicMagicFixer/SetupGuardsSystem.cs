@@ -96,15 +96,7 @@ internal static class SetupGuardsSystem
         {
             if (g.Map == null) continue;
 
-            if (g.Map.FileName == "1") // 道馆 -> TownGuard
-            {
-                if (g.Monster != townGuard)
-                {
-                    g.Monster = townGuard;
-                    updatedGuards++;
-                }
-            }
-            else if (g.Map.FileName == "74") // 盟重县 -> ForestGuard
+            if (g.Map.FileName is "1" or "74") // 道馆 / 盟重县 -> ForestGuard (带刀侍卫)
             {
                 if (g.Monster != forestGuard)
                 {

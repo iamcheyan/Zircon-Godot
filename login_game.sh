@@ -101,7 +101,48 @@ done
 # leaves the client/server map and character definitions out of sync.
 SERVER_DIR="$ROOT/Debug/ServerCore"
 [ -d "$SERVER_DIR" ] || SERVER_DIR="$ROOT/../Debug/ServerCore"
+SERVER_DIR_REAL=$(cd "$SERVER_DIR" && pwd -P)
 SERVER_LOG="/tmp/servercore_login.log"
+
+# Return the PIDs listening on PORT. The fast local launch path must not
+# mistake an older sibling deployment (or an unrelated service) for this
+# checkout's server just because the TCP port is open.
+listener_pids() {
+    if command -v ss >/dev/null 2>&1; then
+        ss -H -ltnp "sport = :$PORT" 2>/dev/null \
+            | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' \
+            | sort -u
+    elif command -v lsof >/dev/null 2>&1; then
+        lsof -nP -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | sort -u
+    fi
+}
+
+is_servercore_process() {
+    local pid="$1" args
+    if [ -r "/proc/$pid/cmdline" ]; then
+        args=$(tr '\0' ' ' <"/proc/$pid/cmdline")
+        [[ "$args" == *ServerCore.dll* ]]
+    elif command -v ps >/dev/null 2>&1; then
+        args=$(ps -p "$pid" -o args= 2>/dev/null || true)
+        [[ "$args" == *ServerCore.dll* ]]
+    else
+        return 1
+    fi
+}
+
+is_expected_servercore_process() {
+    local pid="$1" cwd
+    is_servercore_process "$pid" || return 1
+    if [ -e "/proc/$pid/cwd" ]; then
+        cwd=$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)
+        [ "$cwd" = "$SERVER_DIR_REAL" ]
+    elif command -v lsof >/dev/null 2>&1; then
+        cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)
+        [ "$(cd "$cwd" 2>/dev/null && pwd -P)" = "$SERVER_DIR_REAL" ]
+    else
+        return 1
+    fi
+}
 
 # 端口配置：macOS ControlCenter 占 7000 时自动使用 7001
 PORT=7000
@@ -605,8 +646,45 @@ else
             PORT_OPEN=1
         fi
         if [ "$KILL_ALL" = "0" ] && [ "$PORT_OPEN" = "1" ]; then
-            echo "  服务器已在运行 (端口 $PORT 监听中)，跳过启动"
-        else
+            LISTENERS=$(listener_pids)
+            if [ -z "$LISTENERS" ]; then
+                echo "端口 $PORT 已占用，但无法识别监听进程。为避免连到错误服务端，停止启动。" >&2
+                echo "请检查端口占用，或使用 ./login_game.sh all test 重启本地服务端。" >&2
+                exit 1
+            fi
+
+            EXPECTED=1
+            SERVERCORE_PIDS=""
+            for pid in $LISTENERS; do
+                if ! is_servercore_process "$pid"; then
+                    echo "端口 $PORT 由非 Zircon ServerCore 进程 PID $pid 占用；拒绝连接或终止它。" >&2
+                    exit 1
+                fi
+                SERVERCORE_PIDS="$SERVERCORE_PIDS $pid"
+                if ! is_expected_servercore_process "$pid"; then EXPECTED=0; fi
+            done
+
+            if [ "$EXPECTED" = "1" ]; then
+                echo "  本仓库服务端已在运行 (端口 $PORT, $SERVER_DIR_REAL)，复用当前服务端"
+            else
+                echo "  端口 $PORT 上是另一份 Zircon ServerCore；停止旧部署并启动本仓库版本：$SERVER_DIR_REAL"
+                kill -TERM $SERVERCORE_PIDS 2>/dev/null || true
+                for _ in $(seq 1 10); do
+                    PORT_OPEN=0
+                    nc -z 127.0.0.1 "$PORT" 2>/dev/null && PORT_OPEN=1
+                    [ "$PORT_OPEN" = "0" ] && break
+                    sleep 1
+                done
+                if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
+                    echo "旧服务端未释放端口 $PORT；停止启动以免连入错误版本。" >&2
+                    exit 1
+                fi
+            fi
+        fi
+
+        PORT_OPEN=0
+        if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then PORT_OPEN=1; fi
+        if [ "$PORT_OPEN" = "0" ]; then
             cd "$SERVER_DIR"
             # macOS 没有 setsid；nohup + 后台即可，脚本退出时由 trap 负责清理。
             if command -v setsid >/dev/null 2>&1; then
@@ -620,9 +698,10 @@ else
 
             # 等待服务器就绪
             echo "  等待服务器就绪 (端口 $PORT)..."
+            READY=0
             for i in $(seq 1 30); do
                 if nc -z 127.0.0.1 "$PORT" 2>/dev/null; then
-                    echo "  ✓ 服务器已就绪 (端口 $PORT 监听中)"
+                    READY=1
                     break
                 fi
                 sleep 1
@@ -632,6 +711,18 @@ else
                     exit 1
                 fi
             done
+            if [ "$READY" = "1" ]; then
+                READY_PIDS=$(listener_pids)
+                READY_OK=0
+                for pid in $READY_PIDS; do
+                    if is_expected_servercore_process "$pid"; then READY_OK=1; fi
+                done
+                if [ "$READY_OK" != "1" ]; then
+                    echo "端口 $PORT 虽然已开放，但监听者不是本仓库构建的服务端。" >&2
+                    exit 1
+                fi
+                echo "  ✓ 本仓库服务端已就绪 (端口 $PORT)"
+            fi
         fi
     fi
 

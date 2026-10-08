@@ -64,6 +64,7 @@ public static class AutoLoginArgs
     public static bool OperationAudit => Has("--operation-audit");
     public static bool OperationAuditExt => Has("--operation-audit-ext");
     public static bool ScreenshotAfterEnter => Has("--screenshot-after-enter");
+    public static bool HexaAudit => Has("--hexa-audit");
 
     /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，

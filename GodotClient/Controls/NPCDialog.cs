@@ -299,12 +299,21 @@ public partial class NPCDialog : DXWindow
         });
         var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>.+?)\]");
 
-        // 头像判定
+        // 头像判定：原版由脚本 {NPCIMG/N} 指定（N = NPCface 裸帧号，绘制在 (40,30)）。
+        // 本移植额外允许用 NPC 自身的 NPCInfo.FaceImage 兜底 —— 原版服务端的
+        // Merchant.txt 其实也有 Face 列（本机可达的三份配置全为 0），Zircon 库该字段
+        // 同样是 0，故 2026-10-05 按「NPC 外观 body → 头像帧」补齐了 294 个 NPC
+        // （见 Tools/npc_faces.py）。这样没有 NPCIMG 脚本的 NPC 也有头像。
         _legacyNpcFaceFrame = -1;
         if (_legacyLayout)
         {
             raw = ApplyLegacyFColor(raw);
             raw = ExtractLegacyNpcImg(raw, out _legacyNpcFaceFrame);
+            if (_legacyNpcFaceFrame < 0)
+            {
+                NPCInfo npc = GameScene.Game?.GetNpcInfo(response.ObjectID);
+                if (npc != null) _legacyNpcFaceFrame = npc.FaceImage;
+            }
         }
 
         bool hasFace = _legacyLayout && _legacyNpcFaceFrame >= 0;

@@ -119,6 +119,8 @@ public partial class GameScene : Control
     private uint _npcObjectId;
     public uint NPCObjectId => _npcObjectId;
     public NPCInfo CurrentNPCInfo => _npcInfos.TryGetValue(_npcObjectId, out var info) ? info : null;
+    /// <summary>按 NPC 对象 ID 取定义（对话窗头像用：NPCInfo.FaceImage）。</summary>
+    public NPCInfo GetNpcInfo(uint objectID) => _npcInfos.TryGetValue(objectID, out var info) ? info : null;
     private GroupDialog _groupDialog;
     private GroupHealthPanel _groupHealthPanel;
     private double _statusRefreshMs;
@@ -2017,7 +2019,7 @@ public partial class GameScene : Control
         if (_startGameShown)
         {
             _waitingStartupMap = false;
-            CallDeferred(nameof(ShowMapChanged));
+            ShowMapChanged();
         }
     }
 
@@ -9343,6 +9345,9 @@ public partial class GameScene : Control
 
         if (AutoLoginArgs.ScreenshotAfterEnter)
             GetTree().CreateTimer(1.0).Timeout += SaveProductionAuditScreenshot;
+
+        if (AutoLoginArgs.HexaAudit)
+            GetTree().CreateTimer(1.5).Timeout += StartHexaStoneAudit;
     }
 
     private void SaveProductionAuditScreenshot()
@@ -9376,6 +9381,192 @@ public partial class GameScene : Control
         GD.Print($"[ProductionScreenshot] PASS map={_playerMapIndex} instance={_playerInstanceIndex} " +
             $"viewport={image.GetWidth()}x{image.GetHeight()} path={output}");
         GetTree().Quit();
+    }
+
+    private readonly struct HexaStoneAuditSpec
+    {
+        public readonly string MapFile;
+        public readonly string MapName;
+        public readonly int StoneX;
+        public readonly int StoneY;
+        public readonly int PlayerX;
+        public readonly int PlayerY;
+        public readonly string StoneLabel;
+
+        public HexaStoneAuditSpec(string mapFile, string mapName, int x, int y, string label, int px = 0, int py = 0)
+        {
+            MapFile = mapFile;
+            MapName = mapName;
+            StoneX = x;
+            StoneY = y;
+            PlayerX = px > 0 ? px : x + 1;
+            PlayerY = py > 0 ? py : y + 1;
+            StoneLabel = label;
+        }
+    }
+
+    private static readonly HexaStoneAuditSpec[] _hexaAuditStones = new HexaStoneAuditSpec[]
+    {
+        // 01-04 比奇城 (Map 0)
+        new("0", "比奇城", 498, 463, "Bichon_South"),
+        new("0", "比奇城", 507, 313, "Bichon_East"),
+        new("0", "比奇城", 370, 336, "Bichon_North"),
+        new("0", "比奇城", 379, 444, "Bichon_West"),
+        // 05-07 边境城市 (Map 01)
+        new("01", "边境城市", 456, 216, "BorderTown_North"),
+        new("01", "边境城市", 411, 287, "BorderTown_West"),
+        new("01", "边境城市", 463, 356, "BorderTown_East"),
+        // 08 银杏山谷 (Map 02)
+        new("02", "银杏山谷", 249, 144, "GinkgoValley"),
+        // 09 道馆 (Map 1)
+        new("1", "道馆", 416, 179, "DaoGwan_RiHong"),
+        // 10-11 毒蛇山谷 (Map 2)
+        new("2", "毒蛇山谷", 306, 244, "SnakeValley_South"),
+        new("2", "毒蛇山谷", 314, 193, "SnakeValley_North"),
+        // 12-14 沙巴克城 (Map 3: 350x350)
+        new("3", "沙巴克城", 222, 159, "Sabuk_MainGate", 221, 158),
+        new("3", "沙巴克城", 71, 140, "Sabuk_West"),
+        new("3", "沙巴克城", 51, 222, "Sabuk_Palace_Inner"),
+        // 15 绿洲 (Map 4)
+        new("4", "绿洲", 435, 83, "Oasis"),
+        // 16 诺玛沙漠 (Map 41)
+        new("41", "诺玛沙漠", 184, 136, "NumaDesert"),
+        // 17-20 沙漠土城 (Map 5)
+        new("5", "沙漠土城", 204, 289, "MudFortress_South"),
+        new("5", "沙漠土城", 112, 177, "MudFortress_Inner"),
+        new("5", "沙漠土城", 63, 195, "MudFortress_WestGate"),
+        new("5", "沙漠土城", 227, 128, "MudFortress_EastGate"),
+        // 21 沙漠 (Map 6)
+        new("6", "沙漠", 273, 731, "Desert_AntCave"),
+        // 22-23 盟重县 (Map 74)
+        new("74", "盟重县", 349, 329, "Mongchon_East"),
+        new("74", "盟重县", 271, 267, "Mongchon_West"),
+        // 24 石阁庙 (Map 75)
+        new("75", "石阁庙", 184, 90, "SukGak_Temple"),
+        // 25-29 潘夜岛 (Map 8)
+        new("8", "潘夜岛", 288, 241, "Banya_Village"),
+        new("8", "潘夜岛", 113, 463, "Banya_WestCoast"),
+        new("8", "潘夜岛", 668, 388, "Banya_EastCoast"),
+        new("8", "潘夜岛", 448, 579, "Banya_SouthCoast"),
+        new("8", "潘夜岛", 424, 239, "Banya_North"),
+        // 30 流放岛 (Map 81)
+        new("81", "流放岛", 129, 265, "RedZone_ExileIsland"),
+        // 31 旧潘夜岛 (Map 12)
+        new("12", "旧潘夜岛", 190, 265, "OldBanyaIsland"),
+        // 32-36 潘夜神殿地牢 (Maps D1110, D11031, D1105, D1115)
+        new("D1110", "潘夜神殿1层", 15, 18, "BanyaTemple_Hall1"),
+        new("D1110", "潘夜神殿1层", 28, 31, "BanyaTemple_Hall2"),
+        new("D11031", "潘夜神殿3层西部", 199, 257, "BanyaTemple_3West"),
+        new("D1105", "潘夜神殿5层", 219, 99, "BanyaTemple_5"),
+        new("D1115", "潘夜神殿8层", 358, 353, "BanyaTemple_8"),
+    };
+
+    private int _hexaAuditIndex = 0;
+    private bool _hexaAuditStarted = false;
+
+    private void StartHexaStoneAudit()
+    {
+        if (_hexaAuditStarted) return;
+        _hexaAuditStarted = true;
+        _hexaAuditIndex = 0;
+        GD.Print($"[HexaAudit] Starting audit of {_hexaAuditStones.Length} hexa holy stones...");
+        StepHexaStoneAudit();
+    }
+
+    private int _hexaAuditRetryCount = 0;
+
+    private void StepHexaStoneAudit()
+    {
+        if (_hexaAuditIndex >= _hexaAuditStones.Length)
+        {
+            GD.Print($"[HexaAudit] COMPLETED: Successfully captured all {_hexaAuditStones.Length} stones!");
+            GetTree().Quit();
+            return;
+        }
+
+        var stone = _hexaAuditStones[_hexaAuditIndex];
+        int targetX = stone.PlayerX;
+        int targetY = stone.PlayerY;
+        GD.Print($"[HexaAudit] [{_hexaAuditIndex + 1}/{_hexaAuditStones.Length}] Teleporting to {stone.MapName} ({stone.MapFile}) at ({targetX}, {targetY}) for Stone at ({stone.StoneX}, {stone.StoneY})...");
+        SendChat($"@move {stone.MapFile} {targetX} {targetY}");
+        _hexaAuditRetryCount = 0;
+
+        GetTree().CreateTimer(0.3).Timeout += CheckHexaStoneReady;
+    }
+
+    private void CheckHexaStoneReady()
+    {
+        if (!IsInsideTree() || _mapView?.Map == null)
+        {
+            GetTree().CreateTimer(0.2).Timeout += CheckHexaStoneReady;
+            return;
+        }
+
+        var stone = _hexaAuditStones[_hexaAuditIndex];
+        var curMapInfo = Globals.MapInfoList?.Binding.FirstOrDefault(m => m.Index == _playerMapIndex);
+        bool mapMatches = curMapInfo != null && string.Equals(curMapInfo.FileName, stone.MapFile, StringComparison.OrdinalIgnoreCase);
+
+        int targetX = stone.PlayerX;
+        int targetY = stone.PlayerY;
+        bool locMatches = Math.Abs(_playerLocation.X - targetX) <= 2 && Math.Abs(_playerLocation.Y - targetY) <= 2;
+
+        var stoneNpc = _objects.Values.FirstOrDefault(o => o.Type == ObjectRenderer.Kind.NPC &&
+            Math.Abs(o.CellX - stone.StoneX) <= 1 && Math.Abs(o.CellY - stone.StoneY) <= 1);
+
+        _hexaAuditRetryCount++;
+
+        if ((mapMatches && locMatches && stoneNpc != null) || _hexaAuditRetryCount >= 25)
+        {
+            if (stoneNpc == null)
+            {
+                GD.PrintErr($"[HexaAudit] [{_hexaAuditIndex + 1}/{_hexaAuditStones.Length}] WARNING: Stone NPC not detected at ({stone.StoneX}, {stone.StoneY}) in {stone.MapName} (curMap={curMapInfo?.FileName}, loc=({_playerLocation.X},{_playerLocation.Y}))");
+            }
+            else
+            {
+                GD.Print($"[HexaAudit] [{_hexaAuditIndex + 1}/{_hexaAuditStones.Length}] Stone NPC detected: '{stoneNpc.DisplayName}' at ({stoneNpc.CellX},{stoneNpc.CellY})");
+            }
+
+            UpdatePlayerPosition();
+            UpdateObjectPositions();
+            _mapView.QueueRedraw();
+            foreach (var ob in _objects.Values) ob.QueueRedraw();
+
+            GetTree().CreateTimer(0.3).Timeout += CaptureCurrentHexaStone;
+        }
+        else
+        {
+            GetTree().CreateTimer(0.1).Timeout += CheckHexaStoneReady;
+        }
+    }
+
+    private void CaptureCurrentHexaStone()
+    {
+        if (!IsInsideTree() || _mapView?.Map == null)
+        {
+            GD.PrintErr($"[HexaAudit] Map view not ready at index {_hexaAuditIndex}, retrying in 1s...");
+            GetTree().CreateTimer(1.0).Timeout += CaptureCurrentHexaStone;
+            return;
+        }
+
+        var texture = GetViewport().GetTexture();
+        var image = texture?.GetImage();
+        if (image != null)
+        {
+            var stone = _hexaAuditStones[_hexaAuditIndex];
+            string dir = "/home/tetsuya/development/zircon/docs/screenshots/hexastones";
+            System.IO.Directory.CreateDirectory(dir);
+            string fileName = $"{_hexaAuditIndex + 1:D2}_{stone.MapFile}_{stone.StoneX}_{stone.StoneY}_{stone.StoneLabel}.png";
+            string fullPath = System.IO.Path.Combine(dir, fileName);
+            image.SavePng(fullPath);
+            GD.Print($"[HexaAudit] [{_hexaAuditIndex + 1}/{_hexaAuditStones.Length}] PASS: Saved screenshot to {fullPath}");
+        }
+        else
+        {
+            GD.PrintErr($"[HexaAudit] [{_hexaAuditIndex + 1}/{_hexaAuditStones.Length}] FAIL: Could not grab viewport image");
+        }
+
+        _hexaAuditIndex++;
+        GetTree().CreateTimer(0.3).Timeout += StepHexaStoneAudit;
     }
 
     private static Weather ResolveMapWeather(MapInfo mapInfo)

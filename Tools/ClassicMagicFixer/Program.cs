@@ -183,6 +183,50 @@ switch (mode)
         return ExitOk;
     }
 
+    case "dumpstone":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(NPCInfo).Assembly, typeof(MapInfo).Assembly, typeof(MapRegion).Assembly);
+        var npcs = session.GetCollection<NPCInfo>().Binding.Where(n => n.Image == 56 || n.Image == 57 || n.NPCName.Contains("Stone") || (n.Region?.Map?.FileName == "3")).ToList();
+        foreach (var n in npcs.OrderBy(n => n.Region?.Map?.FileName).ThenBy(n => n.Index))
+        {
+            var p = n.Region?.PointRegion?.FirstOrDefault();
+            n.Region?.CreatePoints(350);
+            int ptCount = n.Region?.PointList?.Count ?? 0;
+            bool hasBit = n.Region?.BitRegion != null;
+            string reqs = string.Join(", ", n.Requirements.Select(r => $"{r.Requirement}:{r.IntParameter1}"));
+            Console.WriteLine($"NPC #{n.Index,-4} Name='{n.NPCName}' Img={n.Image} Map='{n.Region?.Map?.Description}' ({n.Region?.Map?.FileName}) Pos=({p?.X},{p?.Y}) Pts={ptCount} HasBit={hasBit} Page='{n.EntryPage?.Description}'");
+        }
+        return ExitOk;
+    }
+
+    case "checkmap3":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(NPCInfo).Assembly, typeof(MapInfo).Assembly, typeof(MapRegion).Assembly);
+        var mapInfo = session.GetCollection<MapInfo>().Binding.First(m => m.FileName == "3");
+        Console.WriteLine($"Map 3: '{mapInfo.Description}', Total Regions: {mapInfo.Regions?.Count}");
+        var npcsInRegions = new List<NPCInfo>();
+        if (mapInfo.Regions != null)
+        {
+            foreach (var r in mapInfo.Regions)
+            {
+                var pt = r.PointRegion?.FirstOrDefault();
+                Console.WriteLine($"  Region #{r.Index}: '{r.ServerDescription}' Pos=({pt?.X},{pt?.Y}) NPCs={r.NPCs?.Count}");
+                if (r.NPCs != null)
+                {
+                    foreach (var n in r.NPCs)
+                    {
+                        Console.WriteLine($"    -> NPC #{n.Index}: '{n.NPCName}', Img={n.Image}, EntryPage='{n.EntryPage?.Description}'");
+                        npcsInRegions.Add(n);
+                    }
+                }
+            }
+        }
+        Console.WriteLine($"Total NPCs reachable via mapInfo.Regions: {npcsInRegions.Count}");
+        return ExitOk;
+    }
+
     case "charpos":
     {
         var users = new Session(SessionMode.Users, root, root + "Backup/");

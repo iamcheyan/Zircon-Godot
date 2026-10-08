@@ -45,11 +45,10 @@ internal static class HexaStoneAligner
         new("2", 306, 244, 56, "BV Teleporter", "13Move_SnakeVally1 (毒蛇南)"),
         new("2", 314, 193, 56, "BV Teleporter", "13Move_SnakeVally2 (毒蛇北)"),
 
-        // 沙巴克城 (Map 3) - MUD3 4处
+        // 沙巴克城 (Map 3: 350x350) - 3处有效神石 (MUD3 2处 + 皇宫内墙实机底座 1处; (294,539)与(49,566)为攻城战大地图遗留坐标已剔除)
         new("3", 222, 159, 56, "SK Teleporter", "13Move_Sabuk1 (沙巴克正门/外城)"),
-        new("3", 294, 539, 56, "SK Teleporter", "13Move_Sabuk2 (沙巴克南)"),
-        new("3", 49, 566, 56, "SK Teleporter", "13Move_Sabuk3 (沙巴克西南)"),
         new("3", 71, 140, 56, "SK Teleporter", "13Move_Sabuk4 (沙巴克西)"),
+        new("3", 51, 222, 56, "SK1 Teleporter", "Sabuk Inner Wall (沙巴克皇宫内墙底座)"),
 
         // 绿洲 (Map 4) - MUD3 1处 (435, 83)
         new("4", 435, 83, 56, "NV Teleporter", "13Move_Oasis (绿洲)"),

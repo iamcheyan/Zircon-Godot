@@ -89,3 +89,9 @@
 2. **沙漠土城西门六面神石 `(63, 195)`**：
    - 角色传送到 `(66, 196)` 查看；
    - 用户原先截图中空缺的光秃基座上现已成功生成「六面神石」，符文完全贴合石基并附带发光特效。
+
+## 五、补充过程素材
+
+2026-10-08 从临时工作区筛选出的道馆/沙漠土城早期运行截图，以及 NPC56 石阵对齐探索图，保存在 [`docs/screenshots/hexastones/process-review-2026-10-08/`](screenshots/hexastones/process-review-2026-10-08/README.md)。这些只作开发过程补充：早期截图的名称标签不可可靠辨读，NPC56 对齐图缺少地图/坐标/生成参数，均不替代本报告的最终 36 点验收证据。
+
+临时 WIL 资源帧的逐帧来源校验与收录清单见 [`docs/evidence/zircon-temp-audit-review-2026-10-08.md`](evidence/zircon-temp-audit-review-2026-10-08.md)。

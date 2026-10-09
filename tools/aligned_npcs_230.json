@@ -1,0 +1,5491 @@
+[
+  {
+    "id": "npc-13",
+    "npc_index": 13,
+    "name_zh": "啊康",
+    "name_en": "Mr. Kang",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 402,
+    "y": 356,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "啊康",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Bichon1"
+    }
+  },
+  {
+    "id": "npc-14",
+    "npc_index": 14,
+    "name_zh": "店员",
+    "name_en": "Isaac",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 470,
+    "y": 424,
+    "category": "书店",
+    "services": [
+      "基础与进阶技能书买卖"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "Book Main",
+    "mud3_match": {
+      "mud3_name": "店员",
+      "coord_status": "exact_match",
+      "mud3_file": "05Book_Bichon"
+    }
+  },
+  {
+    "id": "npc-15",
+    "npc_index": 15,
+    "name_zh": "药店老板",
+    "name_en": "David",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 397,
+    "y": 363,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main",
+    "mud3_match": {
+      "mud3_name": "药店老板",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Bichon1"
+    }
+  },
+  {
+    "id": "npc-16",
+    "npc_index": 16,
+    "name_zh": "杂货商",
+    "name_en": "Lennard",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 450,
+    "y": 413,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main",
+    "mud3_match": {
+      "mud3_name": "杂货商",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Bichon"
+    }
+  },
+  {
+    "id": "npc-17",
+    "npc_index": 17,
+    "name_zh": "恩实",
+    "name_en": "Amy",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 414,
+    "y": 349,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 5,
+    "face_image": 121,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "恩实",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Bichon"
+    }
+  },
+  {
+    "id": "npc-18",
+    "npc_index": 18,
+    "name_zh": "栗子商人",
+    "name_en": "Loy",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 441,
+    "y": 374,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": "栗子商人",
+      "coord_status": "exact_match",
+      "mud3_file": "10ChestnutMarket_Bichon"
+    }
+  },
+  {
+    "id": "npc-19",
+    "npc_index": 19,
+    "name_zh": "怡美",
+    "name_en": "Linda",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 480,
+    "y": 407,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "怡美",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Bichon"
+    }
+  },
+  {
+    "id": "npc-20",
+    "npc_index": 20,
+    "name_zh": "金氏",
+    "name_en": "Murphy",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 446,
+    "y": 405,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 11,
+    "face_image": 260,
+    "entry_page": "Meat Main",
+    "mud3_match": {
+      "mud3_name": "金氏",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_Bichon1"
+    }
+  },
+  {
+    "id": "npc-21",
+    "npc_index": 21,
+    "name_zh": "王铁匠",
+    "name_en": "Hardy",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 382,
+    "y": 198,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "王铁匠",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Wooma"
+    }
+  },
+  {
+    "id": "npc-22",
+    "npc_index": 22,
+    "name_zh": "天星",
+    "name_en": "Gresham",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 386,
+    "y": 119,
+    "category": "书店",
+    "services": [
+      "基础与进阶技能书买卖"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "Book Main",
+    "mud3_match": {
+      "mud3_name": "天星",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_DoGwan"
+    }
+  },
+  {
+    "id": "npc-23",
+    "npc_index": 23,
+    "name_zh": "华玉",
+    "name_en": "Haylee",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 363,
+    "y": 176,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 4,
+    "face_image": 60,
+    "entry_page": "Basic Potion Main",
+    "mud3_match": {
+      "mud3_name": "华玉",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Wooma"
+    }
+  },
+  {
+    "id": "npc-24",
+    "npc_index": 24,
+    "name_zh": "避难所杂货商",
+    "name_en": "Cory",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 394,
+    "y": 116,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main",
+    "mud3_match": {
+      "mud3_name": "啊天",
+      "coord_status": "near_match (dist=2, mud3_xy=(396,116))",
+      "mud3_file": "06Inn_DoGwan"
+    }
+  },
+  {
+    "id": "npc-25",
+    "npc_index": 25,
+    "name_zh": "药神",
+    "name_en": "Flora",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 387,
+    "y": 118,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 67,
+    "face_image": 120,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "药神",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_DoGwan2"
+    }
+  },
+  {
+    "id": "npc-26",
+    "npc_index": 26,
+    "name_zh": "栗子商人",
+    "name_en": "Max",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 382,
+    "y": 141,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": "栗子商人",
+      "coord_status": "exact_match",
+      "mud3_file": "10ChestnutMarket_DoGwan"
+    }
+  },
+  {
+    "id": "npc-27",
+    "npc_index": 27,
+    "name_zh": "药中",
+    "name_en": "Melisa",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 393,
+    "y": 113,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "药中",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_DoGwan1"
+    }
+  },
+  {
+    "id": "npc-28",
+    "npc_index": 28,
+    "name_zh": "钱老板",
+    "name_en": "Rainier",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 366,
+    "y": 182,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 11,
+    "face_image": 260,
+    "entry_page": "Meat Main",
+    "mud3_match": {
+      "mud3_name": "钱老板",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_DoGwan"
+    }
+  },
+  {
+    "id": "npc-30",
+    "npc_index": 30,
+    "name_zh": "铁匠啊力",
+    "name_en": "Mr. Kim",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 351,
+    "y": 219,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "铁匠啊力",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-31",
+    "npc_index": 31,
+    "name_zh": "啊福",
+    "name_en": "Henry",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 331,
+    "y": 225,
+    "category": "书店",
+    "services": [
+      "基础与进阶技能书买卖"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "Book Main",
+    "mud3_match": {
+      "mud3_name": "啊福",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-32",
+    "npc_index": 32,
+    "name_zh": "金中医",
+    "name_en": "Kacy",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 334,
+    "y": 224,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main",
+    "mud3_match": {
+      "mud3_name": "金中医",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-33",
+    "npc_index": 33,
+    "name_zh": "流浪卢",
+    "name_en": "Seven",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 361,
+    "y": 226,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main",
+    "mud3_match": {
+      "mud3_name": "流浪卢",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-34",
+    "npc_index": 34,
+    "name_zh": "客栈保管员",
+    "name_en": "Dakota",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 346,
+    "y": 234,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "客栈保管员",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-35",
+    "npc_index": 35,
+    "name_zh": "蛇谷老太",
+    "name_en": "Murray",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 337,
+    "y": 223,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": "蛇谷老太",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SnakeVally1"
+    }
+  },
+  {
+    "id": "npc-36",
+    "npc_index": 36,
+    "name_zh": "金莲",
+    "name_en": "Sara",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 342,
+    "y": 235,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "金莲",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_SankeVally"
+    }
+  },
+  {
+    "id": "npc-37",
+    "npc_index": 37,
+    "name_zh": "蛇谷老人",
+    "name_en": "Parker",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 343,
+    "y": 219,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 11,
+    "face_image": 260,
+    "entry_page": "Meat Main",
+    "mud3_match": {
+      "mud3_name": "蛇谷老人",
+      "coord_status": "exact_match",
+      "mud3_file": "09NotBlocker_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-38",
+    "npc_index": 38,
+    "name_zh": "古井",
+    "name_en": "",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 408,
+    "y": 377,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 93,
+    "face_image": 340,
+    "entry_page": "Well",
+    "mud3_match": {
+      "mud3_name": "啊财",
+      "coord_status": "exact_match",
+      "mud3_file": "09ChangeMoney_Bichon"
+    }
+  },
+  {
+    "id": "npc-39",
+    "npc_index": 39,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 498,
+    "y": 463,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BT Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Bichon1"
+    }
+  },
+  {
+    "id": "npc-41",
+    "npc_index": 41,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 306,
+    "y": 244,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_SnakeVally1"
+    }
+  },
+  {
+    "id": "npc-42",
+    "npc_index": 42,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 416,
+    "y": 179,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "LP Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_DoGwan"
+    }
+  },
+  {
+    "id": "npc-43",
+    "npc_index": 43,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 204,
+    "y": 289,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Samak1"
+    }
+  },
+  {
+    "id": "npc-44",
+    "npc_index": 44,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 435,
+    "y": 83,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "NV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Oasis"
+    }
+  },
+  {
+    "id": "npc-45",
+    "npc_index": 45,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 190,
+    "y": 265,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BI Teleporter",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-48",
+    "npc_index": 48,
+    "name_zh": "武功教头",
+    "name_en": "Jack",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 227,
+    "y": 169,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Weapon Refiner",
+    "mud3_match": {
+      "mud3_name": "武功教头",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Samak1"
+    }
+  },
+  {
+    "id": "npc-50",
+    "npc_index": 50,
+    "name_zh": "老郑",
+    "name_en": "Tasha",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 198,
+    "y": 252,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main - Castle",
+    "mud3_match": {
+      "mud3_name": "老郑",
+      "coord_status": "exact_match",
+      "mud3_file": "04PotionMake_Samak"
+    }
+  },
+  {
+    "id": "npc-52",
+    "npc_index": 52,
+    "name_zh": "杂货商老李",
+    "name_en": "Clinton",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 192,
+    "y": 232,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main - Castle",
+    "mud3_match": {
+      "mud3_name": "杂货商老李",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Samak"
+    }
+  },
+  {
+    "id": "npc-56",
+    "npc_index": 56,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 112,
+    "y": 177,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW1 Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Samak2"
+    }
+  },
+  {
+    "id": "npc-60",
+    "npc_index": 60,
+    "name_zh": "铁汉",
+    "name_en": "Glenn",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 189,
+    "y": 252,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "铁汉",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Samak"
+    }
+  },
+  {
+    "id": "npc-61",
+    "npc_index": 61,
+    "name_zh": "润真",
+    "name_en": "Grace",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 181,
+    "y": 277,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 4,
+    "face_image": 60,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "润真",
+      "coord_status": "exact_match",
+      "mud3_file": "03Shoes_Samak"
+    }
+  },
+  {
+    "id": "npc-62",
+    "npc_index": 62,
+    "name_zh": "啊宋",
+    "name_en": "Marshal",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 197,
+    "y": 235,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": "啊宋",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Samak"
+    }
+  },
+  {
+    "id": "npc-63",
+    "npc_index": 63,
+    "name_zh": "黄老板",
+    "name_en": "Mandie",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 200,
+    "y": 249,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "黄老板",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_Samak"
+    }
+  },
+  {
+    "id": "npc-65",
+    "npc_index": 65,
+    "name_zh": "屠夫",
+    "name_en": "Tumur",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 438,
+    "y": 52,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 77,
+    "face_image": 30,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "屠夫",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_Oasis"
+    }
+  },
+  {
+    "id": "npc-66",
+    "npc_index": 66,
+    "name_zh": "努玛药剂师",
+    "name_en": "Imari",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 424,
+    "y": 97,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 80,
+    "face_image": 20,
+    "entry_page": "Basic Potion Main - Castle",
+    "mud3_match": {
+      "mud3_name": "唯我独尊",
+      "coord_status": "near_match (dist=2, mud3_xy=(426,97))",
+      "mud3_file": "15Magic_Oasis"
+    }
+  },
+  {
+    "id": "npc-67",
+    "npc_index": 67,
+    "name_zh": "洪老板",
+    "name_en": "Solonga",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 470,
+    "y": 67,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 81,
+    "face_image": 431,
+    "entry_page": "Essentials Main",
+    "mud3_match": {
+      "mud3_name": "洪老板",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Oasis"
+    }
+  },
+  {
+    "id": "npc-68",
+    "npc_index": 68,
+    "name_zh": "努玛首饰商",
+    "name_en": "Wooshas",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 426,
+    "y": 95,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 78,
+    "face_image": 31,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "唯我独尊",
+      "coord_status": "near_match (dist=2, mud3_xy=(426,97))",
+      "mud3_file": "15Magic_Oasis"
+    }
+  },
+  {
+    "id": "npc-69",
+    "npc_index": 69,
+    "name_zh": "努玛收藏家",
+    "name_en": "Wooroy",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 426,
+    "y": 99,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 81,
+    "face_image": 431,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": "唯我独尊",
+      "coord_status": "near_match (dist=2, mud3_xy=(426,97))",
+      "mud3_file": "15Magic_Oasis"
+    }
+  },
+  {
+    "id": "npc-70",
+    "npc_index": 70,
+    "name_zh": "努玛裁缝",
+    "name_en": "Pat",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 428,
+    "y": 75,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 78,
+    "face_image": 31,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "医仙",
+      "coord_status": "near_match (dist=2, mud3_xy=(430,75))",
+      "mud3_file": "04Potion_Oasis"
+    }
+  },
+  {
+    "id": "npc-76",
+    "npc_index": 76,
+    "name_zh": "啊胜",
+    "name_en": "Mr. Matt",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 224,
+    "y": 210,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 98,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "啊胜",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_HalfNight"
+    }
+  },
+  {
+    "id": "npc-77",
+    "npc_index": 77,
+    "name_zh": "成赫",
+    "name_en": "Dr. Park",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 282,
+    "y": 224,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main - Castle",
+    "mud3_match": {
+      "mud3_name": "成赫",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_HalfNight"
+    }
+  },
+  {
+    "id": "npc-78",
+    "npc_index": 78,
+    "name_zh": "中叔",
+    "name_en": "Lafayette",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 253,
+    "y": 291,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main - Castle",
+    "mud3_match": {
+      "mud3_name": "中叔",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_HalfNight"
+    }
+  },
+  {
+    "id": "npc-79",
+    "npc_index": 79,
+    "name_zh": "晓华",
+    "name_en": "Cherrill",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 266,
+    "y": 285,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 96,
+    "face_image": 290,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "晓华",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_HalfNight"
+    }
+  },
+  {
+    "id": "npc-80",
+    "npc_index": 80,
+    "name_zh": "晓洋",
+    "name_en": "Mindy",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 249,
+    "y": 257,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 96,
+    "face_image": 290,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "晓洋",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_HalfNight"
+    }
+  },
+  {
+    "id": "npc-81",
+    "npc_index": 81,
+    "name_zh": "潘夜铁匠",
+    "name_en": "Warren",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 188,
+    "y": 265,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-82",
+    "npc_index": 82,
+    "name_zh": "潘夜药师",
+    "name_en": "Norman",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 190,
+    "y": 263,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main - Castle",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-83",
+    "npc_index": 83,
+    "name_zh": "潘夜杂货商",
+    "name_en": "Lawrence",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 190,
+    "y": 267,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main - Castle",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-84",
+    "npc_index": 84,
+    "name_zh": "潘夜首饰商",
+    "name_en": "Nancy",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 192,
+    "y": 265,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-85",
+    "npc_index": 85,
+    "name_zh": "潘夜鉴宝商",
+    "name_en": "Livingston",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 188,
+    "y": 263,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-86",
+    "npc_index": 86,
+    "name_zh": "潘夜裁缝",
+    "name_en": "Calla",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 188,
+    "y": 267,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-88",
+    "npc_index": 88,
+    "name_zh": "义贤",
+    "name_en": "Russ",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 375,
+    "y": 304,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 26,
+    "face_image": 190,
+    "entry_page": "Horse Main",
+    "mud3_match": {
+      "mud3_name": "义贤",
+      "coord_status": "exact_match",
+      "mud3_file": "09HorseMarket_Bichon"
+    }
+  },
+  {
+    "id": "npc-90",
+    "npc_index": 90,
+    "name_zh": "图书管理员",
+    "name_en": "Notice Board",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 473,
+    "y": 428,
+    "category": "公告",
+    "services": [
+      "悬赏令与大陆新闻"
+    ],
+    "image": 51,
+    "face_image": 320,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "图书管理员",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_Bichon2"
+    }
+  },
+  {
+    "id": "npc-91",
+    "npc_index": 91,
+    "name_zh": "书堂玄震",
+    "name_en": "Notice Board",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 379,
+    "y": 214,
+    "category": "公告",
+    "services": [
+      "悬赏令与大陆新闻"
+    ],
+    "image": 51,
+    "face_image": 320,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "书堂玄震",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_DoGwan2"
+    }
+  },
+  {
+    "id": "npc-92",
+    "npc_index": 92,
+    "name_zh": "蛇谷老矿夫",
+    "name_en": "Notice Board",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 360,
+    "y": 208,
+    "category": "公告",
+    "services": [
+      "悬赏令与大陆新闻"
+    ],
+    "image": 51,
+    "face_image": 320,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "蛇谷老矿夫",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SnakeVally2"
+    }
+  },
+  {
+    "id": "npc-93",
+    "npc_index": 93,
+    "name_zh": "努玛告示牌",
+    "name_en": "Notice Board",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 428,
+    "y": 97,
+    "category": "公告",
+    "services": [
+      "悬赏令与大陆新闻"
+    ],
+    "image": 51,
+    "face_image": 320,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "唯我独尊",
+      "coord_status": "near_match (dist=2, mud3_xy=(426,97))",
+      "mud3_file": "15Magic_Oasis"
+    }
+  },
+  {
+    "id": "npc-94",
+    "npc_index": 94,
+    "name_zh": "潘夜岛告示牌",
+    "name_en": "Notice Board",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 192,
+    "y": 263,
+    "category": "公告",
+    "services": [
+      "悬赏令与大陆新闻"
+    ],
+    "image": 51,
+    "face_image": 320,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-95",
+    "npc_index": 95,
+    "name_zh": "总教头",
+    "name_en": "Warrior Trainer",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 447,
+    "y": 444,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 46,
+    "face_image": 380,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "总教头",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Bichon1"
+    }
+  },
+  {
+    "id": "npc-96",
+    "npc_index": 96,
+    "name_zh": "万事通",
+    "name_en": "Taoist Mentor",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 398,
+    "y": 127,
+    "category": "公告",
+    "services": [
+      "村落悬赏",
+      "大事公告"
+    ],
+    "image": 89,
+    "face_image": 70,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "万事通",
+      "coord_status": "exact_match",
+      "mud3_file": "14Doctor_DoGwan"
+    }
+  },
+  {
+    "id": "npc-97",
+    "npc_index": 97,
+    "name_zh": "断乔先生",
+    "name_en": "Wizard Teacher",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 347,
+    "y": 193,
+    "category": "公告",
+    "services": [
+      "村落悬赏",
+      "大事公告"
+    ],
+    "image": 88,
+    "face_image": 60,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "断乔先生",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-98",
+    "npc_index": 98,
+    "name_zh": "唯我独尊",
+    "name_en": "Village Elder",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 426,
+    "y": 97,
+    "category": "公告",
+    "services": [
+      "村落悬赏",
+      "大事公告"
+    ],
+    "image": 31,
+    "face_image": 350,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": "唯我独尊",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Oasis"
+    }
+  },
+  {
+    "id": "npc-99",
+    "npc_index": 99,
+    "name_zh": "潘夜码头管理员",
+    "name_en": "Dock Manager",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 192,
+    "y": 267,
+    "category": "管理",
+    "services": [
+      "行会管理与城市秩序"
+    ],
+    "image": 61,
+    "face_image": 210,
+    "entry_page": "Notice Board",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-100",
+    "npc_index": 100,
+    "name_zh": "王大人",
+    "name_en": "Companion Manager",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 389,
+    "y": 396,
+    "category": "宠物",
+    "services": [
+      "灵兽领养与随从管理"
+    ],
+    "image": 41,
+    "face_image": 360,
+    "entry_page": "Companion Main",
+    "mud3_match": {
+      "mud3_name": "王大人",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_Bichon1"
+    }
+  },
+  {
+    "id": "npc-101",
+    "npc_index": 101,
+    "name_zh": "士官",
+    "name_en": "Companion Manager",
+    "map_code": "1",
+    "map_name_zh": "道馆",
+    "map_desc_en": "Lost Paradise",
+    "x": 403,
+    "y": 132,
+    "category": "宠物",
+    "services": [
+      "灵兽领养与随从管理"
+    ],
+    "image": 41,
+    "face_image": 360,
+    "entry_page": "Companion Main",
+    "mud3_match": {
+      "mud3_name": "士官",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_DoGwan1"
+    }
+  },
+  {
+    "id": "npc-102",
+    "npc_index": 102,
+    "name_zh": "万事通",
+    "name_en": "Companion Manager",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 322,
+    "y": 223,
+    "category": "宠物",
+    "services": [
+      "灵兽领养与随从管理"
+    ],
+    "image": 41,
+    "face_image": 360,
+    "entry_page": "Companion Main",
+    "mud3_match": {
+      "mud3_name": "万事通",
+      "coord_status": "exact_match",
+      "mud3_file": "14Doctor_SnakeVally"
+    }
+  },
+  {
+    "id": "npc-103",
+    "npc_index": 103,
+    "name_zh": "努玛驯兽师",
+    "name_en": "Companion Manager",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 430,
+    "y": 77,
+    "category": "宠物",
+    "services": [
+      "灵兽领养与随从管理"
+    ],
+    "image": 41,
+    "face_image": 360,
+    "entry_page": "Companion Main",
+    "mud3_match": {
+      "mud3_name": "医仙",
+      "coord_status": "near_match (dist=2, mud3_xy=(430,75))",
+      "mud3_file": "04Potion_Oasis"
+    }
+  },
+  {
+    "id": "npc-104",
+    "npc_index": 104,
+    "name_zh": "潘夜驯兽师",
+    "name_en": "Companion Manager",
+    "map_code": "12",
+    "map_name_zh": "潘夜岛",
+    "map_desc_en": "Banya Island",
+    "x": 186,
+    "y": 265,
+    "category": "宠物",
+    "services": [
+      "灵兽领养与随从管理"
+    ],
+    "image": 41,
+    "face_image": 360,
+    "entry_page": "Companion Main",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-105",
+    "npc_index": 105,
+    "name_zh": "月老司仪",
+    "name_en": "Administrator",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 386,
+    "y": 288,
+    "category": "管理",
+    "services": [
+      "行会事务",
+      "婚姻公证与活动管理"
+    ],
+    "image": 8,
+    "face_image": 310,
+    "entry_page": "Marriage Main",
+    "mud3_match": {
+      "mud3_name": "司仪",
+      "coord_status": "near_match (dist=2, mud3_xy=(388,288))",
+      "mud3_file": "21WeddingMaker_Bichon"
+    }
+  },
+  {
+    "id": "npc-106",
+    "npc_index": 106,
+    "name_zh": "六面神石",
+    "name_en": "Jack",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 314,
+    "y": 193,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Item Fragment - Main",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_SnakeVally2"
+    }
+  },
+  {
+    "id": "npc-118",
+    "npc_index": 118,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 288,
+    "y": 241,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 140,
+    "entry_page": "FV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfNight1"
+    }
+  },
+  {
+    "id": "npc-135",
+    "npc_index": 135,
+    "name_zh": "慧媛",
+    "name_en": "Mike",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 478,
+    "y": 407,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Accessory Refiner - Main",
+    "mud3_match": {
+      "mud3_name": "慧媛",
+      "coord_status": "exact_match",
+      "mud3_file": "03Shoes_Bichon"
+    }
+  },
+  {
+    "id": "npc-136",
+    "npc_index": 136,
+    "name_zh": "努玛鉴宝师",
+    "name_en": "Payton",
+    "map_code": "4",
+    "map_name_zh": "努玛村",
+    "map_desc_en": "Numa Village",
+    "x": 433,
+    "y": 83,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Rusty Accessory Main",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "near_match (dist=2, mud3_xy=(435,83))",
+      "mud3_file": "13Move_Oasis"
+    }
+  },
+  {
+    "id": "npc-140",
+    "npc_index": 140,
+    "name_zh": "满春",
+    "name_en": "Chief Yonghyeon",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 231,
+    "y": 260,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 74,
+    "face_image": 431,
+    "entry_page": "Fame Main",
+    "mud3_match": {
+      "mud3_name": "满春",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_HalfNight"
+    }
+  },
+  {
+    "id": "npc-141",
+    "npc_index": 141,
+    "name_zh": "石母",
+    "name_en": "14Quest_Bichon",
+    "map_code": "0_003",
+    "map_name_zh": "比奇县牢房",
+    "map_desc_en": "比奇县",
+    "x": 27,
+    "y": 35,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "石母",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_Bichon"
+    }
+  },
+  {
+    "id": "npc-142",
+    "npc_index": 142,
+    "name_zh": "肉店金老板",
+    "name_en": "01Meet_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 425,
+    "y": 274,
+    "category": "肉店",
+    "services": [
+      "肉品收购与买卖",
+      "高品质纯度肉"
+    ],
+    "image": 11,
+    "face_image": 260,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "肉店金老板",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-143",
+    "npc_index": 143,
+    "name_zh": "德秀",
+    "name_en": "02Weapon_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 459,
+    "y": 279,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "德秀",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-144",
+    "npc_index": 144,
+    "name_zh": "顺子",
+    "name_en": "03Armor_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 442,
+    "y": 296,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "顺子",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-145",
+    "npc_index": 145,
+    "name_zh": "尹老人",
+    "name_en": "04Potion_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 434,
+    "y": 303,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "尹老人",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-146",
+    "npc_index": 146,
+    "name_zh": "老余",
+    "name_en": "05Book_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 445,
+    "y": 319,
+    "category": "书店",
+    "services": [
+      "职业技能秘籍买卖"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "老余",
+      "coord_status": "exact_match",
+      "mud3_file": "05Book_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-147",
+    "npc_index": 147,
+    "name_zh": "赵老头",
+    "name_en": "06Inn_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 471,
+    "y": 279,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "赵老头",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-148",
+    "npc_index": 148,
+    "name_zh": "地摊商人",
+    "name_en": "07Grocery_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 433,
+    "y": 282,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "地摊商人",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-149",
+    "npc_index": 149,
+    "name_zh": "晓丽",
+    "name_en": "08Accessory_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 444,
+    "y": 270,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 4,
+    "face_image": 60,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "晓丽",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-150",
+    "npc_index": 150,
+    "name_zh": "啊辉",
+    "name_en": "10Material_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 431,
+    "y": 307,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊辉",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-151",
+    "npc_index": 151,
+    "name_zh": "栗子商人",
+    "name_en": "10ChestnutMarket_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 438,
+    "y": 281,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "栗子商人",
+      "coord_status": "exact_match",
+      "mud3_file": "10ChestnutMarket_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-152",
+    "npc_index": 152,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 456,
+    "y": 216,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BC Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Kugkyung1"
+    }
+  },
+  {
+    "id": "npc-153",
+    "npc_index": 153,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 411,
+    "y": 287,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BC Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Kugkyung2"
+    }
+  },
+  {
+    "id": "npc-154",
+    "npc_index": 154,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 463,
+    "y": 356,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BC Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Kugkyung3"
+    }
+  },
+  {
+    "id": "npc-155",
+    "npc_index": 155,
+    "name_zh": "万事通",
+    "name_en": "14Doctor_Kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 429,
+    "y": 263,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "万事通·接取页",
+    "mud3_match": {
+      "mud3_name": "万事通",
+      "coord_status": "exact_match",
+      "mud3_file": "14Doctor_Kugkyung"
+    }
+  },
+  {
+    "id": "npc-156",
+    "npc_index": 156,
+    "name_zh": "上官小姐",
+    "name_en": "14Quest_KugKyung1",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 461,
+    "y": 257,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "上官小姐",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_KugKyung1"
+    }
+  },
+  {
+    "id": "npc-157",
+    "npc_index": 157,
+    "name_zh": "智善",
+    "name_en": "14Quest_KugKyung2",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 444,
+    "y": 245,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 5,
+    "face_image": 121,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "智善",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_KugKyung2"
+    }
+  },
+  {
+    "id": "npc-158",
+    "npc_index": 158,
+    "name_zh": "无名商人",
+    "name_en": "14Quest_Kugkyung3",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 476,
+    "y": 284,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "无名商人",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_Kugkyung3"
+    }
+  },
+  {
+    "id": "npc-159",
+    "npc_index": 159,
+    "name_zh": "云发",
+    "name_en": "14Quest_KugKyung",
+    "map_code": "01_001",
+    "map_name_zh": "边境志善屋",
+    "map_desc_en": "志善屋",
+    "x": 17,
+    "y": 16,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 18,
+    "face_image": 320,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "云发",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_KugKyung"
+    }
+  },
+  {
+    "id": "npc-160",
+    "npc_index": 160,
+    "name_zh": "龙血先生",
+    "name_en": "15Magic_Kugkyung1",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 456,
+    "y": 302,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 46,
+    "face_image": 380,
+    "entry_page": "龙血先生·接取页",
+    "mud3_match": {
+      "mud3_name": "龙血先生",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Kugkyung1"
+    }
+  },
+  {
+    "id": "npc-161",
+    "npc_index": 161,
+    "name_zh": "龙血先生",
+    "name_en": "15Magic_KugKyung",
+    "map_code": "01_003",
+    "map_name_zh": "边境试练场",
+    "map_desc_en": "试练场",
+    "x": 5,
+    "y": 8,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 46,
+    "face_image": 380,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "龙血先生",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_KugKyung"
+    }
+  },
+  {
+    "id": "npc-162",
+    "npc_index": 162,
+    "name_zh": "黄河大侠",
+    "name_en": "15Magic_Kugkyung2",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 104,
+    "y": 203,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 46,
+    "face_image": 380,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "黄河大侠",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Kugkyung2"
+    }
+  },
+  {
+    "id": "npc-163",
+    "npc_index": 163,
+    "name_zh": "满多",
+    "name_en": "17MobRush_kugkyung",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 424,
+    "y": 312,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "满多",
+      "coord_status": "exact_match",
+      "mud3_file": "17MobRush_kugkyung"
+    }
+  },
+  {
+    "id": "npc-164",
+    "npc_index": 164,
+    "name_zh": "啊彬",
+    "name_en": "09CancleWeapon",
+    "map_code": "01",
+    "map_name_zh": "边境城市",
+    "map_desc_en": "边境城市",
+    "x": 422,
+    "y": 262,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 28,
+    "face_image": 140,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊彬",
+      "coord_status": "exact_match",
+      "mud3_file": "09CancleWeapon"
+    }
+  },
+  {
+    "id": "npc-165",
+    "npc_index": 165,
+    "name_zh": "许氏",
+    "name_en": "01Meet_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 228,
+    "y": 194,
+    "category": "肉店",
+    "services": [
+      "肉品收购与买卖",
+      "高品质纯度肉"
+    ],
+    "image": 11,
+    "face_image": 260,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "许氏",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_Eunhang"
+    }
+  },
+  {
+    "id": "npc-166",
+    "npc_index": 166,
+    "name_zh": "铁匠师傅",
+    "name_en": "02Weapon_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 284,
+    "y": 197,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "铁匠师傅",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Eunhang"
+    }
+  },
+  {
+    "id": "npc-167",
+    "npc_index": 167,
+    "name_zh": "布店晓芙",
+    "name_en": "03Armor_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 260,
+    "y": 177,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "布店晓芙",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Eunhang"
+    }
+  },
+  {
+    "id": "npc-168",
+    "npc_index": 168,
+    "name_zh": "许中医",
+    "name_en": "04Potion_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 273,
+    "y": 189,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "许中医",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Eunhang"
+    }
+  },
+  {
+    "id": "npc-169",
+    "npc_index": 169,
+    "name_zh": "药剂师",
+    "name_en": "04PotionMake_Euhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 272,
+    "y": 189,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "药剂师",
+      "coord_status": "exact_match",
+      "mud3_file": "04PotionMake_Euhang"
+    }
+  },
+  {
+    "id": "npc-170",
+    "npc_index": 170,
+    "name_zh": "才石",
+    "name_en": "05Book_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 233,
+    "y": 222,
+    "category": "书店",
+    "services": [
+      "职业技能秘籍买卖"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "才石",
+      "coord_status": "exact_match",
+      "mud3_file": "05Book_Eunhang"
+    }
+  },
+  {
+    "id": "npc-171",
+    "npc_index": 171,
+    "name_zh": "啊雯",
+    "name_en": "06Inn_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 250,
+    "y": 190,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 6,
+    "face_image": 140,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊雯",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Eunhang"
+    }
+  },
+  {
+    "id": "npc-172",
+    "npc_index": 172,
+    "name_zh": "地摊老周",
+    "name_en": "07Grocery_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 236,
+    "y": 205,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "地摊老周",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Eunhang"
+    }
+  },
+  {
+    "id": "npc-173",
+    "npc_index": 173,
+    "name_zh": "晓兰",
+    "name_en": "08Accessory_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 275,
+    "y": 222,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 4,
+    "face_image": 60,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "晓兰",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Eunhang"
+    }
+  },
+  {
+    "id": "npc-174",
+    "npc_index": 174,
+    "name_zh": "啊勋",
+    "name_en": "10Material_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 269,
+    "y": 186,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊勋",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Eunhang"
+    }
+  },
+  {
+    "id": "npc-175",
+    "npc_index": 175,
+    "name_zh": "栗子商人",
+    "name_en": "10ChestnutMarket_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 260,
+    "y": 205,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "栗子商人",
+      "coord_status": "exact_match",
+      "mud3_file": "10ChestnutMarket_Eunhang"
+    }
+  },
+  {
+    "id": "npc-176",
+    "npc_index": 176,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 249,
+    "y": 144,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "BT Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Eunhang"
+    }
+  },
+  {
+    "id": "npc-177",
+    "npc_index": 177,
+    "name_zh": "万事通",
+    "name_en": "14Doctor_Eunhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 264,
+    "y": 195,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 2,
+    "face_image": 330,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "万事通",
+      "coord_status": "exact_match",
+      "mud3_file": "14Doctor_Eunhang"
+    }
+  },
+  {
+    "id": "npc-178",
+    "npc_index": 178,
+    "name_zh": "南宫小姐",
+    "name_en": "14Quest_Euhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 264,
+    "y": 201,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "南宫小姐",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_Euhang"
+    }
+  },
+  {
+    "id": "npc-179",
+    "npc_index": 179,
+    "name_zh": "霹雳尊者",
+    "name_en": "15Magic_Eunhang1",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 265,
+    "y": 145,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霹雳尊者",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Eunhang1"
+    }
+  },
+  {
+    "id": "npc-180",
+    "npc_index": 180,
+    "name_zh": "化天先生",
+    "name_en": "15Magic_Eunhang2",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 353,
+    "y": 212,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "化天先生",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Eunhang2"
+    }
+  },
+  {
+    "id": "npc-181",
+    "npc_index": 181,
+    "name_zh": "霹雳尊者",
+    "name_en": "15Magic_Euhang",
+    "map_code": "02_001",
+    "map_name_zh": "银杏试练场1",
+    "map_desc_en": "试练场",
+    "x": 5,
+    "y": 8,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霹雳尊者",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Euhang"
+    }
+  },
+  {
+    "id": "npc-182",
+    "npc_index": 182,
+    "name_zh": "霹雳尊者",
+    "name_en": "15Magic_Euhang",
+    "map_code": "02_003",
+    "map_name_zh": "银杏试练场3",
+    "map_desc_en": "试练场",
+    "x": 91,
+    "y": 14,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霹雳尊者",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Euhang"
+    }
+  },
+  {
+    "id": "npc-183",
+    "npc_index": 183,
+    "name_zh": "霹雳尊者",
+    "name_en": "15Magic_Euhang",
+    "map_code": "02_004",
+    "map_name_zh": "银杏试练场4",
+    "map_desc_en": "试练场",
+    "x": 25,
+    "y": 41,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霹雳尊者",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Euhang"
+    }
+  },
+  {
+    "id": "npc-184",
+    "npc_index": 184,
+    "name_zh": "光秀",
+    "name_en": "09Repair_Euhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 243,
+    "y": 234,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 28,
+    "face_image": 140,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "光秀",
+      "coord_status": "exact_match",
+      "mud3_file": "09Repair_Euhang"
+    }
+  },
+  {
+    "id": "npc-185",
+    "npc_index": 185,
+    "name_zh": "智善大师",
+    "name_en": "09Bonus_Euhang",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 247,
+    "y": 242,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 37,
+    "face_image": 80,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "智善大师",
+      "coord_status": "exact_match",
+      "mud3_file": "09Bonus_Euhang"
+    }
+  },
+  {
+    "id": "npc-186",
+    "npc_index": 186,
+    "name_zh": "啊潘",
+    "name_en": "02Weapon_DoGwan",
+    "map_code": "1_001",
+    "map_name_zh": "道馆武器仓库",
+    "map_desc_en": "武器仓库",
+    "x": 14,
+    "y": 12,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 15,
+    "face_image": 150,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊潘",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_DoGwan"
+    }
+  },
+  {
+    "id": "npc-187",
+    "npc_index": 187,
+    "name_zh": "啊浩",
+    "name_en": "03Armor_DoGwan",
+    "map_code": "1_003",
+    "map_name_zh": "道馆洗衣居",
+    "map_desc_en": "洗衣住居",
+    "x": 13,
+    "y": 16,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 23,
+    "face_image": 0,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊浩",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_DoGwan"
+    }
+  },
+  {
+    "id": "npc-188",
+    "npc_index": 188,
+    "name_zh": "禄英",
+    "name_en": "04PotionMake_DoGwan",
+    "map_code": "1_006",
+    "map_name_zh": "道馆药剂师居所",
+    "map_desc_en": "药剂师住居",
+    "x": 12,
+    "y": 7,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 22,
+    "face_image": 130,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "禄英",
+      "coord_status": "exact_match",
+      "mud3_file": "04PotionMake_DoGwan"
+    }
+  },
+  {
+    "id": "npc-189",
+    "npc_index": 189,
+    "name_zh": "老药",
+    "name_en": "04Potion_DoGwan",
+    "map_code": "1_006",
+    "map_name_zh": "道馆药剂师居所",
+    "map_desc_en": "药剂师住居",
+    "x": 9,
+    "y": 10,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 25,
+    "face_image": 370,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "老药",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_DoGwan"
+    }
+  },
+  {
+    "id": "npc-190",
+    "npc_index": 190,
+    "name_zh": "书神",
+    "name_en": "05Book_DoGwan",
+    "map_code": "1_004",
+    "map_name_zh": "道馆书房",
+    "map_desc_en": "书房",
+    "x": 9,
+    "y": 11,
+    "category": "书店",
+    "services": [
+      "职业技能秘籍买卖"
+    ],
+    "image": 18,
+    "face_image": 320,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "书神",
+      "coord_status": "exact_match",
+      "mud3_file": "05Book_DoGwan"
+    }
+  },
+  {
+    "id": "npc-191",
+    "npc_index": 191,
+    "name_zh": "大老板",
+    "name_en": "07Grocery_DoGwan",
+    "map_code": "1_007",
+    "map_name_zh": "道馆仓库",
+    "map_desc_en": "仓库",
+    "x": 11,
+    "y": 14,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 17,
+    "face_image": 30,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "大老板",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_DoGwan"
+    }
+  },
+  {
+    "id": "npc-192",
+    "npc_index": 192,
+    "name_zh": "峰儿",
+    "name_en": "08Accessory_DoGwan",
+    "map_code": "1_005",
+    "map_name_zh": "道馆物品研究所",
+    "map_desc_en": "物品研究所",
+    "x": 9,
+    "y": 11,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 20,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "峰儿",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_DoGwan"
+    }
+  },
+  {
+    "id": "npc-193",
+    "npc_index": 193,
+    "name_zh": "无名老人",
+    "name_en": "14Quest_DoGwan",
+    "map_code": "1_009",
+    "map_name_zh": "无名老人隐居地",
+    "map_desc_en": "无名老人隐居地",
+    "x": 117,
+    "y": 25,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "无名老人",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_DoGwan"
+    }
+  },
+  {
+    "id": "npc-194",
+    "npc_index": 194,
+    "name_zh": "清明子",
+    "name_en": "15Magic_DoGwan",
+    "map_code": "1_002",
+    "map_name_zh": "道馆本馆",
+    "map_desc_en": "本馆",
+    "x": 11,
+    "y": 10,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 14,
+    "face_image": 340,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "清明子",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan"
+    }
+  },
+  {
+    "id": "npc-195",
+    "npc_index": 195,
+    "name_zh": "清明子",
+    "name_en": "15Magic_DoGwan",
+    "map_code": "1_008",
+    "map_name_zh": "道馆试练场1",
+    "map_desc_en": "试练场",
+    "x": 5,
+    "y": 8,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 16,
+    "face_image": 280,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "清明子",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan"
+    }
+  },
+  {
+    "id": "npc-196",
+    "npc_index": 196,
+    "name_zh": "清明子",
+    "name_en": "15Magic_DoGwan",
+    "map_code": "1_011",
+    "map_name_zh": "道馆试练场2",
+    "map_desc_en": "试练场",
+    "x": 91,
+    "y": 14,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 14,
+    "face_image": 340,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "清明子",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan"
+    }
+  },
+  {
+    "id": "npc-197",
+    "npc_index": 197,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan0",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 44,
+    "y": 25,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan0"
+    }
+  },
+  {
+    "id": "npc-198",
+    "npc_index": 198,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan1",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 26,
+    "y": 20,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan1"
+    }
+  },
+  {
+    "id": "npc-199",
+    "npc_index": 199,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan2",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 29,
+    "y": 23,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan2"
+    }
+  },
+  {
+    "id": "npc-200",
+    "npc_index": 200,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan3",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 23,
+    "y": 23,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan3"
+    }
+  },
+  {
+    "id": "npc-201",
+    "npc_index": 201,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan4",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 35,
+    "y": 15,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan4"
+    }
+  },
+  {
+    "id": "npc-202",
+    "npc_index": 202,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan5",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 26,
+    "y": 26,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan5"
+    }
+  },
+  {
+    "id": "npc-203",
+    "npc_index": 203,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan6",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 25,
+    "y": 41,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan6"
+    }
+  },
+  {
+    "id": "npc-204",
+    "npc_index": 204,
+    "name_zh": "变异骷髅",
+    "name_en": "15Magic_DoGwan7",
+    "map_code": "1_013",
+    "map_name_zh": "道馆试练场3",
+    "map_desc_en": "试练场",
+    "x": 10,
+    "y": 24,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 58,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "变异骷髅",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_DoGwan7"
+    }
+  },
+  {
+    "id": "npc-205",
+    "npc_index": 205,
+    "name_zh": "王铁匠",
+    "name_en": "02Weapon_Oasis",
+    "map_code": "4_001",
+    "map_name_zh": "努玛武器店",
+    "map_desc_en": "武器店",
+    "x": 7,
+    "y": 13,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "王铁匠",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Oasis"
+    }
+  },
+  {
+    "id": "npc-206",
+    "npc_index": 206,
+    "name_zh": "织女",
+    "name_en": "03Armor_Oasis",
+    "map_code": "4_004",
+    "map_name_zh": "努玛布匹店",
+    "map_desc_en": "布匹店",
+    "x": 9,
+    "y": 8,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "织女",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Oasis"
+    }
+  },
+  {
+    "id": "npc-207",
+    "npc_index": 207,
+    "name_zh": "白老中医",
+    "name_en": "04Potion_Oasis",
+    "map_code": "4_003",
+    "map_name_zh": "努玛中药商",
+    "map_desc_en": "中药商",
+    "x": 10,
+    "y": 10,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 10,
+    "face_image": 20,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "白老中医",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Oasis"
+    }
+  },
+  {
+    "id": "npc-208",
+    "npc_index": 208,
+    "name_zh": "绿洲仓库管家",
+    "name_en": "06Inn_Oasis",
+    "map_code": "4_003",
+    "map_name_zh": "努玛中药商",
+    "map_desc_en": "中药商",
+    "x": 8,
+    "y": 15,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 39,
+    "face_image": 230,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "绿洲仓库管家",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Oasis"
+    }
+  },
+  {
+    "id": "npc-209",
+    "npc_index": 209,
+    "name_zh": "梅山侠",
+    "name_en": "08Astrologist_Oasis",
+    "map_code": "4_005",
+    "map_name_zh": "努玛占卜屋",
+    "map_desc_en": "占卜屋",
+    "x": 14,
+    "y": 22,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 38,
+    "face_image": 220,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "梅山侠",
+      "coord_status": "exact_match",
+      "mud3_file": "08Astrologist_Oasis"
+    }
+  },
+  {
+    "id": "npc-210",
+    "npc_index": 210,
+    "name_zh": "石宇",
+    "name_en": "10Material_Oasis",
+    "map_code": "4_003",
+    "map_name_zh": "努玛中药商",
+    "map_desc_en": "中药商",
+    "x": 12,
+    "y": 8,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "石宇",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Oasis"
+    }
+  },
+  {
+    "id": "npc-211",
+    "npc_index": 211,
+    "name_zh": "勇汉",
+    "name_en": "02Weapon_Samak1",
+    "map_code": "5_002",
+    "map_name_zh": "盟重武器商",
+    "map_desc_en": "武器商",
+    "x": 8,
+    "y": 17,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "勇汉",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Samak1"
+    }
+  },
+  {
+    "id": "npc-212",
+    "npc_index": 212,
+    "name_zh": "忠云",
+    "name_en": "02Weapon_Samak2",
+    "map_code": "5_002",
+    "map_name_zh": "盟重武器商",
+    "map_desc_en": "武器商",
+    "x": 7,
+    "y": 19,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "忠云",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Samak2"
+    }
+  },
+  {
+    "id": "npc-213",
+    "npc_index": 213,
+    "name_zh": "晓敏",
+    "name_en": "03Armor_Samak",
+    "map_code": "5_004",
+    "map_name_zh": "盟重服饰店",
+    "map_desc_en": "服饰店",
+    "x": 15,
+    "y": 15,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "晓敏",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Samak"
+    }
+  },
+  {
+    "id": "npc-214",
+    "npc_index": 214,
+    "name_zh": "医神",
+    "name_en": "04Potion_Samak",
+    "map_code": "5_003",
+    "map_name_zh": "盟重药房",
+    "map_desc_en": "药房",
+    "x": 13,
+    "y": 17,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "医神",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Samak"
+    }
+  },
+  {
+    "id": "npc-215",
+    "npc_index": 215,
+    "name_zh": "沙漠仓库管家",
+    "name_en": "06Inn_Samak",
+    "map_code": "5_006",
+    "map_name_zh": "盟重仓库",
+    "map_desc_en": "仓库",
+    "x": 12,
+    "y": 23,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 39,
+    "face_image": 230,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "沙漠仓库管家",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Samak"
+    }
+  },
+  {
+    "id": "npc-216",
+    "npc_index": 216,
+    "name_zh": "雪儿",
+    "name_en": "08Accessory_Samak",
+    "map_code": "5_005",
+    "map_name_zh": "盟重饰品店",
+    "map_desc_en": "饰品店",
+    "x": 9,
+    "y": 11,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "雪儿",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Samak"
+    }
+  },
+  {
+    "id": "npc-217",
+    "npc_index": 217,
+    "name_zh": "啊俊",
+    "name_en": "09ChangeMoney_Samak",
+    "map_code": "5_006",
+    "map_name_zh": "盟重仓库",
+    "map_desc_en": "仓库",
+    "x": 7,
+    "y": 21,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊俊",
+      "coord_status": "exact_match",
+      "mud3_file": "09ChangeMoney_Samak"
+    }
+  },
+  {
+    "id": "npc-218",
+    "npc_index": 218,
+    "name_zh": "啊全",
+    "name_en": "07Grocery_Ant",
+    "map_code": "6",
+    "map_name_zh": "沙漠绿洲",
+    "map_desc_en": "沙漠",
+    "x": 284,
+    "y": 723,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊全",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Ant"
+    }
+  },
+  {
+    "id": "npc-219",
+    "npc_index": 219,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "6",
+    "map_name_zh": "沙漠绿洲",
+    "map_desc_en": "沙漠",
+    "x": 273,
+    "y": 731,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Ant"
+    }
+  },
+  {
+    "id": "npc-220",
+    "npc_index": 220,
+    "name_zh": "英龙",
+    "name_en": "02Weapon_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 354,
+    "y": 297,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "英龙",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Mongchon"
+    }
+  },
+  {
+    "id": "npc-221",
+    "npc_index": 221,
+    "name_zh": "晓薇",
+    "name_en": "03Armor_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 324,
+    "y": 277,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "晓薇",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Mongchon"
+    }
+  },
+  {
+    "id": "npc-222",
+    "npc_index": 222,
+    "name_zh": "凌峰",
+    "name_en": "04Potion_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 289,
+    "y": 289,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "凌峰",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Mongchon"
+    }
+  },
+  {
+    "id": "npc-223",
+    "npc_index": 223,
+    "name_zh": "丘叔",
+    "name_en": "06Inn_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 323,
+    "y": 310,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 39,
+    "face_image": 230,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "丘叔",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Mongchon"
+    }
+  },
+  {
+    "id": "npc-224",
+    "npc_index": 224,
+    "name_zh": "龙叔",
+    "name_en": "07Grocery_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 293,
+    "y": 278,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "龙叔",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Mongchon"
+    }
+  },
+  {
+    "id": "npc-225",
+    "npc_index": 225,
+    "name_zh": "善颖",
+    "name_en": "08Accessory_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 311,
+    "y": 273,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "善颖",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Mongchon"
+    }
+  },
+  {
+    "id": "npc-226",
+    "npc_index": 226,
+    "name_zh": "啊贵",
+    "name_en": "10Material_Mongchon",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 287,
+    "y": 290,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊贵",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Mongchon"
+    }
+  },
+  {
+    "id": "npc-227",
+    "npc_index": 227,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 349,
+    "y": 329,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Mongchon1"
+    }
+  },
+  {
+    "id": "npc-228",
+    "npc_index": 228,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 271,
+    "y": 267,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Mongchon2"
+    }
+  },
+  {
+    "id": "npc-229",
+    "npc_index": 229,
+    "name_zh": "武术教头",
+    "name_en": "15Magic_Mongchon1",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 300,
+    "y": 299,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 15,
+    "face_image": 150,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "武术教头",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Mongchon1"
+    }
+  },
+  {
+    "id": "npc-230",
+    "npc_index": 230,
+    "name_zh": "雷翁断珠",
+    "name_en": "15Magic_Mongchon2",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 290,
+    "y": 299,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 18,
+    "face_image": 320,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "雷翁断珠",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Mongchon2"
+    }
+  },
+  {
+    "id": "npc-231",
+    "npc_index": 231,
+    "name_zh": "盟重道长",
+    "name_en": "15Magic_Mongchon3",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 297,
+    "y": 295,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 16,
+    "face_image": 280,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "盟重道长",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Mongchon3"
+    }
+  },
+  {
+    "id": "npc-232",
+    "npc_index": 232,
+    "name_zh": "泼皮路白",
+    "name_en": "15Magic_Mongchon4",
+    "map_code": "74",
+    "map_name_zh": "盟重县",
+    "map_desc_en": "盟重县",
+    "x": 324,
+    "y": 108,
+    "category": "修炼",
+    "services": [
+      "高阶法术研修",
+      "技能指导与境界突破"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "泼皮路白",
+      "coord_status": "exact_match",
+      "mud3_file": "15Magic_Mongchon4"
+    }
+  },
+  {
+    "id": "npc-233",
+    "npc_index": 233,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "75",
+    "map_name_zh": "石阁庙",
+    "map_desc_en": "石阁庙",
+    "x": 184,
+    "y": 90,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_SukGak"
+    }
+  },
+  {
+    "id": "npc-234",
+    "npc_index": 234,
+    "name_zh": "次庸",
+    "name_en": "04Potion_RedZone",
+    "map_code": "81",
+    "map_name_zh": "流放岛",
+    "map_desc_en": "流放岛",
+    "x": 138,
+    "y": 301,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 28,
+    "face_image": 140,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "次庸",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_RedZone"
+    }
+  },
+  {
+    "id": "npc-235",
+    "npc_index": 235,
+    "name_zh": "小望",
+    "name_en": "09Lucky_RedZone",
+    "map_code": "81",
+    "map_name_zh": "流放岛",
+    "map_desc_en": "流放岛",
+    "x": 119,
+    "y": 297,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 38,
+    "face_image": 220,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "小望",
+      "coord_status": "exact_match",
+      "mud3_file": "09Lucky_RedZone"
+    }
+  },
+  {
+    "id": "npc-236",
+    "npc_index": 236,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "81",
+    "map_name_zh": "流放岛",
+    "map_desc_en": "流放岛",
+    "x": 129,
+    "y": 265,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 140,
+    "entry_page": "LL Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_RedZone"
+    }
+  },
+  {
+    "id": "npc-237",
+    "npc_index": 237,
+    "name_zh": "奸商欧阳",
+    "name_en": "07Grocery_SkeletonCave",
+    "map_code": "DM001",
+    "map_name_zh": "兽人古墓奸商",
+    "map_desc_en": "奸商",
+    "x": 4,
+    "y": 6,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 9,
+    "face_image": 90,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "奸商欧阳",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_SkeletonCave"
+    }
+  },
+  {
+    "id": "npc-238",
+    "npc_index": 238,
+    "name_zh": "云发",
+    "name_en": "14Quest_SkeletonCave",
+    "map_code": "D012_001",
+    "map_name_zh": "天然洞穴2层",
+    "map_desc_en": "天然洞穴2层",
+    "x": 13,
+    "y": 11,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 18,
+    "face_image": 320,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "云发",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SkeletonCave"
+    }
+  },
+  {
+    "id": "npc-239",
+    "npc_index": 239,
+    "name_zh": "云发",
+    "name_en": "14Quest_SkeletonCave",
+    "map_code": "E002_001",
+    "map_name_zh": "半兽天然洞穴深处",
+    "map_desc_en": "半兽天然洞穴",
+    "x": 9,
+    "y": 11,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 18,
+    "face_image": 320,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "云发",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SkeletonCave"
+    }
+  },
+  {
+    "id": "npc-240",
+    "npc_index": 240,
+    "name_zh": "嘉登",
+    "name_en": "14Quest_SkeletonCave",
+    "map_code": "E002",
+    "map_name_zh": "半兽天然洞穴",
+    "map_desc_en": "半兽天然洞穴",
+    "x": 65,
+    "y": 12,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 15,
+    "face_image": 150,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "嘉登",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SkeletonCave"
+    }
+  },
+  {
+    "id": "npc-241",
+    "npc_index": 241,
+    "name_zh": "无理的道士",
+    "name_en": "14Quest_SkeletonCave",
+    "map_code": "DM002",
+    "map_name_zh": "兽人古墓王陵",
+    "map_desc_en": "王陵",
+    "x": 14,
+    "y": 22,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "无理的道士",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SkeletonCave"
+    }
+  },
+  {
+    "id": "npc-242",
+    "npc_index": 242,
+    "name_zh": "矿山老人",
+    "name_en": "09NotBlocker_ZombieCave",
+    "map_code": "D431",
+    "map_name_zh": "北部矿山入口",
+    "map_desc_en": "北部矿山入口",
+    "x": 29,
+    "y": 175,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "矿山老人",
+      "coord_status": "exact_match",
+      "mud3_file": "09NotBlocker_ZombieCave"
+    }
+  },
+  {
+    "id": "npc-243",
+    "npc_index": 243,
+    "name_zh": "署箭",
+    "name_en": "14Quest_ZombieCave",
+    "map_code": "E402_001",
+    "map_name_zh": "北部连接通路",
+    "map_desc_en": "连接通路",
+    "x": 13,
+    "y": 10,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "署箭",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_ZombieCave"
+    }
+  },
+  {
+    "id": "npc-244",
+    "npc_index": 244,
+    "name_zh": "署箭",
+    "name_en": "14Quest_ZombieCave",
+    "map_code": "D404_002",
+    "map_name_zh": "废矿矿山地下2层",
+    "map_desc_en": "废矿矿山地下2层",
+    "x": 22,
+    "y": 11,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 48,
+    "face_image": 300,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "署箭",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_ZombieCave"
+    }
+  },
+  {
+    "id": "npc-245",
+    "npc_index": 245,
+    "name_zh": "牛老道",
+    "name_en": "14Quest_WoomaPalace",
+    "map_code": "D023_001",
+    "map_name_zh": "沃玛神殿师徒关",
+    "map_desc_en": "沃玛神殿师徒关",
+    "x": 17,
+    "y": 21,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 20,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "牛老道",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_WoomaPalace"
+    }
+  },
+  {
+    "id": "npc-246",
+    "npc_index": 246,
+    "name_zh": "石堆",
+    "name_en": "14Quest_WoomaPalace",
+    "map_code": "D022",
+    "map_name_zh": "沃玛神殿1层",
+    "map_desc_en": "沃玛神殿1层",
+    "x": 207,
+    "y": 47,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 55,
+    "face_image": 230,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "石堆",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_WoomaPalace"
+    }
+  },
+  {
+    "id": "npc-247",
+    "npc_index": 247,
+    "name_zh": "书架",
+    "name_en": "14Quest_WoomaPalace",
+    "map_code": "D022_001",
+    "map_name_zh": "沃玛神殿1层暗室",
+    "map_desc_en": "沃玛神殿1层",
+    "x": 64,
+    "y": 21,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 54,
+    "face_image": 310,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "书架",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_WoomaPalace"
+    }
+  },
+  {
+    "id": "npc-248",
+    "npc_index": 248,
+    "name_zh": "魂滴",
+    "name_en": "04Potion_Zuma",
+    "map_code": "D5071",
+    "map_name_zh": "祖玛神殿7层大厅",
+    "map_desc_en": "祖玛神殿7层大厅",
+    "x": 20,
+    "y": 23,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 28,
+    "face_image": 140,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "魂滴",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Zuma"
+    }
+  },
+  {
+    "id": "npc-249",
+    "npc_index": 249,
+    "name_zh": "司马云天",
+    "name_en": "02Weapon_HalfTemple",
+    "map_code": "D1110",
+    "map_name_zh": "潘夜神殿大厅",
+    "map_desc_en": "潘夜神殿大厅",
+    "x": 27,
+    "y": 13,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 36,
+    "face_image": 181,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "司马云天",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_HalfTemple"
+    }
+  },
+  {
+    "id": "npc-250",
+    "npc_index": 250,
+    "name_zh": "司马武林",
+    "name_en": "09WideUse_HalfTemple",
+    "map_code": "D1110",
+    "map_name_zh": "潘夜神殿大厅",
+    "map_desc_en": "潘夜神殿大厅",
+    "x": 7,
+    "y": 24,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 40,
+    "face_image": 70,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "司马武林",
+      "coord_status": "exact_match",
+      "mud3_file": "09WideUse_HalfTemple"
+    }
+  },
+  {
+    "id": "npc-251",
+    "npc_index": 251,
+    "name_zh": "司马化林",
+    "name_en": "09Repair_HalfTemple",
+    "map_code": "D1110",
+    "map_name_zh": "潘夜神殿大厅",
+    "map_desc_en": "潘夜神殿大厅",
+    "x": 7,
+    "y": 20,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 37,
+    "face_image": 80,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "司马化林",
+      "coord_status": "exact_match",
+      "mud3_file": "09Repair_HalfTemple"
+    }
+  },
+  {
+    "id": "npc-252",
+    "npc_index": 252,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "D1110",
+    "map_name_zh": "潘夜神殿大厅",
+    "map_desc_en": "潘夜神殿大厅",
+    "x": 15,
+    "y": 18,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 140,
+    "entry_page": "Teleport Banya Hall",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfTemple1"
+    }
+  },
+  {
+    "id": "npc-253",
+    "npc_index": 253,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "D1110",
+    "map_name_zh": "潘夜神殿大厅",
+    "map_desc_en": "潘夜神殿大厅",
+    "x": 28,
+    "y": 31,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 140,
+    "entry_page": "Teleport Banya Hall",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfTemple2"
+    }
+  },
+  {
+    "id": "npc-254",
+    "npc_index": 254,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "D11031",
+    "map_name_zh": "潘夜神殿3层西部",
+    "map_desc_en": "潘夜神殿3层西部",
+    "x": 199,
+    "y": 257,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 140,
+    "entry_page": "Teleport Banya Hall",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfTemple"
+    }
+  },
+  {
+    "id": "npc-255",
+    "npc_index": 255,
+    "name_zh": "花仙",
+    "name_en": "04Potion_SinGiSun",
+    "map_code": "D90221",
+    "map_name_zh": "神舰医务室",
+    "map_desc_en": "医务室",
+    "x": 22,
+    "y": 20,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 49,
+    "face_image": 160,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "花仙",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_SinGiSun"
+    }
+  },
+  {
+    "id": "npc-260",
+    "npc_index": 260,
+    "name_zh": "霸王幽灵",
+    "name_en": "14Quest_SinGiSun",
+    "map_code": "D900",
+    "map_name_zh": "神舰入口",
+    "map_desc_en": "神舰入口",
+    "x": 45,
+    "y": 58,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 76,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霸王幽灵",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SinGiSun"
+    }
+  },
+  {
+    "id": "npc-261",
+    "npc_index": 261,
+    "name_zh": "霸王幽灵",
+    "name_en": "14Quest_SinGiSun",
+    "map_code": "D90323",
+    "map_name_zh": "神舰海图室",
+    "map_desc_en": "海图室",
+    "x": 16,
+    "y": 8,
+    "category": "任务",
+    "services": [
+      "主线/支线剧情指引",
+      "历练任务接取与交付"
+    ],
+    "image": 76,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "霸王幽灵",
+      "coord_status": "exact_match",
+      "mud3_file": "14Quest_SinGiSun"
+    }
+  },
+  {
+    "id": "npc-262",
+    "npc_index": 262,
+    "name_zh": "瓦慈",
+    "name_en": "01Meet_NuMa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 126,
+    "y": 86,
+    "category": "肉店",
+    "services": [
+      "肉品收购与买卖",
+      "高品质纯度肉"
+    ],
+    "image": 77,
+    "face_image": 30,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "瓦慈",
+      "coord_status": "exact_match",
+      "mud3_file": "01Meet_NuMa"
+    }
+  },
+  {
+    "id": "npc-263",
+    "npc_index": 263,
+    "name_zh": "图木勒",
+    "name_en": "02Weapon_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 145,
+    "y": 82,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 77,
+    "face_image": 30,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "图木勒",
+      "coord_status": "exact_match",
+      "mud3_file": "02Weapon_Numa"
+    }
+  },
+  {
+    "id": "npc-264",
+    "npc_index": 264,
+    "name_zh": "儒帕",
+    "name_en": "03Armor_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 141,
+    "y": 108,
+    "category": "防具",
+    "services": [
+      "衣服/头盔/鞋靴买卖",
+      "防具修理"
+    ],
+    "image": 78,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "儒帕",
+      "coord_status": "exact_match",
+      "mud3_file": "03Armor_Numa"
+    }
+  },
+  {
+    "id": "npc-265",
+    "npc_index": 265,
+    "name_zh": "啊莫",
+    "name_en": "04Potion_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 168,
+    "y": 125,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "疗伤药/解毒药"
+    ],
+    "image": 80,
+    "face_image": 20,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊莫",
+      "coord_status": "exact_match",
+      "mud3_file": "04Potion_Numa"
+    }
+  },
+  {
+    "id": "npc-266",
+    "npc_index": 266,
+    "name_zh": "啊勒",
+    "name_en": "06Inn_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 168,
+    "y": 84,
+    "category": "仓库",
+    "services": [
+      "个人仓库保管",
+      "物品存取"
+    ],
+    "image": 79,
+    "face_image": 200,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "啊勒",
+      "coord_status": "exact_match",
+      "mud3_file": "06Inn_Numa"
+    }
+  },
+  {
+    "id": "npc-267",
+    "npc_index": 267,
+    "name_zh": "肃良佳",
+    "name_en": "07Grocery_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 127,
+    "y": 118,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 81,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "肃良佳",
+      "coord_status": "exact_match",
+      "mud3_file": "07Grocery_Numa"
+    }
+  },
+  {
+    "id": "npc-268",
+    "npc_index": 268,
+    "name_zh": "羽霞",
+    "name_en": "08Accessory_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 155,
+    "y": 105,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 78,
+    "face_image": 31,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "羽霞",
+      "coord_status": "exact_match",
+      "mud3_file": "08Accessory_Numa"
+    }
+  },
+  {
+    "id": "npc-269",
+    "npc_index": 269,
+    "name_zh": "禹老",
+    "name_en": "10Material_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 141,
+    "y": 90,
+    "category": "收购",
+    "services": [
+      "矿石材料/特殊战利品收购",
+      "古玩鉴宝"
+    ],
+    "image": 81,
+    "face_image": 431,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "禹老",
+      "coord_status": "exact_match",
+      "mud3_file": "10Material_Numa"
+    }
+  },
+  {
+    "id": "npc-270",
+    "npc_index": 270,
+    "name_zh": "牢牲",
+    "name_en": "09HorseMarket_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 147,
+    "y": 106,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 77,
+    "face_image": 30,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "牢牲",
+      "coord_status": "exact_match",
+      "mud3_file": "09HorseMarket_Numa"
+    }
+  },
+  {
+    "id": "npc-271",
+    "npc_index": 271,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 184,
+    "y": 136,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "II Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Numa"
+    }
+  },
+  {
+    "id": "npc-272",
+    "npc_index": 272,
+    "name_zh": "夏柯",
+    "name_en": "17NuMaSahaka_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 148,
+    "y": 84,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 86,
+    "face_image": 430,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "夏柯",
+      "coord_status": "exact_match",
+      "mud3_file": "17NuMaSahaka_Numa"
+    }
+  },
+  {
+    "id": "npc-273",
+    "npc_index": 273,
+    "name_zh": "紫霞神女",
+    "name_en": "17Zaha_Numa",
+    "map_code": "41",
+    "map_name_zh": "诺玛沙漠",
+    "map_desc_en": "诺玛沙漠",
+    "x": 151,
+    "y": 121,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 35,
+    "face_image": 40,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "紫霞神女",
+      "coord_status": "exact_match",
+      "mud3_file": "17Zaha_Numa"
+    }
+  },
+  {
+    "id": "npc-274",
+    "npc_index": 274,
+    "name_zh": "云中子",
+    "name_en": "20Gmatch",
+    "map_code": "02",
+    "map_name_zh": "银杏山谷",
+    "map_desc_en": "银杏山谷",
+    "x": 254,
+    "y": 227,
+    "category": "特殊",
+    "services": [
+      "场景剧情互动",
+      "向导问询"
+    ],
+    "image": 31,
+    "face_image": 350,
+    "entry_page": "",
+    "mud3_match": {
+      "mud3_name": "云中子",
+      "coord_status": "exact_match",
+      "mud3_file": "20Gmatch"
+    }
+  },
+  {
+    "id": "npc-275",
+    "npc_index": 275,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 222,
+    "y": 159,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "SK Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Sabuk"
+    }
+  },
+  {
+    "id": "npc-276",
+    "npc_index": 276,
+    "name_zh": "沙巴克炼化师",
+    "name_en": "Maddox",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 208,
+    "y": 153,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 27,
+    "face_image": 250,
+    "entry_page": "Weapon Refiner",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-277",
+    "npc_index": 277,
+    "name_zh": "沙巴克药师",
+    "name_en": "Perry",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 209,
+    "y": 91,
+    "category": "药店",
+    "services": [
+      "金创药/魔法药买卖",
+      "万年雪霜与疗伤药"
+    ],
+    "image": 1,
+    "face_image": 170,
+    "entry_page": "Basic Potion Main - Castle",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-278",
+    "npc_index": 278,
+    "name_zh": "沙巴克杂货商",
+    "name_en": "Kellen",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 211,
+    "y": 148,
+    "category": "杂货",
+    "services": [
+      "随机卷轴/回城卷",
+      "火把/护身符/修复油"
+    ],
+    "image": 3,
+    "face_image": 180,
+    "entry_page": "Essentials Main - Castle",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-279",
+    "npc_index": 279,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 51,
+    "y": 222,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 140,
+    "entry_page": "SK1 Teleporter",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-280",
+    "npc_index": 280,
+    "name_zh": "沙巴克首饰商",
+    "name_en": "Denise",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 239,
+    "y": 120,
+    "category": "首饰",
+    "services": [
+      "项链/手镯/戒指买卖",
+      "首饰修理"
+    ],
+    "image": 12,
+    "face_image": 122,
+    "entry_page": "Jewellery Main",
+    "mud3_match": {
+      "mud3_name": "沙巴克旗帜",
+      "coord_status": "near_match (dist=4, mud3_xy=(240,123))",
+      "mud3_file": "18SubFlag_Sabuk"
+    }
+  },
+  {
+    "id": "npc-281",
+    "npc_index": 281,
+    "name_zh": "沙巴克鉴宝师",
+    "name_en": "Mark",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 203,
+    "y": 103,
+    "category": "收购",
+    "services": [
+      "特殊材料收购",
+      "古物鉴定"
+    ],
+    "image": 34,
+    "face_image": 10,
+    "entry_page": "Collector BuySell",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-282",
+    "npc_index": 282,
+    "name_zh": "沙巴克裁缝",
+    "name_en": "Kimberly",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 235,
+    "y": 115,
+    "category": "防具",
+    "services": [
+      "衣服与头盔买卖",
+      "防具备用修理"
+    ],
+    "image": 7,
+    "face_image": 50,
+    "entry_page": "Armour Main",
+    "mud3_match": {
+      "mud3_name": "沙巴克旗帜",
+      "coord_status": "near_match (dist=5, mud3_xy=(236,119))",
+      "mud3_file": "18SubFlag_Sabuk"
+    }
+  },
+  {
+    "id": "npc-283",
+    "npc_index": 283,
+    "name_zh": "沙巴克武器商",
+    "name_en": "Jarvis",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 206,
+    "y": 154,
+    "category": "武器",
+    "services": [
+      "武器买卖",
+      "武器普通修理",
+      "武器特殊修理"
+    ],
+    "image": 0,
+    "face_image": 110,
+    "entry_page": "Weapon Main",
+    "mud3_match": {
+      "mud3_name": "沙巴克旗帜",
+      "coord_status": "near_match (dist=4, mud3_xy=(205,157))",
+      "mud3_file": "18MainFlag_Sabuk"
+    }
+  },
+  {
+    "id": "npc-368",
+    "npc_index": 368,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 507,
+    "y": 313,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "BT Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Bichon2"
+    }
+  },
+  {
+    "id": "npc-369",
+    "npc_index": 369,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 370,
+    "y": 336,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "BT Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Bichon3"
+    }
+  },
+  {
+    "id": "npc-370",
+    "npc_index": 370,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "0",
+    "map_name_zh": "比奇县",
+    "map_desc_en": "Bichon Town",
+    "x": 379,
+    "y": 444,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "BT Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Bichon4"
+    }
+  },
+  {
+    "id": "npc-371",
+    "npc_index": 371,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "2",
+    "map_name_zh": "潘夜村",
+    "map_desc_en": "Banya Village",
+    "x": 314,
+    "y": 193,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "BV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_SnakeVally2"
+    }
+  },
+  {
+    "id": "npc-374",
+    "npc_index": 374,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "3",
+    "map_name_zh": "沙巴克城",
+    "map_desc_en": "Sabuk Keep",
+    "x": 71,
+    "y": 140,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "SK Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_Sabuk"
+    }
+  },
+  {
+    "id": "npc-375",
+    "npc_index": 375,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 63,
+    "y": 195,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-376",
+    "npc_index": 376,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "5",
+    "map_name_zh": "盟重土城",
+    "map_desc_en": "Desert Mud Fortress",
+    "x": 227,
+    "y": 128,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 56,
+    "face_image": 0,
+    "entry_page": "MW Teleporter",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  },
+  {
+    "id": "npc-377",
+    "npc_index": 377,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 113,
+    "y": 463,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "FV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfNight2"
+    }
+  },
+  {
+    "id": "npc-378",
+    "npc_index": 378,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 668,
+    "y": 388,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "FV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfNight3"
+    }
+  },
+  {
+    "id": "npc-379",
+    "npc_index": 379,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 448,
+    "y": 579,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "FV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfNight4"
+    }
+  },
+  {
+    "id": "npc-380",
+    "npc_index": 380,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "8",
+    "map_name_zh": "雪原村",
+    "map_desc_en": "Frost Village",
+    "x": 424,
+    "y": 239,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "FV Teleporter",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfNight5"
+    }
+  },
+  {
+    "id": "npc-381",
+    "npc_index": 381,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "D1105",
+    "map_name_zh": "祖玛神殿5层",
+    "map_desc_en": "Zuma Temple Lv 5",
+    "x": 219,
+    "y": 99,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "Teleport Banya Hall",
+    "mud3_match": {
+      "mud3_name": "六面神石",
+      "coord_status": "exact_match",
+      "mud3_file": "13Move_HalfTemple"
+    }
+  },
+  {
+    "id": "npc-382",
+    "npc_index": 382,
+    "name_zh": "六面神石",
+    "name_en": "Hexa Holy Stone",
+    "map_code": "D1115",
+    "map_name_zh": "潘夜神殿8层",
+    "map_desc_en": "潘夜神殿8层",
+    "x": 358,
+    "y": 353,
+    "category": "传送",
+    "services": [
+      "城镇与地下城瞬间移动传送"
+    ],
+    "image": 57,
+    "face_image": 0,
+    "entry_page": "Teleport Banya Hall",
+    "mud3_match": {
+      "mud3_name": null,
+      "coord_status": "exact",
+      "mud3_file": null
+    }
+  }
+]

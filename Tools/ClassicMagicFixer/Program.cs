@@ -154,6 +154,9 @@ switch (mode)
     case "hexastone":
         return HexaStoneAligner.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 
+    case "alignnpcnames":
+        return NPCNameAligner.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
+
     case "setupguards":
         return SetupGuardsSystem.Run(root, args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 
@@ -224,6 +227,35 @@ switch (mode)
             }
         }
         Console.WriteLine($"Total NPCs reachable via mapInfo.Regions: {npcsInRegions.Count}");
+        return ExitOk;
+    }
+
+    case "dumpallnpcs":
+    {
+        var session = new Session(SessionMode.System, root, root + "Backup/");
+        session.Initialize(typeof(NPCInfo).Assembly, typeof(MapInfo).Assembly, typeof(MapRegion).Assembly);
+        var npcs = session.GetCollection<NPCInfo>().Binding.OrderBy(n => n.Index).ToList();
+        var list = npcs.Select(n => new
+        {
+            Index = n.Index,
+            NPCName = n.NPCName,
+            MapIndex = n.Region?.Map?.Index ?? -1,
+            MapFile = n.Region?.Map?.FileName ?? "",
+            MapDesc = n.Region?.Map?.Description ?? "",
+            X = n.Region?.PointRegion?.FirstOrDefault().X ?? 0,
+            Y = n.Region?.PointRegion?.FirstOrDefault().Y ?? 0,
+            Image = n.Image,
+            FaceImage = n.FaceImage,
+            EntryPage = n.EntryPage?.Description ?? "",
+            Category = n.Category.ToString(),
+            GoodsIndex = n.GoodsIndex,
+            MapIcon = n.MapIcon.ToString(),
+            HasRegion = n.Region != null,
+            HasMap = n.Region?.Map != null
+        }).ToList();
+        string outPath = args.Length >= 3 ? args[2] : "/tmp/zircon_npcs_current.json";
+        System.IO.File.WriteAllText(outPath, System.Text.Json.JsonSerializer.Serialize(list, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"Dumped {list.Count} NPCs to {outPath}");
         return ExitOk;
     }
 

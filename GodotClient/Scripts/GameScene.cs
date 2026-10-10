@@ -277,10 +277,27 @@ public partial class GameScene : Control
     public bool IsTamingActive => _horseTameDialog?.Visible == true;
     public bool IsMounted => _playerHorse != HorseType.None;
 
+    /// <summary>
+    /// 打开仓库窗口。NPC 动作链路 (S.NPCStorage) 与快捷键共用该入口，
+    /// 统一走 WindowManager 以保证 Z 序，并刷新行数/绑定。
+    /// </summary>
+    public void OpenNpcStorage()
+    {
+        if (_storageDialog == null) return;
+        WindowManager.Open(_storageDialog, _uiLayer);
+        _storageDialog.RefreshStorage();
+    }
+
+    /// <summary>快捷键切换仓库窗口：关掉已开窗口，否则按 NPC 同一条路径打开。</summary>
     public void ToggleStorageWindow()
     {
-        if (_storageDialog != null)
-            WindowManager.Toggle(_storageDialog, _uiLayer);
+        if (_storageDialog == null) return;
+        if (_storageDialog.Visible)
+        {
+            WindowManager.Close(_storageDialog);
+            return;
+        }
+        OpenNpcStorage();
     }
 
     public void LeaveGame()
@@ -1405,6 +1422,9 @@ public partial class GameScene : Control
         TrackEvent<S.NPCRepair>(h => _net.Connection.NPCRepairEvent += h,
             h => _net.Connection.NPCRepairEvent -= h,
             packet => _npcDialog?.RepairResult(packet));
+        TrackEvent<S.NPCStorage>(h => _net.Connection.NPCStorageEvent += h,
+            h => _net.Connection.NPCStorageEvent -= h,
+            _ => OpenNpcStorage());
         TrackEvent<S.BundleOpen>(h => _net.Connection.BundleOpenEvent += h,
             h => _net.Connection.BundleOpenEvent -= h,
             p => _bundleDialog?.Open(p.Slot, p.Items));
@@ -2178,7 +2198,7 @@ public partial class GameScene : Control
                 WindowManager.Toggle(_inventoryDialog, _uiLayer);
                 break;
             case KeyBindAction.StorageWindow:
-                WindowManager.Toggle(_storageDialog, _uiLayer);
+                ToggleStorageWindow();
                 break;
             case KeyBindAction.BeltWindow:
                 WindowManager.Toggle(_beltDialog, _uiLayer);

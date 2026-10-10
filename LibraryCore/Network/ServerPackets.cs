@@ -662,6 +662,12 @@ namespace Library.Network.ServerPackets
             Page = Globals.NPCPageList.Binding.FirstOrDefault(x => x.Index == Index);
         }
     }
+
+    public sealed class NPCStorage : Packet
+    {
+        public uint ObjectID { get; set; }
+    }
+
     public sealed class ItemsChanged : Packet
     {
         public List<CellLinkInfo> Links { get; set; }

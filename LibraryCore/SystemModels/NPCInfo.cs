@@ -1072,7 +1072,9 @@ namespace Library.SystemModels
         ChangeDataValue = 20,
         SetDataValue = 21,
 
-        PromoteFame = 22
+        PromoteFame = 22,
+
+        Storage = 23
     }
 
     public enum NPCValueType

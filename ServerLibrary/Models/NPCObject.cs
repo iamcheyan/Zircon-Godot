@@ -321,6 +321,9 @@ namespace Server.Models
                             item.IntValue1 = action.IntParameter2;
                         }
                         break;
+                    case NPCActionType.Storage:
+                        ob.Enqueue(new S.NPCStorage { ObjectID = ObjectID });
+                        break;
                 }
             }
         }

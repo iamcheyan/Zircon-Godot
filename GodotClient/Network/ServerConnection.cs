@@ -125,6 +125,7 @@ public partial class ServerConnection : BaseConnection
     public event Action<S.MarriageInvite> MarriageInviteEvent;
     public event Action<S.ObjectNPC> ObjectNPCEvent;
     public event Action<S.NPCResponse> NPCResponseEvent;
+    public event Action<S.NPCStorage> NPCStorageEvent;
     public event Action NPCClosedEvent;
     public event Action<S.NPCRepair> NPCRepairEvent;
     public event Action<S.BundleOpen> BundleOpenEvent;
@@ -500,6 +501,7 @@ public partial class ServerConnection : BaseConnection
         ObjectNPCEvent?.Invoke(p);
     }
     public void Process(S.NPCResponse p) => NPCResponseEvent?.Invoke(p);
+    public void Process(S.NPCStorage p) => NPCStorageEvent?.Invoke(p);
     public void Process(S.NPCClose p) => NPCClosedEvent?.Invoke();
     public void Process(S.NPCRepair p) => NPCRepairEvent?.Invoke(p);
     public void Process(S.NPCRefinementStone p) => NPCRefinementStoneEvent?.Invoke(p);

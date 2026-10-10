@@ -55,6 +55,13 @@ SVC_COMPANION_HINTS = ("随从", "灵兽", "宠物")
 # 道馆/蛇谷六面神石的菜单里有「移动至沙巴克城」选项，缺这条会让该选项消失。
 EXTRA_TELEPORT = {("sabuk", "center"): ("3", 222, 160)}
 ENTRY_ALIAS = "#entry"
+# Mud3 文本宏 → Zircon NPCValue（ID, ValueType, FieldType, 默认显示值）
+MUD3_MACROS = {
+    "USERNAME": (1, "Field", "Name", "勇士"),
+    "USER_NAME": (1, "Field", "Name", "勇士"),
+    "GUILDNAME": (2, "Field", "GuildName", "无行会"),
+    "GUILD_NAME": (2, "Field", "GuildName", "无行会"),
+}
 MAX_DEPTH = 22
 MAX_PAGES = 400
 
@@ -328,8 +335,8 @@ class Compiler:
         p = self.pages.get(key)
         if p is None:
             p = {"key": key, "type": "None", "say": "", "buttons": [], "checks": [],
-                 "actions": [], "goods": [], "types": [], "success": None, "currency": "",
-                 "entry": False}
+                 "actions": [], "goods": [], "types": [], "values": [], "success": None,
+                 "currency": "", "entry": False}
             self.pages[key] = p
             self.order.append(key)
         return p
@@ -764,6 +771,21 @@ class Compiler:
             return f"[{label_text}:{rid}]"
 
         text = RE_LINK.sub(repl, text)
+
+        # Mud3 的 <$MACRO>（用户名/行会名等）：映射到 Zircon 的 NPCValue 机制
+        # （服务端 GetValues 按 ValueID 下发真值，客户端把 <ID:默认值> 替换掉）。
+        def macro_repl(m):
+            name = m.group(1).upper()
+            spec = MUD3_MACROS.get(name)
+            if spec is None:
+                self.warn(f"mud3_macro_dropped:{name}")
+                return ""
+            vid, vtype, field, default = spec
+            if not any(v["valueId"] == vid for v in page["values"]):
+                page["values"].append({"valueId": vid, "valueType": vtype, "fieldType": field})
+            return f"<{vid}:{default}>"
+
+        text = re.sub(r"<\$(\w+)>", macro_repl, text)
         text = re.sub(r"^[ \t]*_+", "", text, flags=re.M)     # Mud3 文本行首的 "_" 是对齐标记
         text = re.sub(r"[ \t]+\n", "\n", text)
         return re.sub(r"\n{3,}", "\n\n", text).strip()

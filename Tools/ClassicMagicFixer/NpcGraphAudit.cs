@@ -81,7 +81,9 @@ internal static class NpcGraphAudit
                 ["fileName"] = x.FileName ?? "",
                 ["description"] = x.Description ?? "",
                 ["minLevel"] = x.MinimumLevel,
-                ["maxLevel"] = x.MaximumLevel
+                ["maxLevel"] = x.MaximumLevel,
+                ["instance"] = x.Instance?.Name ?? "",
+                ["dungeon"] = x.Dungeon?.Name ?? ""
             }).ToList();
 
 

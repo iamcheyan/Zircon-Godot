@@ -48,6 +48,7 @@ internal static class NpcIrApply
         public List<IrAction> actions { get; set; } = new();
         public List<IrGood> goods { get; set; } = new();
         public List<string> types { get; set; } = new();
+        public List<IrValue> values { get; set; } = new();
         public string? success { get; set; }
     }
 
@@ -77,6 +78,13 @@ internal static class NpcIrApply
         public int x { get; set; }
         public int y { get; set; }
         public string? s1 { get; set; }
+    }
+
+    private sealed class IrValue
+    {
+        public int valueId { get; set; }
+        public string valueType { get; set; } = "Field";
+        public string fieldType { get; set; } = "None";
     }
 
     private sealed class IrGood
@@ -222,6 +230,14 @@ internal static class NpcIrApply
                 {
                     var nt = page.Types.AddNew();
                     nt.ItemType = ParseEnum<ItemType>(t);
+                }
+
+                foreach (var v in irPage.values)
+                {
+                    var nv = page.Values.AddNew();
+                    nv.ValueID = v.valueId;
+                    nv.ValueType = ParseEnum<NPCValueType>(v.valueType);
+                    nv.FieldType = ParseEnum<NPCFieldType>(v.fieldType);
                 }
             }
 

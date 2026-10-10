@@ -56,7 +56,9 @@ public sealed partial class NPCTextControl : DXControl
         _hoveredButton = -1;
         Size = new Vector2I(DrawWidth > 0 ? DrawWidth : width, Math.Max(linePitch, (int)Size.Y));
 
-        var matches = Regex.Matches(text ?? string.Empty, @"\[(?<Text>.*?):(?<ID>.+?)\]|\{(?<Text>.*?):(?<Colour>.+?)\}");
+        // ID 必须限定为整数：NPC 正文里的链接文字可能自带冒号（例如"移动至比奇城所需金钱 : 500 钱"），
+        // 用 (?<ID>.+?) 会把第一个冒号后面的内容当成 ID，导致 int.TryParse 失败、选项不可点。
+        var matches = Regex.Matches(text ?? string.Empty, @"\[(?<Text>.*?):(?<ID>-?\d+)\]|\{(?<Text>.*?):(?<Colour>.+?)\}");
         int cursor = 0;
         float x = 0, y = 0;
         float lineHeight = linePitch;

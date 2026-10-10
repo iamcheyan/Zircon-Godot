@@ -297,7 +297,9 @@ public partial class NPCDialog : DXWindow
             var value = response.Values?.Find(x => x.ID.ToString() == id);
             return value?.Value ?? match.Groups["Default"].Value;
         });
-        var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>.+?)\]");
+        // ID 必须是整数：`[文字:ID]` 的文字里可能含冒号（如"移动至比奇城所需金钱 : 500 钱"），
+        // 用 (?<ID>.+?) 会截错，导致选项解析不出、点了没反应。
+        var buttonMatches = Regex.Matches(raw, @"\[(?<Text>.*?):(?<ID>-?\d+)\]");
 
         // 头像判定：原版由脚本 {NPCIMG/N} 指定（N = NPCface 裸帧号，绘制在 (40,30)）。
         // 本移植额外允许用 NPC 自身的 NPCInfo.FaceImage 兜底 —— 原版服务端的

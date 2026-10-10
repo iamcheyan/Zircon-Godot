@@ -706,7 +706,8 @@ class Compiler:
         nxt = [1]
 
         def repl(m):
-            label_text = m.group(1).strip()
+            # 链接文字里不能出现 []/: —— 它们会与 [文字:ID] 语法冲突（客户端解析会截错）
+            label_text = m.group(1).strip().replace("[", "（").replace("]", "）").replace(":", "：")
             cmd = m.group(2)
             args = (m.group(3) or "").strip()
             if cmd.lower() in ("exit", "close"):
@@ -985,22 +986,39 @@ class Compiler:
             added.append(f"[{label}:{next_id}]")
             next_id += 1
 
-        if caps.get("buy"):
+        # 原版菜单里已经提供该功能时不再重复注入（例如 <购买/@buy> 已指向 BuySell 页）
+        provided = set()
+        for b in entry["buttons"]:
+            dp = self.pages.get(b["dest"])
+            if dp is None:
+                continue
+            if dp["type"] == "BuySell":
+                provided.add("sell" if dp["types"] else "buy")
+            elif dp["type"] == "Repair":
+                provided.add("repair")
+            elif dp["type"] == "CompanionManage":
+                provided.add("companion")
+            elif dp["type"] == "WeddingRing":
+                provided.add("wedding")
+            if any(a["type"] == "Storage" for a in dp["actions"]):
+                provided.add("storage")
+
+        if caps.get("buy") and "buy" not in provided:
             add("购买物品", self.func_page("buy", ""))
-        if caps.get("sell"):
+        if caps.get("sell") and "sell" not in provided:
             add("卖出物品", self.func_page("sell", ""))
-        if caps.get("repair"):
+        if caps.get("repair") and "repair" not in provided:
             add("修理装备", self.func_page("repair", ""))
-        if caps.get("storage"):
+        if caps.get("storage") and "storage" not in provided:
             add("存取物品", self.func_page("storage", ""))
-        if caps.get("wedding"):
+        if caps.get("wedding") and "wedding" not in provided:
             key = "func:wedding"
             wp = self.page(key)
             wp["type"] = "WeddingRing"
             wp["say"] = "[返回:1]\n[离开:0]"
             wp["buttons"] = [{"id": 1, "dest": ENTRY_ALIAS}]
             add("婚戒管理", key)
-        if caps.get("companion"):
+        if caps.get("companion") and "companion" not in provided:
             key = "func:companion"
             cp = self.page(key)
             cp["type"] = "CompanionManage"

@@ -38,10 +38,11 @@ def main() -> int:
     for r in rows:
         idx = r.get("index")
         shots = r.get("shots") or []
+        if not shots and r.get("shot"):
+            shots = [r["shot"]]
         if not shots:
-            # 兼容只记录单个 shot 字段的实现
-            if r.get("shot"):
-                shots = [r["shot"]]
+            # 巡检器把截图记在每个 page 上（pages[].shot），取第一张（入口页）
+            shots = [pg.get("shot") for pg in (r.get("pages") or []) if pg.get("shot")]
         if not shots:
             missing += 1
             continue

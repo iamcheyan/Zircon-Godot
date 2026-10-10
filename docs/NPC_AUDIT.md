@@ -29,6 +29,16 @@ DISPLAY=:151 godot-mono --path GodotClient -- \
   --npc-audit-out /tmp/npc_audit --npc-audit-only 13,90,39
 ```
 
+## 跑全量的两个坑（实测）
+
+1. **服务端包速率封禁**：`Server.ini` 的 `MaxPacket=50` 表示「一个处理周期内收到的包数上限」，
+   超过会**断开连接并把 IP 封 5 分钟**（`SConnection.cs:193`）。巡检在高频点击时可能触发，
+   表现为「客户端突然收不到包、后面全部 timeout」。跑全量前把 `MaxPacket` 调到 500
+   （`Debug/ServerCore/Server.ini`，该目录 gitignore，仅本机生效），并注意巡检器已加断线守卫。
+2. **客户端进程会中途死掉**：用 `tools/run_npc_audit_resumable.sh <outdir> [display] [rounds]`
+   驱动——它每轮只跑「还没记录 / 上一轮有错」的 NPC，每轮独立目录（`roundN/`），
+   跑完自动汇总。单轮全量约 50 分钟，崩了就再跑一轮。
+
 ## 清单格式
 
 ```json

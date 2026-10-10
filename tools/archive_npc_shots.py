@@ -29,6 +29,7 @@ def main() -> int:
     shots_dir = sys.argv[2]
     out_dir = sys.argv[3] if len(sys.argv) > 3 else "docs/screenshots/npc_audit"
     full = "--full" in sys.argv
+    jpeg = "--jpeg" in sys.argv
 
     rows = [json.loads(l) for l in open(results, encoding="utf-8") if l.strip()]
     os.makedirs(out_dir, exist_ok=True)
@@ -58,8 +59,12 @@ def main() -> int:
         map_file = safe(r.get("map") or "unknown")
         sub = os.path.join(out_dir, map_file)
         os.makedirs(sub, exist_ok=True)
-        dst = os.path.join(sub, f"{idx:03d}_{safe(r.get('name', ''))}.png")
-        im.save(dst, optimize=True)
+        ext = ".jpg" if jpeg else ".png"
+        dst = os.path.join(sub, f"{idx:03d}_{safe(r.get('name', ''))}{ext}")
+        if jpeg:
+            im.save(dst, quality=88, optimize=True)
+        else:
+            im.save(dst, optimize=True)
         total += os.path.getsize(dst)
         archived += 1
 

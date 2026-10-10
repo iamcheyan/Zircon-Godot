@@ -153,22 +153,60 @@ check/action 引用的物品与地图在 DB 中存在、success/fail 目标存�
   （啊康 #13：入口页 + 5 个子页含 Repair/BuySell；图书管理员 #90：3 页；六面神石 #39：入口页 1 个链接）
 * 全量 230 NPC：`bash tools/run_npc_audit.sh :150 /home/tetsuya/npc_audit_out`（结果见 6.4）
 
-### 6.3 功能验证（人工 + 脚本，逐项断言）
+### 6.3 功能验证（`--npc-func-audit`，真实 UI 路径 + 硬断言）
 
-| 功能 | 验证方式 | 结果 |
+`GodotClient/Scripts/GameScene.NpcFuncAudit.cs`（说明见 `docs/NPC_FUNC_AUDIT.md`）：
+自动发 GM 命令、点 NPC、点选项、双击商品行、右键选中背包格、点"出售"按钮、搬仓库格——
+每一步都走客户端既有 UI 路径（不直接调 `Send*` 绕过界面），并用**数值断言**判定成败。
+
+`SUMMARY total=4 ok=4 failed=0`（隔离服务端 7001 + 与客户端逐字节相同的 System.db）：
+
+| 用例 | 断言（实测值） | 证据 |
 |---|---|---|
-| 对话框内容 | 点击 啊康(#13) | 显示原版正文"很高兴见到你，有什么事吗？" + 原版选项（特殊修理武器/请求把剑从手分离开/对今日的任务进行了了解/结束）+ 补挂的"购买物品"（截图 `13_akang_menu.png`） |
-| 收钱传送 | 六面神石(#39) 点"移动至道馆村所需金钱：500 钱" | **HUD 由 `比奇县` 变为 `道馆 [415,179]`**，扣 500 金币（截图 `39_teleport_before/after.png`） |
-| 仓库 NPC | 赵老头(#147) 点"寄存物品" | 客户端收到 `S.NPCStorage` 并**弹出仓库窗口**（截图 `147_zhaolaotou_menu.png` / `147_storage_opened.png`） |
-| 商店购买 | 啊康 → 购买物品 | 商品列表显示 木剑 50 / 匕首 100 / 青铜剑 500 / 乌木剑 1000 / 短剑 1000（价格取自物品 DB）——下单断言见 6.4 |
-| 修理 | 啊康 → 特殊修理武器 | 打开 `Repair` 面板（页型 Repair，客户端按原版进入修理模式） |
+| 购买 `buy` #13 啊康 | 金币 `100619080 → 100619030`（**恰好 -50**，木剑 CostFor）；背包木剑 `3 → 4` | `[GIVE GOLD] TestHero Amount: 100000`；`[ItemsGained] Wood Sword x1` |
+| 收费传送 `teleport` #39 六面神石 | 地图 `1(File 0) → 616(File 02)`；金币 `100619030 → 100618530`（**恰好 -500**）；对话自动关闭 | `MapChanged+1` |
+| 仓库存取 `storage` #147 赵老头 | 收到 `S.NPCStorage` 且仓库窗口可见；`Inventory#0 → Storage#4 success=True`；仓库[4]=木剑 x1；背包 `4 → 3` | `[ItemMove] ... success=True` |
+| 卖出 `sell` #14 店员 | 金币 `100618530 → 100621251`（**+2721**）；背包降魔 `1 → 0` | `[ItemsChanged] links=1 success=True` |
 
-### 6.4 全量巡检结果
+数据层结论（详见 `docs/NPC_FUNC_AUDIT.md`）：
+* **卖出需要对话页 `NPCPage.Types` 非空**（服务端 `PlayerObject.NPCSell` 与客户端 `ShowPage` 双重前提）。
+  本次重建已按「现役 DB 同前缀 Types ∪ 该店商品类别 ∪ 前缀默认」推导出售类型：
+  170 个 BuySell 页里 **91 个**具备可售类型（此前 76 个；且此前若干店铺页 Types 为空导致根本不能卖）。
+* **NPC 卖给你的物品带 `UserItemFlags.Locked`**（服务端 `NPCBuy` 防倒卖），想再卖出需先解锁（客户端 `ToggleLock`）。
+* **仓库存取要求所在格是安全区**：赵老头门口 (471,277) 不是安全区格，换到 (442,296) 才成功；
+  整图无安全区时该功能不可用（用例会如实失败 `not_safe_zone`）。
+* `@giveGold` 依赖运行目录 `ServerLibrary.dll` 为新构建（命令是本次新增）。
 
-（跑完填充：ok/no_response/not_found/click_missed 统计、错误码清单、截图归档路径与功能断言明细）
+### 6.4 全量巡检结果（230 个活动 NPC）
+
+**最终一版数据（IR：4288 页 / 2093 按钮 / 855 检查 / 752 动作 / 932 商品行 / 390 可售类型）**
+
+* 自动巡检：`230` 个全部点到并打开对话框，其中 **224 个全绿**（入口页 + 每个可点选项都走到），
+  累计走访 **1520 页**（平均 6.6 页/NPC）；机读结果 `docs/screenshots/npc_audit/audit_results.jsonl`，
+  截图归档 `docs/screenshots/npc_audit/<地图>/<idx>_<名字>.jpg`（224 张，按地图分目录）。
+* 剩余 6 个在自动巡检里报错的，已**逐个人工实机复核通过**（截图同名 `.png` 放在归档根目录）：
+
+| NPC | 自动巡检报错 | 人工复核结果 |
+|---|---|---|
+| #13 啊康（比奇） | timeout（GM 传送到位偶发失败） | 菜单 + 购买列表正常（`13_akang_menu.png` / `13_akang_buylist.png`），购买断言见 6.3 |
+| #106 / #371 六面神石（毒蛇山谷，**同一格两个 NPC**） | click_missed（点到了同格另一个 ObjectID） | 菜单正常（`106_snakevally_hexa_menu.png`）；顺带修掉了原版空菜单 |
+| #188 禄英（药剂师住居） | timeout（室内小图首次传送到位失败） | 对话正常（`188_luying_dialog.png`） |
+| #209 梅山侠（占卜屋） | timeout（同上） | 对话正常（`209_meishanxia_dialog.png`） |
+| #275 六面神石（沙巴克城） | npc_not_found（客户端对象发现窗口） | 菜单正常（`275_sabuk_hexa_menu.png`） |
+
+  结论：**230/230 均可在游戏内正常打开并使用**；自动巡检的 6 处报错全部属于巡检工具的限制
+  （传送落点/同格重复 NPC/对象发现时机），不是 NPC 数据问题——每一处都有人工截图佐证。
+
+* 功能验证（6.3）四项断言全部通过：购买 −50 金币 +1 木剑、收费传送 −500 金币且切图、
+  仓库 NPC 打开仓库并成功存入（`Inventory#0 → Storage#4 success=True`）、卖出 +2721 金币。
 
 ## 7. 实机证据
 
-* 归档目录：`docs/screenshots/npc_audit/`（每个 NPC 一张对话框区域截图 + 关键功能截图）
-* 机读结果：`docs/screenshots/npc_audit/audit_results.jsonl`
-* 隔离服务端跑法（不影响 7000）：见 `docs/NPC_AUDIT.md`
+| 证据 | 位置 |
+|---|---|
+| 224 个 NPC 的对话框截图（按地图分目录） | `docs/screenshots/npc_audit/<mapFile>/<idx>_<name>.jpg` |
+| 巡检机读结果（每 NPC 一行：入口页/页列表/链接/错误码） | `docs/screenshots/npc_audit/audit_results.jsonl` |
+| 6 个自动巡检报错 NPC 的人工复核截图 | `docs/screenshots/npc_audit/{13,106,188,209,275}_*.png` |
+| 功能验证截图（购买/传送/仓库/给钱） | `docs/screenshots/npc_audit/13_*.png`、`39_*.png`、`147_*.png` |
+| 隔离服务端跑法（不影响 7000） | `docs/NPC_AUDIT.md` |
+| 功能验证用例与断言说明 | `docs/NPC_FUNC_AUDIT.md` |

@@ -385,13 +385,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -441,7 +435,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -454,7 +448,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Bichon1-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Bichon1-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Bichon1-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Bichon1-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Bichon1-0:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Bichon1-0:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Bichon1-0:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Bichon1-0:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -787,13 +833,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book"
      ],
      "success": null,
      "currency": "",
@@ -980,7 +1020,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "05Book_Bichon-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Bichon-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Bichon-0:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -1442,13 +1495,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -1463,7 +1511,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Bichon1-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Bichon1-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Bichon1-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Bichon1-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -2072,7 +2146,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -2284,7 +2361,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_Bichon-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Bichon-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Bichon-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Bichon-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Bichon-0:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Bichon-0:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Bichon-0:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Bichon-0:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Bichon-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -2757,13 +2886,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -2783,13 +2908,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -2804,7 +2925,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_Bichon-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Bichon-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Bichon-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Bichon-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Bichon-0:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Bichon-0:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Bichon-0:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Bichon-0:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Bichon-0:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Bichon-0:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Bichon-0:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -2855,13 +3041,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -3405,13 +3585,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -3426,13 +3601,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": "03Armor_Bichon-0:pre_repair#func:repair#else0",
      "currency": "",
@@ -3513,7 +3683,7 @@
     {
      "key": "mute:mugong_mute_explan_armor",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -3538,7 +3708,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "03Armor_Bichon-0:main_0_0"
       }
      ],
      "actions": [],
@@ -3624,13 +3794,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -3645,7 +3810,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Bichon-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Bichon-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Bichon-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Bichon-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Bichon-0:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -4151,7 +4342,11 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Book",
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -4201,7 +4396,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 5,
-       "fail": null
+       "fail": "01Meet_Bichon1-0:main_0_0"
       }
      ],
      "actions": [],
@@ -4220,7 +4415,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -4233,7 +4428,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -4246,7 +4441,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Bichon1-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Bichon1-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Bichon1-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Bichon1-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Bichon1-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -4520,13 +4741,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": "02Weapon_Wooma-1:pre_repair#func:repair#else0",
      "currency": "",
@@ -4607,7 +4822,7 @@
     {
      "key": "mute:mugong_mute_explan_mugi",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -4632,7 +4847,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "02Weapon_Wooma-1:main_0_0"
       }
      ],
      "actions": [],
@@ -4736,13 +4951,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -4762,13 +4971,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -4783,7 +4986,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Wooma-1:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Wooma-1:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Wooma-1:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Wooma-1:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Wooma-1:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Wooma-1:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Wooma-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -4960,13 +5202,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -4981,7 +5218,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "10Material_DoGwan-1:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "10Material_DoGwan-1:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "10Material_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -5261,13 +5511,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -5282,7 +5527,85 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Wooma-1:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Wooma-1:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Wooma-1:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -5483,7 +5806,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_DoGwan-1:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_DoGwan-1:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_DoGwan-1:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_DoGwan-1:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_DoGwan-1:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_DoGwan-1:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_DoGwan-1:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_DoGwan-1:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -5642,7 +6017,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_DoGwan2-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -5660,13 +6035,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -5719,13 +6088,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -5893,13 +6256,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -5914,7 +6272,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_DoGwan1-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -5932,13 +6290,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -6027,7 +6379,11 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Book",
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -6041,7 +6397,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_DoGwan-1:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_DoGwan-1:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_DoGwan-1:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_DoGwan-1:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_DoGwan-1:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_DoGwan-1:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_DoGwan-1:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_DoGwan-1:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -6307,13 +6715,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -6328,13 +6730,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": "02Weapon_SnakeVally-2:pre_repair#func:repair#else0",
      "currency": "",
@@ -6415,7 +6811,7 @@
     {
      "key": "mute:mugong_mute_explan_mugi",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -6440,7 +6836,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "02Weapon_SnakeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -6544,13 +6940,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -6570,13 +6960,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -6591,7 +6975,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_SnakeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_SnakeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_SnakeVally-2:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_SnakeVally-2:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -6689,13 +7112,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -7080,13 +7498,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -7101,7 +7514,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_SnakeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_SnakeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -7310,7 +7749,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -7324,7 +7766,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_SnakeVally-2:main_0",
      "currency": "",
      "entry": false
     }
@@ -7529,7 +7984,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_SnakeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_SnakeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -7547,13 +8028,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -7606,7 +8087,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_SnakeVally1-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -7624,13 +8105,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -7849,13 +8330,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -7870,13 +8346,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": "03Armor_SankeVally-2:pre_repair#func:repair#else0",
      "currency": "",
@@ -7957,7 +8428,7 @@
     {
      "key": "mute:mugong_mute_explan_armor",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -7982,7 +8453,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "03Armor_SankeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -8068,13 +8539,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -8089,7 +8555,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_SankeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_SankeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_SankeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_SankeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_SankeVally-2:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_SankeVally-2:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_SankeVally-2:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -8160,7 +8665,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "09NotBlocker_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "09NotBlocker_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "09NotBlocker_SnakeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "09NotBlocker_SnakeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "09NotBlocker_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -8505,7 +9036,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "ChangeMoney:Change",
      "currency": "",
      "entry": false
     }
@@ -11848,13 +12379,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -12066,7 +12597,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04PotionMake_Samak-5:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -12090,7 +12621,7 @@
        "op": "GreaterThanOrEqual",
        "item": "Skeleton Bone",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12122,7 +12653,7 @@
        "op": "GreaterThanOrEqual",
        "item": "Skeleton Bone",
        "i1": 10,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12184,7 +12715,7 @@
        "op": "GreaterThanOrEqual",
        "item": "Zombie Bone",
        "i1": 5,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12246,14 +12777,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Ant Egg",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Tooth",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12320,14 +12851,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Horn",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Tooth",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12394,21 +12925,21 @@
        "op": "GreaterThanOrEqual",
        "item": "Dark Banya Gem Stone",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Statue Fragment",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Tears Of Banya",
        "i1": 4,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12480,14 +13011,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Statue Fragment",
        "i1": 4,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Jewel",
        "i1": 6,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12601,14 +13132,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Spitting Spider Tooth",
        "i1": 2,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Carnivorous Plant Leaf",
        "i1": 6,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12662,14 +13193,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Maggot Pill",
        "i1": 2,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Carnivorous Plant Leaf",
        "i1": 2,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12723,14 +13254,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Spitting Spider Tooth",
        "i1": 6,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Carnivorous Plant Leaf",
        "i1": 6,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12797,14 +13328,14 @@
        "op": "GreaterThanOrEqual",
        "item": "Maggot Pill",
        "i1": 2,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       },
       {
        "type": "HasItem",
        "op": "GreaterThanOrEqual",
        "item": "Carnivorous Plant Leaf",
        "i1": 6,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12910,7 +13441,7 @@
        "op": "GreaterThanOrEqual",
        "item": "Skeleton Bone",
        "i1": 3,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -12965,7 +13496,7 @@
        "op": "GreaterThanOrEqual",
        "item": "Zombie Bone",
        "i1": 4,
-       "fail": null
+       "fail": "04PotionMake_Samak-5:main_0_0"
       }
      ],
      "actions": [
@@ -14380,7 +14911,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -14661,13 +15195,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -14687,13 +15215,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -14713,13 +15235,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -14883,12 +15399,6 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
       "Shoes"
      ],
      "success": null,
@@ -14909,12 +15419,6 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
       "Shoes"
      ],
      "success": null,
@@ -15013,13 +15517,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -15112,13 +15611,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -15133,7 +15628,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Samak-5:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Samak-5:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Samak-5:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -15151,13 +15659,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -15251,13 +15753,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -15272,7 +15770,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Oasis-4:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Oasis-4:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Oasis-4:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Oasis-4:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Oasis-4:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Oasis-4:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -15290,13 +15840,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -18722,7 +19266,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -18845,7 +19402,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -18945,7 +19505,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Oasis-4:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Oasis-4:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -22374,7 +22960,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -22392,13 +22991,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -25829,7 +26428,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -25847,13 +26459,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -26053,13 +26665,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -26160,7 +26767,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Oasis-4:main_0_1",
      "currency": "",
      "entry": false
     },
@@ -26178,13 +26785,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -26358,13 +26959,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -26384,13 +26979,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -26410,13 +26999,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -26576,13 +27159,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -26697,7 +27275,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -26932,13 +27513,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -26958,13 +27535,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -26979,7 +27552,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_HalfNight-8:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -27106,13 +27679,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -27132,13 +27700,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -27153,7 +27716,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_HalfNight-8:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -27283,13 +27846,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -27640,13 +28197,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -27696,13 +28249,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -27787,13 +28334,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -27851,7 +28393,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 15,
-       "fail": null
+       "fail": "09HorseMarket_Bichon-0:main_0"
       }
      ],
      "actions": [],
@@ -27871,7 +28413,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 40,
-       "fail": null
+       "fail": "09HorseMarket_Bichon-0:main_0"
       }
      ],
      "actions": [],
@@ -27891,7 +28433,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 50,
-       "fail": null
+       "fail": "09HorseMarket_Bichon-0:main_0"
       }
      ],
      "actions": [],
@@ -27936,7 +28478,7 @@
        "type": "Gold",
        "op": "LessThan",
        "i1": 89999999,
-       "fail": null
+       "fail": "09HorseMarket_Bichon-0:main_0"
       }
      ],
      "actions": [
@@ -27997,7 +28539,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_Bichon2-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Bichon2-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Bichon2-0:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Bichon2-0:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Bichon2-0:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -28015,13 +28583,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -28073,13 +28641,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -28130,7 +28698,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_SnakeVally2-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -28148,13 +28716,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -31583,7 +32151,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -31601,13 +32182,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -31661,13 +32242,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -34138,7 +34719,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 3,
-       "fail": null
+       "fail": "14Doctor_DoGwan-1:main_0_0"
       }
      ],
      "actions": [],
@@ -34245,7 +34826,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 5,
-       "fail": null
+       "fail": "14Doctor_DoGwan-1:main_0_0"
       }
      ],
      "actions": [],
@@ -34378,7 +34959,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 7,
-       "fail": null
+       "fail": "14Doctor_DoGwan-1:main_0_0"
       }
      ],
      "actions": [],
@@ -34510,7 +35091,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -34636,7 +35217,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -34736,7 +35317,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -34806,7 +35387,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35136,7 +35717,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35310,7 +35891,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35406,7 +35987,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35697,7 +36278,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35733,7 +36314,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 20,
-       "fail": null
+       "fail": "14Doctor_DoGwan-1:main_0_0"
       }
      ],
      "actions": [],
@@ -35778,7 +36359,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_DoGwan-1:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -35796,13 +36377,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -38731,7 +39312,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_SnakeVally-2:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_SnakeVally-2:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_SnakeVally-2:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_SnakeVally-2:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -38749,13 +39356,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -42187,7 +42794,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Oasis-4:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_Oasis-4:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_Oasis-4:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -42205,13 +42825,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -42291,7 +42911,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_Bichon1-0:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Bichon1-0:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Bichon1-0:npc_base_0",
      "currency": "",
      "entry": false
     },
@@ -42408,7 +43041,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_DoGwan1-1:main_cj",
      "currency": "",
      "entry": false
     },
@@ -42715,7 +43348,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 3,
-       "fail": null
+       "fail": "14Doctor_SnakeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -42822,7 +43455,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 5,
-       "fail": null
+       "fail": "14Doctor_SnakeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -42955,7 +43588,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 7,
-       "fail": null
+       "fail": "14Doctor_SnakeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -43087,7 +43720,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43213,7 +43846,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43313,7 +43946,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43383,7 +44016,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43713,7 +44346,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43887,7 +44520,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -43983,7 +44616,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -44274,7 +44907,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -44310,7 +44943,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 20,
-       "fail": null
+       "fail": "14Doctor_SnakeVally-2:main_0_0"
       }
      ],
      "actions": [],
@@ -44355,7 +44988,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_SnakeVally-2:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -44570,7 +45203,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -44670,7 +45306,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Oasis-4:main_0_1",
      "currency": "",
      "entry": false
     },
@@ -44782,7 +45418,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "Marriage:Marrage#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Marriage:Marrage#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "Marriage:Marrage#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Marriage:Marrage#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "Marriage:Marrage#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Marriage:Marrage#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "Marriage:Marrage",
      "currency": "",
      "entry": false
     },
@@ -44809,7 +45484,7 @@
        "type": "Level",
        "op": "LessThan",
        "i1": 22,
-       "fail": null
+       "fail": "Marriage:Marrage"
       }
      ],
      "actions": [],
@@ -44833,7 +45508,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "Marriage:wantDivorce#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Marriage:wantDivorce#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "Marriage:Marrage",
      "currency": "",
      "entry": false
     },
@@ -44847,7 +45535,7 @@
        "type": "Gold",
        "op": "GreaterThanOrEqual",
        "i1": 5000000,
-       "fail": null
+       "fail": "Marriage:Marrage"
       }
      ],
      "actions": [
@@ -45881,12 +46569,6 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
       "Shoes"
      ],
      "success": null,
@@ -45907,12 +46589,6 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
       "Shoes"
      ],
      "success": null,
@@ -45928,7 +46604,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Shoes_Bichon-0:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -46374,13 +47050,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -46581,42 +47257,12 @@
    "x": 27,
    "y": 35,
    "source": "Market_Def/14Quest_Bichon-0_003.txt",
-   "entry": "dolumi:SOKMO_START_1",
+   "entry": "14Quest_Bichon-0_003:main_0_0",
    "pages": [
     {
-     "key": "dolumi:SOKMO_START_1",
+     "key": "14Quest_Bichon-0_003:main_0_0",
      "type": "None",
-     "say": "这位侠客，请一定要帮帮我啊！\n\n[(装作没看见走过去):1]\n\n[什么事啊?:2]\n这位女侠，请一定要帮帮我啊！\n\n[(装作没看见走过去):3]\n\n[什么事啊?:4]",
-     "buttons": [
-      {
-       "id": 1,
-       "dest": "dolumi:SOKMO_START_1_1"
-      },
-      {
-       "id": 2,
-       "dest": "dolumi:SOKMO_START_2"
-      },
-      {
-       "id": 3,
-       "dest": "dolumi:SOKMO_START_1_1"
-      },
-      {
-       "id": 4,
-       "dest": "dolumi:SOKMO_START_2"
-      }
-     ],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "dolumi:SOKMO_START_1_1",
-     "type": "None",
-     "say": "请一定要帮帮我… 啊？太无情了！\n\n[结束:0]",
+     "say": "（这样说来，在公园的这个地方好像有一个母子模样的大石头。难道？啊啊？是我记错了吧。）\n\n [结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -46624,55 +47270,7 @@
      "types": [],
      "success": null,
      "currency": "",
-     "entry": false
-    },
-    {
-     "key": "dolumi:SOKMO_START_2",
-     "type": "None",
-     "say": "呜呜…… 不久前我的孩子在夜市被商人给抢走了。一定要帮我找回孩子啊！不知道他把孩子带走到底想干什么……一定要……拜托您了！\n\n[我没有这闲工夫。:1]\n\n[知道了。我去帮你找回孩子。:2]",
-     "buttons": [
-      {
-       "id": 1,
-       "dest": "dolumi:SOKMO_START_2_1"
-      },
-      {
-       "id": 2,
-       "dest": "dolumi:SOKMO_START_3"
-      }
-     ],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "dolumi:SOKMO_START_2_1",
-     "type": "None",
-     "say": "这样啊……呜呜……天下之大，竟然没有同情失去孩儿母亲心的侠客吗？……\n\n[结束:0]",
-     "buttons": [],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "dolumi:SOKMO_START_3",
-     "type": "None",
-     "say": "多谢了……听说夜市的商人在{FCOLOR/10}452 : 297{FCOLOR/12}，请一定要帮我找回孩子啊！\n\n[结束:0]",
-     "buttons": [],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
+     "entry": true
     }
    ],
    "warnings": [
@@ -46866,13 +47464,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -46905,7 +47499,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -47171,13 +47778,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -47192,13 +47793,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": "02Weapon_Kugkyung-01:pre_repair#func:repair#else0",
      "currency": "",
@@ -47279,7 +47874,7 @@
     {
      "key": "mute:mugong_mute_explan_mugi",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -47304,7 +47899,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "02Weapon_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -47408,13 +48003,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -47434,13 +48023,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -47455,7 +48038,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Kugkyung-01:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Kugkyung-01:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Kugkyung-01:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Kugkyung-01:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -47583,13 +48205,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -47604,13 +48221,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": "03Armor_Kugkyung-01:pre_repair#func:repair#else0",
      "currency": "",
@@ -47691,7 +48303,7 @@
     {
      "key": "mute:mugong_mute_explan_armor",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -47716,7 +48328,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "03Armor_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -47802,13 +48414,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -47823,7 +48430,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -48000,13 +48607,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -48021,7 +48623,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Kugkyung-01:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Kugkyung-01:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Kugkyung-01:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Kugkyung-01:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Kugkyung-01:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Kugkyung-01:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Kugkyung-01:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Kugkyung-01:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -48225,13 +48892,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book"
      ],
      "success": null,
      "currency": "",
@@ -48298,7 +48959,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "05Book_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Kugkyung-01:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Kugkyung-01:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -48500,7 +49187,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -48636,7 +49336,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -48778,7 +49481,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_Kugkyung-01:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Kugkyung-01:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -49026,13 +49742,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -49052,13 +49764,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -49073,7 +49781,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -49174,13 +49882,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -49195,7 +49898,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "10Material_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -49246,13 +49949,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -49996,7 +50693,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 3,
-       "fail": null
+       "fail": "14Doctor_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -50103,7 +50800,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 5,
-       "fail": null
+       "fail": "14Doctor_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -50236,7 +50933,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 7,
-       "fail": null
+       "fail": "14Doctor_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -50368,7 +51065,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -50494,7 +51191,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -50594,7 +51291,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -50664,7 +51361,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -50994,7 +51691,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -51168,7 +51865,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -51264,7 +51961,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -51555,7 +52252,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -51591,7 +52288,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 20,
-       "fail": null
+       "fail": "14Doctor_Kugkyung-01:main_0_0"
       }
      ],
      "actions": [],
@@ -51636,7 +52333,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Kugkyung-01:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -51733,7 +52430,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_Kugkyung1-01:main_cj",
      "currency": "",
      "entry": false
     },
@@ -51886,7 +52583,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Kugkyung1-01:yong_other_class",
      "currency": "",
      "entry": false
     },
@@ -51899,7 +52596,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Kugkyung1-01:yong_other_class",
      "currency": "",
      "entry": false
     }
@@ -51986,7 +52683,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Kugkyung2-01:whang_other_class",
      "currency": "",
      "entry": false
     }
@@ -52136,7 +52833,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "Treasure:Monkey#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Treasure:Monkey#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "17MobRush_kugkyung-01:main#1",
      "currency": "",
      "entry": false
     },
@@ -52223,11 +52933,15 @@
     {
      "key": "09CancleWeapon-01:main",
      "type": "None",
-     "say": "你好! 想做什么?\n\n[制炼武器.:1]\n\n[制作钢玉石.:3]\n\n[关闭:0]\n\n[修理装备:4]",
+     "say": "你好! 想做什么?\n\n[制炼武器.:1]\n\n[制炼饰品.:2]\n\n[制作钢玉石.:3]\n\n[关闭:0]\n\n[修理装备:4]",
      "buttons": [
       {
        "id": 1,
        "dest": "09CancleWeapon-01:RefineinitialWeapon"
+      },
+      {
+       "id": 2,
+       "dest": "09CancleWeapon-01:PreRefineAcessory"
       },
       {
        "id": 3,
@@ -52374,6 +53088,32 @@
      "entry": false
     },
     {
+     "key": "09CancleWeapon-01:PreRefineAcessory",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "Accessory:RefineAccessory",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "Accessory:RefineAccessory",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "09CancleWeapon-01:main",
+     "currency": "",
+     "entry": false
+    },
+    {
      "key": "09CancleWeapon-01:PreRefineGangOk",
      "type": "None",
      "say": "",
@@ -52413,7 +53153,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "09CancleWeapon-01:main",
      "currency": "",
      "entry": false
     },
@@ -52431,13 +53171,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -52625,13 +53365,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -52664,7 +53400,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "01Meet_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "01Meet_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "01Meet_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -52921,13 +53722,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -52942,13 +53737,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": "02Weapon_Eunhang-02:pre_repair#func:repair#else0",
      "currency": "",
@@ -53029,7 +53818,7 @@
     {
      "key": "mute:mugong_mute_explan_mugi",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -53054,7 +53843,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "02Weapon_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -53158,13 +53947,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -53184,13 +53967,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -53223,7 +54000,98 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:TQuest#7",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Eunhang-02:TQuest#7",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -53390,13 +54258,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -53411,13 +54274,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": "03Armor_Eunhang-02:pre_repair#func:repair#else0",
      "currency": "",
@@ -53498,7 +54356,7 @@
     {
      "key": "mute:mugong_mute_explan_armor",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -53523,7 +54381,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "03Armor_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -53609,13 +54467,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -53630,7 +54483,85 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Eunhang-02:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -53794,13 +54725,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -53815,7 +54741,85 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Eunhang-02:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -53861,7 +54865,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04PotionMake_Euhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_Euhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_Euhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_Euhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_Euhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_Euhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_Euhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -54051,13 +55094,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book"
      ],
      "success": null,
      "currency": "",
@@ -54134,7 +55171,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "05Book_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -54335,7 +55437,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -54458,7 +55625,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -54578,7 +55748,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -54813,13 +56035,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -54839,13 +56057,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -54860,7 +56074,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_Eunhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Eunhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Eunhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Eunhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Eunhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Eunhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Eunhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Eunhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Eunhang-02:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Eunhang-02:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -54961,13 +56240,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -54982,7 +56256,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "10Material_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -55033,13 +56307,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -55641,7 +56909,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 3,
-       "fail": null
+       "fail": "14Doctor_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -55748,7 +57016,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 5,
-       "fail": null
+       "fail": "14Doctor_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -55881,7 +57149,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 7,
-       "fail": null
+       "fail": "14Doctor_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -56013,7 +57281,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56139,7 +57407,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56239,7 +57507,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56309,7 +57577,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56639,7 +57907,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56813,7 +58081,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -56909,7 +58177,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -57200,7 +58468,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     },
@@ -57236,7 +58504,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 20,
-       "fail": null
+       "fail": "14Doctor_Eunhang-02:main_0_0"
       }
      ],
      "actions": [],
@@ -57281,7 +58549,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Doctor_Eunhang-02:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -57386,7 +58654,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_Euhang-02:main_cj",
      "currency": "",
      "entry": false
     },
@@ -57417,7 +58685,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_Euhang-02:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Euhang-02:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Euhang-02:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Euhang-02:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Euhang-02:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Euhang-02:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Euhang-02:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_Euhang-02:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_Euhang-02:main_cj",
      "currency": "",
      "entry": false
     },
@@ -57472,7 +58792,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Eunhang1-02:beouk_other_class",
      "currency": "",
      "entry": false
     },
@@ -57485,7 +58805,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Eunhang1-02:beouk_other_class",
      "currency": "",
      "entry": false
     }
@@ -57522,7 +58842,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Eunhang2-02:wha_other_class",
      "currency": "",
      "entry": false
     },
@@ -57535,7 +58855,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Eunhang2-02:wha_other_class",
      "currency": "",
      "entry": false
     }
@@ -57766,13 +59086,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
       "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -57830,7 +59146,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "09Bonus_Euhang-02:main",
      "currency": "",
      "entry": false
     }
@@ -58083,13 +59399,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -58104,13 +59414,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": "02Weapon_DoGwan-1_001:pre_repair#func:repair#else0",
      "currency": "",
@@ -58191,7 +59495,7 @@
     {
      "key": "mute:mugong_mute_explan_mugi",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -58216,7 +59520,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "02Weapon_DoGwan-1_001:main_0_0"
       }
      ],
      "actions": [],
@@ -58320,13 +59624,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -58346,13 +59644,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -58367,7 +59659,98 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_DoGwan-1_001:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:TQuest#7",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_DoGwan-1_001:TQuest#7",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_DoGwan-1_001:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -58495,13 +59878,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -58516,13 +59894,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": "03Armor_DoGwan-1_003:pre_repair#func:repair#else0",
      "currency": "",
@@ -58603,7 +59976,7 @@
     {
      "key": "mute:mugong_mute_explan_armor",
      "type": "None",
-     "say": "",
+     "say": "叫野蛮冲撞的武功请找黄河大侠。。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -58628,7 +60001,7 @@
        "type": "Level",
        "op": "GreaterThanOrEqual",
        "i1": 27,
-       "fail": null
+       "fail": "03Armor_DoGwan-1_003:main_0_0"
       }
      ],
      "actions": [],
@@ -58714,13 +60087,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -58735,7 +60103,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_DoGwan-1_003:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_DoGwan-1_003:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_DoGwan-1_003:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_DoGwan-1_003:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_DoGwan-1_003:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_DoGwan-1_003:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_DoGwan-1_003:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -58782,7 +60189,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04PotionMake_DoGwan-1_006:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_DoGwan-1_006:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_DoGwan-1_006:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_DoGwan-1_006:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_DoGwan-1_006:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04PotionMake_DoGwan-1_006:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04PotionMake_DoGwan-1_006:main_0",
      "currency": "",
      "entry": false
     }
@@ -58944,13 +60390,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -58965,7 +60406,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_DoGwan-1_006:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_DoGwan-1_006:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_DoGwan-1_006:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_DoGwan-1_006:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_DoGwan-1_006:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_DoGwan-1_006:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_DoGwan-1_006:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_DoGwan-1_006:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_DoGwan-1_006:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -59156,13 +60649,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book"
      ],
      "success": null,
      "currency": "",
@@ -59261,7 +60748,85 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "05Book_DoGwan-1_004:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:TQuest#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "05Book_DoGwan-1_004:TQuest#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "05Book_DoGwan-1_004:main_0",
      "currency": "",
      "entry": false
     }
@@ -59470,7 +61035,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -59484,7 +61052,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_DoGwan-1_007:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_DoGwan-1_007:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_DoGwan-1_007:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_DoGwan-1_007:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_DoGwan-1_007:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_DoGwan-1_007:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_DoGwan-1_007:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -59719,13 +61326,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -59745,13 +61348,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -59766,7 +61365,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_DoGwan-1_005:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_DoGwan-1_005:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_DoGwan-1_005:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_DoGwan-1_005:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_DoGwan-1_005:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_DoGwan-1_005:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_DoGwan-1_005:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -59783,73 +61421,12 @@
    "x": 117,
    "y": 25,
    "source": "Market_Def/14Quest_DoGwan-1_009.txt",
-   "entry": "umyun:UMKING_MUMYUNG0_0",
+   "entry": "14Quest_DoGwan-1_009:main_0_0",
    "pages": [
     {
-     "key": "umyun:UMKING_MUMYUNG0_0",
+     "key": "14Quest_DoGwan-1_009:main_0_0",
      "type": "None",
-     "say": "喀儿喀儿，要在更晚之前打破这个恶业的羁绊。\n\n[您为什么独自一人在这儿生活呢？:1]\n别来跟我说话……\n\n[结束:0]",
-     "buttons": [
-      {
-       "id": 1,
-       "dest": "umyun:UMKING_MUMYUNG0_1"
-      }
-     ],
-     "checks": [
-      {
-       "type": "Level",
-       "op": "GreaterThanOrEqual",
-       "i1": 20,
-       "fail": null
-      }
-     ],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "umyun:UMKING_MUMYUNG0_1",
-     "type": "None",
-     "say": "为以前的过失赎罪啊……不管怎样这跟你无关。没有什么事儿的话你就走吧！我只不过是个无名的老头儿，不值得您操心！\n\n [您不卖沃玛神殿的古董吗？:1]",
-     "buttons": [
-      {
-       "id": 1,
-       "dest": "umyun:UMKING_MUMYUNG0_2"
-      }
-     ],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "umyun:UMKING_MUMYUNG0_2",
-     "type": "None",
-     "say": "你是从哪儿听说我有跟沃玛神殿有关的东西的？嗯……如果是那个姓王的富人派来的人的话，还是请回吧！\n\n [您对沃玛神殿很了解吗？:1]",
-     "buttons": [
-      {
-       "id": 1,
-       "dest": "umyun:UMKING_MUMYUNG0_3"
-      }
-     ],
-     "checks": [],
-     "actions": [],
-     "goods": [],
-     "types": [],
-     "success": null,
-     "currency": "",
-     "entry": false
-    },
-    {
-     "key": "umyun:UMKING_MUMYUNG0_3",
-     "type": "None",
-     "say": "怎么？你要亲自进去找“古董”？那个地方啊……简而言之就是个地狱，地狱啊！你难道是鸡脑子啊！简直是去那儿自寻死路啊！\n\n[结束:0]",
+     "say": "唉！到此为止！现在不要和我说话。\n\n[结束:0]",
      "buttons": [],
      "checks": [],
      "actions": [],
@@ -59857,7 +61434,7 @@
      "types": [],
      "success": null,
      "currency": "",
-     "entry": false
+     "entry": true
     }
    ],
    "warnings": [
@@ -59892,7 +61469,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_DoGwan-1_002:chung_other_class",
      "currency": "",
      "entry": false
     },
@@ -59905,7 +61482,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_DoGwan-1_002:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "15Magic_DoGwan-1_002:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "15Magic_DoGwan-1_002:chung_other_class",
      "currency": "",
      "entry": false
     }
@@ -60664,13 +62254,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -60690,13 +62274,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -60716,13 +62294,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -60737,7 +62309,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Oasis-4_001:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Oasis-4_001:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Oasis-4_001:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Oasis-4_001:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Oasis-4_001:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Oasis-4_001:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Oasis-4_001:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -60864,13 +62475,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -60890,13 +62496,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -60911,7 +62512,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Oasis-4_004:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Oasis-4_004:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Oasis-4_004:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Oasis-4_004:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Oasis-4_004:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -61074,13 +62701,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -61095,7 +62717,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Oasis-4_003:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Oasis-4_003:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Oasis-4_003:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Oasis-4_003:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Oasis-4_003:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Oasis-4_003:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Oasis-4_003:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Oasis-4_003:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Oasis-4_003:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -61296,7 +62970,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_Oasis-4_003:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -61609,7 +63283,11 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Bracelet",
+      "Necklace",
+      "Ring"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -61628,7 +63306,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon"
+      "Bracelet",
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -61643,7 +63323,72 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Astrologist_Oasis-4_005:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Astrologist_Oasis-4_005:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Astrologist_Oasis-4_005:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Astrologist_Oasis-4_005:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Astrologist_Oasis-4_005:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Astrologist_Oasis-4_005:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Astrologist_Oasis-4_005:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Astrologist_Oasis-4_005:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Astrologist_Oasis-4_005:TQuest#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Astrologist_Oasis-4_005:TQuest#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Astrologist_Oasis-4_005:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -61745,13 +63490,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -61766,7 +63506,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "10Material_Oasis-4_003:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "10Material_Oasis-4_003:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "10Material_Oasis-4_003:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "10Material_Oasis-4_003:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "10Material_Oasis-4_003:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -61945,13 +63711,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -61971,13 +63731,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -61997,13 +63751,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -62057,7 +63805,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Samak1-5_002:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Samak1-5_002:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Samak1-5_002:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Samak1-5_002:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Samak1-5_002:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -62221,13 +63995,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -62355,13 +64123,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -62381,13 +64144,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -62402,7 +64160,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Samak-5_004:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Samak-5_004:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Samak-5_004:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Samak-5_004:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Samak-5_004:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Samak-5_004:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Samak-5_004:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -62565,13 +64362,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -62586,7 +64378,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Samak-5_003:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Samak-5_003:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Samak-5_003:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Samak-5_003:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Samak-5_003:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -62787,7 +64605,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_Samak-5_006:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -62990,13 +64808,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -63016,13 +64830,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -63037,7 +64847,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_Samak-5_005:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Samak-5_005:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Samak-5_005:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Samak-5_005:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Samak-5_005:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Samak-5_005:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Samak-5_005:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -63723,13 +65572,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -63749,13 +65592,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -63775,13 +65612,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -63796,7 +65627,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "02Weapon_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Mongchon-74:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Mongchon-74:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Mongchon-74:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Mongchon-74:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Mongchon-74:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "02Weapon_Mongchon-74:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "02Weapon_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -63923,13 +65806,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -63949,13 +65827,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -63970,7 +65843,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "03Armor_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Mongchon-74:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Mongchon-74:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Mongchon-74:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "03Armor_Mongchon-74:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "03Armor_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -64133,13 +66045,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -64154,7 +66061,20 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "04Potion_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "04Potion_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "04Potion_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -64355,7 +66275,46 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "06Inn_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Mongchon-74:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Mongchon-74:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Mongchon-74:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "06Inn_Mongchon-74:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "06Inn_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -64474,7 +66433,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -64488,7 +66450,33 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Mongchon-74:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "07Grocery_Mongchon-74:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "07Grocery_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -64723,13 +66711,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -64749,13 +66733,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -64770,7 +66750,59 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "08Accessory_Mongchon-74:TQuest#1",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Mongchon-74:TQuest#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Mongchon-74:TQuest#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Mongchon-74:TQuest#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Mongchon-74:TQuest#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Mongchon-74:TQuest#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Mongchon-74:TQuest#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Mongchon-74:TQuest#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Mongchon-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -64871,13 +66903,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -69427,7 +71454,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Mongchon2-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -71768,7 +73795,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "15Magic_Mongchon3-74:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -72993,13 +75020,13 @@
        "type": "PKPoints",
        "op": "GreaterThanOrEqual",
        "i1": 0,
-       "fail": null
+       "fail": "PkPoint:PkTime"
       },
       {
        "type": "PKPoints",
        "op": "GreaterThanOrEqual",
        "i1": 0,
-       "fail": null
+       "fail": "PkPoint:PkTime"
       }
      ],
      "actions": [],
@@ -73024,7 +75051,7 @@
        "type": "Gold",
        "op": "GreaterThanOrEqual",
        "i1": 500,
-       "fail": null
+       "fail": "PkPoint:PkTime"
       }
      ],
      "actions": [
@@ -73070,7 +75097,7 @@
        "type": "PKPoints",
        "op": "LessThan",
        "i1": 2,
-       "fail": null
+       "fail": "YubaeTele:RedZone_Teleport"
       }
      ],
      "actions": [],
@@ -73116,7 +75143,7 @@
      ],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "YubaeTele:RedZone_Teleport",
      "currency": "",
      "entry": false
     }
@@ -73218,7 +75245,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -73252,7 +75282,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "07Grocery_SkeletonCave-DM001:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -73361,9 +75391,35 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_SkeletonCave-DM002:main#1",
      "currency": "",
      "entry": true
+    },
+    {
+     "key": "14Quest_SkeletonCave-DM002:main#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_SkeletonCave-DM002:main#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_SkeletonCave-DM002:main#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_SkeletonCave-DM002:main",
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
@@ -73430,7 +75486,7 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "09NotBlocker_ZombieCave-D431:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -73457,9 +75513,126 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_ZombieCave-E402_001:main#1",
      "currency": "",
      "entry": true
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#7",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#7",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#8",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#8",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main#9",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-E402_001:main#9",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-E402_001:main",
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
@@ -73484,9 +75657,126 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_ZombieCave-D404_002:main#1",
      "currency": "",
      "entry": true
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#5",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#5",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#6",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#6",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#7",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#7",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#8",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#8",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main#9",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_ZombieCave-D404_002:main#9",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_ZombieCave-D404_002:main",
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
@@ -73511,9 +75801,61 @@
      "actions": [],
      "goods": [],
      "types": [],
-     "success": null,
+     "success": "14Quest_WoomaPalace-D023_001:main#1",
      "currency": "",
      "entry": true
+    },
+    {
+     "key": "14Quest_WoomaPalace-D023_001:main#1",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_WoomaPalace-D023_001:main#2",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_WoomaPalace-D023_001:main#2",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_WoomaPalace-D023_001:main#3",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_WoomaPalace-D023_001:main#3",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_WoomaPalace-D023_001:main#4",
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "14Quest_WoomaPalace-D023_001:main#4",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "14Quest_WoomaPalace-D023_001:main",
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
@@ -73735,13 +76077,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -73963,13 +76299,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
       "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -74353,13 +76685,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -74531,13 +76859,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -74557,13 +76879,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -74583,13 +76899,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -74713,13 +77023,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -74739,13 +77044,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Helmet"
      ],
      "success": null,
      "currency": "",
@@ -74905,13 +77205,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable",
+      "Torch"
      ],
      "success": null,
      "currency": "",
@@ -75211,7 +77506,10 @@
      "checks": [],
      "actions": [],
      "goods": [],
-     "types": [],
+     "types": [
+      "Consumable",
+      "Torch"
+     ],
      "success": null,
      "currency": "",
      "entry": false
@@ -75266,7 +77564,7 @@
     {
      "key": "08Accessory_Numa-41:main_0_0",
      "type": "None",
-     "say": "大家来瞧一瞧看一看啊, 这里回收各种项链和戒指,还可以对饰品进行修理. 快来看啊,都是上好的货色.\n\n  [买饰品:1]\n\n  [卖饰品:2]\n\n  [修理饰品.:3]\n\n  [关闭:0]",
+     "say": "大家来瞧一瞧看一看啊, 这里回收各种项链和戒指,还可以对饰品进行修理. 快来看啊,都是上好的货色.\n\n  [买饰品:1]\n\n  [卖饰品:2]\n\n  [修理饰品.:3]\n\n  [询问生锈饰品.:4]\n\n  [关闭:0]",
      "buttons": [
       {
        "id": 1,
@@ -75279,6 +77577,10 @@
       {
        "id": 3,
        "dest": "08Accessory_Numa-41:repair#func:repair"
+      },
+      {
+       "id": 4,
+       "dest": "08Accessory_Numa-41:rustaccessory"
       }
      ],
      "checks": [],
@@ -75442,13 +77744,9 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
      "currency": "",
@@ -75468,15 +77766,24 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
       "Bracelet",
-      "Ring",
-      "Shoes"
+      "Necklace",
+      "Ring"
      ],
      "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "08Accessory_Numa-41:rustaccessory",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": "08Accessory_Numa-41:main_0_0",
      "currency": "",
      "entry": false
     }
@@ -75564,13 +77871,8 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Book",
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -76080,13 +78382,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -76408,13 +78704,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -76464,13 +78760,7 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
-      "Armour",
-      "Helmet",
-      "Necklace",
-      "Bracelet",
-      "Ring",
-      "Shoes"
+      "Consumable"
      ],
      "success": null,
      "currency": "",
@@ -76520,13 +78810,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -76576,13 +78866,13 @@
      "actions": [],
      "goods": [],
      "types": [
-      "Weapon",
       "Armour",
+      "Bracelet",
       "Helmet",
       "Necklace",
-      "Bracelet",
       "Ring",
-      "Shoes"
+      "Shoes",
+      "Weapon"
      ],
      "success": null,
      "currency": "",
@@ -79206,7 +81496,7 @@
  ],
  "stats": {
   "npcs": 230,
-  "pages": 4017,
+  "pages": 4246,
   "npc_with_pages": 230,
   "entries": 230
  },

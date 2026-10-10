@@ -466,7 +466,8 @@ class Compiler:
                     strip_dead_links(p)
                 for c in p["checks"]:
                     if c.get("fail") and dead(c["fail"]):
-                        c["fail"] = None
+                        # 失败目标页是死页 → 回落入口页（绝不能留 null：服务端会静默 return）
+                        c["fail"] = ENTRY_ALIAS
                 if p["success"] and dead(p["success"]):
                     p["success"] = None
 
@@ -489,7 +490,9 @@ class Compiler:
             self.pages[k]["buttons"] = [b for b in self.pages[k]["buttons"] if b["dest"] in seen]
             for c in self.pages[k]["checks"]:
                 if c.get("fail") and c["fail"] not in seen:
-                    c["fail"] = None
+                    # 目标页被剪掉（不可达）时不能留空：服务端 CheckPage 失败 + FailPage=null
+                    # 会静默 return（玩家点了没反应）。回落入口页，至少给玩家一个可见响应。
+                    c["fail"] = self.entry
             if self.pages[k]["success"] and self.pages[k]["success"] not in seen:
                 self.pages[k]["success"] = None
         return [self.pages[k] for k in self.order if k in seen]
@@ -555,6 +558,10 @@ class Compiler:
                 target = fails[i]
                 if target == "__next__":
                     target = gkeys[i + 1] if i + 1 < len(gkeys) else None
+                # 条件失败必须有落点：服务端 CheckPage 失败且 FailPage=null 时会**静默 return**
+                # （玩家点了没反应）。没有 else/下一组时统一回落入口页（回到菜单也是一种响应）。
+                if target is None:
+                    target = ENTRY_ALIAS
                 for c in supported[i]:
                     c["fail"] = target
                 page = self.page(gkey)

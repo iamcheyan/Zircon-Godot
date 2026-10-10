@@ -34,7 +34,7 @@ namespace ZirconClient.Scripts;
 public partial class GameScene
 {
     private const int NpcAuditMaxDepth = 4;
-    private const double NpcAuditTeleportBudgetMs = 25000.0;
+    private const double NpcAuditTeleportBudgetMs = 45000.0;   // 整环 24 个落点，每个最多等 8s
     private const double NpcAuditResponseTimeoutMs = 5000.0;
 
     private bool _npcAuditStarted;
@@ -199,6 +199,9 @@ public partial class GameScene
 
         await WaitNpcCallReadyAsync();
         int showsBeforeClick = _npcDialog?.PageShowCount ?? 0;
+        int mapBeforeEntry = _playerMapIndex;
+        var locBeforeEntry = _playerLocation;
+        long goldBeforeEntry = CurrentGold();
         bool clicked = await ClickNpcAsync(npc);
         rec.Clicked = clicked;
         if (!clicked)
@@ -211,6 +214,23 @@ public partial class GameScene
         int entryPage = await WaitForPageAsync(npc.ObjectID, NpcAuditResponseTimeoutMs, showsBeforeClick);
         if (entryPage < 0)
         {
+            // 入口页本身可能就是"纯动作页"（Say 空 + 动作，例如六面神石的固定目的地传送）：
+            // 服务端执行动作后直接关闭对话，不会有 NPCResponse。按副作用判定成功。
+            bool actedOnEntry = _playerMapIndex != mapBeforeEntry
+                || _playerLocation != locBeforeEntry
+                || CurrentGold() != goldBeforeEntry;
+            if (actedOnEntry)
+            {
+                rec.Pages.Add(new NpcAuditPageRecord
+                {
+                    Page = -1, Links = new List<int>(), Type = "entry_action",
+                    Shot = CaptureNpcAuditShot(shotsDir, entry.Index, 0, -1),
+                });
+                GD.Print($"[NpcAudit] [{entry.Index}] 入口即动作生效"
+                         + $"(map {mapBeforeEntry}->{_playerMapIndex}, gold {goldBeforeEntry}->{CurrentGold()})");
+                await EnsureNpcDialogClosedAsync();
+                return rec;
+            }
             rec.Errors.Add("no_response");
             GD.PrintErr($"[NpcAudit] [{entry.Index}] 5s 内无 NPCResponse (object={npc.ObjectID})");
             await EnsureNpcDialogClosedAsync();

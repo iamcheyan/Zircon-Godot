@@ -74,6 +74,10 @@ public partial class GameScene
         public int EntryPage;
         public readonly List<NpcAuditPageRecord> Pages = new();
         public readonly List<string> Errors = new();
+        /// <summary>--npc-func-audit 用：本 NPC 上跑过的功能验证用例（为空时 JSONL 不输出 func 字段）。</summary>
+        public readonly List<NpcFuncCaseResult> Cases = new();
+        /// <summary>本记录已产出的截图序号（page 记录与断言点截图共用，保证文件名不撞）。</summary>
+        public int ShotSeq;
     }
 
     // ---- 入口 ---------------------------------------------------------------
@@ -618,7 +622,25 @@ public partial class GameScene
             if (i > 0) sb.Append(',');
             sb.Append(JsonString(rec.Errors[i]));
         }
-        sb.Append("]}");
+        sb.Append(']');
+        if (rec.Cases.Count > 0)
+        {
+            sb.Append(",\"func\":{\"cases\":[");
+            for (int i = 0; i < rec.Cases.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                var item = rec.Cases[i];
+                sb.Append($"{{\"name\":{JsonString(item.Name)},\"ok\":{(item.Ok ? "true" : "false")},\"error\":{JsonString(item.Error)},\"evidence\":[");
+                for (int e = 0; e < item.Evidence.Count; e++)
+                {
+                    if (e > 0) sb.Append(',');
+                    sb.Append(JsonString(item.Evidence[e]));
+                }
+                sb.Append("]}");
+            }
+            sb.Append("]}");
+        }
+        sb.Append('}');
         return sb.ToString();
     }
 

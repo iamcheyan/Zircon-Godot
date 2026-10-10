@@ -123,6 +123,33 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --npc-func-audit：功能性验证通道。在巡检的基础上用真实交互证明
+    /// 「购买 / 收费传送 / 仓库存取（可选：卖出）」真的生效，只产出可核对的断言值，
+    /// 不只看 UI 有没有弹窗。清单、NPC 坐标与 --npc-audit 共用同一份 manifest。
+    /// </summary>
+    public static bool NpcFuncAudit => Has("--npc-func-audit");
+
+    /// <summary>--npc-func-audit-out &lt;dir&gt;：功能验证输出目录（缺省 /tmp/npc_func_audit）。</summary>
+    public static string NpcFuncAuditOut => GetValue("--npc-func-audit-out") ?? "/tmp/npc_func_audit";
+
+    /// <summary>
+    /// --npc-func-audit-only buy,teleport,storage,sell：只跑指定用例（缺省全跑）；
+    /// 未知名字会被忽略。用于迭代时只重跑失败的那一项。
+    /// </summary>
+    public static List<string> NpcFuncAuditOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--npc-func-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string name = part.Trim().ToLowerInvariant();
+            if (name.Length > 0 && !result.Contains(name)) result.Add(name);
+        }
+        return result;
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

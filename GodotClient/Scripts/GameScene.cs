@@ -9677,6 +9677,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.0).Timeout += StartNpcAudit;
         }
 
+        // NPC 功能性验证：进入游戏且地图就绪后启动一次（实现见 GameScene.NpcFuncAudit.cs）。
+        if (AutoLoginArgs.NpcFuncAudit && !_npcFuncAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _npcFuncAuditStarted = true;
+            GetTree().CreateTimer(1.0).Timeout += StartNpcFuncAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

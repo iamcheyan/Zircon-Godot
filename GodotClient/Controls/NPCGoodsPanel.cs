@@ -193,6 +193,22 @@ public partial class NPCGoodsPanel : DXControl
         return ok;
     }
 
+    /// <summary>
+    /// 审计用：当前渲染出来的商品行（顺序 = good 下标，起点 <see cref="FirstVisibleRowIndex"/>）。
+    /// 存在的意义是让实机验证能走**真实行按钮的双击路径**（DXControl.MouseDoubleClick →
+    /// NPCGoodsPanel.BuySelected），而不是绕过 UI 直接调 GameScene.SendNPCBuy。
+    /// </summary>
+    public IReadOnlyList<DXButton> VisibleRows => _rows;
+
+    /// <summary>审计用：第一个可见行的 good 下标（滚动位置 / 行高）。</summary>
+    public int FirstVisibleRowIndex => _rowHeight > 0 ? _scroll.Value / _rowHeight : 0;
+
+    /// <summary>审计用：当前选中的 good 下标（-1 = 未选中）。</summary>
+    public int SelectedIndex => _selected;
+
+    /// <summary>审计用：本页商品总数。</summary>
+    public int GoodCount => _goods.Count;
+
     public bool TrySelectForSale(DXItemCell source)
     {
         // 原版 DXItemCell 的 NPC 买卖分支只在 GridType.Inventory 中切换

@@ -282,8 +282,21 @@ public partial class NPCDialog : DXWindow
     public DXButton LegacyScrollDownButton => _scrollDown;
     public NPCTextControl LegacyText => _text;
 
+    /// <summary>当前显示页的 NPCPage.Index（未显示任何页时为 -1）。供实机巡检记录页号。</summary>
+    public int CurrentPageIndex => _page?.Index ?? -1;
+
+    /// <summary>当前显示页的 DialogType（未显示任何页时为 None）。</summary>
+    public NPCDialogType CurrentPageDialogType => _page?.DialogType ?? NPCDialogType.None;
+
+    /// <summary>
+    /// 累计 ShowPage 次数。巡检点击链接后用它判断「服务器确实回了新页」——
+    /// 仅仅比较页号不可靠：同一页自环/回退也会产生新响应。
+    /// </summary>
+    public int PageShowCount { get; private set; }
+
     public void ShowPage(S.NPCResponse response)
     {
+        PageShowCount++;
         _page = response?.Page;
         if (_page == null) return;
 

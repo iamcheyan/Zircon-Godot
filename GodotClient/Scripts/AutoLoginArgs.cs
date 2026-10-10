@@ -67,6 +67,62 @@ public static class AutoLoginArgs
     public static bool HexaAudit => Has("--hexa-audit");
 
     /// <summary>
+    /// --npc-audit：全量 NPC 实机巡检。逐条读取清单，用聊天 @move 把角色传到目标
+    /// NPC 面前，以真实点击路径唤起对话框、遍历可点链接并逐步截图，最后把行为写成
+    /// JSONL。需要 Admin 账号（@move 是 GM 命令）。
+    /// </summary>
+    public static bool NpcAudit => Has("--npc-audit");
+
+    /// <summary>--npc-audit-manifest &lt;path&gt;：巡检清单（缺省 tools/npc_audit_manifest.json，相对进程工作目录）。</summary>
+    public static string NpcAuditManifest =>
+        GetValue("--npc-audit-manifest") ?? "tools/npc_audit_manifest.json";
+
+    /// <summary>--npc-audit-out &lt;dir&gt;：输出目录（results.jsonl + shots/）。</summary>
+    public static string NpcAuditOut => GetValue("--npc-audit-out") ?? "/tmp/npc_audit";
+
+    /// <summary>--npc-audit-limit N：只跑清单里的前 N 条（<=0 或缺省 = 全量）。</summary>
+    public static int NpcAuditLimit
+    {
+        get
+        {
+            string raw = GetValue("--npc-audit-limit");
+            return int.TryParse(raw, out int n) && n > 0 ? n : 0;
+        }
+    }
+
+    /// <summary>--npc-audit-only 13,14：只跑指定 index（缺省 = 全量）。</summary>
+    public static List<int> NpcAuditOnly()
+    {
+        var result = new List<int>();
+        string raw = GetValue("--npc-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (int.TryParse(part.Trim(), out int index)) result.Add(index);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// --npc-audit-quit=0|1：巡检结束后是否退出进程（缺省 1 = 退出，便于脚本化）。
+    /// 只有显式传 0/false/no 才留在游戏里。
+    /// </summary>
+    public static bool NpcAuditQuit
+    {
+        get
+        {
+            string raw = GetValue("--npc-audit-quit");
+            if (raw != null && raw.StartsWith("--")) raw = null;
+            if (string.IsNullOrWhiteSpace(raw)) return true;
+            return raw.Trim().ToLowerInvariant() switch
+            {
+                "0" or "false" or "no" or "off" => false,
+                _ => true,
+            };
+        }
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

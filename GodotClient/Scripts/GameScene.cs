@@ -9670,6 +9670,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.0).Timeout += RunLegacyNpcResponseSelfTest;
         }
 
+        // 全量 NPC 实机巡检：进入游戏且地图就绪后启动一次（实现见 GameScene.NpcAudit.cs）。
+        if (AutoLoginArgs.NpcAudit && !_npcAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _npcAuditStarted = true;
+            GetTree().CreateTimer(1.0).Timeout += StartNpcAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

@@ -131,6 +131,11 @@ public partial class GameScene
                 NpcAuditRecord rec;
                 try
                 {
+                    if (_net?.Connection?.Connected == false)
+                    {
+                        GD.PrintErr("[NpcAudit] ABORT 连接已断开（服务端断开/封禁），中止巡检");
+                        break;
+                    }
                     rec = await AuditOneNpcAsync(entry, shotsDir);
                 }
                 catch (Exception ex)
@@ -482,6 +487,9 @@ public partial class GameScene
                     });
                     GD.Print($"[NpcAudit] [{entry.Index}] page={pageIndex} link={id} 副作用生效"
                              + $"(map {mapBefore}->{_playerMapIndex}, gold {goldBefore}->{CurrentGold()})");
+                    // 副作用（典型是收费传送）已经把我们挪走，兄弟分支无法再回到本页；
+                    // 直接结束该 NPC 的遍历，避免把"回不去"记成一堆 link_failed。
+                    return;
                 }
                 else
                 {

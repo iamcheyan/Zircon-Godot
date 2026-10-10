@@ -78,10 +78,47 @@ public partial class MapView : Node2D
         _debugLogged = false;
         _warned = false;
         _countLogged = false;
-        string full = Path.Combine(_mapPath, mapFileName + ".map");
-        Map = new MirMap(full);
+        string full = ResolveMapFile(mapFileName);
+        try
+        {
+            Map = new MirMap(full);
+        }
+        catch (Exception ex)
+        {
+            // 单张地图缺失/损坏不应把异常抛回包处理循环（那会连带断线，实测 d903 vs D903 就踩过）。
+            GD.PrintErr($"[MapView] 地图加载失败 {mapFileName} ({full}): {ex.Message}");
+            return;
+        }
         GD.Print($"[MapView] 加载 {mapFileName}: {Map.Width}x{Map.Height}");
         SyncTerrainRows();
+    }
+
+    private static readonly Dictionary<string, string> _mapFileCache = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// 解析 .map 实际路径：先按原名，再按大小写不敏感匹配。
+    /// 服务端 DB 里同一张图可能同时存在 `D903` 与 `d903` 两个 MapInfo 行（历史导入重复），
+    /// 而 Linux 文件系统区分大小写 —— 直接用 DB 里的名字拼路径会 FileNotFound 并断线。
+    /// </summary>
+    private string ResolveMapFile(string mapFileName)
+    {
+        string exact = Path.Combine(_mapPath, mapFileName + ".map");
+        if (File.Exists(exact)) return exact;
+        if (_mapFileCache.Count == 0)
+        {
+            try
+            {
+                foreach (var f in Directory.EnumerateFiles(_mapPath, "*.map"))
+                    _mapFileCache[Path.GetFileNameWithoutExtension(f)] = f;
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"[MapView] 扫描地图目录失败 {_mapPath}: {ex.Message}");
+            }
+        }
+        if (_mapFileCache.TryGetValue(mapFileName, out var hit)) return hit;
+        GD.PrintErr($"[MapView] 找不到地图文件: {mapFileName} (dir={_mapPath})");
+        return exact;
     }
 
     private bool _debugLogged;

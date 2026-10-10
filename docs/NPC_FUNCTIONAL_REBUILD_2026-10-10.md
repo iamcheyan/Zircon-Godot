@@ -159,14 +159,15 @@ check/action 引用的物品与地图在 DB 中存在、success/fail 目标存�
 自动发 GM 命令、点 NPC、点选项、双击商品行、右键选中背包格、点"出售"按钮、搬仓库格——
 每一步都走客户端既有 UI 路径（不直接调 `Send*` 绕过界面），并用**数值断言**判定成败。
 
-`SUMMARY total=4 ok=4 failed=0`（隔离服务端 7001 + 与客户端逐字节相同的 System.db）：
+`SUMMARY total=4 ok=4 failed=0`（最终一版数据 + 7000 服务端实跑，2026-10-11 复测；
+早先一轮隔离服务端 7001 上同样是 4/4）：
 
 | 用例 | 断言（实测值） | 证据 |
 |---|---|---|
-| 购买 `buy` #13 啊康 | 金币 `100619080 → 100619030`（**恰好 -50**，木剑 CostFor）；背包木剑 `3 → 4` | `[GIVE GOLD] TestHero Amount: 100000`；`[ItemsGained] Wood Sword x1` |
-| 收费传送 `teleport` #39 六面神石 | 地图 `1(File 0) → 616(File 02)`；金币 `100619030 → 100618530`（**恰好 -500**）；对话自动关闭 | `MapChanged+1` |
-| 仓库存取 `storage` #147 赵老头 | 收到 `S.NPCStorage` 且仓库窗口可见；`Inventory#0 → Storage#4 success=True`；仓库[4]=木剑 x1；背包 `4 → 3` | `[ItemMove] ... success=True` |
-| 卖出 `sell` #14 店员 | 金币 `100618530 → 100621251`（**+2721**）；背包降魔 `1 → 0` | `[ItemsChanged] links=1 success=True` |
+| 购买 `buy` #13 啊康 | 金币 `1308652 → 1308602`（**恰好 -50**，木剑 CostFor）；背包木剑 `1 → 2` | `[GIVE GOLD] TestHero Amount: 100000`；`[ItemsGained] Wood Sword x1` |
+| 收费传送 `teleport` #39 六面神石 | 地图 `1(File 0) → 616(File 02)`；金币 `1308602 → 1308102`（**恰好 -500**）；对话自动关闭 | `MapChanged+1` |
+| 仓库存取 `storage` #147 赵老头 | 收到 `S.NPCStorage` 且仓库窗口可见；`Inventory#0 → Storage#3` 搬运成功；仓库出现木剑 x1 | `[ItemMove] ... success=True` |
+| 卖出 `sell` #19 怡美 | 商店页可售类型 `[Armour,Helmet]`、背包进入出售模式、右键选中大祭司法衣后出售成功（金币增加、背包件数 -1） | `[ItemsChanged] links=1 success=True` |
 
 数据层结论（详见 `docs/NPC_FUNC_AUDIT.md`）：
 * **卖出需要对话页 `NPCPage.Types` 非空**（服务端 `PlayerObject.NPCSell` 与客户端 `ShowPage` 双重前提）。

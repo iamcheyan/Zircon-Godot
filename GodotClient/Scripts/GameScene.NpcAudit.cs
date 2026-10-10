@@ -122,6 +122,26 @@ public partial class GameScene
         Directory.CreateDirectory(shotsDir);
         string resultsPath = Path.Combine(outDir, "results.jsonl");
 
+        // 暖机：刚进游戏时服务端可能还没把会话切到 Game 阶段，此时发 @move 会被**静默忽略**
+        // （实测首个 NPC 必超时、后续正常）。这里反复发一条无害的 @move（自己地图上横向 2 格），
+        // 直到客户端坐标真的发生变化，才认为命令通道可用。
+        await WaitUntilAsync(() => _playerLocation.X > 0 || _playerLocation.Y > 0, 8000.0);
+        await WaitSecondsAsync(2.0);
+        for (int i = 0; i < 12; i++)
+        {
+            var info = Globals.MapInfoList?.Binding.FirstOrDefault(m => m.Index == _playerMapIndex);
+            if (info == null) { await WaitSecondsAsync(1.0); continue; }
+            var before = _playerLocation;
+            int tx = Math.Clamp(before.X + 2, 1, 3000);
+            SendChat($"@move {info.FileName} {tx} {before.Y}");
+            if (await WaitUntilAsync(() => _playerLocation != before, 3000.0))
+            {
+                GD.Print($"[NpcAudit] 命令通道就绪（{before.X},{before.Y} -> {_playerLocation.X},{_playerLocation.Y}）");
+                break;
+            }
+        }
+        await WaitSecondsAsync(1.0);
+
         int ok = 0, noResponse = 0, notFound = 0, clickMissed = 0, timeout = 0;
         // 每次运行重写 results.jsonl，避免上一轮的旧记录污染统计。
         using (var writer = new StreamWriter(resultsPath, append: false) { AutoFlush = true })
@@ -184,9 +204,16 @@ public partial class GameScene
 
         if (!await TeleportToNpcAsync(entry))
         {
-            rec.Errors.Add("timeout");
-            GD.PrintErr($"[NpcAudit] [{entry.Index}] 传送未到位 (timeout)");
-            return rec;
+            // 偶发失败（首传/刚切图）再给一轮机会
+            await WaitSecondsAsync(3.0);
+            if (!await TeleportToNpcAsync(entry))
+            {
+                rec.Errors.Add("timeout");
+                GD.PrintErr($"[NpcAudit] [{entry.Index}] 传送未到位 (timeout) "
+                            + $"player=({_playerLocation.X},{_playerLocation.Y}) mapIdx={_playerMapIndex} "
+                            + $"want={entry.MapFile} ({entry.X},{entry.Y}) dialogVisible={_npcDialog?.Visible == true}");
+                return rec;
+            }
         }
 
         ObjectRenderer npc = FindTargetNpc(entry);
@@ -262,10 +289,15 @@ public partial class GameScene
     {
         // 落点要避开 NPC 自身格与其周围障碍：按距离 1..3 的整环尝试（NPC 常站在不可走格上，
         // 只试 5 个偏移会在城内/屋内大量 timeout）。
+        // 落点按「最可能可用」排序：先正下方（NPC 下方通常是空地），再正上方/左右，最后斜角；
+        // 预算 45s、每次最多等 8s，所以顺序很关键（实测 (402,358) 可用但排在环的后段就永远轮不到）。
         var offsets = new List<(int dx, int dy)>();
-        for (int d = 1; d <= 3; d++)
-            foreach (var (dx, dy) in new[] { (0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1) })
-                offsets.Add((dx * d, dy * d));
+        foreach (var (dx, dy) in new[] { (0, 1), (0, 2), (0, 3), (0, -1), (0, -2), (0, -3),
+                                        (1, 0), (2, 0), (-1, 0), (-2, 0),
+                                        (1, 1), (-1, 1), (1, -1), (-1, -1),
+                                        (2, 1), (-2, 1), (2, -1), (-2, -1),
+                                        (1, 2), (-1, 2), (1, -2), (-1, -2) })
+            offsets.Add((dx, dy));
         double deadline = Godot.Time.GetTicksMsec() + NpcAuditTeleportBudgetMs;
 
         foreach (var (dx, dy) in offsets)
@@ -279,7 +311,10 @@ public partial class GameScene
             GD.Print($"[NpcAudit] [{entry.Index}] @move {entry.MapFile} {tx} {ty}");
             SendChat($"@move {entry.MapFile} {tx} {ty}");
 
-            if (!await WaitUntilAsync(() => IsPlayerNearNpc(entry), Math.Min(8000.0, remaining)))
+            // 同图内传送不会触发 S.MapChanged，客户端的本地玩家坐标更新路径与跨图不同：
+            // 这里同时接受「玩家坐标已落到目标格」作为成功条件，否则同图 NPC 会一直判失败。
+            if (!await WaitUntilAsync(() => IsPlayerNearNpc(entry) || IsPlayerAt(entry, tx, ty),
+                                      Math.Min(8000.0, remaining)))
                 continue;
 
             // 坐标已到位：再宽限等地图对象同步（NPC 本身找不到时由调用方记 npc_not_found）。
@@ -289,6 +324,15 @@ public partial class GameScene
         }
 
         return IsPlayerNearNpc(entry);
+    }
+
+    /// <summary>玩家坐标是否已落到指定格（同图传送的到位判定）。</summary>
+    private bool IsPlayerAt(NpcAuditEntry entry, int x, int y)
+    {
+        var info = Globals.MapInfoList?.Binding.FirstOrDefault(m => m.Index == _playerMapIndex);
+        if (info == null || !string.Equals(info.FileName, entry.MapFile, StringComparison.OrdinalIgnoreCase))
+            return false;
+        return Math.Abs(_playerLocation.X - x) <= 1 && Math.Abs(_playerLocation.Y - y) <= 1;
     }
 
     private bool IsPlayerNearNpc(NpcAuditEntry entry)
@@ -440,6 +484,14 @@ public partial class GameScene
     }
 
     // ---- 链接遍历 -----------------------------------------------------------
+
+    /// <summary>固定等待（巡检暖机/重试用）。</summary>
+    private async Task WaitSecondsAsync(double seconds)
+    {
+        double deadline = Godot.Time.GetTicksMsec() + seconds * 1000.0;
+        while (Godot.Time.GetTicksMsec() < deadline)
+            await NextFrameAsync();
+    }
 
     /// <summary>当前金币数量（客户端本地缓存，用于判定「收费」类链接是否真的扣钱）。</summary>
     private long CurrentGold()

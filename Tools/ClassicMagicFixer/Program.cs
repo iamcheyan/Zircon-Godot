@@ -258,6 +258,9 @@ switch (mode)
         Console.WriteLine($"Dumped {list.Count} NPCs to {outPath}");
         return ExitOk;
     }
+    case "npcgraph":
+        return NpcGraphAudit.Run(root, args.Length >= 3 ? args[2] : "/tmp/npc_graph.json");
+
 
     case "charpos":
     {
@@ -350,6 +353,15 @@ switch (mode)
         }
         return ExitOk;
     }
+
+    case "applynpcir":
+        if (args.Length < 3)
+        {
+            Console.Error.WriteLine("applynpcir needs <RootDir> <IR.json> [--dry-run]");
+            return ExitFail;
+        }
+        return NpcIrApply.Run(root, Path.GetFullPath(args[2]),
+            args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
 
     default:
         Console.Error.WriteLine($"unknown mode: {mode}");

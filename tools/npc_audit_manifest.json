@@ -1,0 +1,3425 @@
+{
+ "generated": "2026-10-10",
+ "count": 230,
+ "npcs": [
+  {
+   "index": 13,
+   "name": "啊康",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 402,
+   "y": 356,
+   "category": "武器",
+   "mud3File": "02Weapon_Bichon1",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 14,
+   "name": "店员",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 470,
+   "y": 424,
+   "category": "书店",
+   "mud3File": "05Book_Bichon",
+   "services": [
+    "基础与进阶技能书买卖"
+   ],
+   "entryPage": 13
+  },
+  {
+   "index": 15,
+   "name": "药店老板",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 397,
+   "y": 363,
+   "category": "药店",
+   "mud3File": "04Potion_Bichon1",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 1
+  },
+  {
+   "index": 16,
+   "name": "杂货商",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 450,
+   "y": 413,
+   "category": "杂货",
+   "mud3File": "07Grocery_Bichon",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 18
+  },
+  {
+   "index": 17,
+   "name": "恩实",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 414,
+   "y": 349,
+   "category": "首饰",
+   "mud3File": "08Accessory_Bichon",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 18,
+   "name": "栗子商人",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 441,
+   "y": 374,
+   "category": "收购",
+   "mud3File": "10ChestnutMarket_Bichon",
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 19,
+   "name": "怡美",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 480,
+   "y": 407,
+   "category": "防具",
+   "mud3File": "03Armor_Bichon",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 20,
+   "name": "金氏",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 446,
+   "y": 405,
+   "category": "特殊",
+   "mud3File": "01Meet_Bichon1",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 3
+  },
+  {
+   "index": 21,
+   "name": "王铁匠",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 382,
+   "y": 198,
+   "category": "武器",
+   "mud3File": "02Weapon_Wooma",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 22,
+   "name": "天星",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 386,
+   "y": 119,
+   "category": "书店",
+   "mud3File": "10Material_DoGwan",
+   "services": [
+    "基础与进阶技能书买卖"
+   ],
+   "entryPage": 13
+  },
+  {
+   "index": 23,
+   "name": "华玉",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 363,
+   "y": 176,
+   "category": "药店",
+   "mud3File": "04Potion_Wooma",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 1
+  },
+  {
+   "index": 24,
+   "name": "避难所杂货商",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 394,
+   "y": 116,
+   "category": "杂货",
+   "mud3File": "06Inn_DoGwan",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 18
+  },
+  {
+   "index": 25,
+   "name": "药神",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 387,
+   "y": 118,
+   "category": "首饰",
+   "mud3File": "04Potion_DoGwan2",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 26,
+   "name": "栗子商人",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 382,
+   "y": 141,
+   "category": "收购",
+   "mud3File": "10ChestnutMarket_DoGwan",
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 27,
+   "name": "药中",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 393,
+   "y": 113,
+   "category": "防具",
+   "mud3File": "04Potion_DoGwan1",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 28,
+   "name": "钱老板",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 366,
+   "y": 182,
+   "category": "特殊",
+   "mud3File": "01Meet_DoGwan",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 3
+  },
+  {
+   "index": 30,
+   "name": "铁匠啊力",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 351,
+   "y": 219,
+   "category": "武器",
+   "mud3File": "02Weapon_SnakeVally",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 31,
+   "name": "啊福",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 331,
+   "y": 225,
+   "category": "书店",
+   "mud3File": "10Material_SnakeVally",
+   "services": [
+    "基础与进阶技能书买卖"
+   ],
+   "entryPage": 13
+  },
+  {
+   "index": 32,
+   "name": "金中医",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 334,
+   "y": 224,
+   "category": "药店",
+   "mud3File": "04Potion_SnakeVally",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 1
+  },
+  {
+   "index": 33,
+   "name": "流浪卢",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 361,
+   "y": 226,
+   "category": "杂货",
+   "mud3File": "07Grocery_SnakeVally",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 18
+  },
+  {
+   "index": 34,
+   "name": "客栈保管员",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 346,
+   "y": 234,
+   "category": "首饰",
+   "mud3File": "06Inn_SnakeVally",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 35,
+   "name": "蛇谷老太",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 337,
+   "y": 223,
+   "category": "收购",
+   "mud3File": "14Quest_SnakeVally1",
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 36,
+   "name": "金莲",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 342,
+   "y": 235,
+   "category": "防具",
+   "mud3File": "03Armor_SankeVally",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 37,
+   "name": "蛇谷老人",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 343,
+   "y": 219,
+   "category": "特殊",
+   "mud3File": "09NotBlocker_SnakeVally",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 3
+  },
+  {
+   "index": 38,
+   "name": "古井",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 408,
+   "y": 377,
+   "category": "特殊",
+   "mud3File": "09ChangeMoney_Bichon",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 25
+  },
+  {
+   "index": 39,
+   "name": "六面神石",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 498,
+   "y": 463,
+   "category": "传送",
+   "mud3File": "13Move_Bichon1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 38
+  },
+  {
+   "index": 41,
+   "name": "六面神石",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 306,
+   "y": 244,
+   "category": "传送",
+   "mud3File": "13Move_SnakeVally1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 39
+  },
+  {
+   "index": 42,
+   "name": "六面神石",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 416,
+   "y": 179,
+   "category": "传送",
+   "mud3File": "13Move_DoGwan",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 40
+  },
+  {
+   "index": 43,
+   "name": "六面神石",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 204,
+   "y": 289,
+   "category": "传送",
+   "mud3File": "13Move_Samak1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 44,
+   "name": "六面神石",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 435,
+   "y": 83,
+   "category": "传送",
+   "mud3File": "13Move_Oasis",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 43
+  },
+  {
+   "index": 45,
+   "name": "六面神石",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 190,
+   "y": 265,
+   "category": "传送",
+   "mud3File": null,
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 49
+  },
+  {
+   "index": 48,
+   "name": "武功教头",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 227,
+   "y": 169,
+   "category": "武器",
+   "mud3File": "15Magic_Samak1",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 71
+  },
+  {
+   "index": 50,
+   "name": "老郑",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 198,
+   "y": 252,
+   "category": "药店",
+   "mud3File": "04PotionMake_Samak",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 102
+  },
+  {
+   "index": 52,
+   "name": "杂货商老李",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 192,
+   "y": 232,
+   "category": "杂货",
+   "mud3File": "07Grocery_Samak",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 98
+  },
+  {
+   "index": 56,
+   "name": "六面神石",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 112,
+   "y": 177,
+   "category": "传送",
+   "mud3File": "13Move_Samak2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 114
+  },
+  {
+   "index": 60,
+   "name": "铁汉",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 189,
+   "y": 252,
+   "category": "武器",
+   "mud3File": "02Weapon_Samak",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 61,
+   "name": "润真",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 181,
+   "y": 277,
+   "category": "首饰",
+   "mud3File": "03Shoes_Samak",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 62,
+   "name": "啊宋",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 197,
+   "y": 235,
+   "category": "收购",
+   "mud3File": "10Material_Samak",
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 63,
+   "name": "黄老板",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 200,
+   "y": 249,
+   "category": "防具",
+   "mud3File": "01Meet_Samak",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 65,
+   "name": "屠夫",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 438,
+   "y": 52,
+   "category": "武器",
+   "mud3File": "01Meet_Oasis",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 66,
+   "name": "努玛药剂师",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 424,
+   "y": 97,
+   "category": "药店",
+   "mud3File": "15Magic_Oasis",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 102
+  },
+  {
+   "index": 67,
+   "name": "洪老板",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 470,
+   "y": 67,
+   "category": "杂货",
+   "mud3File": "07Grocery_Oasis",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 18
+  },
+  {
+   "index": 68,
+   "name": "努玛首饰商",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 426,
+   "y": 95,
+   "category": "首饰",
+   "mud3File": "15Magic_Oasis",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 69,
+   "name": "努玛收藏家",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 426,
+   "y": 99,
+   "category": "收购",
+   "mud3File": "15Magic_Oasis",
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 70,
+   "name": "努玛裁缝",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 428,
+   "y": 75,
+   "category": "防具",
+   "mud3File": "04Potion_Oasis",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 76,
+   "name": "啊胜",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 224,
+   "y": 210,
+   "category": "武器",
+   "mud3File": "02Weapon_HalfNight",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 77,
+   "name": "成赫",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 282,
+   "y": 224,
+   "category": "药店",
+   "mud3File": "04Potion_HalfNight",
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 102
+  },
+  {
+   "index": 78,
+   "name": "中叔",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 253,
+   "y": 291,
+   "category": "杂货",
+   "mud3File": "07Grocery_HalfNight",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 98
+  },
+  {
+   "index": 79,
+   "name": "晓华",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 266,
+   "y": 285,
+   "category": "首饰",
+   "mud3File": "08Accessory_HalfNight",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 80,
+   "name": "晓洋",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 249,
+   "y": 257,
+   "category": "防具",
+   "mud3File": "03Armor_HalfNight",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 81,
+   "name": "潘夜铁匠",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 188,
+   "y": 265,
+   "category": "武器",
+   "mud3File": null,
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 82,
+   "name": "潘夜药师",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 190,
+   "y": 263,
+   "category": "药店",
+   "mud3File": null,
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 102
+  },
+  {
+   "index": 83,
+   "name": "潘夜杂货商",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 190,
+   "y": 267,
+   "category": "杂货",
+   "mud3File": null,
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 98
+  },
+  {
+   "index": 84,
+   "name": "潘夜首饰商",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 192,
+   "y": 265,
+   "category": "首饰",
+   "mud3File": null,
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 85,
+   "name": "潘夜鉴宝商",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 188,
+   "y": 263,
+   "category": "收购",
+   "mud3File": null,
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 86,
+   "name": "潘夜裁缝",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 188,
+   "y": 267,
+   "category": "防具",
+   "mud3File": null,
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 88,
+   "name": "义贤",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 375,
+   "y": 304,
+   "category": "特殊",
+   "mud3File": "09HorseMarket_Bichon",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 119
+  },
+  {
+   "index": 90,
+   "name": "图书管理员",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 473,
+   "y": 428,
+   "category": "公告",
+   "mud3File": "14Quest_Bichon2",
+   "services": [
+    "悬赏令与大陆新闻"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 91,
+   "name": "书堂玄震",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 379,
+   "y": 214,
+   "category": "公告",
+   "mud3File": "14Quest_DoGwan2",
+   "services": [
+    "悬赏令与大陆新闻"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 92,
+   "name": "蛇谷老矿夫",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 360,
+   "y": 208,
+   "category": "公告",
+   "mud3File": "14Quest_SnakeVally2",
+   "services": [
+    "悬赏令与大陆新闻"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 93,
+   "name": "努玛告示牌",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 428,
+   "y": 97,
+   "category": "公告",
+   "mud3File": "15Magic_Oasis",
+   "services": [
+    "悬赏令与大陆新闻"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 94,
+   "name": "潘夜岛告示牌",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 192,
+   "y": 263,
+   "category": "公告",
+   "mud3File": null,
+   "services": [
+    "悬赏令与大陆新闻"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 95,
+   "name": "总教头",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 447,
+   "y": 444,
+   "category": "修炼",
+   "mud3File": "15Magic_Bichon1",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 96,
+   "name": "万事通",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 398,
+   "y": 127,
+   "category": "公告",
+   "mud3File": "14Doctor_DoGwan",
+   "services": [
+    "村落悬赏",
+    "大事公告"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 97,
+   "name": "断乔先生",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 347,
+   "y": 193,
+   "category": "公告",
+   "mud3File": "15Magic_SnakeVally",
+   "services": [
+    "村落悬赏",
+    "大事公告"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 98,
+   "name": "唯我独尊",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 426,
+   "y": 97,
+   "category": "公告",
+   "mud3File": "15Magic_Oasis",
+   "services": [
+    "村落悬赏",
+    "大事公告"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 99,
+   "name": "潘夜码头管理员",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 192,
+   "y": 267,
+   "category": "管理",
+   "mud3File": null,
+   "services": [
+    "行会管理与城市秩序"
+   ],
+   "entryPage": 147
+  },
+  {
+   "index": 100,
+   "name": "王大人",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 389,
+   "y": 396,
+   "category": "宠物",
+   "mud3File": "14Quest_Bichon1",
+   "services": [
+    "灵兽领养与随从管理"
+   ],
+   "entryPage": 148
+  },
+  {
+   "index": 101,
+   "name": "士官",
+   "mapFile": "1",
+   "mapDesc": "Lost Paradise",
+   "x": 403,
+   "y": 132,
+   "category": "宠物",
+   "mud3File": "14Quest_DoGwan1",
+   "services": [
+    "灵兽领养与随从管理"
+   ],
+   "entryPage": 148
+  },
+  {
+   "index": 102,
+   "name": "万事通",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 322,
+   "y": 223,
+   "category": "宠物",
+   "mud3File": "14Doctor_SnakeVally",
+   "services": [
+    "灵兽领养与随从管理"
+   ],
+   "entryPage": 148
+  },
+  {
+   "index": 103,
+   "name": "努玛驯兽师",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 430,
+   "y": 77,
+   "category": "宠物",
+   "mud3File": "04Potion_Oasis",
+   "services": [
+    "灵兽领养与随从管理"
+   ],
+   "entryPage": 148
+  },
+  {
+   "index": 104,
+   "name": "潘夜驯兽师",
+   "mapFile": "12",
+   "mapDesc": "Banya Island",
+   "x": 186,
+   "y": 265,
+   "category": "宠物",
+   "mud3File": null,
+   "services": [
+    "灵兽领养与随从管理"
+   ],
+   "entryPage": 148
+  },
+  {
+   "index": 105,
+   "name": "月老司仪",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 386,
+   "y": 288,
+   "category": "管理",
+   "mud3File": "21WeddingMaker_Bichon",
+   "services": [
+    "行会事务",
+    "婚姻公证与活动管理"
+   ],
+   "entryPage": 151
+  },
+  {
+   "index": 106,
+   "name": "六面神石",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 314,
+   "y": 193,
+   "category": "传送",
+   "mud3File": "13Move_SnakeVally2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 170
+  },
+  {
+   "index": 118,
+   "name": "六面神石",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 288,
+   "y": 241,
+   "category": "传送",
+   "mud3File": "13Move_HalfNight1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 190
+  },
+  {
+   "index": 135,
+   "name": "慧媛",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 478,
+   "y": 407,
+   "category": "武器",
+   "mud3File": "03Shoes_Bichon",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 194
+  },
+  {
+   "index": 136,
+   "name": "努玛鉴宝师",
+   "mapFile": "4",
+   "mapDesc": "Numa Village",
+   "x": 433,
+   "y": 83,
+   "category": "首饰",
+   "mud3File": "13Move_Oasis",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 198
+  },
+  {
+   "index": 140,
+   "name": "满春",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 231,
+   "y": 260,
+   "category": "特殊",
+   "mud3File": "06Inn_HalfNight",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": 334
+  },
+  {
+   "index": 141,
+   "name": "石母",
+   "mapFile": "0_003",
+   "mapDesc": "比奇县",
+   "x": 27,
+   "y": 35,
+   "category": "任务",
+   "mud3File": "14Quest_Bichon",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 142,
+   "name": "肉店金老板",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 425,
+   "y": 274,
+   "category": "肉店",
+   "mud3File": "01Meet_Kugkyung",
+   "services": [
+    "肉品收购与买卖",
+    "高品质纯度肉"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 143,
+   "name": "德秀",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 459,
+   "y": 279,
+   "category": "武器",
+   "mud3File": "02Weapon_Kugkyung",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 144,
+   "name": "顺子",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 442,
+   "y": 296,
+   "category": "防具",
+   "mud3File": "03Armor_Kugkyung",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 145,
+   "name": "尹老人",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 434,
+   "y": 303,
+   "category": "药店",
+   "mud3File": "04Potion_Kugkyung",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 146,
+   "name": "老余",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 445,
+   "y": 319,
+   "category": "书店",
+   "mud3File": "05Book_Kugkyung",
+   "services": [
+    "职业技能秘籍买卖"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 147,
+   "name": "赵老头",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 471,
+   "y": 279,
+   "category": "仓库",
+   "mud3File": "06Inn_Kugkyung",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 148,
+   "name": "地摊商人",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 433,
+   "y": 282,
+   "category": "杂货",
+   "mud3File": "07Grocery_Kugkyung",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 149,
+   "name": "晓丽",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 444,
+   "y": 270,
+   "category": "首饰",
+   "mud3File": "08Accessory_Kugkyung",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 150,
+   "name": "啊辉",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 431,
+   "y": 307,
+   "category": "收购",
+   "mud3File": "10Material_Kugkyung",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 151,
+   "name": "栗子商人",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 438,
+   "y": 281,
+   "category": "收购",
+   "mud3File": "10ChestnutMarket_Kugkyung",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 152,
+   "name": "六面神石",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 456,
+   "y": 216,
+   "category": "传送",
+   "mud3File": "13Move_Kugkyung1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 191
+  },
+  {
+   "index": 153,
+   "name": "六面神石",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 411,
+   "y": 287,
+   "category": "传送",
+   "mud3File": "13Move_Kugkyung2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 191
+  },
+  {
+   "index": 154,
+   "name": "六面神石",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 463,
+   "y": 356,
+   "category": "传送",
+   "mud3File": "13Move_Kugkyung3",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 191
+  },
+  {
+   "index": 155,
+   "name": "万事通",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 429,
+   "y": 263,
+   "category": "药店",
+   "mud3File": "14Doctor_Kugkyung",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": 339
+  },
+  {
+   "index": 156,
+   "name": "上官小姐",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 461,
+   "y": 257,
+   "category": "任务",
+   "mud3File": "14Quest_KugKyung1",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 157,
+   "name": "智善",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 444,
+   "y": 245,
+   "category": "任务",
+   "mud3File": "14Quest_KugKyung2",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 158,
+   "name": "无名商人",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 476,
+   "y": 284,
+   "category": "任务",
+   "mud3File": "14Quest_Kugkyung3",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 159,
+   "name": "云发",
+   "mapFile": "01_001",
+   "mapDesc": "志善屋",
+   "x": 17,
+   "y": 16,
+   "category": "任务",
+   "mud3File": "14Quest_KugKyung",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 160,
+   "name": "龙血先生",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 456,
+   "y": 302,
+   "category": "修炼",
+   "mud3File": "15Magic_Kugkyung1",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": 340
+  },
+  {
+   "index": 161,
+   "name": "龙血先生",
+   "mapFile": "01_003",
+   "mapDesc": "试练场",
+   "x": 5,
+   "y": 8,
+   "category": "修炼",
+   "mud3File": "15Magic_KugKyung",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 162,
+   "name": "黄河大侠",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 104,
+   "y": 203,
+   "category": "修炼",
+   "mud3File": "15Magic_Kugkyung2",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 163,
+   "name": "满多",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 424,
+   "y": 312,
+   "category": "特殊",
+   "mud3File": "17MobRush_kugkyung",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 164,
+   "name": "啊彬",
+   "mapFile": "01",
+   "mapDesc": "边境城市",
+   "x": 422,
+   "y": 262,
+   "category": "武器",
+   "mud3File": "09CancleWeapon",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 165,
+   "name": "许氏",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 228,
+   "y": 194,
+   "category": "肉店",
+   "mud3File": "01Meet_Eunhang",
+   "services": [
+    "肉品收购与买卖",
+    "高品质纯度肉"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 166,
+   "name": "铁匠师傅",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 284,
+   "y": 197,
+   "category": "武器",
+   "mud3File": "02Weapon_Eunhang",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 167,
+   "name": "布店晓芙",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 260,
+   "y": 177,
+   "category": "防具",
+   "mud3File": "03Armor_Eunhang",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 168,
+   "name": "许中医",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 273,
+   "y": 189,
+   "category": "药店",
+   "mud3File": "04Potion_Eunhang",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 169,
+   "name": "药剂师",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 272,
+   "y": 189,
+   "category": "药店",
+   "mud3File": "04PotionMake_Euhang",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 170,
+   "name": "才石",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 233,
+   "y": 222,
+   "category": "书店",
+   "mud3File": "05Book_Eunhang",
+   "services": [
+    "职业技能秘籍买卖"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 171,
+   "name": "啊雯",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 250,
+   "y": 190,
+   "category": "仓库",
+   "mud3File": "06Inn_Eunhang",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 172,
+   "name": "地摊老周",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 236,
+   "y": 205,
+   "category": "杂货",
+   "mud3File": "07Grocery_Eunhang",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 173,
+   "name": "晓兰",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 275,
+   "y": 222,
+   "category": "首饰",
+   "mud3File": "08Accessory_Eunhang",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 174,
+   "name": "啊勋",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 269,
+   "y": 186,
+   "category": "收购",
+   "mud3File": "10Material_Eunhang",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 175,
+   "name": "栗子商人",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 260,
+   "y": 205,
+   "category": "收购",
+   "mud3File": "10ChestnutMarket_Eunhang",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 176,
+   "name": "六面神石",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 249,
+   "y": 144,
+   "category": "传送",
+   "mud3File": "13Move_Eunhang",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 38
+  },
+  {
+   "index": 177,
+   "name": "万事通",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 264,
+   "y": 195,
+   "category": "药店",
+   "mud3File": "14Doctor_Eunhang",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 178,
+   "name": "南宫小姐",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 264,
+   "y": 201,
+   "category": "任务",
+   "mud3File": "14Quest_Euhang",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 179,
+   "name": "霹雳尊者",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 265,
+   "y": 145,
+   "category": "修炼",
+   "mud3File": "15Magic_Eunhang1",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 180,
+   "name": "化天先生",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 353,
+   "y": 212,
+   "category": "修炼",
+   "mud3File": "15Magic_Eunhang2",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 181,
+   "name": "霹雳尊者",
+   "mapFile": "02_001",
+   "mapDesc": "试练场",
+   "x": 5,
+   "y": 8,
+   "category": "修炼",
+   "mud3File": "15Magic_Euhang",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 182,
+   "name": "霹雳尊者",
+   "mapFile": "02_003",
+   "mapDesc": "试练场",
+   "x": 91,
+   "y": 14,
+   "category": "修炼",
+   "mud3File": "15Magic_Euhang",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 183,
+   "name": "霹雳尊者",
+   "mapFile": "02_004",
+   "mapDesc": "试练场",
+   "x": 25,
+   "y": 41,
+   "category": "修炼",
+   "mud3File": "15Magic_Euhang",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 184,
+   "name": "光秀",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 243,
+   "y": 234,
+   "category": "武器",
+   "mud3File": "09Repair_Euhang",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 185,
+   "name": "智善大师",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 247,
+   "y": 242,
+   "category": "特殊",
+   "mud3File": "09Bonus_Euhang",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 186,
+   "name": "啊潘",
+   "mapFile": "1_001",
+   "mapDesc": "武器仓库",
+   "x": 14,
+   "y": 12,
+   "category": "武器",
+   "mud3File": "02Weapon_DoGwan",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 187,
+   "name": "啊浩",
+   "mapFile": "1_003",
+   "mapDesc": "洗衣住居",
+   "x": 13,
+   "y": 16,
+   "category": "防具",
+   "mud3File": "03Armor_DoGwan",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 188,
+   "name": "禄英",
+   "mapFile": "1_006",
+   "mapDesc": "药剂师住居",
+   "x": 12,
+   "y": 7,
+   "category": "药店",
+   "mud3File": "04PotionMake_DoGwan",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 189,
+   "name": "老药",
+   "mapFile": "1_006",
+   "mapDesc": "药剂师住居",
+   "x": 9,
+   "y": 10,
+   "category": "药店",
+   "mud3File": "04Potion_DoGwan",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 190,
+   "name": "书神",
+   "mapFile": "1_004",
+   "mapDesc": "书房",
+   "x": 9,
+   "y": 11,
+   "category": "书店",
+   "mud3File": "05Book_DoGwan",
+   "services": [
+    "职业技能秘籍买卖"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 191,
+   "name": "大老板",
+   "mapFile": "1_007",
+   "mapDesc": "仓库",
+   "x": 11,
+   "y": 14,
+   "category": "杂货",
+   "mud3File": "07Grocery_DoGwan",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 192,
+   "name": "峰儿",
+   "mapFile": "1_005",
+   "mapDesc": "物品研究所",
+   "x": 9,
+   "y": 11,
+   "category": "首饰",
+   "mud3File": "08Accessory_DoGwan",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 193,
+   "name": "无名老人",
+   "mapFile": "1_009",
+   "mapDesc": "无名老人隐居地",
+   "x": 117,
+   "y": 25,
+   "category": "任务",
+   "mud3File": "14Quest_DoGwan",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 194,
+   "name": "清明子",
+   "mapFile": "1_002",
+   "mapDesc": "本馆",
+   "x": 11,
+   "y": 10,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 195,
+   "name": "清明子",
+   "mapFile": "1_008",
+   "mapDesc": "试练场",
+   "x": 5,
+   "y": 8,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 196,
+   "name": "清明子",
+   "mapFile": "1_011",
+   "mapDesc": "试练场",
+   "x": 91,
+   "y": 14,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 197,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 44,
+   "y": 25,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan0",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 198,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 26,
+   "y": 20,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan1",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 199,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 29,
+   "y": 23,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan2",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 200,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 23,
+   "y": 23,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan3",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 201,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 35,
+   "y": 15,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan4",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 202,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 26,
+   "y": 26,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan5",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 203,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 25,
+   "y": 41,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan6",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 204,
+   "name": "变异骷髅",
+   "mapFile": "1_013",
+   "mapDesc": "试练场",
+   "x": 10,
+   "y": 24,
+   "category": "修炼",
+   "mud3File": "15Magic_DoGwan7",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 205,
+   "name": "王铁匠",
+   "mapFile": "4_001",
+   "mapDesc": "武器店",
+   "x": 7,
+   "y": 13,
+   "category": "武器",
+   "mud3File": "02Weapon_Oasis",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 206,
+   "name": "织女",
+   "mapFile": "4_004",
+   "mapDesc": "布匹店",
+   "x": 9,
+   "y": 8,
+   "category": "防具",
+   "mud3File": "03Armor_Oasis",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 207,
+   "name": "白老中医",
+   "mapFile": "4_003",
+   "mapDesc": "中药商",
+   "x": 10,
+   "y": 10,
+   "category": "药店",
+   "mud3File": "04Potion_Oasis",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 208,
+   "name": "绿洲仓库管家",
+   "mapFile": "4_003",
+   "mapDesc": "中药商",
+   "x": 8,
+   "y": 15,
+   "category": "仓库",
+   "mud3File": "06Inn_Oasis",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 209,
+   "name": "梅山侠",
+   "mapFile": "4_005",
+   "mapDesc": "占卜屋",
+   "x": 14,
+   "y": 22,
+   "category": "特殊",
+   "mud3File": "08Astrologist_Oasis",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 210,
+   "name": "石宇",
+   "mapFile": "4_003",
+   "mapDesc": "中药商",
+   "x": 12,
+   "y": 8,
+   "category": "收购",
+   "mud3File": "10Material_Oasis",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 211,
+   "name": "勇汉",
+   "mapFile": "5_002",
+   "mapDesc": "武器商",
+   "x": 8,
+   "y": 17,
+   "category": "武器",
+   "mud3File": "02Weapon_Samak1",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 212,
+   "name": "忠云",
+   "mapFile": "5_002",
+   "mapDesc": "武器商",
+   "x": 7,
+   "y": 19,
+   "category": "武器",
+   "mud3File": "02Weapon_Samak2",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 213,
+   "name": "晓敏",
+   "mapFile": "5_004",
+   "mapDesc": "服饰店",
+   "x": 15,
+   "y": 15,
+   "category": "防具",
+   "mud3File": "03Armor_Samak",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 214,
+   "name": "医神",
+   "mapFile": "5_003",
+   "mapDesc": "药房",
+   "x": 13,
+   "y": 17,
+   "category": "药店",
+   "mud3File": "04Potion_Samak",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 215,
+   "name": "沙漠仓库管家",
+   "mapFile": "5_006",
+   "mapDesc": "仓库",
+   "x": 12,
+   "y": 23,
+   "category": "仓库",
+   "mud3File": "06Inn_Samak",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 216,
+   "name": "雪儿",
+   "mapFile": "5_005",
+   "mapDesc": "饰品店",
+   "x": 9,
+   "y": 11,
+   "category": "首饰",
+   "mud3File": "08Accessory_Samak",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 217,
+   "name": "啊俊",
+   "mapFile": "5_006",
+   "mapDesc": "仓库",
+   "x": 7,
+   "y": 21,
+   "category": "特殊",
+   "mud3File": "09ChangeMoney_Samak",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 218,
+   "name": "啊全",
+   "mapFile": "6",
+   "mapDesc": "沙漠",
+   "x": 284,
+   "y": 723,
+   "category": "杂货",
+   "mud3File": "07Grocery_Ant",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 219,
+   "name": "六面神石",
+   "mapFile": "6",
+   "mapDesc": "沙漠",
+   "x": 273,
+   "y": 731,
+   "category": "传送",
+   "mud3File": "13Move_Ant",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 220,
+   "name": "英龙",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 354,
+   "y": 297,
+   "category": "武器",
+   "mud3File": "02Weapon_Mongchon",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 221,
+   "name": "晓薇",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 324,
+   "y": 277,
+   "category": "防具",
+   "mud3File": "03Armor_Mongchon",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 222,
+   "name": "凌峰",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 289,
+   "y": 289,
+   "category": "药店",
+   "mud3File": "04Potion_Mongchon",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 223,
+   "name": "丘叔",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 323,
+   "y": 310,
+   "category": "仓库",
+   "mud3File": "06Inn_Mongchon",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 224,
+   "name": "龙叔",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 293,
+   "y": 278,
+   "category": "杂货",
+   "mud3File": "07Grocery_Mongchon",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 225,
+   "name": "善颖",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 311,
+   "y": 273,
+   "category": "首饰",
+   "mud3File": "08Accessory_Mongchon",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 226,
+   "name": "啊贵",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 287,
+   "y": 290,
+   "category": "收购",
+   "mud3File": "10Material_Mongchon",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 227,
+   "name": "六面神石",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 349,
+   "y": 329,
+   "category": "传送",
+   "mud3File": "13Move_Mongchon1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 228,
+   "name": "六面神石",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 271,
+   "y": 267,
+   "category": "传送",
+   "mud3File": "13Move_Mongchon2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 229,
+   "name": "武术教头",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 300,
+   "y": 299,
+   "category": "修炼",
+   "mud3File": "15Magic_Mongchon1",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 230,
+   "name": "雷翁断珠",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 290,
+   "y": 299,
+   "category": "修炼",
+   "mud3File": "15Magic_Mongchon2",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 231,
+   "name": "盟重道长",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 297,
+   "y": 295,
+   "category": "修炼",
+   "mud3File": "15Magic_Mongchon3",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 232,
+   "name": "泼皮路白",
+   "mapFile": "74",
+   "mapDesc": "盟重县",
+   "x": 324,
+   "y": 108,
+   "category": "修炼",
+   "mud3File": "15Magic_Mongchon4",
+   "services": [
+    "高阶法术研修",
+    "技能指导与境界突破"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 233,
+   "name": "六面神石",
+   "mapFile": "75",
+   "mapDesc": "石阁庙",
+   "x": 184,
+   "y": 90,
+   "category": "传送",
+   "mud3File": "13Move_SukGak",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 234,
+   "name": "次庸",
+   "mapFile": "81",
+   "mapDesc": "流放岛",
+   "x": 138,
+   "y": 301,
+   "category": "药店",
+   "mud3File": "04Potion_RedZone",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 235,
+   "name": "小望",
+   "mapFile": "81",
+   "mapDesc": "流放岛",
+   "x": 119,
+   "y": 297,
+   "category": "特殊",
+   "mud3File": "09Lucky_RedZone",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 236,
+   "name": "六面神石",
+   "mapFile": "81",
+   "mapDesc": "流放岛",
+   "x": 129,
+   "y": 265,
+   "category": "传送",
+   "mud3File": "13Move_RedZone",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 286
+  },
+  {
+   "index": 237,
+   "name": "奸商欧阳",
+   "mapFile": "DM001",
+   "mapDesc": "奸商",
+   "x": 4,
+   "y": 6,
+   "category": "杂货",
+   "mud3File": "07Grocery_SkeletonCave",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 238,
+   "name": "云发",
+   "mapFile": "D012_001",
+   "mapDesc": "天然洞穴2层",
+   "x": 13,
+   "y": 11,
+   "category": "任务",
+   "mud3File": "14Quest_SkeletonCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 239,
+   "name": "云发",
+   "mapFile": "E002_001",
+   "mapDesc": "半兽天然洞穴",
+   "x": 9,
+   "y": 11,
+   "category": "任务",
+   "mud3File": "14Quest_SkeletonCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 240,
+   "name": "嘉登",
+   "mapFile": "E002",
+   "mapDesc": "半兽天然洞穴",
+   "x": 65,
+   "y": 12,
+   "category": "任务",
+   "mud3File": "14Quest_SkeletonCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 241,
+   "name": "无理的道士",
+   "mapFile": "DM002",
+   "mapDesc": "王陵",
+   "x": 14,
+   "y": 22,
+   "category": "任务",
+   "mud3File": "14Quest_SkeletonCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 242,
+   "name": "矿山老人",
+   "mapFile": "D431",
+   "mapDesc": "北部矿山入口",
+   "x": 29,
+   "y": 175,
+   "category": "特殊",
+   "mud3File": "09NotBlocker_ZombieCave",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 243,
+   "name": "署箭",
+   "mapFile": "E402_001",
+   "mapDesc": "连接通路",
+   "x": 13,
+   "y": 10,
+   "category": "任务",
+   "mud3File": "14Quest_ZombieCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 244,
+   "name": "署箭",
+   "mapFile": "D404_002",
+   "mapDesc": "废矿矿山地下2层",
+   "x": 22,
+   "y": 11,
+   "category": "任务",
+   "mud3File": "14Quest_ZombieCave",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 245,
+   "name": "牛老道",
+   "mapFile": "D023_001",
+   "mapDesc": "沃玛神殿师徒关",
+   "x": 17,
+   "y": 21,
+   "category": "任务",
+   "mud3File": "14Quest_WoomaPalace",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 246,
+   "name": "石堆",
+   "mapFile": "D022",
+   "mapDesc": "沃玛神殿1层",
+   "x": 207,
+   "y": 47,
+   "category": "任务",
+   "mud3File": "14Quest_WoomaPalace",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 247,
+   "name": "书架",
+   "mapFile": "D022_001",
+   "mapDesc": "沃玛神殿1层",
+   "x": 64,
+   "y": 21,
+   "category": "任务",
+   "mud3File": "14Quest_WoomaPalace",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 248,
+   "name": "魂滴",
+   "mapFile": "D5071",
+   "mapDesc": "祖玛神殿7层大厅",
+   "x": 20,
+   "y": 23,
+   "category": "药店",
+   "mud3File": "04Potion_Zuma",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 249,
+   "name": "司马云天",
+   "mapFile": "D1110",
+   "mapDesc": "潘夜神殿大厅",
+   "x": 27,
+   "y": 13,
+   "category": "武器",
+   "mud3File": "02Weapon_HalfTemple",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 250,
+   "name": "司马武林",
+   "mapFile": "D1110",
+   "mapDesc": "潘夜神殿大厅",
+   "x": 7,
+   "y": 24,
+   "category": "特殊",
+   "mud3File": "09WideUse_HalfTemple",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 251,
+   "name": "司马化林",
+   "mapFile": "D1110",
+   "mapDesc": "潘夜神殿大厅",
+   "x": 7,
+   "y": 20,
+   "category": "武器",
+   "mud3File": "09Repair_HalfTemple",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 252,
+   "name": "六面神石",
+   "mapFile": "D1110",
+   "mapDesc": "潘夜神殿大厅",
+   "x": 15,
+   "y": 18,
+   "category": "传送",
+   "mud3File": "13Move_HalfTemple1",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 70
+  },
+  {
+   "index": 253,
+   "name": "六面神石",
+   "mapFile": "D1110",
+   "mapDesc": "潘夜神殿大厅",
+   "x": 28,
+   "y": 31,
+   "category": "传送",
+   "mud3File": "13Move_HalfTemple2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 70
+  },
+  {
+   "index": 254,
+   "name": "六面神石",
+   "mapFile": "D11031",
+   "mapDesc": "潘夜神殿3层西部",
+   "x": 199,
+   "y": 257,
+   "category": "传送",
+   "mud3File": "13Move_HalfTemple",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 70
+  },
+  {
+   "index": 255,
+   "name": "花仙",
+   "mapFile": "D90221",
+   "mapDesc": "医务室",
+   "x": 22,
+   "y": 20,
+   "category": "药店",
+   "mud3File": "04Potion_SinGiSun",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 260,
+   "name": "霸王幽灵",
+   "mapFile": "D900",
+   "mapDesc": "神舰入口",
+   "x": 45,
+   "y": 58,
+   "category": "任务",
+   "mud3File": "14Quest_SinGiSun",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 261,
+   "name": "霸王幽灵",
+   "mapFile": "D90323",
+   "mapDesc": "海图室",
+   "x": 16,
+   "y": 8,
+   "category": "任务",
+   "mud3File": "14Quest_SinGiSun",
+   "services": [
+    "主线/支线剧情指引",
+    "历练任务接取与交付"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 262,
+   "name": "瓦慈",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 126,
+   "y": 86,
+   "category": "肉店",
+   "mud3File": "01Meet_NuMa",
+   "services": [
+    "肉品收购与买卖",
+    "高品质纯度肉"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 263,
+   "name": "图木勒",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 145,
+   "y": 82,
+   "category": "武器",
+   "mud3File": "02Weapon_Numa",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 264,
+   "name": "儒帕",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 141,
+   "y": 108,
+   "category": "防具",
+   "mud3File": "03Armor_Numa",
+   "services": [
+    "衣服/头盔/鞋靴买卖",
+    "防具修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 265,
+   "name": "啊莫",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 168,
+   "y": 125,
+   "category": "药店",
+   "mud3File": "04Potion_Numa",
+   "services": [
+    "金创药/魔法药买卖",
+    "疗伤药/解毒药"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 266,
+   "name": "啊勒",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 168,
+   "y": 84,
+   "category": "仓库",
+   "mud3File": "06Inn_Numa",
+   "services": [
+    "个人仓库保管",
+    "物品存取"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 267,
+   "name": "肃良佳",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 127,
+   "y": 118,
+   "category": "杂货",
+   "mud3File": "07Grocery_Numa",
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 268,
+   "name": "羽霞",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 155,
+   "y": 105,
+   "category": "首饰",
+   "mud3File": "08Accessory_Numa",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 269,
+   "name": "禹老",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 141,
+   "y": 90,
+   "category": "收购",
+   "mud3File": "10Material_Numa",
+   "services": [
+    "矿石材料/特殊战利品收购",
+    "古玩鉴宝"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 270,
+   "name": "牢牲",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 147,
+   "y": 106,
+   "category": "特殊",
+   "mud3File": "09HorseMarket_Numa",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 271,
+   "name": "六面神石",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 184,
+   "y": 136,
+   "category": "传送",
+   "mud3File": "13Move_Numa",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 104
+  },
+  {
+   "index": 272,
+   "name": "夏柯",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 148,
+   "y": 84,
+   "category": "特殊",
+   "mud3File": "17NuMaSahaka_Numa",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 273,
+   "name": "紫霞神女",
+   "mapFile": "41",
+   "mapDesc": "诺玛沙漠",
+   "x": 151,
+   "y": 121,
+   "category": "特殊",
+   "mud3File": "17Zaha_Numa",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 274,
+   "name": "云中子",
+   "mapFile": "02",
+   "mapDesc": "银杏山谷",
+   "x": 254,
+   "y": 227,
+   "category": "特殊",
+   "mud3File": "20Gmatch",
+   "services": [
+    "场景剧情互动",
+    "向导问询"
+   ],
+   "entryPage": -1
+  },
+  {
+   "index": 275,
+   "name": "六面神石",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 222,
+   "y": 159,
+   "category": "传送",
+   "mud3File": "13Move_Sabuk",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 41
+  },
+  {
+   "index": 276,
+   "name": "沙巴克炼化师",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 208,
+   "y": 153,
+   "category": "武器",
+   "mud3File": null,
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 71
+  },
+  {
+   "index": 277,
+   "name": "沙巴克药师",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 209,
+   "y": 91,
+   "category": "药店",
+   "mud3File": null,
+   "services": [
+    "金创药/魔法药买卖",
+    "万年雪霜与疗伤药"
+   ],
+   "entryPage": 102
+  },
+  {
+   "index": 278,
+   "name": "沙巴克杂货商",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 211,
+   "y": 148,
+   "category": "杂货",
+   "mud3File": null,
+   "services": [
+    "随机卷轴/回城卷",
+    "火把/护身符/修复油"
+   ],
+   "entryPage": 98
+  },
+  {
+   "index": 279,
+   "name": "六面神石",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 51,
+   "y": 222,
+   "category": "传送",
+   "mud3File": null,
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 113
+  },
+  {
+   "index": 280,
+   "name": "沙巴克首饰商",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 239,
+   "y": 120,
+   "category": "首饰",
+   "mud3File": "18SubFlag_Sabuk",
+   "services": [
+    "项链/手镯/戒指买卖",
+    "首饰修理"
+   ],
+   "entryPage": 8
+  },
+  {
+   "index": 281,
+   "name": "沙巴克鉴宝师",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 203,
+   "y": 103,
+   "category": "收购",
+   "mud3File": null,
+   "services": [
+    "特殊材料收购",
+    "古物鉴定"
+   ],
+   "entryPage": 20
+  },
+  {
+   "index": 282,
+   "name": "沙巴克裁缝",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 235,
+   "y": 115,
+   "category": "防具",
+   "mud3File": "18SubFlag_Sabuk",
+   "services": [
+    "衣服与头盔买卖",
+    "防具备用修理"
+   ],
+   "entryPage": 19
+  },
+  {
+   "index": 283,
+   "name": "沙巴克武器商",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 206,
+   "y": 154,
+   "category": "武器",
+   "mud3File": "18MainFlag_Sabuk",
+   "services": [
+    "武器买卖",
+    "武器普通修理",
+    "武器特殊修理"
+   ],
+   "entryPage": 5
+  },
+  {
+   "index": 368,
+   "name": "六面神石",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 507,
+   "y": 313,
+   "category": "传送",
+   "mud3File": "13Move_Bichon2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 38
+  },
+  {
+   "index": 369,
+   "name": "六面神石",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 370,
+   "y": 336,
+   "category": "传送",
+   "mud3File": "13Move_Bichon3",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 38
+  },
+  {
+   "index": 370,
+   "name": "六面神石",
+   "mapFile": "0",
+   "mapDesc": "Bichon Town",
+   "x": 379,
+   "y": 444,
+   "category": "传送",
+   "mud3File": "13Move_Bichon4",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 38
+  },
+  {
+   "index": 371,
+   "name": "六面神石",
+   "mapFile": "2",
+   "mapDesc": "Banya Village",
+   "x": 314,
+   "y": 193,
+   "category": "传送",
+   "mud3File": "13Move_SnakeVally2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 39
+  },
+  {
+   "index": 374,
+   "name": "六面神石",
+   "mapFile": "3",
+   "mapDesc": "Sabuk Keep",
+   "x": 71,
+   "y": 140,
+   "category": "传送",
+   "mud3File": "13Move_Sabuk",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 41
+  },
+  {
+   "index": 375,
+   "name": "六面神石",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 63,
+   "y": 195,
+   "category": "传送",
+   "mud3File": null,
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 376,
+   "name": "六面神石",
+   "mapFile": "5",
+   "mapDesc": "Desert Mud Fortress",
+   "x": 227,
+   "y": 128,
+   "category": "传送",
+   "mud3File": null,
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 42
+  },
+  {
+   "index": 377,
+   "name": "六面神石",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 113,
+   "y": 463,
+   "category": "传送",
+   "mud3File": "13Move_HalfNight2",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 190
+  },
+  {
+   "index": 378,
+   "name": "六面神石",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 668,
+   "y": 388,
+   "category": "传送",
+   "mud3File": "13Move_HalfNight3",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 190
+  },
+  {
+   "index": 379,
+   "name": "六面神石",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 448,
+   "y": 579,
+   "category": "传送",
+   "mud3File": "13Move_HalfNight4",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 190
+  },
+  {
+   "index": 380,
+   "name": "六面神石",
+   "mapFile": "8",
+   "mapDesc": "Frost Village",
+   "x": 424,
+   "y": 239,
+   "category": "传送",
+   "mud3File": "13Move_HalfNight5",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 190
+  },
+  {
+   "index": 381,
+   "name": "六面神石",
+   "mapFile": "D1105",
+   "mapDesc": "Zuma Temple Lv 5",
+   "x": 219,
+   "y": 99,
+   "category": "传送",
+   "mud3File": "13Move_HalfTemple",
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 70
+  },
+  {
+   "index": 382,
+   "name": "六面神石",
+   "mapFile": "D1115",
+   "mapDesc": "潘夜神殿8层",
+   "x": 358,
+   "y": 353,
+   "category": "传送",
+   "mud3File": null,
+   "services": [
+    "城镇与地下城瞬间移动传送"
+   ],
+   "entryPage": 70
+  }
+ ]
+}

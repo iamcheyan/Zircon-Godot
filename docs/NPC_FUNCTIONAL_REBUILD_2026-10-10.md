@@ -182,21 +182,20 @@ check/action 引用的物品与地图在 DB 中存在、success/fail 目标存�
 
 **最终一版数据（IR：4288 页 / 2093 按钮 / 855 检查 / 752 动作 / 932 商品行 / 390 可售类型）**
 
-* 自动巡检：`230` 个全部点到并打开对话框，其中 **224 个全绿**（入口页 + 每个可点选项都走到），
-  累计走访 **1520 页**（平均 6.6 页/NPC）；机读结果 `docs/screenshots/npc_audit/audit_results.jsonl`，
-  截图归档 `docs/screenshots/npc_audit/<地图>/<idx>_<名字>.jpg`（224 张，按地图分目录）。
-* 剩余 6 个在自动巡检里报错的，已**逐个人工实机复核通过**（截图同名 `.png` 放在归档根目录）：
+* 自动巡检：`230` 个全部点到并打开对话框，其中 **227 个全绿**（入口页 + 每个可点选项都走到），
+  累计走访 **1520+ 页**（平均 6.6 页/NPC）；机读结果 `docs/screenshots/npc_audit/audit_results.jsonl`，
+  截图归档 `docs/screenshots/npc_audit/<地图>/<idx>_<名字>.jpg`（227 张，按地图分目录）。
+* 剩余 3 个在自动巡检里报错的，已**逐个人工实机复核通过**（截图放在归档根目录）：
 
 | NPC | 自动巡检报错 | 人工复核结果 |
 |---|---|---|
-| #13 啊康（比奇） | timeout（GM 传送到位偶发失败） | 菜单 + 购买列表正常（`13_akang_menu.png` / `13_akang_buylist.png`），购买断言见 6.3 |
-| #106 / #371 六面神石（毒蛇山谷，**同一格两个 NPC**） | click_missed（点到了同格另一个 ObjectID） | 菜单正常（`106_snakevally_hexa_menu.png`）；顺带修掉了原版空菜单 |
-| #188 禄英（药剂师住居） | timeout（室内小图首次传送到位失败） | 对话正常（`188_luying_dialog.png`） |
-| #209 梅山侠（占卜屋） | timeout（同上） | 对话正常（`209_meishanxia_dialog.png`） |
-| #275 六面神石（沙巴克城） | npc_not_found（客户端对象发现窗口） | 菜单正常（`275_sabuk_hexa_menu.png`） |
+| #106 / #371 六面神石（毒蛇山谷，**同一格两个 NPC**） | click_missed（点到了同格另一个 ObjectID，巡检按 ObjectID 严格匹配） | 菜单正常（`106_snakevally_hexa_menu.png`）；顺带修掉了原版空菜单 |
+| #275 六面神石（沙巴克城） | npc_not_found（客户端对象发现时机） | 菜单正常（`275_sabuk_hexa_menu.png`） |
 
-  结论：**230/230 均可在游戏内正常打开并使用**；自动巡检的 6 处报错全部属于巡检工具的限制
-  （传送落点/同格重复 NPC/对象发现时机），不是 NPC 数据问题——每一处都有人工截图佐证。
+  结论：**230/230 均可在游戏内正常打开并使用**；自动巡检的 3 处报错属于巡检工具的限制
+  （同格重复 NPC、对象发现时机），不是 NPC 数据问题——每一处都有人工截图佐证。
+  （首轮巡检里另外 3 个 timeout 的 NPC —— #13 啊康、#188 禄英、#209 梅山侠 —— 在修好
+  「传送落点顺序 + 命令通道暖机」后已全部自动通过。）
 
 * 功能验证（6.3）四项断言全部通过：购买 −50 金币 +1 木剑、收费传送 −500 金币且切图、
   仓库 NPC 打开仓库并成功存入（`Inventory#0 → Storage#4 success=True`）、卖出 +2721 金币。
@@ -205,9 +204,9 @@ check/action 引用的物品与地图在 DB 中存在、success/fail 目标存�
 
 | 证据 | 位置 |
 |---|---|
-| 224 个 NPC 的对话框截图（按地图分目录） | `docs/screenshots/npc_audit/<mapFile>/<idx>_<name>.jpg` |
+| 227 个 NPC 的对话框截图（按地图分目录） | `docs/screenshots/npc_audit/<mapFile>/<idx>_<name>.jpg` |
 | 巡检机读结果（每 NPC 一行：入口页/页列表/链接/错误码） | `docs/screenshots/npc_audit/audit_results.jsonl` |
-| 6 个自动巡检报错 NPC 的人工复核截图 | `docs/screenshots/npc_audit/{13,106,188,209,275}_*.png` |
+| 自动巡检报错 NPC 的人工复核截图 | `docs/screenshots/npc_audit/{106,275}_*.png`（另 13/188/209 已自动通过） |
 | 功能验证截图（购买/传送/仓库/给钱） | `docs/screenshots/npc_audit/13_*.png`、`39_*.png`、`147_*.png` |
 | 隔离服务端跑法（不影响 7000） | `docs/NPC_AUDIT.md` |
 | 功能验证用例与断言说明 | `docs/NPC_FUNC_AUDIT.md` |

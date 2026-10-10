@@ -45655,8 +45655,41 @@
     {
      "key": "SnakeVallyTele:SnakeVally_Teleport_North",
      "type": "None",
-     "say": "六面神石",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至比奇城所需金钱 ： 500 钱:1]\n\n[移动至银杏山村所需金钱 ： 1000 钱:2]\n\n[移动至道馆村所需金钱 ： 1000 钱:3]\n\n[移动至边境村庄所需金钱 ： 1000 钱:4]\n\n[移动至潘夜岛村所需金钱 ： 1500 钱:5]\n\n[移动至盟重土城所需金钱 ： 1500 钱:6]\n\n[移动至沙漠土城所需金钱 ： 2000 钱:7]\n\n[移动至绿洲村所需金钱 ： 2500 钱:8]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:Bichon:East"
+      },
+      {
+       "id": 2,
+       "dest": "tp:EunHang:Center"
+      },
+      {
+       "id": 3,
+       "dest": "tp:DoGwan:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 5,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 6,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 7,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 8,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [
       {
        "type": "PKPoints",
@@ -45691,10 +45724,277 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:Bichon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "0",
+       "x": 507,
+       "y": 312
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "SnakeVallyTele:SnakeVally_Teleport_North"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:EunHang:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "02",
+       "x": 249,
+       "y": 145
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:DoGwan:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "1",
+       "x": 416,
+       "y": 180
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2500
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
-    "unsupported_cond"
+    "unsupported_cond",
+    "teleport_menu_filled"
    ]
   },
   {
@@ -76324,8 +76624,29 @@
     {
      "key": "VanyaSinjunTele:teleport_D1110_0",
      "type": "None",
-     "say": "",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至边境村庄所需金钱 ： 500 钱:1]\n\n[移动盟重土城所需金钱 ： 1000 钱:2]\n\n[移动至潘夜岛村所需金钱 ： 1000 钱:3]\n\n[移动至沙漠土城所需金钱 ： 1500 钱:4]\n\n[移动至绿洲村所需金钱 ： 2000 钱:5]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 2,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 3,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 5,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [],
      "actions": [
       {
@@ -76340,9 +76661,184 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "VanyaSinjunTele:teleport_D1110_0"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
-   "warnings": []
+   "warnings": [
+    "teleport_menu_filled"
+   ]
   },
   {
    "index": 253,
@@ -76356,8 +76852,29 @@
     {
      "key": "VanyaSinjunTele:teleport_D1110_1",
      "type": "None",
-     "say": "",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至边境村庄所需金钱 ： 500 钱:1]\n\n[移动盟重土城所需金钱 ： 1000 钱:2]\n\n[移动至潘夜岛村所需金钱 ： 1000 钱:3]\n\n[移动至沙漠土城所需金钱 ： 1500 钱:4]\n\n[移动至绿洲村所需金钱 ： 2000 钱:5]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 2,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 3,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 5,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [],
      "actions": [
       {
@@ -76372,9 +76889,184 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "VanyaSinjunTele:teleport_D1110_1"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
-   "warnings": []
+   "warnings": [
+    "teleport_menu_filled"
+   ]
   },
   {
    "index": 254,
@@ -76388,8 +77080,29 @@
     {
      "key": "VanyaSinjunTele:teleport_D11031",
      "type": "None",
-     "say": "",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至边境村庄所需金钱 ： 500 钱:1]\n\n[移动盟重土城所需金钱 ： 1000 钱:2]\n\n[移动至潘夜岛村所需金钱 ： 1000 钱:3]\n\n[移动至沙漠土城所需金钱 ： 1500 钱:4]\n\n[移动至绿洲村所需金钱 ： 2000 钱:5]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 2,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 3,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 5,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [],
      "actions": [
       {
@@ -76404,9 +77117,184 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "VanyaSinjunTele:teleport_D11031"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
-   "warnings": []
+   "warnings": [
+    "teleport_menu_filled"
+   ]
   },
   {
    "index": 255,
@@ -79353,8 +80241,41 @@
     {
      "key": "SnakeVallyTele:SnakeVally_Teleport_North",
      "type": "None",
-     "say": "六面神石",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至比奇城所需金钱 ： 500 钱:1]\n\n[移动至银杏山村所需金钱 ： 1000 钱:2]\n\n[移动至道馆村所需金钱 ： 1000 钱:3]\n\n[移动至边境村庄所需金钱 ： 1000 钱:4]\n\n[移动至潘夜岛村所需金钱 ： 1500 钱:5]\n\n[移动至盟重土城所需金钱 ： 1500 钱:6]\n\n[移动至沙漠土城所需金钱 ： 2000 钱:7]\n\n[移动至绿洲村所需金钱 ： 2500 钱:8]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:Bichon:East"
+      },
+      {
+       "id": 2,
+       "dest": "tp:EunHang:Center"
+      },
+      {
+       "id": 3,
+       "dest": "tp:DoGwan:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 5,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 6,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 7,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 8,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [
       {
        "type": "PKPoints",
@@ -79389,10 +80310,277 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:Bichon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "0",
+       "x": 507,
+       "y": 312
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "SnakeVallyTele:SnakeVally_Teleport_North"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:EunHang:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "02",
+       "x": 249,
+       "y": 145
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:DoGwan:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "1",
+       "x": 416,
+       "y": 180
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2500
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
    "warnings": [
-    "unsupported_cond"
+    "unsupported_cond",
+    "teleport_menu_filled"
    ]
   },
   {
@@ -81252,8 +82440,29 @@
     {
      "key": "VanyaSinjunTele:teleport_D1105",
      "type": "None",
-     "say": "",
-     "buttons": [],
+     "say": "六面神石\n\n[移动至边境村庄所需金钱 ： 500 钱:1]\n\n[移动盟重土城所需金钱 ： 1000 钱:2]\n\n[移动至潘夜岛村所需金钱 ： 1000 钱:3]\n\n[移动至沙漠土城所需金钱 ： 1500 钱:4]\n\n[移动至绿洲村所需金钱 ： 2000 钱:5]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "tp:KugKyung:North"
+      },
+      {
+       "id": 2,
+       "dest": "tp:MongChon:East"
+      },
+      {
+       "id": 3,
+       "dest": "tp:HalfMoon:Center"
+      },
+      {
+       "id": 4,
+       "dest": "tp:Samak:East"
+      },
+      {
+       "id": 5,
+       "dest": "tp:Oasis:Center"
+      }
+     ],
      "checks": [],
      "actions": [
       {
@@ -81268,9 +82477,184 @@
      "success": null,
      "currency": "",
      "entry": false
+    },
+    {
+     "key": "tp:KugKyung:North",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 500
+      },
+      {
+       "type": "Teleport",
+       "map": "01",
+       "x": 456,
+       "y": 217
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "func:nogold",
+     "type": "None",
+     "say": "[返回:1]\n[离开:0]",
+     "buttons": [
+      {
+       "id": 1,
+       "dest": "VanyaSinjunTele:teleport_D1105"
+      }
+     ],
+     "checks": [],
+     "actions": [],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:MongChon:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "74",
+       "x": 349,
+       "y": 330
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:HalfMoon:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1000
+      },
+      {
+       "type": "Teleport",
+       "map": "8",
+       "x": 288,
+       "y": 242
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Samak:East",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 1500,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 1500
+      },
+      {
+       "type": "Teleport",
+       "map": "5",
+       "x": 204,
+       "y": 290
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
+    },
+    {
+     "key": "tp:Oasis:Center",
+     "type": "None",
+     "say": "",
+     "buttons": [],
+     "checks": [
+      {
+       "type": "Gold",
+       "op": "GreaterThanOrEqual",
+       "i1": 2000,
+       "fail": "func:nogold"
+      }
+     ],
+     "actions": [
+      {
+       "type": "TakeGold",
+       "i1": 2000
+      },
+      {
+       "type": "Teleport",
+       "map": "4",
+       "x": 435,
+       "y": 84
+      }
+     ],
+     "goods": [],
+     "types": [],
+     "success": null,
+     "currency": "",
+     "entry": false
     }
    ],
-   "warnings": []
+   "warnings": [
+    "teleport_menu_filled"
+   ]
   },
   {
    "index": 382,
@@ -81496,7 +82880,7 @@
  ],
  "stats": {
   "npcs": 230,
-  "pages": 4246,
+  "pages": 4288,
   "npc_with_pages": 230,
   "entries": 230
  },
@@ -81509,6 +82893,7 @@
   "give_item_unresolved": 15,
   "take_item_unresolved": 5,
   "no_source_content": 4,
+  "teleport_menu_filled": 6,
   "unresolved_label": 1,
   "teleport_fallback_text": 1
  },

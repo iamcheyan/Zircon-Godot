@@ -384,6 +384,10 @@ class Compiler:
         else:
             self.page(self.entry)["entry"] = True
             self.inject_services()
+            # 六面神石这类传送 NPC：原版个别方位的脚本正文是空菜单（例：SnakeVallyTele_2 只有"六面神石"），
+            # 玩家点开是个没有选项的空框。按该城原版传送文本补齐目的地菜单。
+            if self.npc.get("category") == "传送":
+                self.augment_teleport_entry()
         # 把创建时未知的“返回入口”占位符解析成真正的入口 key
         for pg in self.pages.values():
             for b in pg["buttons"]:
@@ -405,6 +409,34 @@ class Compiler:
         "41": "Numa.txt", "8": "VanyaTele.txt", "12": "VanyaTele.txt",
         "9": "VanyaTele.txt",
     }
+
+    def augment_teleport_entry(self):
+        """入口页没有任何可点目的地时，用该城原版传送文本补一版菜单（不覆盖原有正文）。"""
+        target = self.display_target(self.entry)
+        if target is None or target["buttons"]:
+            return
+        if re.search(r"\[[^\[\]]*:\d+\]", target["say"] or ""):
+            return
+        stem = self.TELE_TEXT_BY_MAP.get(self.npc["mapFile"], "BiChonTele.txt")
+        path = self.repo.resolve(f"Convert_Def/QuestDiary/Teleport/{stem}", want_convert=True)
+        if path is None:
+            return
+        blocks = self.repo.text(path)
+        best = None
+        for label, txt in blocks.items():
+            n = txt.count("TelePortRootin")
+            if n and (best is None or n > best[1]):
+                best = (label, n, txt)
+        if best is None:
+            return
+        rendered = self.render(best[2], target["key"], 3)
+        if not target["buttons"]:
+            return
+        head = (target["say"] or "").strip()
+        # 原文往往就是菜单标题（"六面神石"），补的菜单自带同样标题 → 去重
+        target["say"] = rendered if head and rendered.strip().startswith(head) else \
+            ((head + "\n\n" + rendered).strip() if head else rendered)
+        self.warn(f"teleport_menu_filled:{stem}")
 
     def make_teleport_entry(self) -> str | None:
         """无 13Move 脚本的六面神石：用该城原版传送文本生成目的地菜单。"""

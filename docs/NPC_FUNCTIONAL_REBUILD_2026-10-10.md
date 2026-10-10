@@ -95,6 +95,21 @@ dotnet run --project Tools/ClassicMagicFixer -- applynpcir /home/tetsuya/develop
   → 客户端 `GameScene.OpenNpcStorage()` 打开既有仓库窗口。
   注意：新增包会改变后续包 ID（按类型名排序取下标），**客户端与服务端必须同版本重建**。
 
+* **客户端链接解析修复**（实机发现，`GodotClient/Controls/NPCDialog.cs` 与 `NPCTextControl.cs`）：
+  原实现用 `\[(?<Text>.*?):(?<ID>.+?)\]` 解析选项，正文里的选项文字只要自带冒号
+  （例："移动至比奇城所需金钱 : 500 钱"）就会被截错，`int.TryParse` 失败 → 选项没有可点区域
+  （症状正是"点了选项没反应"）。已把 ID 组限定为 `-?\d+`；同时编译期把链接文字里的
+  `[ ] :` 统一替换为全角，避免与链接语法冲突。
+
+### 4.1 两个运维陷阱（本次踩到，记录备查）
+
+* **服务端运行目录的 DLL 容易被"以为已更新"**：`ServerCore.csproj` 的
+  `OutputPath=..\..\Debug\ServerCore\` 相对项目目录解析，普通 `dotnet build` 会把产物写到
+  `/home/tetsuya/development/Debug/ServerCore/`（仓库**外**），而服务端实际从
+  `<repo>/Debug/ServerCore/` 启动。协议有改动时不同步，表现就是"客户端卡在 Login 包已入队"。
+  正确做法（`login_game.sh` 同款）：`dotnet build ServerCore/ServerCore.csproj --no-restore -o Debug/ServerCore`。
+* `pkill -f "dotnet ServerCore.dll"` 会连带杀掉别人的测试服务端：多 agent 并行时按 PID 精确退场。
+
 ## 5. 结果与残留
 
 ### 5.1 每个 NPC 的实际落地
@@ -122,13 +137,38 @@ dotnet run --project Tools/ClassicMagicFixer -- applynpcir /home/tetsuya/develop
 
 ## 6. 验证
 
-1. **结构校验**：`tools/validate_npc_ir.py` → 0 error（无死链/无缺失引用/入口链可见）。
-2. **实机巡检**：客户端 `--npc-audit`（自动传送→模拟真实点击→遍历每个选项→逐页截图→JSONL 结果），
-   全量 230 个 NPC 的结果与截图见 `docs/screenshots/npc_audit/`。
-3. **功能验证**：购买（`@giveGold` → 商店下单）、传送（神石切图）、仓库（NPC 打开仓库窗口并成功存入）。
+### 6.1 结构校验（离线，可重复）
 
-> 实机结果与截图清单见第 7 节（本报告生成时填充）。
+`python3 tools/validate_npc_ir.py tools/npc_dialog_ir.json` → **0 error**
+（逐条检查：入口页存在且对普通新号可见、页内每个 `[文字:ID]` 都有对应按钮、按钮目的地存在、
+check/action 引用的物品与地图在 DB 中存在、success/fail 目标存在；另列出"空页/按钮未在正文出现"等 warning）
+
+### 6.2 实机巡检（客户端自动点击）
+
+`--npc-audit`（`GodotClient/Scripts/GameScene.NpcAudit.cs`，用法见 `docs/NPC_AUDIT.md`）：
+自动传送到每个 NPC → 以真实点击路径唤起对话框 → 读取可点链接区域逐个点击 → 逐页截图 → JSONL 记录。
+
+* 试运行（隔离服务端 7001 + 与客户端逐字节相同的 System.db，分支最终态）：
+  `SUMMARY total=3 ok=3 no_response=0 not_found=0 click_missed=0 timeout=0`
+  （啊康 #13：入口页 + 5 个子页含 Repair/BuySell；图书管理员 #90：3 页；六面神石 #39：入口页 1 个链接）
+* 全量 230 NPC：`bash tools/run_npc_audit.sh :150 /home/tetsuya/npc_audit_out`（结果见 6.4）
+
+### 6.3 功能验证（人工 + 脚本，逐项断言）
+
+| 功能 | 验证方式 | 结果 |
+|---|---|---|
+| 对话框内容 | 点击 啊康(#13) | 显示原版正文"很高兴见到你，有什么事吗？" + 原版选项（特殊修理武器/请求把剑从手分离开/对今日的任务进行了了解/结束）+ 补挂的"购买物品"（截图 `13_akang_menu.png`） |
+| 收钱传送 | 六面神石(#39) 点"移动至道馆村所需金钱：500 钱" | **HUD 由 `比奇县` 变为 `道馆 [415,179]`**，扣 500 金币（截图 `39_teleport_before/after.png`） |
+| 仓库 NPC | 赵老头(#147) 点"寄存物品" | 客户端收到 `S.NPCStorage` 并**弹出仓库窗口**（截图 `147_zhaolaotou_menu.png` / `147_storage_opened.png`） |
+| 商店购买 | 啊康 → 购买物品 | 商品列表显示 木剑 50 / 匕首 100 / 青铜剑 500 / 乌木剑 1000 / 短剑 1000（价格取自物品 DB）——下单断言见 6.4 |
+| 修理 | 啊康 → 特殊修理武器 | 打开 `Repair` 面板（页型 Repair，客户端按原版进入修理模式） |
+
+### 6.4 全量巡检结果
+
+（跑完填充：ok/no_response/not_found/click_missed 统计、错误码清单、截图归档路径与功能断言明细）
 
 ## 7. 实机证据
 
-（见 `docs/screenshots/npc_audit/` 与 `docs/screenshots/npc_audit/audit_results.jsonl`）
+* 归档目录：`docs/screenshots/npc_audit/`（每个 NPC 一张对话框区域截图 + 关键功能截图）
+* 机读结果：`docs/screenshots/npc_audit/audit_results.jsonl`
+* 隔离服务端跑法（不影响 7000）：见 `docs/NPC_AUDIT.md`

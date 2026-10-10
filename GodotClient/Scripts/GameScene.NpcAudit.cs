@@ -235,7 +235,12 @@ public partial class GameScene
     /// </summary>
     private async Task<bool> TeleportToNpcAsync(NpcAuditEntry entry)
     {
-        (int dx, int dy)[] offsets = { (0, -2), (0, -3), (0, 2), (-2, 0), (2, 0) };
+        // 落点要避开 NPC 自身格与其周围障碍：按距离 1..3 的整环尝试（NPC 常站在不可走格上，
+        // 只试 5 个偏移会在城内/屋内大量 timeout）。
+        var offsets = new List<(int dx, int dy)>();
+        for (int d = 1; d <= 3; d++)
+            foreach (var (dx, dy) in new[] { (0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1) })
+                offsets.Add((dx * d, dy * d));
         double deadline = Godot.Time.GetTicksMsec() + NpcAuditTeleportBudgetMs;
 
         foreach (var (dx, dy) in offsets)
@@ -411,6 +416,10 @@ public partial class GameScene
 
     // ---- 链接遍历 -----------------------------------------------------------
 
+    /// <summary>当前金币数量（客户端本地缓存，用于判定「收费」类链接是否真的扣钱）。</summary>
+    private long CurrentGold()
+        => Currencies.FirstOrDefault(x => x.Info?.Type == CurrencyType.Gold)?.Amount ?? 0;
+
     private async Task AuditPageAsync(NpcAuditRecord rec, NpcAuditEntry entry, ObjectRenderer npc,
         List<int> path, int pageIndex, int depth, HashSet<int> visited, string shotsDir)
     {
@@ -444,6 +453,9 @@ public partial class GameScene
             }
 
             int showsBefore = _npcDialog.PageShowCount;
+            int mapBefore = _playerMapIndex;
+            var locBefore = _playerLocation;
+            long goldBefore = CurrentGold();
             if (!ClickNpcLink(id))
             {
                 rec.Errors.Add("link_failed");
@@ -454,8 +466,28 @@ public partial class GameScene
             int next = await WaitForPageAsync(npc.ObjectID, NpcAuditResponseTimeoutMs, showsBefore);
             if (next < 0)
             {
-                rec.Errors.Add("link_failed");
-                GD.PrintErr($"[NpcAudit] [{entry.Index}] page={pageIndex} link={id} link_failed（5s 无新页）");
+                // 该链接可能不是「翻页」而是**副作用动作**（收费传送/给钱给物后关闭对话）：
+                // 地图或金币发生变化就说明它生效了，不能算 link_failed。
+                bool acted = _playerMapIndex != mapBefore
+                    || _playerLocation != locBefore
+                    || CurrentGold() != goldBefore;
+                if (acted)
+                {
+                    rec.Pages.Add(new NpcAuditPageRecord
+                    {
+                        Page = -1,
+                        Links = new List<int>(),
+                        Shot = CaptureNpcAuditShot(shotsDir, entry.Index, rec.Pages.Count, -1),
+                        Type = "action",
+                    });
+                    GD.Print($"[NpcAudit] [{entry.Index}] page={pageIndex} link={id} 副作用生效"
+                             + $"(map {mapBefore}->{_playerMapIndex}, gold {goldBefore}->{CurrentGold()})");
+                }
+                else
+                {
+                    rec.Errors.Add("link_failed");
+                    GD.PrintErr($"[NpcAudit] [{entry.Index}] page={pageIndex} link={id} link_failed（5s 无新页且无副作用）");
+                }
                 continue;
             }
             if (!visited.Add(next))

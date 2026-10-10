@@ -878,14 +878,29 @@ class Compiler:
                 out.append({"item": name, "price": price})
         return out
 
+    # 商店"收购/出售"类型：Mud3 的买卖界面由客户端提供，脚本只写 <出售/@sell>；
+    # 这里按「店铺卖什么就收什么」+ 现役 DB 同前缀商店的 Types + 职能兜底 推导。
+    PREFIX_SELL_TYPES = {
+        "02Weapon": ["Weapon"], "03Armor": ["Armour", "Helmet"], "03Shoes": ["Shoes"],
+        "04Potion": ["Consumable"], "05Book": ["Book"], "06Inn": [],
+        "07Grocery": ["Consumable", "Torch"], "08Accessory": ["Necklace", "Bracelet", "Ring"],
+        "01Meet": ["Consumable", "Torch", "Book"], "10ChestnutMarket": ["Consumable"],
+        "10Material": ["Consumable", "Book"], "09Repair": ["Weapon", "Armour", "Helmet"],
+    }
+    SELLABLE = ("Weapon", "Armour", "Helmet", "Necklace", "Bracelet", "Ring", "Shoes",
+                "Book", "Consumable", "Torch")
+
     def sell_types(self) -> list[str]:
-        t = list(self.ctx["prefix_types"].get(self.prefix(), []))
-        if t:
-            return t
+        out: set[str] = set(self.ctx["prefix_types"].get(self.prefix(), []))
+        for g in self.shop_goods():
+            it = self.ctx["item_types"].get(g["item"])
+            if it in self.SELLABLE:
+                out.add(it)
+        out.update(self.PREFIX_SELL_TYPES.get(self.prefix(), []))
         svc = " ".join(self.npc.get("services", []))
-        if any(h in svc for h in SVC_SELL_HINTS) or "买卖" in svc:
-            return ["Weapon", "Armour", "Helmet", "Necklace", "Bracelet", "Ring", "Shoes"]
-        return []
+        if not out and (any(h in svc for h in SVC_SELL_HINTS) or "买卖" in svc):
+            out.update(["Weapon", "Armour", "Helmet", "Necklace", "Bracelet", "Ring", "Shoes"])
+        return sorted(out)
 
     def repair_types(self) -> list[str]:
         t = [x for x in self.sell_types()
@@ -1155,6 +1170,7 @@ def main() -> int:
     ctx = {
         "maps": {m["fileName"] for m in graph["maps"]},
         "db_item_names": {i["name"] for i in graph["items"]},
+        "item_types": {i["name"]: i["type"] for i in graph["items"]},
         "item_alias": {**parse_client_item_names(), **parse_item_aliases()},
         "moverootin": parse_moverootin(os.path.join(MUD3_ROOT, "QuestDiary", "Teleport", "moverootin.txt")),
         "shop_goods": shop_goods,

@@ -1,0 +1,278 @@
+D5074	total=0	
+D6012	total=88	Spiked Beetle=26,Butterfly Worm=20,Mutant Maggot=16,Wasp Hatchling=15,Centipede=11
+D60131	total=85	Wasp Hatchling=20,Mutant Maggot=20,Centipede=15,Butterfly Worm=15,Spiked Beetle=15
+D60131	total=85	Wasp Hatchling=20,Mutant Maggot=20,Centipede=15,Butterfly Worm=15,Spiked Beetle=15
+4	total=30	Sheep=26,SandGuard=4
+D716	total=200	Red Boar=60,Black Boar=60,Claw Serpent=60,Wedge Moth=20
+5	total=32	SandGuard=18,ArcherGuard=8,Sheep=6
+D717	total=326	Black Boar=111,Red Boar=110,Claw Serpent=70,Wedge Moth=35
+74	total=13	Fierce Falcon=5,ForestGuard=4,Beetle=4
+D8001	total=17	Ant Soldier=15,Ant Commander=2
+75	total=12	Beetle=10,Fierce Falcon=2
+D8002	total=18	Ant Soldier=16,Ant Commander=2
+8	total=1027	Decaying Ghoul=1005,Guard=14,Rotting Ghoul=8
+D8003	total=22	Ant Soldier=20,Ant Commander=2
+B115_001	total=100	GhostSorcerer=100
+D8004	total=18	Ant Soldier=16,Ant Commander=2
+B132_001	total=2	Spiked Beetle=2
+D801	total=32	Ant Soldier=15,Armoured Ant=15,Ant Commander=2
+D001	total=85	Skeleton=22,Skeleton Warrior=22,Scorpion=20,Cave Maggot=20,Skeleton Lord=1
+D802	total=37	Armoured Ant=20,Ant Soldier=15,Ant Commander=2
+D002	total=86	Skeleton Lord=23,Skeleton Warrior=22,Skeleton Axe Thrower=21,Cave Maggot=20
+D8021	total=15	Ant Soldier=10,Armoured Ant=5
+D003	total=107	Skeleton Lord=23,Skeleton Warrior=22,Skeleton Axe Thrower=21,Skeleton=21,Cave Maggot=20
+D803	total=27	Ant Soldier=15,Armoured Ant=10,Ant Commander=2
+D011	total=85	Skeleton=22,Skeleton Warrior=22,Scorpion=20,Cave Maggot=20,Skeleton Lord=1
+D8031	total=16	Ant Soldier=8,Armoured Ant=8
+D012	total=105	Skeleton Lord=23,Skeleton Warrior=21,Skeleton Axe Thrower=21,Scorpion=20,Cave Maggot=20
+D8032	total=0	
+D021	total=10	Cave Bat=5,Cave Maggot=5
+D804	total=29	Ant Soldier=11,Armoured Ant=11,Ant Healer=5,Ant Commander=2
+D022	total=182	Uma Anguisher=65,Uma Flame Thrower=31,Spined Dark Lizard=30,Uma Infidel=30,Cave Bat=26
+D022_001	total=8	Uma Anguisher=4,Uma Flame Thrower=4
+D805	total=51	Ant Soldier=20,Armoured Ant=16,Ant Healer=15
+D023	total=186	Uma Anguisher=65,Uma Infidel=61,Spined Dark Lizard=30,Uma Flame Thrower=30
+D806	total=56	Ant Soldier=20,Armoured Ant=17,Ant Healer=17,Ant Commander=2
+D024	total=81	Uma Anguisher=40,Uma Flame Thrower=20,Uma Infidel=20,Uma King=1
+D8061	total=30	Ant Soldier=10,Armoured Ant=10,Ant Healer=10
+D032	total=183	Uma Anguisher=64,Uma Infidel=31,Uma Flame Thrower=31,Spined Dark Lizard=30,Cave Bat=27
+D901	total=91	Oyoung Beast=20,Otherworld Light Guard=20,Otherworld Sea General=20,Otherworld Tentacle Demon=15,Otherworld Poison Demon=15,Otherworld Ship Guard 1=1
+D033	total=187	Uma Anguisher=64,Uma Infidel=62,Uma Flame Thrower=31,Spined Dark Lizard=30
+D9021	total=51	Oyoung Beast=15,Otherworld Light Guard=15,Otherworld Tentacle Demon=10,Otherworld Poison Demon=10,Otherworld Ship Guard 1=1
+D042	total=182	Uma Anguisher=65,Spined Dark Lizard=30,Uma Infidel=30,Uma Flame Thrower=30,Cave Bat=27
+D9022	total=91	Otherworld Tentacle Demon=15,Otherworld Poison Demon=15,Otherworld Red Mage=15,Otherworld Ship Guard=15,Oyoung Beast=10,Otherworld Light Guard=10,Otherworld Sea General=10,Otherworld Ship Guard 1=1
+D043	total=186	Uma Anguisher=65,Uma Infidel=61,Spined Dark Lizard=30,Uma Flame Thrower=30
+D052	total=0	
+D053	total=0	
+D1011	total=0	
+D1012	total=0	
+D10131	total=0	
+D10132	total=0	
+D1014	total=0	
+D10151	total=0	
+D10152	total=0	
+D1101	total=482	Banyo Warrior=130,Flame Demon Soldier=130,Sama Wind Guardian=80,Ice Break Demon Soldier=70,Fierce Wind Demon=70,Banya Guardian=2
+D1102	total=482	Ice Break Demon Soldier=130,Flame Demon Soldier=130,Banyo Warrior=80,Sama Wind Guardian=70,Fierce Wind Demon=70,Banya Guardian=2
+D11031	total=502	Banyo Warrior=130,Sama Wind Guardian=130,Ice Break Demon Soldier=80,Fierce Wind Demon=80,Flame Demon Soldier=80,Banya Guardian=2
+D11032	total=400	Banyo Warrior=80,Ice Break Demon Soldier=80,Fierce Wind Demon=80,Sama Wind Guardian=80,Flame Demon Soldier=80
+D1104	total=462	Fierce Wind Demon=80,Banyo Warrior=70,Ice Break Demon Soldier=70,Sama Wind Guardian=70,Flame Demon Soldier=70,Banya Left Guard=50,Banya Right Guard=50,Banya Guardian=2
+D1105	total=462	Banyo Warrior=110,Ice Break Demon Soldier=70,Fierce Wind Demon=70,Flame Demon Soldier=70,Sama Wind Guardian=60,Banya Left Guard=50,Banya Right Guard=30,Banya Guardian=2
+D1111	total=452	Flame Demon Soldier=110,Ice Break Demon Soldier=70,Sama Wind Guardian=70,Banyo Warrior=60,Fierce Wind Demon=60,Banya Right Guard=50,Banya Left Guard=30,Banya Guardian=2
+D1112	total=447	Banyo Warrior=75,Sama Wind Guardian=75,Ice Break Demon Soldier=65,Fierce Wind Demon=65,Flame Demon Soldier=65,Banya Left Guard=50,Banya Right Guard=50,Banya Guardian=2
+D1113	total=497	Sama Wind Guardian=120,Banyo Warrior=80,Flame Demon Soldier=80,Ice Break Demon Soldier=70,Fierce Wind Demon=65,Banya Right Guard=50,Banya Left Guard=30,Banya Guardian=2
+D11141	total=522	Fierce Wind Demon=125,Ice Break Demon Soldier=120,Flame Demon Soldier=80,Banyo Warrior=75,Sama Wind Guardian=60,Banya Left Guard=30,Banya Right Guard=30,Banya Guardian=2
+D11142	total=452	Banyo Warrior=115,Flame Demon Soldier=70,Fierce Wind Demon=65,Ice Break Demon Soldier=60,Sama Wind Guardian=60,Banya Right Guard=50,Banya Left Guard=30,Banya Guardian=2
+D1115	total=432	Banyo Warrior=70,Fierce Wind Demon=70,Flame Demon Soldier=70,Ice Break Demon Soldier=60,Sama Wind Guardian=60,Banya Left Guard=50,Banya Right Guard=50,Banya Guardian=2
+D1116	total=51	Banya Left Guard=25,Banya Right Guard=25,Flame Minotaur=1
+D1201	total=4	Black Boar=2,Millipede=2
+D1202	total=4	Black Boar=2,Millipede=2
+D12031	total=10	Black Boar=5,Millipede=5
+D12032	total=10	Black Boar=5,Millipede=5
+D1204	total=10	Black Boar=5,Millipede=5
+D1205	total=10	Black Boar=5,Millipede=5
+D1211	total=83	Bone Archer=31,Bone Bladesman=30,Bone Soldier=22
+D12121	total=92	Bone Archer=31,Bone Soldier=31,Bone Bladesman=30
+D1213	total=92	Bone Archer=31,Bone Soldier=31,Bone Bladesman=30
+D1214	total=92	Bone Archer=31,Bone Soldier=31,Bone Bladesman=30
+D1215	total=113	Bone Archer=41,Bone Bladesman=40,Bone Soldier=31,Arch Lich Taedu=1
+D1301	total=36	Spiked Beetle=20,Spitting Spider=15,Beetle=1
+D1302	total=36	Spiked Beetle=20,Spitting Spider=15,Beetle=1
+D1303	total=31	Spiked Beetle=20,Spitting Spider=10,Beetle=1
+D1304	total=36	Spiked Beetle=25,Spitting Spider=10,Beetle=1
+D1305	total=31	Spiked Beetle=20,Spitting Spider=10,Beetle=1
+D1311	total=1	Beetle=1
+D1312	total=1	Beetle=1
+D1313	total=1	Beetle=1
+D1314	total=1	Beetle=1
+D1315	total=1	Beetle=1
+D1321	total=1	Beetle=1
+D1322	total=1	Beetle=1
+D1323	total=1	Beetle=1
+D1324	total=1	Beetle=1
+D1325	total=1	Beetle=1
+D1401	total=167	GhostSorcerer=127,Ghoul Champion=40
+D1402	total=167	GhostSorcerer=127,Ghoul Champion=40
+D1403	total=122	GhostSorcerer=112,Ghoul Champion=10
+D1404	total=137	GhostSorcerer=127,Ghoul Champion=10
+D1405	total=137	GhostSorcerer=127,Ghoul Champion=10
+D1411	total=10	Ghoul Champion=10
+D1412	total=10	Ghoul Champion=10
+D1413	total=10	Ghoul Champion=10
+D1414	total=10	Ghoul Champion=10
+D1415	total=10	Ghoul Champion=10
+D1421	total=10	Ghoul Champion=10
+D1422	total=10	Ghoul Champion=10
+D1423	total=10	Ghoul Champion=10
+D1424	total=10	Ghoul Champion=10
+D1425	total=10	Ghoul Champion=10
+D400_001	total=10	Ghoul Champion=10
+D401	total=123	GhostSorcerer=93,Ghoul Champion=30
+D401_001	total=20	Ghoul Champion=20
+D402	total=123	GhostSorcerer=93,Ghoul Champion=30
+D402_001	total=20	Ghoul Champion=20
+D403	total=123	GhostSorcerer=93,Ghoul Champion=30
+D403_001	total=20	Ghoul Champion=20
+D404	total=103	GhostSorcerer=93,Ghoul Champion=10
+D404_001	total=20	Ghoul Champion=20
+D405	total=103	GhostSorcerer=93,Ghoul Champion=10
+D405_001	total=20	Ghoul Champion=20
+D406	total=103	GhostSorcerer=93,Ghoul Champion=10
+D406_001	total=20	Ghoul Champion=20
+D411	total=90	GhostSorcerer=90
+D412	total=90	GhostSorcerer=90
+D413	total=90	GhostSorcerer=90
+D415	total=95	GhostSorcerer=95
+D416	total=90	GhostSorcerer=90
+D420_001	total=10	Ghoul Champion=10
+D421	total=116	GhostSorcerer=106,Ghoul Champion=10
+D421_001	total=20	Ghoul Champion=20
+D422	total=116	GhostSorcerer=106,Ghoul Champion=10
+D422_001	total=20	Ghoul Champion=20
+D431	total=103	GhostSorcerer=83,Ghoul Champion=20
+D431_001	total=20	Ghoul Champion=20
+D432	total=103	GhostSorcerer=83,Ghoul Champion=20
+D432_001	total=20	Ghoul Champion=20
+D433	total=103	GhostSorcerer=83,Ghoul Champion=20
+D433_001	total=20	Ghoul Champion=20
+D434	total=94	GhostSorcerer=84,Ghoul Champion=10
+D434_001	total=20	Ghoul Champion=20
+D435	total=94	GhostSorcerer=84,Ghoul Champion=10
+D435_001	total=20	Ghoul Champion=20
+D436	total=93	GhostSorcerer=83,Ghoul Champion=10
+D436_001	total=20	Ghoul Champion=20
+D441	total=80	GhostSorcerer=80
+D442	total=80	GhostSorcerer=80
+D443	total=80	GhostSorcerer=80
+D445	total=70	GhostSorcerer=70
+D446	total=80	GhostSorcerer=80
+D451	total=116	GhostSorcerer=106,Ghoul Champion=10
+D451_001	total=20	Ghoul Champion=20
+D452	total=116	GhostSorcerer=106,Ghoul Champion=10
+D452_001	total=20	Ghoul Champion=20
+D501	total=126	Vicious Rat=95,Zuma Sharpshooter=31
+D502	total=182	Vicious Rat=151,Zuma Sharpshooter=31
+D503	total=263	Zuma Fanatic=95,Vicious Rat=65,Zuma Guardian=61,Zuma Sharpshooter=41,Zuma Keeper=1
+D504	total=274	Zuma Fanatic=121,Zuma Guardian=61,Vicious Rat=60,Zuma Sharpshooter=31,Zuma Keeper=1
+D505	total=222	Zuma Fanatic=93,Zuma Guardian=93,Zuma Sharpshooter=33,Wedge Moth=2,Zuma Keeper=1
+D5061	total=13	Zuma Guardian=13
+D5062	total=13	Zuma Guardian=13
+D5063	total=13	Zuma Guardian=13
+D5064	total=13	Zuma Guardian=13
+D5065	total=13	Zuma Guardian=13
+D5072	total=157	Zuma Fanatic=61,Zuma Guardian=61,Zuma Sharpshooter=35
+D5073	total=157	Zuma Fanatic=61,Zuma Guardian=61,Zuma Sharpshooter=35
+D5074	total=157	Zuma Fanatic=61,Zuma Guardian=61,Zuma Sharpshooter=35
+D6012	total=88	Spiked Beetle=26,Butterfly Worm=20,Mutant Maggot=16,Wasp Hatchling=15,Centipede=11
+D60131	total=85	Wasp Hatchling=20,Mutant Maggot=20,Centipede=15,Butterfly Worm=15,Spiked Beetle=15
+D60132	total=85	Wasp Hatchling=20,Mutant Maggot=20,Centipede=15,Butterfly Worm=15,Spiked Beetle=15
+D60133	total=85	Wasp Hatchling=20,Mutant Maggot=20,Centipede=15,Butterfly Worm=15,Spiked Beetle=15
+D60134	total=75	Centipede=15,Wasp Hatchling=15,Butterfly Worm=15,Mutant Maggot=15,Spiked Beetle=15
+D60135	total=70	Butterfly Worm=20,Centipede=15,Spiked Beetle=15,Wasp Hatchling=10,Mutant Maggot=10
+D6014	total=104	Spiked Beetle=27,Centipede=25,Butterfly Worm=20,Wasp Hatchling=16,Mutant Maggot=16
+D715	total=811	Black Boar=251,Red Boar=200,Wedge Moth=200,Claw Serpent=160
+D716	total=200	Red Boar=60,Black Boar=60,Claw Serpent=60,Wedge Moth=20
+D717	total=326	Black Boar=111,Red Boar=110,Claw Serpent=70,Wedge Moth=35
+D8001	total=17	Ant Soldier=15,Ant Commander=2
+D8002	total=18	Ant Soldier=16,Ant Commander=2
+D8003	total=22	Ant Soldier=20,Ant Commander=2
+D8004	total=18	Ant Soldier=16,Ant Commander=2
+D801	total=32	Ant Soldier=15,Armoured Ant=15,Ant Commander=2
+D802	total=37	Armoured Ant=20,Ant Soldier=15,Ant Commander=2
+D8021	total=15	Ant Soldier=10,Armoured Ant=5
+D803	total=27	Ant Soldier=15,Armoured Ant=10,Ant Commander=2
+D8031	total=16	Ant Soldier=8,Armoured Ant=8
+D8032	total=16	Ant Soldier=8,Armoured Ant=8
+D804	total=29	Ant Soldier=11,Armoured Ant=11,Ant Healer=5,Ant Commander=2
+D8041	total=22	Ant Soldier=11,Armoured Ant=11
+D805	total=51	Ant Soldier=20,Armoured Ant=16,Ant Healer=15
+D806	total=56	Ant Soldier=20,Armoured Ant=17,Ant Healer=17,Ant Commander=2
+D8061	total=30	Ant Soldier=10,Armoured Ant=10,Ant Healer=10
+D901	total=91	Oyoung Beast=20,Otherworld Light Guard=20,Otherworld Sea General=20,Otherworld Tentacle Demon=15,Otherworld Poison Demon=15,Otherworld Ship Guard 1=1
+D9021	total=51	Oyoung Beast=15,Otherworld Light Guard=15,Otherworld Tentacle Demon=10,Otherworld Poison Demon=10,Otherworld Ship Guard 1=1
+D9022	total=91	Otherworld Tentacle Demon=15,Otherworld Poison Demon=15,Otherworld Red Mage=15,Otherworld Ship Guard=15,Oyoung Beast=10,Otherworld Light Guard=10,Otherworld Sea General=10,Otherworld Ship Guard 1=1
+D90222	total=1	Otherworld Tentacle Demon=1
+D90223	total=1	Oyoung Beast=1
+D9031	total=0	
+D9032	total=0	
+E001	total=30	Cave Maggot=5,Skeleton Warrior=5,Skeleton Axe Thrower=5,Skeleton Lord=5,Skeleton=5,Cave Bat=5
+E002	total=30	Cave Maggot=5,Skeleton Warrior=5,Skeleton Axe Thrower=5,Skeleton Lord=5,Skeleton=5,Cave Bat=5
+E401	total=30	Cave Maggot=5,Skeleton Warrior=5,Skeleton Axe Thrower=5,Skeleton Lord=5,Skeleton=5,Cave Bat=5
+E402	total=55	GhostSorcerer=25,Cave Maggot=5,Skeleton Warrior=5,Skeleton Axe Thrower=5,Skeleton Lord=5,Skeleton=5,Cave Bat=5
+E403	total=36	GhostSorcerer=25,Skeleton Warrior=5,Skeleton Lord=5,Skeleton=1
+E404	total=25	GhostSorcerer=25
+d15023	total=432	Dungeon Goddess 2=280,Flame Lion=80,Stone Lion=70,Monkey=2
+d15033	total=269	Stone Lion=130,Flame Lion=130,Numa Royal Guard=7,Monkey=2
+d15054	total=404	Dungeon Goddess 2=165,Stone Lion=150,Flame Lion=80,Numa Royal Guard=7,Monkey=2
+d1506	total=56	Flame Lion=30,Stone Lion=20,Numa Royal Guard=5,Evil Monkey=1
+d1510	total=302	Flame Lion=150,Dungeon Goddess 2=150,Monkey=2
+d15111	total=192	Stone Lion=70,Flame Lion=60,Dungeon Goddess 2=60,Monkey=2
+d1512	total=632	Dungeon Goddess 2=420,Flame Lion=210,Monkey=2
+d1513	total=407	Dungeon Goddess 2=140,Stone Lion=130,Flame Lion=130,Numa Royal Guard=5,Monkey=2
+d515	total=29	Zuma Guardian=7,Zuma Fanatic=7,Zuma Sharpshooter=7,Wedge Moth=7,Zuma King=1
+d6011	total=78	Spiked Beetle=21,Centipede=20,Mutant Maggot=15,Wasp Hatchling=11,Butterfly Worm=11
+d6015	total=105	Centipede=25,Spiked Beetle=22,Wasp Hatchling=21,Butterfly Worm=21,Mutant Maggot=15,Millipede=1
+d711	total=501	Black Boar=251,Red Boar=250
+d712	total=601	Black Boar=251,Red Boar=200,Wedge Moth=150
+d713	total=851	Black Boar=251,Claw Serpent=250,Red Boar=200,Wedge Moth=150
+d714	total=811	Black Boar=251,Claw Serpent=210,Red Boar=200,Wedge Moth=150
+d8022	total=15	Ant Soldier=10,Armoured Ant=5
+d8033	total=16	Ant Soldier=8,Armoured Ant=8
+d8051	total=20	Ant Soldier=8,Armoured Ant=6,Ant Healer=6
+d8062	total=30	Ant Soldier=10,Armoured Ant=10,Ant Healer=10
+d807	total=58	Armoured Ant=22,Ant Soldier=17,Ant Healer=17,Ant Commander=2
+d8071	total=24	Ant Soldier=8,Armoured Ant=8,Ant Healer=8
+d808	total=59	Armoured Ant=20,Ant Healer=20,Ant Soldier=17,Ant Commander=2
+d903	total=111	Otherworld Tentacle Demon=20,Otherworld Poison Demon=20,Otherworld Red Mage=20,Otherworld Ship Guard=20,Otherworld Sea General=20,Otherworld Light Guard=10,Otherworld Ship Guard 1=1
+d904	total=61	Otherworld Sea General=15,Otherworld Ship Guard=15,Otherworld Poison Demon=15,Otherworld Red Mage=15,Emperor Sa'Woo=1
+D1011	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1011	total=75	Red Moon Protector=38,Red Moon Guardian=37
+0	total=627	Claw Cat=159,Pig=101,Scarecrow=53,Chicken=50,Cow=50,Deer=44,Oma=39,Forest Yeti=35,Wolf=32,Guard=27,Carnivorous Plant=19,ArcherGuard=8,Spitting Spider=5,Oma Warrior=5
+01	total=415	Pig=106,Chicken=90,Cow=90,Claw Cat=52,Scarecrow=28,Deer=12,Oma=10,Guard=9,Wolf=7,Forest Yeti=6,Spitting Spider=5
+02	total=499	Claw Cat=100,Pig=77,Scarecrow=53,Deer=44,Chicken=40,Cow=40,Wolf=36,Oma=34,Spitting Spider=31,Forest Yeti=30,Guard=14
+1	total=1398	Claw Cat=302,Scarecrow=196,Pig=156,Wolf=147,Oma=114,Forest Yeti=101,Chicken=100,Cow=100,Deer=91,Spitting Spider=83,ForestGuard=8
+12	total=257	Arachnid Gazer=158,Dark Arachnid=58,Arachnid Broodmother=36,Guard=5
+2	total=729	Tiger Snake=180,Claw Cat=120,Wolf=105,Oma=105,Forest Yeti=105,Carnivorous Plant=90,Centipede=20,Guard=4
+D10162	total=11	Red Moon Protector=10,Red Moon The Fallen=1
+D052	total=1	Uma Anguisher=1
+D052	total=1	Uma Anguisher=1
+8	total=1025	Decaying Ghoul=1003,Guard=14,Rotting Ghoul=8
+D053	total=1	Uma Anguisher=1
+D053	total=1	Uma Anguisher=1
+D052	total=1	Uma Anguisher=1
+D1012	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D053	total=1	Uma Anguisher=1
+D1012	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1011	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10131	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10131	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1012	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10132	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10132	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10131	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1014	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10132	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1014	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D1014	total=75	Red Moon Protector=38,Red Moon Guardian=37
+D10151	total=73	Red Moon Protector=38,Red Moon Guardian=35
+D10151	total=73	Red Moon Protector=38,Red Moon Guardian=35
+D10151	total=73	Red Moon Protector=38,Red Moon Guardian=35
+D10152	total=63	Red Moon Protector=38,Red Moon Guardian=25
+D10152	total=63	Red Moon Protector=38,Red Moon Guardian=25
+D10152	total=63	Red Moon Protector=38,Red Moon Guardian=25
+D9031	total=0	
+D9031	total=0	
+D9031	total=0	
+D9032	total=0	
+D9032	total=0	
+D9032	total=0	
+D9032	total=0	
+D9032	total=0	
+12	total=261	Arachnid Gazer=158,Dark Arachnid=58,Arachnid Broodmother=40,Guard=5
+12	total=261	Arachnid Gazer=158,Dark Arachnid=58,Arachnid Broodmother=40,Guard=5
+8	total=1025	Decaying Ghoul=1003,Guard=14,Rotting Ghoul=8
+8	total=1025	Decaying Ghoul=1003,Guard=14,Rotting Ghoul=8
+0	total=627	Claw Cat=159,Pig=101,Scarecrow=53,Chicken=50,Cow=50,Deer=44,Oma=39,Forest Yeti=35,Wolf=32,Guard=27,Carnivorous Plant=19,ArcherGuard=8,Spitting Spider=5,Oma Warrior=5
+0	total=627	Claw Cat=159,Pig=101,Scarecrow=53,Chicken=50,Cow=50,Deer=44,Oma=39,Forest Yeti=35,Wolf=32,Guard=27,Carnivorous Plant=19,ArcherGuard=8,Spitting Spider=5,Oma Warrior=5
+1	total=1398	Claw Cat=302,Scarecrow=196,Pig=156,Wolf=147,Oma=114,Forest Yeti=101,Chicken=100,Cow=100,Deer=91,Spitting Spider=83,ForestGuard=8
+1	total=1398	Claw Cat=302,Scarecrow=196,Pig=156,Wolf=147,Oma=114,Forest Yeti=101,Chicken=100,Cow=100,Deer=91,Spitting Spider=83,ForestGuard=8
+0	total=627	Claw Cat=159,Pig=101,Scarecrow=53,Chicken=50,Cow=50,Deer=44,Oma=39,Forest Yeti=35,Wolf=32,Guard=27,Carnivorous Plant=19,ArcherGuard=8,Spitting Spider=5,Oma Warrior=5

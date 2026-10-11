@@ -354,6 +354,19 @@ switch (mode)
         return ExitOk;
     }
 
+    case "rebuildspawns":
+        if (args.Length < 3)
+        {
+            Console.Error.WriteLine("rebuildspawns needs <RootDir> <plan.json> [mapDir] [--dry-run]");
+            return ExitFail;
+        }
+        return RespawnRebuilder.Run(root, Path.GetFullPath(args[2]),
+            args.Length >= 4 && !args[3].StartsWith("--") ? Path.GetFullPath(args[3]) : Path.Combine(root, "Map") + "/",
+            args.Contains("--dry-run", StringComparer.OrdinalIgnoreCase));
+
+    case "mobgraph":
+        return MobGraphAudit.Run(root, args.Length >= 3 ? args[2] : "/tmp/mob_graph.json");
+
     case "applynpcir":
         if (args.Length < 3)
         {

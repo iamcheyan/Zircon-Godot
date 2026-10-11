@@ -1,0 +1,5 @@
+[spawn_verify] 计划地图=210  census 覆盖=210  完全一致=206  数量不符=4  无 census=0
+  差异 map 12: Arachnid Gazer: 期望160 实得158; Dark Arachnid: 期望60 实得58
+  差异 map 8: Decaying Ghoul: 期望1008 实得1003
+  差异 map D9031: Otherworld Poison Demon: 期望1 实得0
+  差异 map D9032: Otherworld Ship Guard: 期望1 实得0

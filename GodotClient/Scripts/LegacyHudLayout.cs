@@ -11,6 +11,16 @@ public static class LegacyHudLayout
     public const int LogicalWidth = 800;
     public const int LogicalHeight = 600;
     public const int MainPanelHeight = 136;
+
+    /// <summary>
+    /// GameInter[50]（800x136）底部 3 行是**纯黑边**（逐行实测：y=133/134/135 全黑），
+    /// 顶部聊天区前 11 行同样纯黑。布局用**内容高度**(136-3) 当窗口高度、美术自然越过
+    /// 屏幕底边，否则屏幕最底下会露出素材自带的黑行，看起来像「HUD 没贴底」。
+    /// 见 docs/LEGACY_UI_WINDOW_CATALOG.md 的贴底说明。
+    /// </summary>
+    public const int MainPanelBottomBlackRows = 3;
+    public const int MainPanelContentHeight = MainPanelHeight - MainPanelBottomBlackRows;
+
     public const int MainPanelY = 465;
 
     // EI F50 内的常驻聊天槽和其下方输入条。坐标相对

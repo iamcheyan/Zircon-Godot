@@ -70,7 +70,9 @@ public partial class MainPanel : DXImageControl
         LibraryFile = LibraryFile.GameInter;
         Index = 50; // 底图, Size 自动
         FixedSize = true;
-        Size = new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.MainPanelHeight);
+        // 用**内容高度**（133 = 136 - 素材底部 3 行黑边）：美术仍按 136 高度绘制，
+        // 自然越过屏幕底边，屏幕最底下不再露出素材自带的黑行（"HUD 没贴底"）。
+        Size = new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.MainPanelContentHeight);
 
         // 位置不能照搬反编译的 SetRect (61,586,400,597)：那是 339 宽的整块区域。
         // F50 底图上真正给经验条留的凹槽由下边框亮线量出：y=131 处亮线
@@ -872,7 +874,8 @@ public partial class MainPanel : DXImageControl
     /// <summary>正式场景与独立测试场共用的旧版 EI HUD 几何审计。</summary>
     public bool AuditLegacyHud(out string details)
     {
-        bool panel = Index == 50 && Size == new Vector2I(LegacyHudLayout.LogicalWidth, 136);
+        bool panel = Index == 50
+            && Size == new Vector2I(LegacyHudLayout.LogicalWidth, LegacyHudLayout.MainPanelContentHeight);
         bool buttons = ExchangeButton?.Location == new Vector2I(204, 2)
             && MiniMapButton?.Location == new Vector2I(228, 2)
             && SkillEntryButton?.Location == new Vector2I(252, 2)

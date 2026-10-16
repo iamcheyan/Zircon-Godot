@@ -243,8 +243,23 @@ public partial class BeltDialog : DXWindow
             x = mainPanelLocation.X + mainPanelSize.X - Size.X;
         }
         float y = mainPanelLocation.Y - Size.Y;
+        // 原版里腰带与 HUD 底板是**紧贴**的（用户 2026-10-16 复报「还有缝」）。
+        // 缝不是摆放错位，而是两件素材各自的黑色边距叠在一起：
+        //   实测 GameInter[51]（腰带 248x46）：内容到 y=43，最后 2 行纯黑；
+        //   实测 GameInter[50]（底板 800x136）：聊天区顶部前 **11 行纯黑**。
+        // 直接 bottom 贴 panel.top 会把这两段黑边叠成一道 ~13px 的缝。
+        // 故让腰带内容底边去接底板内容顶边：下移 (11+2)=13 逻辑像素。
+        // 校验方式：改后在实机截图上量中央列，腰带木纹底边与底板亮边应无黑带。
+        if (PositionLocked && AutoLoginArgs.LegacyUi)
+            y += LegacyEiBeltDropIntoPanel;
         Position = new Vector2(Mathf.Max(0, x), Mathf.Max(0, y));
     }
+
+    /// <summary>
+    /// legacy EI 腰带相对"贴底板顶"要额外下移的像素 = 底板顶部黑带 + 腰带底部黑边。
+    /// 依据见 <see cref="ApplyDefaultAnchor"/> 注释（素材逐行实测）。
+    /// </summary>
+    public const int LegacyEiBeltDropIntoPanel = 13;
 
     /// <summary>原版 AllowResize：按格子吸附尺寸，并在横向/纵向之间自动切换。</summary>
     public override Vector2I GetAcceptableResize(Vector2 requested)

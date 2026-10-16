@@ -260,3 +260,87 @@ frame 18 的还原对画面无影响：客户端 DB 中没有任何地图引用 
   （本机为 244 条），是不同世代的数据，**不可整份互相覆盖**。
 - 82 的服务端 `Config.IPAddress = 127.0.0.1`（配置存在 `System.db` 内），
   只接受本机连接，远程客户端连不上 —— 这是既有配置，与本次同步无关。
+
+## 2026-10-16 修正：`5.map`（沙漠土城）小地图显示的是另一张图
+
+### 问题（用户实测）
+
+在 `5.map`（Desert Mud Fortress 沙漠土城）里，右上角小地图与实际地图对不上：
+角色站在开阔沙漠 `(155,235)`，主视图全是沙地，小地图却把角色画在城镇街区里。
+
+### 根因：绑定值没错，但 EI 帧画的是**另一版** `5.map`
+
+- 绑定值按 EI/Mud3 权威表是**正确**的：Mud3 `Envir/MiniMap.txt` 里 `5 → 1008`，
+  按 `value ≥ 1001 → FMMap frame = value - 1001`（+1 空帧占位）⇒ `MiniMap = 8` ✓。
+  当前库：`Index=9 FileName=5 MiniMap=8`。
+- 但 EI/Mud3 的 `5.map` 与 Zircon 用的 `5.map` **不是同一张图**：
+
+  | 来源 | 尺寸 | md5 |
+  |---|---|---|
+  | Zircon `mir2ei/Map/5.map` | 350×350 | `29c09de662a80fbc80fbcfc869300c51` |
+  | EI `EI传奇3.0客户端/Map/5.map` ＝ Mud3 `Map/5.map` | 400×400 | `df7a9822bdf950b4ee33e4e8b7c38583` |
+
+- 瓦片签名任意平移比对命中率仅 **4%** → 不是裁剪/平移，而是**两张不同的图**；
+  离屏渲染对照同样证实：Zircon 的土城在东北，EI 的在西南。
+- 于是 `MiniMap = 8` 指向的 EI 艺术图与玩家脚下地图无关，小地图必然错位 ——
+  与 `3.map`（沙巴克）当初属于同一类问题，当时用 frame 287 覆盖帧解决。
+
+### 修法（沿用沙巴克配方）
+
+1. 取旧 Zircon 小地图库 `zircon-backup-20260811-095139/MiniMap-original.Zl` 的
+   **frame 9**（旧库里 `5 → 9`）。该帧与当前 `5.map` 同源：与地图渲染图归一化
+   相关 **0.850**、最佳平移 **(0,0)**。存为 `Tools/minimap_overrides/5.png`（800×600）。
+2. 重建图库（顺序不可反：先 EI 布局，再叠加覆盖帧，按文件名排序追加）→
+   `3.png → frame 287`、`5.png → frame 288`：
+
+   ```bash
+   PYTHONPATH=<Mir3-Research>/Tools/common \
+     python3 Tools/convert_ei_minimap.py "<EI 客户端 Data>" /tmp/minimap-base.zl
+   python3 Tools/apply_zircon_minimap_overrides.py \
+     /tmp/minimap-base.zl Tools/minimap_overrides <客户端 Data>/MiniMap.Zl
+   ```
+
+3. 改绑（服务端先停服）：`DbMigrationTool --root <Data 目录> set-minimap 5 288`，
+   写前备份、写完 round-trip 读回、4 处 `System.db` 保持一致。
+
+### 验证（2026-10-16 实机）
+
+| 检查 | 结果 |
+|---|---|
+| 新库 0..287 帧与现网库逐帧像素比对 | 184 有效帧全同、104 帧双方空白，**零差异**（216 张正常地图不受影响） |
+| frame 287 / 288 内容 | 分别与 `3.png` / `5.png` 逐像素一致 |
+| 新帧 288 与当前 `5.map` 渲染对齐 | 相关 0.850，最佳平移 `(0,0)` |
+| System.db round-trip | `Index=9 FileName=5 MiniMap=288` |
+| 实机（NPC 审计通道 `--npc-audit-only 50` 自动传送进图） | 小地图内容由"城镇街区"变为与地图一致的沙漠/岩地；与该帧对应区域相关 0.63~0.70，与旧 EI 帧仅 0.36 |
+
+### 影响面（249 张已绑定小地图的地图，2026-10-16 扫描）
+
+| 分类 | 数量 | 说明 |
+|---|---|---|
+| `.map` 与 EI 逐字节相同 | 215 | 绑定可信 |
+| 自建覆盖帧（287/288） | 2 | `3.map`、`5.map`，已修 |
+| **帧号越界（帧号 ≥ 库帧数 289）** | **16** | 旧库 537 帧时代的绑定，EI 版库装不下 → 小地图空白：`0_000`、`D2201/D2204/D2205/D2205`、`D006/D007/D2900/D2901/D2902/D29051`、`D008`、`D3005`、`14`、`D009`、`D3101`、`8_002` |
+| 尺寸不同（必然错位） | 2 | `D9021`/`D9022`（神舰地下2层，200×200 vs EI 140×140），**待修** |
+| 内容不同但尺寸相同（可能错位） | 10 | `0`/`1`/`12`/`6`/`81`/`D024`/`D11031`/`D505`/`D5073`/`d712`，需逐张实机确认 |
+| 无 EI 对照 | 4 | `d903`/`d904`/`d2001`/`d20023`，绑的是别的 EI 帧，很可能也错位 |
+
+批量复查：`python3 Tools/check_minimap_binding.py <DbMigrationTool report 输出> <Zircon Map 目录> "<EI 客户端 Map 目录>" [部署中的 MiniMap.Zl]`
+（有待修条目时退出码 1；带上 `MiniMap.Zl` 才能判出"帧号越界"这一类。）
+
+### 跨机同步（运行期产物，不在 git）
+
+| 产物 | 本机（Mac）状态 |
+|---|---|
+| `MiniMap.Zl`（289 帧，40,063,525 B，md5 `de516d7de39d5201100f353014937347`） | 已替换 `mir2ei/Data/MiniMap.Zl` |
+| `System.db`（md5 `083532c9660549f6f2a6fcfd1a2f1485`） | 已同步 `mir2ei/Data`、`mir2ei/Database`、`Debug/ServerCore/Database` 三处 |
+
+旧值：`MiniMap.Zl` = `ea09c837…`（288 帧，29,641,533 B）、`System.db` = `c91448d9…`。
+备份在 `/Volumes/NAS/TMP/zircon-backup-20261016-153344-map5-minimap/`。
+
+> ⚠️ 这不是 Mac 本地问题：Mac 与 82 的 `MiniMap.Zl`/`System.db`/`Map/5.map` md5 完全相同，
+> 82 上同样会错。修好本机后必须把这两项产物同步到 82（`MiniMap.Zl` 可直接拷；
+> `System.db` 只改绑定：`set-minimap 5 288`，不要整份覆盖）。
+
+> 📌 追加帧的体积：重建后文件比现网大 10 MB（40.0 MB vs 29.6 MB），原因是
+> `Tools/zl2writer.py` 写 PNG 用 `compress_level=1`；帧内容逐像素一致，功能无差异。
+> 若要压回原体积，调高该压缩级别即可（会改变整份文件字节）。

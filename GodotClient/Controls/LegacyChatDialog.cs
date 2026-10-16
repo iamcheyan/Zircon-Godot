@@ -386,6 +386,9 @@ public sealed partial class LegacyChatDialog : DXWindow
     }
     public bool InputHasFocus => _input.HasFocus;
 
+    /// <summary>输入框为空（用于判断"只是获得焦点等输入"还是"正在打字"）。</summary>
+    public bool InputIsEmpty => string.IsNullOrEmpty(_input.Text);
+
     public void CloseChat()
     {
         _input.ReleaseFocus();

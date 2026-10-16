@@ -32,6 +32,9 @@ public sealed partial class ChatTextBox : DXWindow
     /// <summary>主 HUD 输入框是否拥有键盘焦点。</summary>
     public bool InputHasFocus => _input.HasFocus;
 
+    /// <summary>输入框为空（用于判断"只是获得焦点等输入"还是"正在打字"）。</summary>
+    public bool InputIsEmpty => string.IsNullOrEmpty(_input.Text);
+
     public ChatTextBox()
     {
         HasTitle = false;

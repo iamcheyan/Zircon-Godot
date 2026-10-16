@@ -104,6 +104,14 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --bigmap-audit：Tab 大地图 / 输入焦点夺键的实机巡检（实现见 GameScene.BigMapAudit.cs）。
+    /// </summary>
+    public static bool BigMapAudit => Has("--bigmap-audit");
+
+    /// <summary>--bigmap-audit-out：巡检截图与结果目录（缺省 /tmp/bigmap_audit）。</summary>
+    public static string BigMapAuditOut => GetValue("--bigmap-audit-out") ?? "/tmp/bigmap_audit";
+
+    /// <summary>
     /// --npc-audit-quit=0|1：巡检结束后是否退出进程（缺省 1 = 退出，便于脚本化）。
     /// 只有显式传 0/false/no 才留在游戏里。
     /// </summary>

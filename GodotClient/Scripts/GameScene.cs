@@ -333,6 +333,11 @@ public partial class GameScene : Control
 
     /// <summary>主 HUD 聊天输入是否占用键盘焦点。</summary>
     public bool ChatInputHasFocus => _chatTextBox?.InputHasFocus == true;
+
+    /// <summary>legacy 竖排聊天条 / 主 HUD 输入框是否有焦点且内容为空。</summary>
+    private bool ChatInputIsEmpty
+        => (_legacyChatDialog is { InputHasFocus: true, InputIsEmpty: true })
+        || (_chatTextBox is { InputHasFocus: true, InputIsEmpty: true });
  
     public void SendChat(string text)
         => SendChat(text, new List<int>());
@@ -5581,7 +5586,18 @@ public partial class GameScene : Control
 
     private void OpenBigMapForMap(MapInfo map)
     {
-        if (map == null) return;
+        // 这两条早退以前是**静默**的：地图信息缺失时按 Tab 毫无反应，看起来就像
+        // 「Tab 时灵时不灵」。打印出来，症状可诊断（2026-10-16）。
+        if (_bigMap == null)
+        {
+            GD.PrintErr("[BigMap] 大地图控件尚未创建，忽略打开请求");
+            return;
+        }
+        if (map == null)
+        {
+            GD.PrintErr($"[BigMap] 找不到地图信息 MapIndex={_playerMapIndex}，无法打开大地图");
+            return;
+        }
         var vp = GetHudViewportSize() / UiScale;
         bool isCurrent = map.Index == _playerMapIndex;
         int mapWidth = _mapView.Map?.Width ?? 0;
@@ -9684,6 +9700,20 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.0).Timeout += StartNpcFuncAudit;
         }
 
+        // Tab 大地图 / 输入焦点夺键巡检：进入游戏且地图就绪后启动一次
+        // （实现见 GameScene.BigMapAudit.cs）。
+        if (AutoLoginArgs.BigMapAudit && !_bigMapAuditTriggerLogged)
+        {
+            _bigMapAuditTriggerLogged = true;
+            GD.Print($"[BigMapAudit] trigger: started={_bigMapAuditStarted} "
+                + $"startGameShown={_startGameShown} mapReady={_mapView?.Map != null}");
+        }
+        if (AutoLoginArgs.BigMapAudit && !_bigMapAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _bigMapAuditStarted = true;
+            GetTree().CreateTimer(1.2).Timeout += StartBigMapAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))
@@ -11507,11 +11537,35 @@ public partial class GameScene : Control
         // 打开聊天”快捷键会抢走配置、搜索等输入框的字符和确认键。
         //
         // 这个判定必须排在 R 分支**之前**：验收要求「输入焦点时 R 不得切换
-        // 详细聊天窗」，而 R 分支原先跑在它前面，导致在交易数量、公会名等
-        // 非聊天 LineEdit 里输入 R 会开/关 F350。下面的两个聊天输入框
-        // InputHasFocus 判定仍保留，作为 focus owner 不是 LineEdit 时的兜底。
-        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
-            return;
+        // 详细聊天窗」，否则在交易数量、公会名等非聊天 LineEdit 里输入 R 会
+        // 开/关 F350。下面的新分支只对 **Tab** 放行，R/Q/W/E 的该约束不变。
+        //
+        // 2026-10-16「Tab 大地图一会能用一会不能用」修复，两个新分支：
+        //   1) 隐藏控件仍持有焦点：Godot 不保证控件隐藏时释放焦点（例如按空格
+        //      打开过聊天条后再关掉某些窗），此时这条早退会让**所有**自定义热键
+        //      （Tab 大地图 / Q W E R）静默失效。隐藏控件一律抢先释放焦点。
+        //   2) 聊天输入框为空：两个聊天输入框都没有 Tab 补全，原版 Tab 也只用于
+        //      补全候选，所以「空输入框 + Tab」没有字段内语义，应照常开大地图。
+        //      正在打字（非空）时仍把 Tab 留给输入框。
+        var focusOwner = GetViewport()?.GuiGetFocusOwner();
+        if (focusOwner is LineEdit or TextEdit)
+        {
+            if (!focusOwner.IsVisibleInTree())
+            {
+                GD.Print($"[Input] 释放隐藏输入控件的残留焦点: {focusOwner.GetType().Name}");
+                focusOwner.ReleaseFocus();
+            }
+            else if (key.Keycode == Key.Tab && ChatInputIsEmpty)
+            {
+                // 只放行 Tab，其余键（R/Q/W/E…）仍按原验收留给输入框，
+                // 保证「交易数量、公会名等输入框里输入 R 不得开关 F350」不变。
+                GD.Print("[Input] 聊天输入框为空: Tab 仍交给 GameScene（开大地图）");
+            }
+            else
+            {
+                return;
+            }
+        }
 
         // Tab 在原版大地图键位缺失的客户端中用于开关完整地图。
         // GameScene._Input 早于 Control 输入回调，因此必须先检查自定义聊天
@@ -11519,13 +11573,26 @@ public partial class GameScene : Control
         // 不标记输入框中的 Tab 为 handled，让控件继续处理制表/焦点导航。
         if (key.Keycode == Key.Tab && !key.AltPressed && !key.CtrlPressed && !key.ShiftPressed)
         {
-            if (_legacyChatDialog?.InputHasFocus == true || _chatTextBox?.InputHasFocus == true)
+            // 正在打字时 Tab 留给输入框；空输入框已在上面放行（见焦点保护注释）。
+            if ((_legacyChatDialog?.InputHasFocus == true || _chatTextBox?.InputHasFocus == true)
+                && !ChatInputIsEmpty)
+            {
+                GD.Print("[Input] Tab 被非空聊天输入框接管（正在打字）");
                 return;
+            }
 
             if (_bigMap?.Visible == true)
+            {
+                GD.Print("[BigMap] Tab -> 关闭大地图");
                 _bigMap.Visible = false;
+            }
             else
+            {
+                GD.Print($"[BigMap] Tab -> 打开大地图: mapIndex={_playerMapIndex} "
+                    + $"mapInfo={(GetMapInfo(_playerMapIndex) == null ? "null" : "ok")} "
+                    + $"bigMapNode={(_bigMap == null ? "null" : "ok")}");
                 OpenBigMap();
+            }
             GetViewport()?.SetInputAsHandled();
             return;
         }

@@ -215,13 +215,33 @@ public partial class BeltDialog : DXWindow
 
 
     private void OnResized() => RefreshGridLayout();
-    /// <summary>未拖动时由 LayoutHud 调用: 锚在主面板右上侧 (底栏旁), 贴右对齐。</summary>
+
+    /// <summary>
+    /// 未拖动时由 LayoutHud 调用。两种布局的锚点不同：
+    /// · EI 复古（--legacy-ui）：**固定在聊天窗正上方**，水平居中于聊天区，
+    ///   底边贴 HUD 上沿 —— 原版就是这么放的（不可拖动，永远在那个位置）。
+    ///   聊天区取逆向值 LegacyHudLayout.ChatLogLocation/ChatLogSize
+    ///   （= EI 的 chat_region (224,492)-(578,566)，相对 HUD 原点 (0,465)）；
+    ///   聊天区上沿正中的金色圆钮正在中心，所以"居中"即"跟黄色按钮贴在一起"。
+    /// · 现代 Zircon：贴主面板右边缘、右下角对齐（原版 Client/Scenes/GameScene.cs:996）。
+    /// </summary>
     public void ApplyDefaultAnchor(Vector2 logicalViewport, Vector2I mainPanelLocation, Vector2 mainPanelSize)
     {
         // 旧版位置固定：忽略 UserMoved，每帧都拉回默认锚点，
         // 这样即便有残留的拖动状态或外部改过 Position 也回得去。
         if (UserMoved && !PositionLocked) return;
-        float x = mainPanelLocation.X + mainPanelSize.X - Size.X;
+
+        float x;
+        if (PositionLocked && AutoLoginArgs.LegacyUi)
+        {
+            float chatCenter = mainPanelLocation.X + LegacyHudLayout.ChatLogLocation.X
+                               + LegacyHudLayout.ChatLogSize.X / 2f;
+            x = chatCenter - Size.X / 2f;
+        }
+        else
+        {
+            x = mainPanelLocation.X + mainPanelSize.X - Size.X;
+        }
         float y = mainPanelLocation.Y - Size.Y;
         Position = new Vector2(Mathf.Max(0, x), Mathf.Max(0, y));
     }

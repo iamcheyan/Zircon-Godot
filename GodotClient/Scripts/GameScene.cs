@@ -9714,6 +9714,14 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.2).Timeout += StartBigMapAudit;
         }
 
+        // 「灰色遮罩」全 UI 巡检：逐个打开全部窗口并汇总 DXButton 兜底灰块
+        // （实现见 GameScene.UiMaskAudit.cs）。
+        if (AutoLoginArgs.UiMaskAudit && !_uiMaskAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _uiMaskAuditStarted = true;
+            GetTree().CreateTimer(1.2).Timeout += StartUiMaskAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

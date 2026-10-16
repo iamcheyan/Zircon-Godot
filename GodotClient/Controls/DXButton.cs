@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace ZirconClient.Controls;
@@ -251,12 +252,28 @@ public partial class DXButton : DXImageControl
             return;
         }
 
+        // 显式 (Index=-1, HoverIndex=-1) = "正常/悬停都不画帧"，即按钮美术**已烘焙进
+        // 窗口背景帧**（行会 F600 的实参 0x424EE7 起、马窗/背包/角色/任务等 legacy 分支同款：
+        // 代码只用 MirSkin.GetSize(spec.normal) 取尺寸）。这种按钮画兜底灰块会**盖住**
+        // 背景帧上本来就有的按钮美术 —— 正是用户看到的"到处是灰色遮罩"。
+        // 判定放在生成按钮之前：Interface 系（现代皮肤）仍走 DrawGeneratedButton()。
+        if (FramelessByDesign)
+            return;
+
         // 原版 DXButton 在 Index 未指定时并不是空矩形，而是由 Interface
         // 的左右端片和可拉伸中片拼成的按钮。这里保留同一套端片索引，
         // 使 Default/SmallButton/Tab 以及功能图标按钮在所有窗口中一致。
         if (!DrawGeneratedButton() && !SuppressFallbackDraw)
             DrawFallbackButton();
     }
+
+    /// <summary>
+    /// "正常/悬停都不画帧"的有意无帧按钮（美术烘焙在窗口背景帧上）。
+    /// 只对非 Interface 库生效：Interface 系按钮的生成贴图路径不受影响。
+    /// </summary>
+    private bool FramelessByDesign
+        => !SuppressFallbackDraw && Index < 0 && HoverIndex < 0
+        && LibraryFile != Library.LibraryFile.Interface;
 
     private LegacyHudCaptionHint _legacyHint;
 
@@ -272,10 +289,41 @@ public partial class DXButton : DXImageControl
         if (_legacyHint != null) _legacyHint.Visible = false;
     }
 
+    /// <summary>
+    /// 兜底灰块报告：每个按钮实例只记一次，供 --ui-mask-audit 汇总"哪些控件还在画灰块"。
+    /// （legacy 模式下现代帧缺失/空帧、或 Index 指向了当前库不存在的帧时最易触发。）
+    /// </summary>
+    private bool _fallbackLogged;
+    public static readonly List<string> FallbackDrawReports = new();
+
+    /// <summary>最近一次兜底报告（供巡检取用，避免解析日志）。</summary>
+    public static string LastFallbackReport { get; private set; } = "";
+
     private void DrawFallbackButton()
     {
+        if (!_fallbackLogged)
+        {
+            _fallbackLogged = true;
+            string report = $"type={GetType().Name} file={LibraryFile} idx={GetCurrentIndex()} "
+                + $"size={Size} loc={Location} text=\"{Text}\" parent={GetParent()?.GetType().Name} "
+                + $"owner={OwnerWindowName()}";
+            LastFallbackReport = report;
+            FallbackDrawReports.Add(report);
+            GD.Print($"[UIMask] 兜底灰块: {report}");
+        }
         Color back = IsHovered ? new Color(0.4f, 0.4f, 0.6f, 0.8f) : new Color(0.25f, 0.25f, 0.3f, 0.8f);
         DrawRect(new Rect2(Vector2.Zero, Size), back);
+    }
+
+    /// <summary>向上找最近的 DXWindow/DXControl 归属，用于报告"这个灰块属于哪个窗口"。</summary>
+    private string OwnerWindowName()
+    {
+        for (Node n = GetParent(); n != null; n = n.GetParent())
+        {
+            if (n is DXWindow w) return w.GetType().Name + "(window)";
+            if (n is DXControl c && c.GetType() != typeof(DXControl)) return c.GetType().Name;
+        }
+        return "-";
     }
 
     private bool DrawGeneratedButton()

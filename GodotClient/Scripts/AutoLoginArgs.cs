@@ -111,6 +111,12 @@ public static class AutoLoginArgs
     /// <summary>--bigmap-audit-out：巡检截图与结果目录（缺省 /tmp/bigmap_audit）。</summary>
     public static string BigMapAuditOut => GetValue("--bigmap-audit-out") ?? "/tmp/bigmap_audit";
 
+    /// <summary>--ui-mask-audit：逐个打开全部窗口，汇总 DXButton 兜底灰块（见 GameScene.UiMaskAudit.cs）。</summary>
+    public static bool UiMaskAudit => Has("--ui-mask-audit");
+
+    /// <summary>--ui-mask-audit-out：巡检截图目录（缺省 /tmp/ui_mask_audit）。</summary>
+    public static string UiMaskAuditOut => GetValue("--ui-mask-audit-out") ?? "/tmp/ui_mask_audit";
+
     /// <summary>
     /// --npc-audit-quit=0|1：巡检结束后是否退出进程（缺省 1 = 退出，便于脚本化）。
     /// 只有显式传 0/false/no 才留在游戏里。

@@ -130,6 +130,21 @@ public abstract partial class DXWindow : DXControl
                 DefaultCloseButton.MouseClick += (_, _) => WindowManager.Close(this);
                 AddControl(DefaultCloseButton);
             }
+
+            // legacy EI 皮肤：关闭钮统一换成原版 ✕ 帧。
+            // 现代 Interface[15] 在 legacy 下解析到现代 Zl（legacy 目录只有 Interface1c.wil，
+            // 没有 Interface.wil/Zl）→ 取不到图 → DXButton 退化成**灰色兜底块**。
+            // 帧号来自 2026-10-16 一手取证（逐像素比对 + EXE 构造点反汇编）：
+            //   各窗口背景帧里烘焙的 ✕ 与 **F160（银白）逐像素相同（diff 0.0）**，
+            //   161 = 同一美术的绿态、162 = 金态 → 常态/悬停/按下 = 160/161/162。
+            // （旧约定只写 161/162，会把静息态画成绿色 ✕。）
+            if (DefaultCloseButton != null && AutoLoginArgs.LegacyUi)
+            {
+                DefaultCloseButton.LibraryFile = LibraryFile.GameInter;
+                DefaultCloseButton.Index = 160;
+                DefaultCloseButton.HoverIndex = 161;
+                DefaultCloseButton.PressedIndex = 162;
+            }
         }
 
         if (DrawChrome && _titleLabel == null && HasTitle)

@@ -48,6 +48,13 @@ public sealed partial class NPCTextControl : DXControl
     /// </summary>
     public int DrawWidth { get; set; }
 
+    /// <summary>
+    /// 每行起始缩进 (px)。legacy 有头像时把正文整体推到头像右侧（参考头像帧可见区
+    /// 右缘 161，正文列起点取 167），使所有行左边界一致、不再被头像压住；
+    /// 也让"文本区"与"换行宽度"解耦：文本区横跨面板内宽，正文靠缩进让位。
+    /// </summary>
+    public int LeftIndent { get; set; }
+
     public void SetContent(string text, int width, int fontSize = 10, int linePitch = 18)
     {
         LinePitch = linePitch;
@@ -60,7 +67,7 @@ public sealed partial class NPCTextControl : DXControl
         // 用 (?<ID>.+?) 会把第一个冒号后面的内容当成 ID，导致 int.TryParse 失败、选项不可点。
         var matches = Regex.Matches(text ?? string.Empty, @"\[(?<Text>.*?):(?<ID>-?\d+)\]|\{(?<Text>.*?):(?<Colour>.+?)\}");
         int cursor = 0;
-        float x = 0, y = 0;
+        float x = LeftIndent, y = 0;
         float lineHeight = linePitch;
         foreach (Match match in matches)
         {
@@ -89,10 +96,10 @@ public sealed partial class NPCTextControl : DXControl
     {
         foreach (char character in text ?? string.Empty)
         {
-            if (character == '\n') { x = 0; y += lineHeight; continue; }
+            if (character == '\n') { x = LeftIndent; y += lineHeight; continue; }
             string glyph = character.ToString();
             float glyphWidth = MirSkin.MeasureText(glyph, fontSize).X;
-            if (x > 0 && x + glyphWidth > width) { x = 0; y += lineHeight; }
+            if (x > LeftIndent && x + glyphWidth > width) { x = LeftIndent; y += lineHeight; }
             var hit = new Rect2(x, y, Mathf.Max(1, glyphWidth), lineHeight);
             _glyphs.Add(new Glyph(glyph, new Vector2(x, y + MirSkin.ScaledSize(fontSize)), colour, buttonId, hit, MirSkin.ScaledSize(fontSize)));
             if (buttonId >= 0) _buttons.Add((hit, buttonId));
@@ -100,18 +107,13 @@ public sealed partial class NPCTextControl : DXControl
         }
     }
 
-    /// <summary>
-    /// legacy EI：为每个内嵌选项行绘制原版菜单条。
-    ///
-    /// 依据（反汇编 0x43F040 + npc-window-render-evidence.json::paint_order）：
-    ///   order 2 = 循环绘制 **F1101**（重复的菜单行），计数 [this+0x51C]，每项目标 Y 递增 18
-    ///   order 3 = **末项用 F1102**，位于 [this+0x544] + 末项索引*18
-    ///   order 1 = F1100 背景（由 NPCDialog 画）
-    ///
-    /// 我方此前**完全没有** F1101/F1102 的引用：legacy 下只把现代 F381 行移除、不画菜单条，
-    /// 所以菜单行是"有可点区域但没有原版底图"。此开关补上这层底图。
-    /// </summary>
-    public bool LegacyMenuStrips { get; set; }
+    // 2026-10-16 修正：此前以为 F1101 是"菜单条底图"，想给每个内嵌选项行画一条。
+    // 独立解码 ~/mir2ei/LegacyEI/Data/GameInter.wil 后确认：F1101 = 512x32、不透明区
+    // (64,7)-(447,25) = 383x18，内容就是**面板中段的黑色身体 + 左右两道木栏**（与 F1100
+    // 身体两侧同款），即窗口纵向平铺用的中段，不是装饰性菜单底图。画在选项行背后是
+    // 黑压黑、看不见 —— 该思路作废，选项行就是面板黑底上的文字行。
+    // 真正的窗口结构：F1100(138) + N×F1101(18) + F1102(44，末行带 ✕)，见 NPCDialog。
+
     /// <summary>诊断用：返回前若干选项行的命中区摘要（确认菜单条 Y 是否与行对齐）。</summary>
     public string DebugRowSummary()
     {

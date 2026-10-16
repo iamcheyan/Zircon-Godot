@@ -42,11 +42,23 @@ public partial class NPCDialog : DXWindow
     private const int LegacyRowHeight = 18;
     private const int LegacyFooterHeight = 44;
     private const int LegacyWidth = 384;
+    // legacy 窗口中段行数上限（每行 18px）。20 行 → 正文上限约 470px（约 23 行 @21），
+    // 覆盖常见页（实测最长常规页「武功目录」19 行）并让末尾选项行留在窗口内；
+    // 帮助类超长页（最长实测 84 行）超出部分仍由右侧箭头滚动兜底 ——
+    // 原版那类页用「第二列」消化，本移植的第二列尚未实现（见
+    // docs/NPC/LEGACY_DIALOG_GEOMETRY.md §2.4 未解矛盾）。
+    private const int LegacyMaxExtraRows = 20;
     private const int LegacyFontSize = 10;
     private const int LegacyLinePitch = 21;
     private const int LegacyLinePitchCompact = 14;
     private const int LegacyScannerHeaderSegments = 6;
     private const int LegacyScannerOverflowLimit = 16;
+    // legacy 正文列起点 (窗口坐标)。参考 NPC 头像帧可见区为 (64,46)-(161,168)
+    // （docs/NPC/LEGACY_DIALOG_GEOMETRY.md §2.2 实测），原扫描器给的 150 会压进
+    // 头像 11px；这里按"最宽头像也压不到正文"取值，保证所有行左边界一致。
+    private const int LegacyBodyTextLeftWithFace = 167;
+    private const int LegacyBodyTextLeftPlain = 20;
+    private const int LegacyBodyTextRightMargin = 16;
 
     /// <summary>
     /// legacy 行距：按原版扫描器规则从正文推导（21 为默认，14 为「有 NPCIMG 且段数溢出」）。
@@ -199,6 +211,9 @@ public partial class NPCDialog : DXWindow
         _closeButton.Index = -1;
         _closeButton.HoverIndex = -1;
         _closeButton.PressedIndex = -1;
+        // 这个按钮的"美术"是 F1102 上的 ✕，按钮自己没有任何帧；不关掉兜底绘制
+        // 会盖上一块灰块（悬停变蓝），正是实机上看到的"右下角一团灰"。
+        _closeButton.SuppressFallbackDraw = true;
         _closeButton.Location = new Vector2I(342, LegacyHeaderHeight + 8);
         _closeButton.Size = new Vector2I(28, 28);
         _closeButton.Visible = true;
@@ -336,9 +351,28 @@ public partial class NPCDialog : DXWindow
 
         // 排版参数：左对齐
         _legacyPitch = _legacyLayout ? ComputeLegacyLinePitch(raw) : 18;
-        int textLeft = _legacyLayout ? (hasFace ? 135 : 20) : 15;
         int textTop = _legacyLayout ? 20 : 45;
-        int textWidth = _legacyLayout ? (hasFace ? 229 : 344) : 350;
+        int textWidth;   // 换行右界（控件局部坐标）
+        int areaW;       // 文本区宽度（= 面板内宽，菜单条靠它才不被裁）
+        if (_legacyLayout)
+        {
+            // legacy EI：文本区横跨整个面板内宽 (窗口 x=1..383)，正文用 LeftIndent
+            // 缩进到头像右侧。原因见 docs/NPC/LEGACY_DIALOG_GEOMETRY.md：
+            //   - 头像可见区右缘 = 161，正文列起点 167 → 所有行左边界一致（不再被头像压住）
+            //   - F1101 菜单条 383 宽、从控件 x=0 起画，控件/父区必须够宽才不会被裁短
+            _text.LeftIndent = (hasFace ? LegacyBodyTextLeftWithFace : LegacyBodyTextLeftPlain) - 1;
+            _text.DrawWidth = LegacyWidth - 2;
+            areaW = LegacyWidth - 2;
+            textWidth = areaW - LegacyBodyTextRightMargin;
+        }
+        else
+        {
+            _text.LeftIndent = 0;
+            _text.DrawWidth = 0;
+            areaW = 350;
+            textWidth = 350;
+        }
+        int textLeft = _legacyLayout ? 1 : 15;
 
         _textArea.Location = new Vector2I(textLeft, textTop);
         // 新页面一律回到顶部（原版 0x440630: [0x3BC]=0），否则沿用上一页的滚动偏移，正文被推出可视区。
@@ -385,7 +419,14 @@ public partial class NPCDialog : DXWindow
             // 基础可用文本高度 (避开底边框)
             int baseTextH = hasFace ? 110 : 85;
             int overflow = pageTextHeight - baseTextH;
-            int rowCount = overflow > 0 ? Math.Clamp((overflow + LegacyRowHeight - 1) / LegacyRowHeight, 0, 6) : 0;
+            // 行数上限：必须够长正文 + 末尾若干选项行全部落在窗口内。
+            // 旧上限 6 行（=108px）会把「9 行正文 + 3 行选项」这类常见页的最后两行
+            // 裁在 F1102 底下——实机只看见第一个选项，其余要滚才出来，这正是
+            // 「里边的位置都不对」的来源。14 行 = 上限 362px 正文（约 17 行 @21），
+            // 仍留滚动兜底（矮屏放不下时才滚）。
+            int rowCount = overflow > 0
+                ? Math.Clamp((overflow + LegacyRowHeight - 1) / LegacyRowHeight, 0, LegacyMaxExtraRows)
+                : 0;
 
             int totalH = LegacyHeaderHeight + rowCount * LegacyRowHeight + LegacyFooterHeight;
             Size = new Vector2I(LegacyWidth, totalH);
@@ -422,7 +463,7 @@ public partial class NPCDialog : DXWindow
 
             const int textBottomMargin = 42;
             int areaH = Math.Max(0, totalH - textTop - textBottomMargin);
-            _textArea.Size = new Vector2I(textWidth, areaH);
+            _textArea.Size = new Vector2I(areaW, areaH);
             int maxScroll = GetLegacyMaxScroll();
             _scroll.Visible = false;
             _scrollUp.Location = new Vector2I(300, footerY + 14);

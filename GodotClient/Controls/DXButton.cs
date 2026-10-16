@@ -51,6 +51,13 @@ public partial class DXButton : DXImageControl
         }
     }
 
+    /// <summary>
+    /// 关闭"无美术时画兜底色块"的兜底。用于**美术由父窗自带**的透明热区按钮：
+    /// legacy NPC 对话框右下角的关闭钮就是这种——✕ 画在 F1102 底段上，按钮自己
+    /// 只提供命中区；不关掉兜底会盖上一块灰色（悬停时变蓝）方块。
+    /// </summary>
+    public bool SuppressFallbackDraw { get; set; }
+
     public DXButton()
     {
         // 原版 DXButton 构造函数默认 Sound = ButtonA；特殊控件仍可
@@ -239,7 +246,7 @@ public partial class DXButton : DXImageControl
         {
             base.DrawControl();
             // 按钮文字画在贴图上; 若贴图缺失则画一个底色框保证可见
-            if (MirSkin.GetTexture(LibraryFile, index) == null)
+            if (!SuppressFallbackDraw && MirSkin.GetTexture(LibraryFile, index) == null)
                 DrawFallbackButton();
             return;
         }
@@ -247,7 +254,7 @@ public partial class DXButton : DXImageControl
         // 原版 DXButton 在 Index 未指定时并不是空矩形，而是由 Interface
         // 的左右端片和可拉伸中片拼成的按钮。这里保留同一套端片索引，
         // 使 Default/SmallButton/Tab 以及功能图标按钮在所有窗口中一致。
-        if (!DrawGeneratedButton())
+        if (!DrawGeneratedButton() && !SuppressFallbackDraw)
             DrawFallbackButton();
     }
 

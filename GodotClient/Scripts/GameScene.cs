@@ -1233,7 +1233,7 @@ public partial class GameScene : Control
         _player = new PlayerRenderer();
         // 本地玩家和其他对象一样按脚底所在行排序，允许同一行的前景树木
         // 与悬崖前沿盖住人物，而普通中层地面仍在人物下面。
-        _player.ZIndex = RenderOrder.ObjectAtFoot(_player.RenderY);
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         _player.FrameChanged = (animation, frame, magic) => OnPlayerFrameChanged(_player, animation, frame, magic);
             _player.SoundCue = PlaySound;
         AddChild(_player);
@@ -11174,7 +11174,7 @@ public partial class GameScene : Control
         _mapView.CenterOn(_player.CellX, _player.CellY);
         _player.Position = _mapView.CellToScreen(_player.CellX, _player.CellY, true)
             + new Vector2(_player.OffsetX, _player.OffsetY);
-        _player.ZIndex = RenderOrder.ObjectAtFoot(_player.RenderY);
+        _player.ZIndex = RenderOrder.Object(_player.RenderY);
         UpdateObjectPositions();
         // 原版主 HUD 的「地图名 : [X, Y]」每帧随玩家格重画（`0x0042A471` 起的
         // HUD 绘制链每次都取当前坐标）。UpdatePlayerPosition 是所有玩家格变化
@@ -11214,7 +11214,7 @@ public partial class GameScene : Control
         {
             ob.ComputeScreenPos(_mapView.CenterX, _mapView.CenterY, _mapView.ViewRangeX,
                 _mapView.ViewRangeY, 0, 0, _mapView);
-            ob.ZIndex = RenderOrder.ObjectAtFoot(ob.RenderY);
+            ob.ZIndex = RenderOrder.Object(ob.RenderY);
         }
         foreach (var player in _otherPlayers.Values) UpdateOtherPlayerPosition(player);
     }
@@ -11225,7 +11225,7 @@ public partial class GameScene : Control
         // objects, the local player, and the hidden mouse-picking proxy.
         player.Position = _mapView.CellToScreen(player.CellX, player.CellY, true)
             + new Vector2(player.OffsetX, player.OffsetY);
-        player.ZIndex = RenderOrder.ObjectAtFoot(player.RenderY);
+        player.ZIndex = RenderOrder.Object(player.RenderY);
 
         // The visible player uses PlayerRenderer, while mouse picking uses the
         // hidden ObjectRenderer proxy in _objects.
@@ -11241,7 +11241,7 @@ public partial class GameScene : Control
             proxy.OffsetY = player.OffsetY;
             proxy.ComputeScreenPos(_mapView.CenterX, _mapView.CenterY, _mapView.ViewRangeX,
                 _mapView.ViewRangeY, 0, 0, _mapView);
-            proxy.ZIndex = RenderOrder.ObjectAtFoot(proxy.RenderY);
+            proxy.ZIndex = RenderOrder.Object(proxy.RenderY);
             break;
         }
     }

@@ -185,7 +185,7 @@ public partial class MirEffectNode : Node2D
         {
             EffectLayer.Floor => RenderOrder.FloorEffects,
             EffectLayer.Final => RenderOrder.FinalEffects,
-            _ => RenderOrder.ObjectEffectAtFoot(targetAlive
+            _ => RenderOrder.ObjectEffect(targetAlive
                 ? (_targetRenderYFn?.Invoke() ?? _target?.RenderY ?? MapCellY)
                 : MapCellY),
         };

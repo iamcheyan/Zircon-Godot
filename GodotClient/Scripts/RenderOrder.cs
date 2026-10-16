@@ -21,37 +21,36 @@ public static class RenderOrder
     // 之上——与旧端的绘制顺序一致。曾用常量 50，恰好落在视野中部：行 13+
     // 的地形盖住地板特效，行 0-12 的对象反而被地板特效压住。
     public const int FloorEffects = 0;
-    // 自身持续 Buff 光环/护盾在角色身体后方，避免特效帧的透明键或矩形
-    // 覆盖腿部；仍高于所有地图前景地形。
-    public const int PlayerBuffEffect = 3198;
-    public const int Particles = 3300;
-    public const int FinalEffects = 3400;
-    // 原版 MapControl.OnBeforeDraw 在 DrawObjects()(地形+对象+天气粒子)
-    // 之后才绘制 LLayer 光纹理做全屏合成: 夜晚环境光应覆盖包括对象在内的
-    // 全部世界内容, 光源光斑再在覆盖层上恢复亮度。此处取 FinalEffects 之后
-    // 最后一个世界槽位。光照层实际挂在独立 CanvasLayer(Layer=1), 在世界
-    // 画布完整绘制后触发一次新的 hint_screen_texture 整屏拷贝, 采样必然
-    // 完整——世界画布内首个 screen_texture 用户(地形 Blend 行/施法特效,
-    // 低 ZIndex)会劫持拷贝点, 只靠本槽位无法保证采样含全部对象。
-    public const int LightOverlay = FinalEffects + 1;
 
-    // 中层地面是脚下底图，不能因为它属于更靠后的地图行就把对象整层
-    // 压住。Godot 每个对象是独立 CanvasItem，而旧端是在同一张画布里逐像素
-    // 合成；把中层地面单独放在前景/对象之前，避免怪物被“地板贴土”截腰。
-    public static int TerrainMiddle(int renderY) => TerrainBase + Math.Clamp(renderY, 0, 1000);
-    // 原版 MapControl.DrawObjects 的真实顺序是：中层地面 -> 前景树/悬崖
-    // -> 该行对象 -> 该行对象特效。前景贴图必须先于同一 RenderY 的对象，
-    // 但其透明区域不会遮挡对象；如果把前景放到对象之后，悬崖/树根会错误
-    // 地盖住人物和怪物的腿（见 Client/Scenes/Views/MapControl.cs）。
+    // 每行 4 个槽位，严格照原版 Client/Scenes/Views/MapControl.cs 的逐行画家
+    // 顺序（DrawObjects 的 for y 循环内）：
+    //     middle(y) → front(y) → 该行对象 → 该行对象特效 → middle(y+1) → …
+    // 由此得到两条用户可见规则，缺一不可：
+    //   1) middle(y) < object(y)  ：自己脚下的中层底图不压自己（否则"地砖截腰"）
+    //   2) object(y) < middle(y+1)：**前面那一行的中层/前景会盖住本行角色**
+    //      —— 树林、墙体遮挡角色的来源。棕榈树就是中层整帧
+    //      （`smobjectsc[943]` 48×480，锚点 4 行之外，树身正好穿过上游角色）。
+    // 历史教训（两次都改坏过这里，勿再动）：
+    //   · 212cc387 把中层单独压到所有对象之下（TerrainMiddle=row<1001），
+    //     于是行 y+1 的中层永远画在行 y 角色之前 → 棕榈树挡不住人；
+    //   · 0d20010d 把对象整体挪到 Object(renderY+1)（ObjectAtFoot），
+    //     于是行 y+1 的前景层也画在角色之前 → 前景树/悬崖切不住人。
     private static int Row(int renderY) => Math.Clamp(renderY, 0, 1000);
-    public static int TerrainFront(int renderY) => 1001 + Row(renderY) * 3;
-    public static int Object(int renderY) => 1002 + Row(renderY) * 3;
-    // MapView.CellToScreen(..., objectBaseline:true) 与地图中/前景的 drawY
-    // 都落在 CellY+1 的脚底基线。对象的深度也必须使用同一基线，否则对象
-    // 虽然画在下一行，Z 顺序却仍停留在上一行，前景切口会错误压住脚和影子。
-    public static int ObjectAtFoot(int renderY) => Object(renderY + 1);
-    public static int ObjectEffect(int renderY) => 1003 + Row(renderY) * 3;
-    public static int ObjectEffectAtFoot(int renderY) => ObjectEffect(renderY + 1);
+    public static int TerrainMiddle(int renderY) => TerrainBase + Row(renderY) * 4;
+    public static int TerrainFront(int renderY) => TerrainMiddle(renderY) + 1;
+    public static int Object(int renderY) => TerrainMiddle(renderY) + 2;
+    public static int ObjectEffect(int renderY) => TerrainMiddle(renderY) + 3;
+    // 世界层之上（对象/特效之后）：Row 上限 1000 → 行带最大 4003，必须留在
+    // 这些槽位之下，也要留在 Godot CanvasItem.ZIndex 上限 4096 之下。
+    // 自身 Buff 光环/护盾在角色身体后方（由 MirEffectNode 按角色行取
+    // ObjectEffect(player.RenderY)，不落在这个常量上）。
+    public const int PlayerBuffEffect = 4050;
+    public const int Particles = 4060;
+    public const int FinalEffects = 4070;
+    // 原版 MapControl.OnBeforeDraw 在 DrawObjects()（地形+对象+天气粒子）之后
+    // 才绘制 LLayer 光纹理做全屏合成：夜晚环境光应覆盖包括对象在内的全部世界
+    // 内容。此处取世界画布最后一个槽位。
+    public const int LightOverlay = 4071;
     // Legacy MapControl draws the local player's target effects after all
     // particle emitters, so keep this above Particles.
     public static int LocalPlayerEffect => Particles + 1;

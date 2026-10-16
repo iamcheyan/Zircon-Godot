@@ -2501,14 +2501,24 @@ public partial class MapTestScene : Control
 
     private void RunLayerOrderAudit()
     {
-        bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.Object(10)
-            && RenderOrder.TerrainMiddle(10) < RenderOrder.TerrainFront(10)
+        // 逐行画家顺序（对齐原版 MapControl.DrawObjects 的每行：
+        // 中层 → 前景 → 该行对象 → 该行对象特效 → 下一行中层 …）：
+        //   middle(r) < front(r) < object(r) < effect(r) < middle(r+1) < front(r+1) …
+        // 两条用户可见规则：
+        //   object(10) < middle(11)：站在树后要被树挡住（棕榈树是中层整帧）
+        //   front(10)  < object(10) ：自己这一行的前景不压自己的腿
+        bool rows = RenderOrder.TerrainMiddle(10) < RenderOrder.TerrainFront(10)
             && RenderOrder.TerrainFront(10) < RenderOrder.Object(10)
-            && RenderOrder.Object(10) < RenderOrder.ObjectAtFoot(10)
-            && RenderOrder.TerrainFront(11) < RenderOrder.ObjectAtFoot(10)
-            && RenderOrder.ObjectAtFoot(10) < RenderOrder.ObjectEffectAtFoot(10)
-            && RenderOrder.ObjectEffectAtFoot(10) < RenderOrder.TerrainFront(12)
-            && RenderOrder.TerrainMiddle(1000) < RenderOrder.TerrainFront(0);
+            && RenderOrder.Object(10) < RenderOrder.ObjectEffect(10)
+            && RenderOrder.ObjectEffect(10) < RenderOrder.TerrainMiddle(11)
+            && RenderOrder.TerrainMiddle(11) < RenderOrder.TerrainFront(11)
+            && RenderOrder.TerrainFront(11) < RenderOrder.Object(11)
+            && RenderOrder.Object(11) < RenderOrder.TerrainFront(12)
+            // 行带必须整体留在世界之上（Buff 光环/粒子/光叠加）之下，
+            // 也要留在 Godot ZIndex 上限之内
+            && RenderOrder.ObjectEffect(1000) < RenderOrder.PlayerBuffEffect
+            && RenderOrder.PlayerBuffEffect < RenderOrder.Particles
+            && RenderOrder.LightOverlay < 4096;
         bool itemInput = GameScene.IsMovementBlockedByItemInteraction(true, false, false)
             && GameScene.IsMovementBlockedByItemInteraction(false, true, false)
             && GameScene.IsMovementBlockedByItemInteraction(false, false, true)

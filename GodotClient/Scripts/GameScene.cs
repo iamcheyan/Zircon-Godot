@@ -9729,6 +9729,14 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.2).Timeout += StartUiMaskAudit;
         }
 
+        // HUD 全入口实机走查：从 HUD 出发逐个"真点"按钮与窗口内控件，查打不开/点错/
+        // 点了没反应/窗口跑出屏幕（实现见 GameScene.HudUiAudit.cs）。
+        if (AutoLoginArgs.HudUiAudit && !_hudUiAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _hudUiAuditStarted = true;
+            GetTree().CreateTimer(1.4).Timeout += StartHudUiAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

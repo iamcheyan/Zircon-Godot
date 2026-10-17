@@ -164,6 +164,54 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --hud-ui-audit：HUD 全入口实机走查（实现见 GameScene.HudUiAudit.cs）。
+    /// 阶段 1 在主面板上逐个"真点"HUD 按钮（合成鼠标事件走 Godot 真实命中与
+    /// DXControl._GuiInput），记录它打开了哪个窗口并截图；阶段 2 把每个窗口
+    /// 打开后枚举窗口内所有可点控件逐个"真点"，记录灰块/新开窗口/疑似无反应。
+    /// 退出/注销/删除类按钮只记录不点，避免把测试进程关掉或删数据。
+    /// </summary>
+    public static bool HudUiAudit => Has("--hud-ui-audit");
+
+    /// <summary>--hud-ui-audit-out &lt;dir&gt;：走查截图与结果目录（缺省 /tmp/hud_ui_audit）。</summary>
+    public static string HudUiAuditOut => GetValue("--hud-ui-audit-out") ?? "/tmp/hud_ui_audit";
+
+    /// <summary>--hud-ui-audit-phase hud|windows|all：只跑某一阶段（缺省 all）。</summary>
+    public static string HudUiAuditPhase
+    {
+        get
+        {
+            string raw = GetValue("--hud-ui-audit-phase");
+            return string.IsNullOrWhiteSpace(raw) ? "all" : raw.Trim().ToLowerInvariant();
+        }
+    }
+
+    /// <summary>--hud-ui-audit-limit N：每个窗口最多点 N 个控件（缺省 10）。</summary>
+    public static int HudUiAuditLimit
+    {
+        get
+        {
+            string raw = GetValue("--hud-ui-audit-limit");
+            return int.TryParse(raw, out int n) && n > 0 ? n : 10;
+        }
+    }
+
+    /// <summary>--hud-ui-audit-quit=0|1：走查结束后是否退出进程（缺省 1 = 退出，便于脚本化）。</summary>
+    public static bool HudUiAuditQuit
+    {
+        get
+        {
+            string raw = GetValue("--hud-ui-audit-quit");
+            if (raw != null && raw.StartsWith("--")) raw = null;
+            if (string.IsNullOrWhiteSpace(raw)) return true;
+            return raw.Trim().ToLowerInvariant() switch
+            {
+                "0" or "false" or "no" or "off" => false,
+                _ => true,
+            };
+        }
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

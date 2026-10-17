@@ -10,12 +10,12 @@
 | 清单（在用）NPC | 230 |
 | 已巡检 | 230 |
 | 未巡检（待续跑） | 0 |
-| 无错误 | 228 |
-| 有错误 | 2 |
-| 累计对话页 | 1533 |
-| 累计截图 | 1533 |
+| 无错误 | 229 |
+| 有错误 | 1 |
+| 累计对话页 | 1535 |
+| 累计截图 | 1535 |
 
-错误分类：click_missed×1、npc_not_found×1
+错误分类：click_missed×1
 
 ## 二、服务类型覆盖
 
@@ -74,7 +74,6 @@
 | NPC | 地图/坐标 | 服务 | 错误 | 已点开页 | 与其它条目同坐标？ |
 |---|---|---|---|---|---|
 | #106 六面神石 | Banya Village(2) (314,193) | 城镇与地下城瞬间移动传送 | click_missed | 0 | **是**（同一实体登记两次） |
-| #275 六面神石 | Sabuk Keep(3) (222,159) | 城镇与地下城瞬间移动传送 | npc_not_found | 0 | 否（该坐标无实体） |
 
 ## 五、逐 NPC 明细
 
@@ -288,7 +287,7 @@
 | #272 夏柯 | 场景剧情互动、向导问询 | 1 | True | - | `/tmp/npc_sweep/chunk_51/shots` |
 | #273 紫霞神女 | 场景剧情互动、向导问询 | 1 | True | - | `/tmp/npc_sweep/chunk_51/shots` |
 | #274 云中子 | 场景剧情互动、向导问询 | 1 | True | - | `/tmp/npc_sweep/chunk_51/shots` |
-| #275 六面神石 | 城镇与地下城瞬间移动传送 | 0 | False | npc_not_found | `-` |
+| #275 六面神石 | 城镇与地下城瞬间移动传送 | 2 | True | - | `/tmp/npc_sweep/chunk_52/shots` |
 | #276 沙巴克炼化师 | 武器买卖、武器普通修理、武器特殊修理 | 3 | True | - | `/tmp/npc_sweep/chunk_52/shots` |
 | #277 沙巴克药师 | 金创药/魔法药买卖、万年雪霜与疗伤药 | 2 | True | - | `/tmp/npc_sweep/chunk_52/shots` |
 | #278 沙巴克杂货商 | 随机卷轴/回城卷、火把/护身符/修复油 | 2 | True | - | `/tmp/npc_sweep/chunk_52/shots` |
@@ -314,7 +313,6 @@
 ## 附：分块进度
 
 ```
-[sweep] chunk_20 已存在，跳过
 [sweep] chunk_21 已存在，跳过
 [sweep] chunk_22 已存在，跳过
 [sweep] chunk_23 已存在，跳过
@@ -346,21 +344,22 @@
 [sweep] chunk_49 已存在，跳过
 [sweep] chunk_50 已存在，跳过
 [sweep] chunk_51 已存在，跳过
-[sweep] chunk_52 已存在，跳过
+[sweep] chunk_52 开始 ids=275,276,277,278 12:34:14
+[sweep] chunk_52 结束 rc=0 用时=52s  [NpcAudit] SUMMARY total=4 ok=4 no_response=0 not_found=0 click_missed=0 timeout=0 duplicate_skipped=0
 [sweep] chunk_53 已存在，跳过
 [sweep] chunk_54 已存在，跳过
-[sweep] chunk_55 开始 ids=371,374,375,376 11:23:19
-[sweep] chunk_55 结束 rc=0 用时=34s  [NpcAudit] SUMMARY total=4 ok=4 no_response=0 not_found=0 click_missed=0 timeout=0 duplicate_skipped=1
+[sweep] chunk_55 开始 ids=371,374,375,376 12:35:06
+[sweep] chunk_55 结束 rc=0 用时=33s  [NpcAudit] SUMMARY total=4 ok=4 no_response=0 not_found=0 click_missed=0 timeout=0 duplicate_skipped=1
 [sweep] chunk_56 已存在，跳过
 [sweep] chunk_57 已存在，跳过
-[sweep] 全部完成 11:23:53
+[sweep] 全部完成 12:35:39
 ```
 
 ## 七、结论
 
-- **覆盖**：清单内 230 个在用 NPC 全部巡检完毕，累计 1533 个对话页、1533 张截图（每页一张）。
-- **对话/商店/修理/仓库/传送页型**：228 个 NPC 逐页逐链接点击无异常。
-- **异常**：2 个（click_missed×1、npc_not_found×1）——全部集中在六面神石（传送石），且均为**清单登记问题**：同坐标重复登记（同一实体两条记录，其中一条永远点不到）或该坐标无实体；**不影响传送功能本身**（功能断言已单独证明，见第三节）。
+- **覆盖**：清单内 230 个在用 NPC 全部巡检完毕，累计 1535 个对话页、1535 张截图（每页一张）。
+- **对话/商店/修理/仓库/传送页型**：229 个 NPC 逐页逐链接点击无异常。
+- **异常**：1 个（click_missed×1）——全部集中在六面神石（传送石），且均为**清单登记问题**：同坐标重复登记（同一实体两条记录，其中一条永远点不到）或该坐标无实体；**不影响传送功能本身**（功能断言已单独证明，见第三节）。
 - **功能断言**：4/4 通过（交易=金币精确扣减+背包+1；传送=换图+扣费；仓库=背包格→仓库格搬运；出售=金币增加+物品减少）。
 - **灰色遮罩回归**：整轮巡检日志中 `[UIMask]` 行数 = **0**（0 = 无兜底灰块）。
 - 截图留证：`/tmp/npc_sweep/chunk_NN/shots/`（文件名 `<NPC序号>_<页序>_p<页号>.png`）。

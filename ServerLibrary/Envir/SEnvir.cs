@@ -922,6 +922,7 @@ namespace Server.Envir
                 npcInfos = mapNPCInfos;
             }
 
+            var placedList = new List<string>();
             foreach (NPCInfo info in npcInfos)
             {
                 if (info.Region == null) continue;
@@ -944,9 +945,20 @@ namespace Server.Envir
                     NPCInfo = info,
                 };
 
-                if (!ob.Spawn(info.Region, instance, instanceSequence))
+                bool spawned = ob.Spawn(info.Region, instance, instanceSequence);
+                if (!spawned)
                     Log($"[NPC] Failed to spawn NPC, Region: {info.Region.ServerDescription}, NPC: {info.NPCName}");
+                else if (targetMap != null && instance == null)
+                    placedList.Add($"{info.NPCName}#{info.Index}@({ob.CurrentLocation.X},{ob.CurrentLocation.Y})");
             }
+
+            // 放置诊断（2026-10-17）：部分 NPC 数据完整却"在客户端看不到"（萨巴克传送石
+            // #275/#279/#374 曾如此），而失败日志一条都没有 —— 说明问题既不在数据也不在
+            // Spawn 失败，而在「区域中心 vs 实际落格」或服务端→客户端的对象同步。
+            // 这里把实际刷出的**格子**打印出来，便于与客户端收到的坐标对照。
+            if (targetMap != null && instance == null)
+                Log($"[NPC] 地图 {targetMap.Description} [{targetMap.FileName}] 实际落格 {placedList.Count} 个："
+                    + $"{string.Join(",", placedList)}");
         }
 
         private static void CreateQuestRegions(InstanceInfo instance = null, byte instanceSequence = 0, MapInfo targetMap = null)

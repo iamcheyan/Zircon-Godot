@@ -405,7 +405,10 @@ public partial class GameScene
         {
             if (ob?.Type != ObjectRenderer.Kind.NPC) continue;
             int distance = Math.Max(Math.Abs(ob.CellX - entry.X), Math.Abs(ob.CellY - entry.Y));
-            if (distance > 6) continue;
+            // 搜索半径：@move 的落点会被服务端修正（目标格不可站时挪到邻近可站格），
+            // 半径 6 曾把"其实存在但在别处"的 NPC 误判成 npc_not_found（萨巴克 #279/#374
+            // 就是这样）。放宽到 24 格，仍能识别"真不在场"（如刷到 (0,0) 的 #275）。
+            if (distance > 24) continue;
             string rawName = GetNpcInfo(ob.ObjectID)?.NPCName ?? "";
             string localName = ob.DisplayName ?? "";
             bool nameMatches = hasName

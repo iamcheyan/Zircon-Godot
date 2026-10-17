@@ -41,53 +41,52 @@
 原版里由服务端按玩法动态放置（或由 Zircon 用窗口实现：仓库=StorageDialog、
 钓鱼=FishingDialog 等）。**不是需要「补回来」的丢失内容**，不该硬塞到地图上。
 
-## 四、萨巴克传送石为什么不出来（未解决）
+## 四、萨巴克传送石：已定位，只有 1 颗真坏
 
-已排除的因素（全部有证据）：
+服务端加了「实际落格」诊断后（`[NPC] 地图 X [file] 实际落格 N 个：名字#index@(x,y)`），
+真相如下：
 
-| 假设 | 核查结果 |
-|---|---|
-| 记录缺失 | ✗ 记录在（#275/#279/#374），`Image=56`、`EntryPage` 均存在且 `NPCPage` 表里查得到 |
-| 区域/链接缺失 | ✗ 三个区域都有 `NPCs` 反向链接指向自己 |
-| 区域类型/尺寸异常 | ✗ 与「能用的」#39/#118 完全同构（`RegionType=None`、`Size=1/0`、单点区域） |
-| 地图指错 | ✗ 全部指向 `MapIdx=7`（FileName「3」= Sabuk Keep），且该图**只有一条** MapInfo |
-| 服务端刷怪失败 | ✗ 服务端日志无 `[NPC] Failed to spawn` / `Bad Map` |
-| 客户端未收到 | ✓ 实机在该图只收到 3 个商人（#276/#278/#283），**同区域家族的传送石一个都没有** |
-| 寻路/视野范围 | ✗ 商人距离玩家 11~15 格仍被收到，传送石就在 (222,159)、距玩家 2 格 |
+| NPC | 库内登记落点 | 服务端**启动时**实际落格 | 实机（地图加载后若干秒） | 判定 |
+|---|---|---|---|---|
+| #275 六面神石 | (222,159) | **(0,0)** ✗ | 可达、可点开（`pages=2 clicked=True`） | 登记格不可站 → 启动瞬间落到原点，之后才归位；**建议挪到可站格** |
+| #279 六面神石 | (51,222) | (51,222) ✓ | 正常 | 此前"缺失"是巡检半径 6 格太窄的误报（已放宽到 24 格） |
+| #374 六面神石 | (71,140) | (71,140) ✓ | 正常 | 同上 |
+| #276/#277/#278/#280/#281/#282/#283 | — | 与登记一致 ✓ | 正常 |
 
-服务端代码（`ServerLibrary/Envir/SEnvir.cs::CreateNPCs`）是按**地图加载时**
-从 `targetMap.Regions[].NPCs` 收集并 `NPCObject.Spawn` 的，失败会打日志：
+服务端 `[NPC] 地图 Sabuk Keep [3] 实际落格 10 个：…` 证明**十颗全刷出来了**，
+且无一条 `Failed to spawn`。所以：
 
-```csharp
-foreach (NPCInfo info in npcInfos) {
-    if (info.Region == null) continue;
-    if (targetMap != null && info.Region.Map != targetMap) continue;
-    Map map = GetMap(info.Region.Map, instance, instanceSequence);
-    if (map == null) { Log("[NPC] Bad Map, ..."); continue; }
-    NPCObject ob = new NPCObject { NPCInfo = info };
-    if (!ob.Spawn(info.Region, instance, instanceSequence))
-        Log($"[NPC] Failed to spawn NPC, Region: {info.Region.ServerDescription}, NPC: {info.NPCName}");
-}
+- **内容没丢**，不存在"要补回来的 NPC"；
+- 唯一缺陷是 **#275 的落点不可站**，被引擎放到了 (0,0)（因此巡检在 (222,157)
+  周围永远找不到它）。
+
+### 修复配方（一行数据，需走写库纪律）
+
+把 #275 的 `MapRegion`（Index 5090，`3 / Teleport Stone Castle`）中心从
+(222,159) 挪到可站格 —— 实机已验证 **(222,157) 可站**（`@move 3 222 157` 成功）：
+
+```bash
+cd ~/Development/Mir3-Research
+python3 Tools/NpcMover/place.py move 275 222 157 3   # 写 dbeditor workspace（不碰 .db）
+python3 Tools/NpcMover/place.py diff                 # 预览待入库改动
+# 停服后：bash Tools/dbeditor/sync.sh                  # 校验→临时副本→语义 diff→备份→安装→报告
 ```
 
-数据与日志都正常却不出，**下一步只能做服务端侧诊断**：在 `SEnvir.CreateNPCs`
-里加一条「本次为地图 X 创建了 N 个 NPC（逐个打印 index/name/坐标）」的诊断行，
-重编译服务端并重启，即可判定是「压根没进循环」「Spawn 静默失败」还是
-「刷出来了但没进给玩家的对象包」。
+> 结论：**内容没丢，不存在"要补回来的 NPC"**。全量巡检里唯一剩下的异常是 #106 的
+> 一次偶发点击失败（单独重跑 `pages=2` 通过）；#275 只需把登记落点挪到可站格，
+> 即可消除"启动瞬间落到 (0,0)"的瞬态。
 
-## 五、Mud3 源里的萨巴克传送石（待补）
+## 五、Mud3 源里的萨巴克传送石（信息项）
 
 `Envir3/Merchant.txt` 中 `13Move_Sabuk` 共 **4** 个落点：
 
-| Mud3 坐标 | 库内对应 | 状态 |
+| Mud3 坐标 | 库内 | 状态 |
 |---|---|---|
-| (222,159) | #275 | 有记录、不出现（§4） |
-| (71,140) | #374 | 有记录、不出现（§4） |
-| (51,222) | #279 | 有记录（坐标与源不符）、不出现（§4） |
-| (294,539) | 无 | **库内缺失**，可补 |
-| (49,566) | 无 | **库内缺失**，可补 |
+| (222,159) | #275 | 落格 (0,0)，待按 §4 挪到可站格 |
+| (71,140) | #374 | 正常 |
+| (51,222) | #279 | 正常（坐标与源不同，功能正常） |
+| (294,539) / (49,566) | 无 | 库内没有这两颗；属"经典纯净"清洗时裁掉的冗余落点，**不建议补**（同一服务已有 3 颗） |
 
-> 补这两条的前提是先解决 §4 的「刷不出来」——否则补进去同样不会出现。
 
 ## 六、本轮新增/改动的工具
 
@@ -103,3 +102,8 @@ foreach (NPCInfo info in npcInfos) {
 - 写完必须 4 处同步且 MD5 一致（服务端 `Debug/ServerCore/Database/`、
   `~/mir2ei/Data/`、`~/mir2ei/Database/`、仓库根 `System.db`）。
 - 走既有管线：`NpcMover/place.py`（写 dbeditor 工作区）→ 停服 → `dbeditor/sync.sh` → 起服。
+
+> 写库注意：`Tools/dbeditor/sync.sh` 里 `ZIRCON` 硬编码为 Linux 路径
+> `/home/tetsuya/development/zircon`，在 macOS 上必须先改成本机仓库根再跑，
+> 否则会写到不存在的路径。workspace 里已有一条历史待同步改动
+> （`MapRegion #11369 modified PointRegion`），入库前需确认它是否要一起提交。

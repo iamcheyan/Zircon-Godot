@@ -122,7 +122,7 @@ while [ "$i" -lt "$total" ]; do
   i=$((i + CHUNK_SIZE)); chunk=$((chunk + 1))
 done
 
-echo "[sweep] 全部完成 $(date +%H:%M:%S)，块数 $chunk，失败块 $failed" | tee -a "$OUT/progress.txt"
+echo "[sweep] 全部完成 $(date +%H:%M:%S)，块数 ${chunk}，失败块 ${failed}" | tee -a "$OUT/progress.txt"
 shots=$(find "$OUT" -name '*.png' | wc -l | tr -d ' ')
 records=$(cat "$OUT"/chunk_*/results.jsonl 2>/dev/null | wc -l | tr -d ' ')
 echo "[sweep] 截图 $shots 张，结果记录 $records 条，占用 $(du -sh "$OUT" | cut -f1)" | tee -a "$OUT/progress.txt"

@@ -229,6 +229,9 @@ public partial class NPCDialog : DXWindow
         _goods.ApplyLegacyEiLayout();
         _legacyGoodsPlaced = true;
         PlaceGoodsPanel();
+        // 修理面板过去在 legacy 模式下没有任何处理（现代外框 + 无美术按钮），
+        // 与旁边的 EI 商品面板/对话框不是一套皮 —— 见 NPCRepairPanel.ApplyLegacyEiLayout。
+        _repair.ApplyLegacyEiLayout();
     }
 
     private void PlaceGoodsPanel()

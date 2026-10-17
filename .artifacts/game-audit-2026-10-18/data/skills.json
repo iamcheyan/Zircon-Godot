@@ -1,0 +1,8298 @@
+{
+ "_meta": {
+  "generated_at": "2026-10-17T23:25:47+00:00",
+  "script": "tools/audit/skills_audit.py",
+  "scope": "skills only (MagicInfo + 技能书 ItemInfo/DropInfo/NPCGood 只统计)",
+  "inputs": {
+   "wiki_data_v2": {
+    "path": "/Users/tetsuya/Development/Mir3-Research/docs/research/ei-ui-layout/artifacts/web-entity-audit-2026-09-26/raw/wiki_data_v2.json",
+    "md5": "df7bf55c6d9487e8155f4ecd8dd85673"
+   },
+   "db_export_dir": "/Users/tetsuya/audit-raw/db-export-2026-10-18/out",
+   "db_export_files": {
+    "MagicInfo": "2e7a530c8f13274445066d116e4e2b16",
+    "ItemInfo": "20ec3f0200b5734fe61dd8c7f61aec36",
+    "DropInfo": "32f472bc093408401e6e8a42eca1efb4",
+    "NPCGood": "9657d26746f2d50b43895500529f1374"
+   },
+   "zircon_root": "/Users/tetsuya/Development/Zircon",
+   "old_magic_snapshot": "/Users/tetsuya/Development/Mir3-Research/docs/research/ei-ui-layout/magic-icon-metadata-2026-09-25.json",
+   "icon_library": "/Users/tetsuya/mir2ei/Data/MIcon.Zl",
+   "icon_library_md5": "1b6acf9cf159be00b3e84eb7eaa7d03a",
+   "magic_exp": "/Users/tetsuya/Development/Zircon/ClientData/Magic.exp.txt",
+   "enum_source": "/Users/tetsuya/Development/Zircon/LibraryCore/Enum.cs",
+   "db_names": "/Users/tetsuya/Development/Zircon/GodotClient/translations/db_names.json"
+  },
+  "read_only": true
+ },
+ "coverage": {
+  "counts": {
+   "website_skills_total": 218,
+   "website_ver_zircon": 174,
+   "website_ver_mud3_only": 44,
+   "db_magicinfo_rows": 61,
+   "matched_db_and_website": 61,
+   "db_rows_without_website": 0,
+   "website_zircon_tagged_but_no_db_row": 113,
+   "website_mud3_only_legacy": 44,
+   "enum_player_skills_100_499": 195,
+   "enum_player_skills_without_db_row": 134,
+   "enum_player_skills_without_website_entry": 22,
+   "server_impl_files_total": 192,
+   "website_zircon_tagged_with_server_impl_but_no_db_row": 112
+  },
+  "matched_by_class": {
+   "战士": 14,
+   "法师": 27,
+   "道士": 20
+  },
+  "website_zircon_tagged_by_class": {
+   "战士": 18,
+   "法师": 15,
+   "道士": 27,
+   "刺客": 53
+  },
+  "db_only": [],
+  "website_only_zircon_tagged_top30": [
+   {
+    "id": 2,
+    "name": "Potion Mastery",
+    "klass": "战士",
+    "type": "PotionMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "262",
+    "zh": "药水精通",
+    "levels": "12 / 22 / 33 级"
+   },
+   {
+    "id": 135,
+    "name": "Advanced Potion Mastery",
+    "klass": "战士",
+    "type": "AdvancedPotionMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "262",
+    "zh": "高级药水精通",
+    "levels": "40 / 50 / 60 级"
+   },
+   {
+    "id": 15,
+    "name": "Swift Blade",
+    "klass": "战士",
+    "type": "SwiftBlade",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "260",
+    "zh": "疾风剑法",
+    "levels": "49 / 57 / 65 级"
+   },
+   {
+    "id": 16,
+    "name": "Assault",
+    "klass": "战士",
+    "type": "Assault",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "216",
+    "zh": "突袭",
+    "levels": "50 / 53 / 56 级"
+   },
+   {
+    "id": 17,
+    "name": "Endurance",
+    "klass": "战士",
+    "type": "Endurance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "254",
+    "zh": "金钟罩",
+    "levels": "51 / 55 / 59 级"
+   },
+   {
+    "id": 19,
+    "name": "Fetter",
+    "klass": "战士",
+    "type": "Fetter",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "258",
+    "zh": "束缚",
+    "levels": "55 / 61 / 67 级"
+   },
+   {
+    "id": 138,
+    "name": "Mass Beckon",
+    "klass": "战士",
+    "type": "MassBeckon",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "386",
+    "zh": "群体召唤",
+    "levels": "60 / 63 / 66 级"
+   },
+   {
+    "id": 146,
+    "name": "Invincibility",
+    "klass": "战士",
+    "type": "Invincibility",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "442",
+    "zh": "无敌",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 152,
+    "name": "Defensive Mastery",
+    "klass": "战士",
+    "type": "DefensiveMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "466",
+    "zh": "防御精通",
+    "levels": "70 / 75 / 80 级"
+   },
+   {
+    "id": 21,
+    "name": "Advanced Defiance",
+    "klass": "战士",
+    "type": "AugmentDefiance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "388",
+    "zh": "高级铁布衫",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 153,
+    "name": "Physical Immunity",
+    "klass": "战士",
+    "type": "PhysicalImmunity",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "468",
+    "zh": "物理免疫",
+    "levels": "80 / 84 / 88 级"
+   },
+   {
+    "id": 154,
+    "name": "Magic Immunity",
+    "klass": "战士",
+    "type": "MagicImmunity",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "470",
+    "zh": "魔法免疫",
+    "levels": "80 / 84 / 88 级"
+   },
+   {
+    "id": 22,
+    "name": "Advanced Reflect Damage",
+    "klass": "战士",
+    "type": "AugmentReflectDamage",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "458",
+    "zh": "高级移花接玉",
+    "levels": "82 / 82 / 82 级"
+   },
+   {
+    "id": 142,
+    "name": "Seismic Slam",
+    "klass": "战士",
+    "type": "SeismicSlam",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "434",
+    "zh": "震地重击",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 20,
+    "name": "Advanced Destructive Surge",
+    "klass": "战士",
+    "type": "AugmentDestructiveSurge",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "526",
+    "zh": "高级破血狂杀",
+    "levels": "84 / 90 / 96 级"
+   },
+   {
+    "id": 155,
+    "name": "Defensive Blow",
+    "klass": "战士",
+    "type": "DefensiveBlow",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "488",
+    "zh": "破防击",
+    "levels": "86 / 88 / 91 级"
+   },
+   {
+    "id": 147,
+    "name": "Crushing Wave",
+    "klass": "战士",
+    "type": "CrushingWave",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "450",
+    "zh": "碎浪斩",
+    "levels": "90 / 90 / 90 级"
+   },
+   {
+    "id": 156,
+    "name": "Elemental Swords",
+    "klass": "战士",
+    "type": "ElementalSwords",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "502",
+    "zh": "元素飞剑",
+    "levels": "95 / 96 / 97 级"
+   },
+   {
+    "id": 53,
+    "name": "Fire Bounce",
+    "klass": "法师",
+    "type": "FireBounce",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "0",
+    "zh": "火焰弹射",
+    "levels": "15 / 17 / 19 级"
+   },
+   {
+    "id": 47,
+    "name": "Chain Lightning",
+    "klass": "法师",
+    "type": "ChainLightning",
+    "ver": [
+     "mud3",
+     "zircon"
+    ],
+    "icon": "220",
+    "zh": "连环闪电",
+    "levels": "40 / 42 / 44 级"
+   },
+   {
+    "id": 50,
+    "name": "Tempest",
+    "klass": "法师",
+    "type": "Tempest",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "226",
+    "zh": "暴风术",
+    "levels": "49 / 51 / 53 级"
+   },
+   {
+    "id": 51,
+    "name": "Judgement Of Heaven",
+    "klass": "法师",
+    "type": "JudgementOfHeaven",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "264",
+    "zh": "天罡气",
+    "levels": "52 / 57 / 62 级"
+   },
+   {
+    "id": 131,
+    "name": "Mirror Image",
+    "klass": "法师",
+    "type": "MirrorImage",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "252",
+    "zh": "魔法分身",
+    "levels": "56 / 61 / 66 级"
+   },
+   {
+    "id": 139,
+    "name": "Frost Bite",
+    "klass": "法师",
+    "type": "FrostBite",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "390",
+    "zh": "霜寒",
+    "levels": "58 / 60 / 62 级"
+   },
+   {
+    "id": 55,
+    "name": "Superior Magic Shield",
+    "klass": "法师",
+    "type": "SuperiorMagicShield",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "444",
+    "zh": "高级魔法盾",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 56,
+    "name": "Burning",
+    "klass": "法师",
+    "type": "Burning",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "484",
+    "zh": "灼烧",
+    "levels": "76 / 80 / 86 级"
+   },
+   {
+    "id": 144,
+    "name": "Asteroid",
+    "klass": "法师",
+    "type": "Asteroid",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "392",
+    "zh": "陨石术",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 137,
+    "name": "Ice Rain",
+    "klass": "法师",
+    "type": "IceRain",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "486",
+    "zh": "冰雨",
+    "levels": "82 / 86 / 90 级"
+   },
+   {
+    "id": 54,
+    "name": "Elemental Hurricane",
+    "klass": "法师",
+    "type": "ElementalHurricane",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "436",
+    "zh": "元素飓风",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 57,
+    "name": "Shock",
+    "klass": "法师",
+    "type": "Shocked",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "532",
+    "zh": "震慑",
+    "levels": "85 / 88 / 91 级"
+   }
+  ],
+  "website_only_zircon_tagged": [
+   {
+    "id": 2,
+    "name": "Potion Mastery",
+    "klass": "战士",
+    "type": "PotionMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "262",
+    "zh": "药水精通",
+    "levels": "12 / 22 / 33 级"
+   },
+   {
+    "id": 135,
+    "name": "Advanced Potion Mastery",
+    "klass": "战士",
+    "type": "AdvancedPotionMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "262",
+    "zh": "高级药水精通",
+    "levels": "40 / 50 / 60 级"
+   },
+   {
+    "id": 15,
+    "name": "Swift Blade",
+    "klass": "战士",
+    "type": "SwiftBlade",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "260",
+    "zh": "疾风剑法",
+    "levels": "49 / 57 / 65 级"
+   },
+   {
+    "id": 16,
+    "name": "Assault",
+    "klass": "战士",
+    "type": "Assault",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "216",
+    "zh": "突袭",
+    "levels": "50 / 53 / 56 级"
+   },
+   {
+    "id": 17,
+    "name": "Endurance",
+    "klass": "战士",
+    "type": "Endurance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "254",
+    "zh": "金钟罩",
+    "levels": "51 / 55 / 59 级"
+   },
+   {
+    "id": 19,
+    "name": "Fetter",
+    "klass": "战士",
+    "type": "Fetter",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "258",
+    "zh": "束缚",
+    "levels": "55 / 61 / 67 级"
+   },
+   {
+    "id": 138,
+    "name": "Mass Beckon",
+    "klass": "战士",
+    "type": "MassBeckon",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "386",
+    "zh": "群体召唤",
+    "levels": "60 / 63 / 66 级"
+   },
+   {
+    "id": 146,
+    "name": "Invincibility",
+    "klass": "战士",
+    "type": "Invincibility",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "442",
+    "zh": "无敌",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 152,
+    "name": "Defensive Mastery",
+    "klass": "战士",
+    "type": "DefensiveMastery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "466",
+    "zh": "防御精通",
+    "levels": "70 / 75 / 80 级"
+   },
+   {
+    "id": 21,
+    "name": "Advanced Defiance",
+    "klass": "战士",
+    "type": "AugmentDefiance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "388",
+    "zh": "高级铁布衫",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 153,
+    "name": "Physical Immunity",
+    "klass": "战士",
+    "type": "PhysicalImmunity",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "468",
+    "zh": "物理免疫",
+    "levels": "80 / 84 / 88 级"
+   },
+   {
+    "id": 154,
+    "name": "Magic Immunity",
+    "klass": "战士",
+    "type": "MagicImmunity",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "470",
+    "zh": "魔法免疫",
+    "levels": "80 / 84 / 88 级"
+   },
+   {
+    "id": 22,
+    "name": "Advanced Reflect Damage",
+    "klass": "战士",
+    "type": "AugmentReflectDamage",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "458",
+    "zh": "高级移花接玉",
+    "levels": "82 / 82 / 82 级"
+   },
+   {
+    "id": 142,
+    "name": "Seismic Slam",
+    "klass": "战士",
+    "type": "SeismicSlam",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "434",
+    "zh": "震地重击",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 20,
+    "name": "Advanced Destructive Surge",
+    "klass": "战士",
+    "type": "AugmentDestructiveSurge",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "526",
+    "zh": "高级破血狂杀",
+    "levels": "84 / 90 / 96 级"
+   },
+   {
+    "id": 155,
+    "name": "Defensive Blow",
+    "klass": "战士",
+    "type": "DefensiveBlow",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "488",
+    "zh": "破防击",
+    "levels": "86 / 88 / 91 级"
+   },
+   {
+    "id": 147,
+    "name": "Crushing Wave",
+    "klass": "战士",
+    "type": "CrushingWave",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "450",
+    "zh": "碎浪斩",
+    "levels": "90 / 90 / 90 级"
+   },
+   {
+    "id": 156,
+    "name": "Elemental Swords",
+    "klass": "战士",
+    "type": "ElementalSwords",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "502",
+    "zh": "元素飞剑",
+    "levels": "95 / 96 / 97 级"
+   },
+   {
+    "id": 53,
+    "name": "Fire Bounce",
+    "klass": "法师",
+    "type": "FireBounce",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "0",
+    "zh": "火焰弹射",
+    "levels": "15 / 17 / 19 级"
+   },
+   {
+    "id": 47,
+    "name": "Chain Lightning",
+    "klass": "法师",
+    "type": "ChainLightning",
+    "ver": [
+     "mud3",
+     "zircon"
+    ],
+    "icon": "220",
+    "zh": "连环闪电",
+    "levels": "40 / 42 / 44 级"
+   },
+   {
+    "id": 50,
+    "name": "Tempest",
+    "klass": "法师",
+    "type": "Tempest",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "226",
+    "zh": "暴风术",
+    "levels": "49 / 51 / 53 级"
+   },
+   {
+    "id": 51,
+    "name": "Judgement Of Heaven",
+    "klass": "法师",
+    "type": "JudgementOfHeaven",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "264",
+    "zh": "天罡气",
+    "levels": "52 / 57 / 62 级"
+   },
+   {
+    "id": 131,
+    "name": "Mirror Image",
+    "klass": "法师",
+    "type": "MirrorImage",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "252",
+    "zh": "魔法分身",
+    "levels": "56 / 61 / 66 级"
+   },
+   {
+    "id": 139,
+    "name": "Frost Bite",
+    "klass": "法师",
+    "type": "FrostBite",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "390",
+    "zh": "霜寒",
+    "levels": "58 / 60 / 62 级"
+   },
+   {
+    "id": 55,
+    "name": "Superior Magic Shield",
+    "klass": "法师",
+    "type": "SuperiorMagicShield",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "444",
+    "zh": "高级魔法盾",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 56,
+    "name": "Burning",
+    "klass": "法师",
+    "type": "Burning",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "484",
+    "zh": "灼烧",
+    "levels": "76 / 80 / 86 级"
+   },
+   {
+    "id": 144,
+    "name": "Asteroid",
+    "klass": "法师",
+    "type": "Asteroid",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "392",
+    "zh": "陨石术",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 137,
+    "name": "Ice Rain",
+    "klass": "法师",
+    "type": "IceRain",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "486",
+    "zh": "冰雨",
+    "levels": "82 / 86 / 90 级"
+   },
+   {
+    "id": 54,
+    "name": "Elemental Hurricane",
+    "klass": "法师",
+    "type": "ElementalHurricane",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "436",
+    "zh": "元素飓风",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 57,
+    "name": "Shock",
+    "klass": "法师",
+    "type": "Shocked",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "532",
+    "zh": "震慑",
+    "levels": "85 / 88 / 91 级"
+   },
+   {
+    "id": 157,
+    "name": "Storm",
+    "klass": "法师",
+    "type": "Storm",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "492",
+    "zh": "风暴",
+    "levels": "86 / 88 / 91 级"
+   },
+   {
+    "id": 58,
+    "name": "Lightning Strike",
+    "klass": "法师",
+    "type": "LightningStrike",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "452",
+    "zh": "雷击术",
+    "levels": "90 / 90 / 90 级"
+   },
+   {
+    "id": 158,
+    "name": "Tornado",
+    "klass": "法师",
+    "type": "Tornado",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "508",
+    "zh": "龙卷风暴",
+    "levels": "95 / 96 / 97 级"
+   },
+   {
+    "id": 124,
+    "name": "Empowered Explosive Talisman",
+    "klass": "道士",
+    "type": "AugmentExplosiveTalisman",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "24",
+    "zh": "强化灵魂火符",
+    "levels": "17 / 34 / 51 级"
+   },
+   {
+    "id": 125,
+    "name": "Empowered Evil Slayer",
+    "klass": "道士",
+    "type": "AugmentEvilSlayer",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "72",
+    "zh": "强化召唤骷髅",
+    "levels": "17 / 34 / 51 级"
+   },
+   {
+    "id": 71,
+    "name": "Elemental Superiority",
+    "klass": "道士",
+    "type": "ElementalSuperiority",
+    "ver": [
+     "mei",
+     "mud3",
+     "zircon"
+    ],
+    "icon": "176",
+    "zh": "幽灵盾",
+    "levels": "29 / 31 / 33 级"
+   },
+   {
+    "id": 129,
+    "name": "Strength Of Faith",
+    "klass": "道士",
+    "type": "StrengthOfFaith",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "244",
+    "zh": "信仰之力",
+    "levels": "40 / 42 / 44 级"
+   },
+   {
+    "id": 77,
+    "name": "Celestial Light",
+    "klass": "道士",
+    "type": "CelestialLight",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "242",
+    "zh": "圣言术",
+    "levels": "46 / 48 / 50 级"
+   },
+   {
+    "id": 78,
+    "name": "Empowered Healing",
+    "klass": "道士",
+    "type": "EmpoweredHealing",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "256",
+    "zh": "强化治愈术",
+    "levels": "47 / 53 / 60 级"
+   },
+   {
+    "id": 79,
+    "name": "Life Steal",
+    "klass": "道士",
+    "type": "LifeSteal",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "270",
+    "zh": "吸血",
+    "levels": "48 / 55 / 62 级"
+   },
+   {
+    "id": 143,
+    "name": "Demonic Recovery",
+    "klass": "道士",
+    "type": "DemonicRecovery",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "536",
+    "zh": "恶魔恢复",
+    "levels": "48 / 51 / 54 级"
+   },
+   {
+    "id": 80,
+    "name": "Improved Explosive Talisman",
+    "klass": "道士",
+    "type": "ImprovedExplosiveTalisman",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "246",
+    "zh": "超强灵魂火符",
+    "levels": "49 / 51 / 53 级"
+   },
+   {
+    "id": 81,
+    "name": "Empowered Poison Dust",
+    "klass": "道士",
+    "type": "AugmentPoisonDust",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "268",
+    "zh": "强化施毒术",
+    "levels": "50 / 54 / 58 级"
+   },
+   {
+    "id": 134,
+    "name": "Summon Demonic Creature",
+    "klass": "道士",
+    "type": "SummonDemonicCreature",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "304",
+    "zh": "召唤恶魔",
+    "levels": "50 / 54 / 56 级"
+   },
+   {
+    "id": 82,
+    "name": "Cursed Doll",
+    "klass": "道士",
+    "type": "CursedDoll",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "272",
+    "zh": "诅咒娃娃",
+    "levels": "52 / 56 / 61 级"
+   },
+   {
+    "id": 128,
+    "name": "Demon Explosion",
+    "klass": "道士",
+    "type": "DemonExplosion",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "306",
+    "zh": "恶魔爆破",
+    "levels": "52 / 56 / 58 级"
+   },
+   {
+    "id": 83,
+    "name": "Thunder Kick",
+    "klass": "道士",
+    "type": "ThunderKick",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "248",
+    "zh": "雷震踢",
+    "levels": "54 / 59 / 64 级"
+   },
+   {
+    "id": 126,
+    "name": "Empowered Purification",
+    "klass": "道士",
+    "type": "AugmentPurification",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "238",
+    "zh": "强化净化术",
+    "levels": "55 / 58 / 62 级"
+   },
+   {
+    "id": 85,
+    "name": "Parasite",
+    "klass": "道士",
+    "type": "Parasite",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "396",
+    "zh": "寄生术",
+    "levels": "62 / 66 / 70 级"
+   },
+   {
+    "id": 140,
+    "name": "Infection",
+    "klass": "道士",
+    "type": "Infection",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "446",
+    "zh": "感染",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 127,
+    "name": "Empowered Resurrection",
+    "klass": "道士",
+    "type": "AugmentResurrection",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "152",
+    "zh": "强化复活术",
+    "levels": "75 / 77 / 80 级"
+   },
+   {
+    "id": 86,
+    "name": "Spiritualism",
+    "klass": "道士",
+    "type": "Spiritualism",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "394",
+    "zh": "通灵",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 148,
+    "name": "Neutralize",
+    "klass": "道士",
+    "type": "Neutralize",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "480",
+    "zh": "压制",
+    "levels": "80 / 86 / 91 级"
+   },
+   {
+    "id": 149,
+    "name": "Empowered Neutralize",
+    "klass": "道士",
+    "type": "AugmentNeutralize",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "480",
+    "zh": "强化压制",
+    "levels": "80 / 86 / 91 级"
+   },
+   {
+    "id": 159,
+    "name": "Empowered Celestial Light",
+    "klass": "道士",
+    "type": "AugmentCelestialLight",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "462",
+    "zh": "强化圣言术",
+    "levels": "82 / 83 / 84 级"
+   },
+   {
+    "id": 151,
+    "name": "Searing Light",
+    "klass": "道士",
+    "type": "SearingLight",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "438",
+    "zh": "灼热圣光",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 84,
+    "name": "Soul Resonance",
+    "klass": "道士",
+    "type": "SoulResonance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "482",
+    "zh": "魔魂附体",
+    "levels": "84 / 84 / 84 级"
+   },
+   {
+    "id": 160,
+    "name": "Corpse Exploder",
+    "klass": "道士",
+    "type": "CorpseExploder",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "490",
+    "zh": "爆裂尸",
+    "levels": "86 / 88 / 95 级"
+   },
+   {
+    "id": 150,
+    "name": "Dark Soul Prison",
+    "klass": "道士",
+    "type": "DarkSoulPrison",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "454",
+    "zh": "暗魂囚牢",
+    "levels": "90 / 90 / 90 级"
+   },
+   {
+    "id": 161,
+    "name": "Summon Dead",
+    "klass": "道士",
+    "type": "SummonDead",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "514",
+    "zh": "召唤死灵",
+    "levels": "95 / 96 / 97 级"
+   },
+   {
+    "id": 136,
+    "name": "_Blank_",
+    "klass": "刺客",
+    "type": "Unused",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "0",
+    "zh": "（未使用）",
+    "levels": "0 / 0 / 0 级"
+   },
+   {
+    "id": 87,
+    "name": "Willow Dance",
+    "klass": "刺客",
+    "type": "WillowDance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "308",
+    "zh": "柳叶舞",
+    "levels": "7 / 9 / 11 级"
+   },
+   {
+    "id": 88,
+    "name": "Vine Tree Dance",
+    "klass": "刺客",
+    "type": "VineTreeDance",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "310",
+    "zh": "柳枝舞",
+    "levels": "10 / 12 / 14 级"
+   },
+   {
+    "id": 89,
+    "name": "Discipline",
+    "klass": "刺客",
+    "type": "Discipline",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "314",
+    "zh": "修炼",
+    "levels": "12 / 14 / 16 级"
+   },
+   {
+    "id": 112,
+    "name": "Bloody Flower",
+    "klass": "刺客",
+    "type": "BloodyFlower",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "374",
+    "zh": "血花",
+    "levels": "12 / 22 / 33 级"
+   },
+   {
+    "id": 90,
+    "name": "Poisonous Cloud",
+    "klass": "刺客",
+    "type": "PoisonousCloud",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "312",
+    "zh": "毒雾",
+    "levels": "14 / 16 / 18 级"
+   },
+   {
+    "id": 91,
+    "name": "Full Bloom",
+    "klass": "刺客",
+    "type": "FullBloom",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "328",
+    "zh": "盛放",
+    "levels": "19 / 21 / 23 级"
+   },
+   {
+    "id": 92,
+    "name": "Cloak",
+    "klass": "刺客",
+    "type": "Cloak",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "324",
+    "zh": "隐身",
+    "levels": "20 / 22 / 24 级"
+   },
+   {
+    "id": 93,
+    "name": "White Lotus",
+    "klass": "刺客",
+    "type": "WhiteLotus",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "330",
+    "zh": "白莲",
+    "levels": "22 / 24 / 26 级"
+   },
+   {
+    "id": 94,
+    "name": "Calamity Of Full Moon",
+    "klass": "刺客",
+    "type": "CalamityOfFullMoon",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "340",
+    "zh": "月华",
+    "levels": "22 / 24 / 26 级"
+   },
+   {
+    "id": 95,
+    "name": "Wraith Grip",
+    "klass": "刺客",
+    "type": "WraithGrip",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "316",
+    "zh": "幽灵之握",
+    "levels": "24 / 26 / 28 级"
+   },
+   {
+    "id": 96,
+    "name": "Red Lotus",
+    "klass": "刺客",
+    "type": "RedLotus",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "332",
+    "zh": "红莲",
+    "levels": "24 / 26 / 28 级"
+   },
+   {
+    "id": 97,
+    "name": "Hell Fire",
+    "klass": "刺客",
+    "type": "HellFire",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "318",
+    "zh": "地狱火",
+    "levels": "26 / 28 / 30 级"
+   },
+   {
+    "id": 98,
+    "name": "Pledge Of Blood",
+    "klass": "刺客",
+    "type": "PledgeOfBlood",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "352",
+    "zh": "血誓",
+    "levels": "26 / 28 / 30 级"
+   },
+   {
+    "id": 99,
+    "name": "Rake",
+    "klass": "刺客",
+    "type": "Rake",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "376",
+    "zh": "爪袭",
+    "levels": "26 / 28 / 30 级"
+   },
+   {
+    "id": 100,
+    "name": "Sweetbrier",
+    "klass": "刺客",
+    "type": "SweetBrier",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "334",
+    "zh": "蔷薇",
+    "levels": "27 / 29 / 31 级"
+   },
+   {
+    "id": 101,
+    "name": "Summon Puppet",
+    "klass": "刺客",
+    "type": "SummonPuppet",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "326",
+    "zh": "召唤傀儡",
+    "levels": "30 / 32 / 34 级"
+   },
+   {
+    "id": 102,
+    "name": "Karma",
+    "klass": "刺客",
+    "type": "Karma",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "342",
+    "zh": "业报",
+    "levels": "30 / 35 / 40 级"
+   },
+   {
+    "id": 103,
+    "name": "Touch Of The Departed",
+    "klass": "刺客",
+    "type": "TouchOfTheDeparted",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "354",
+    "zh": "归魂术",
+    "levels": "30 / 32 / 34 级"
+   },
+   {
+    "id": 104,
+    "name": "Waning Moon",
+    "klass": "刺客",
+    "type": "WaningMoon",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "350",
+    "zh": "残月",
+    "levels": "32 / 34 / 36 级"
+   },
+   {
+    "id": 105,
+    "name": "Ghost Walk",
+    "klass": "刺客",
+    "type": "GhostWalk",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "356",
+    "zh": "幽灵步",
+    "levels": "32 / 34 / 36 级"
+   },
+   {
+    "id": 106,
+    "name": "Elemental Puppet",
+    "klass": "刺客",
+    "type": "ElementalPuppet",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "358",
+    "zh": "元素傀儡",
+    "levels": "34 / 36 / 38 级"
+   },
+   {
+    "id": 107,
+    "name": "Rejuvenation",
+    "klass": "刺客",
+    "type": "Rejuvenation",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "336",
+    "zh": "复苏",
+    "levels": "35 / 37 / 39 级"
+   },
+   {
+    "id": 108,
+    "name": "Resolution",
+    "klass": "刺客",
+    "type": "Resolution",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "344",
+    "zh": "决意",
+    "levels": "35 / 37 / 39 级"
+   },
+   {
+    "id": 109,
+    "name": "Change Of Seasons",
+    "klass": "刺客",
+    "type": "ChangeOfSeasons",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "360",
+    "zh": "换季",
+    "levels": "36 / 0 / 0 级"
+   },
+   {
+    "id": 110,
+    "name": "Release",
+    "klass": "刺客",
+    "type": "Release",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "378",
+    "zh": "解放",
+    "levels": "36 / 38 / 40 级"
+   },
+   {
+    "id": 111,
+    "name": "Flame Splash",
+    "klass": "刺客",
+    "type": "FlameSplash",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "320",
+    "zh": "烈焰溅射",
+    "levels": "38 / 40 / 42 级"
+   },
+   {
+    "id": 113,
+    "name": "The New Beginning",
+    "klass": "刺客",
+    "type": "TheNewBeginning",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "346",
+    "zh": "新生",
+    "levels": "40 / 43 / 46 级"
+   },
+   {
+    "id": 114,
+    "name": "Dance Of Swallow",
+    "klass": "刺客",
+    "type": "DanceOfSwallow",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "362",
+    "zh": "燕子舞",
+    "levels": "40 / 42 / 44 级"
+   },
+   {
+    "id": 115,
+    "name": "Dark Conversion",
+    "klass": "刺客",
+    "type": "DarkConversion",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "364",
+    "zh": "黑暗转化",
+    "levels": "42 / 44 / 46 级"
+   },
+   {
+    "id": 116,
+    "name": "Dragon Repulse",
+    "klass": "刺客",
+    "type": "DragonRepulse",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "322",
+    "zh": "龙威震退",
+    "levels": "45 / 47 / 49 级"
+   },
+   {
+    "id": 117,
+    "name": "Advent Of Demon",
+    "klass": "刺客",
+    "type": "AdventOfDemon",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "338",
+    "zh": "恶魔降临",
+    "levels": "45 / 47 / 49 级"
+   },
+   {
+    "id": 118,
+    "name": "Advent Of Devil",
+    "klass": "刺客",
+    "type": "AdventOfDevil",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "348",
+    "zh": "魔尊降临",
+    "levels": "45 / 47 / 49 级"
+   },
+   {
+    "id": 119,
+    "name": "Abyss",
+    "klass": "刺客",
+    "type": "Abyss",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "366",
+    "zh": "深渊",
+    "levels": "45 / 47 / 49 级"
+   },
+   {
+    "id": 120,
+    "name": "Flash Of Light",
+    "klass": "刺客",
+    "type": "FlashOfLight",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "368",
+    "zh": "闪光",
+    "levels": "45 / 47 / 50 级"
+   },
+   {
+    "id": 121,
+    "name": "Stealth",
+    "klass": "刺客",
+    "type": "Stealth",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "380",
+    "zh": "潜行",
+    "levels": "45 / 47 / 49 级"
+   },
+   {
+    "id": 122,
+    "name": "Evasion",
+    "klass": "刺客",
+    "type": "Evasion",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "370",
+    "zh": "闪避",
+    "levels": "47 / 49 / 51 级"
+   },
+   {
+    "id": 123,
+    "name": "Raging Wind",
+    "klass": "刺客",
+    "type": "RagingWind",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "372",
+    "zh": "怒风",
+    "levels": "47 / 49 / 51 级"
+   },
+   {
+    "id": 162,
+    "name": "Dragon Blood",
+    "klass": "刺客",
+    "type": "DragonBlood",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "382",
+    "zh": "龙血",
+    "levels": "60 / 62 / 64 级"
+   },
+   {
+    "id": 163,
+    "name": "Fatal Blow",
+    "klass": "刺客",
+    "type": "FatalBlow",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "474",
+    "zh": "致命一击",
+    "levels": "60 / 70 / 80 级"
+   },
+   {
+    "id": 141,
+    "name": "Massacre",
+    "klass": "刺客",
+    "type": "Massacre",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "382",
+    "zh": "大屠杀",
+    "levels": "65 / 70 / 75 级"
+   },
+   {
+    "id": 164,
+    "name": "Last Stand",
+    "klass": "刺客",
+    "type": "LastStand",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "448",
+    "zh": "背水一战",
+    "levels": "65 / 75 / 85 级"
+   },
+   {
+    "id": 165,
+    "name": "Magic Combustion",
+    "klass": "刺客",
+    "type": "MagicCombustion",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "478",
+    "zh": "魔法燃烧",
+    "levels": "70 / 72 / 76 级"
+   },
+   {
+    "id": 166,
+    "name": "Vitality",
+    "klass": "刺客",
+    "type": "Vitality",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "472",
+    "zh": "活力",
+    "levels": "70 / 74 / 80 级"
+   },
+   {
+    "id": 145,
+    "name": "Art of Shadows",
+    "klass": "刺客",
+    "type": "ArtOfShadows",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "396",
+    "zh": "暗影术",
+    "levels": "75 / 79 / 82 级"
+   },
+   {
+    "id": 167,
+    "name": "Chain",
+    "klass": "刺客",
+    "type": "Chain",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "476",
+    "zh": "锁链",
+    "levels": "75 / 80 / 84 级"
+   },
+   {
+    "id": 168,
+    "name": "Concentration",
+    "klass": "刺客",
+    "type": "Concentration",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "384",
+    "zh": "专注",
+    "levels": "80 / 82 / 84 级"
+   },
+   {
+    "id": 169,
+    "name": "Dual Weapon Skills",
+    "klass": "刺客",
+    "type": "DualWeaponSkills",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "464",
+    "zh": "双持",
+    "levels": "82 / 83 / 84 级"
+   },
+   {
+    "id": 170,
+    "name": "Containment",
+    "klass": "刺客",
+    "type": "Containment",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "440",
+    "zh": "禁锢",
+    "levels": "83 / 85 / 87 级"
+   },
+   {
+    "id": 171,
+    "name": "Dragon Wave",
+    "klass": "刺客",
+    "type": "DragonWave",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "542",
+    "zh": "龙波",
+    "levels": "85 / 90 / 95 级"
+   },
+   {
+    "id": 172,
+    "name": "Hemorrhage",
+    "klass": "刺客",
+    "type": "Hemorrhage",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "494",
+    "zh": "大出血",
+    "levels": "86 / 88 / 91 级"
+   },
+   {
+    "id": 173,
+    "name": "Burning Fire",
+    "klass": "刺客",
+    "type": "BurningFire",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "456",
+    "zh": "烈焰陷阱",
+    "levels": "90 / 90 / 90 级"
+   },
+   {
+    "id": 174,
+    "name": "Chain Of Fire",
+    "klass": "刺客",
+    "type": "ChainOfFire",
+    "ver": [
+     "zircon"
+    ],
+    "icon": "520",
+    "zh": "火焰锁链",
+    "levels": "95 / 96 / 97 级"
+   }
+  ],
+  "website_only_zircon_tagged_with_server_impl": [
+   {
+    "site_id": 2,
+    "name": "Potion Mastery",
+    "type": "PotionMastery",
+    "enum": "PotionMastery",
+    "klass": "战士",
+    "icon": "262",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/PotionMastery.cs"
+   },
+   {
+    "site_id": 135,
+    "name": "Advanced Potion Mastery",
+    "type": "AdvancedPotionMastery",
+    "enum": "AugmentPotionMastery",
+    "klass": "战士",
+    "icon": "262",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/AugmentPotionMastery.cs"
+   },
+   {
+    "site_id": 15,
+    "name": "Swift Blade",
+    "type": "SwiftBlade",
+    "enum": "SwiftBlade",
+    "klass": "战士",
+    "icon": "260",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/SwiftBlade.cs"
+   },
+   {
+    "site_id": 16,
+    "name": "Assault",
+    "type": "Assault",
+    "enum": "Assault",
+    "klass": "战士",
+    "icon": "216",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/Assault.cs"
+   },
+   {
+    "site_id": 17,
+    "name": "Endurance",
+    "type": "Endurance",
+    "enum": "Endurance",
+    "klass": "战士",
+    "icon": "254",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/Endurance.cs"
+   },
+   {
+    "site_id": 19,
+    "name": "Fetter",
+    "type": "Fetter",
+    "enum": "Fetter",
+    "klass": "战士",
+    "icon": "258",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/Fetter.cs"
+   },
+   {
+    "site_id": 138,
+    "name": "Mass Beckon",
+    "type": "MassBeckon",
+    "enum": "MassBeckon",
+    "klass": "战士",
+    "icon": "386",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/MassBeckon.cs"
+   },
+   {
+    "site_id": 146,
+    "name": "Invincibility",
+    "type": "Invincibility",
+    "enum": "Invincibility",
+    "klass": "战士",
+    "icon": "442",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/Invincibility.cs"
+   },
+   {
+    "site_id": 152,
+    "name": "Defensive Mastery",
+    "type": "DefensiveMastery",
+    "enum": "DefensiveMastery",
+    "klass": "战士",
+    "icon": "466",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/DefensiveMastery.cs"
+   },
+   {
+    "site_id": 21,
+    "name": "Advanced Defiance",
+    "type": "AugmentDefiance",
+    "enum": "AugmentDefiance",
+    "klass": "战士",
+    "icon": "388",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/AugmentDefiance.cs"
+   },
+   {
+    "site_id": 153,
+    "name": "Physical Immunity",
+    "type": "PhysicalImmunity",
+    "enum": "PhysicalImmunity",
+    "klass": "战士",
+    "icon": "468",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/PhysicalImmunity.cs"
+   },
+   {
+    "site_id": 154,
+    "name": "Magic Immunity",
+    "type": "MagicImmunity",
+    "enum": "MagicImmunity",
+    "klass": "战士",
+    "icon": "470",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/MagicImmunity.cs"
+   },
+   {
+    "site_id": 22,
+    "name": "Advanced Reflect Damage",
+    "type": "AugmentReflectDamage",
+    "enum": "AugmentReflectDamage",
+    "klass": "战士",
+    "icon": "458",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/AugmentReflectDamage.cs"
+   },
+   {
+    "site_id": 142,
+    "name": "Seismic Slam",
+    "type": "SeismicSlam",
+    "enum": "SeismicSlam",
+    "klass": "战士",
+    "icon": "434",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/SeismicSlam.cs"
+   },
+   {
+    "site_id": 20,
+    "name": "Advanced Destructive Surge",
+    "type": "AugmentDestructiveSurge",
+    "enum": "AugmentDestructiveSurge",
+    "klass": "战士",
+    "icon": "526",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/AugmentDestructiveSurge.cs"
+   },
+   {
+    "site_id": 155,
+    "name": "Defensive Blow",
+    "type": "DefensiveBlow",
+    "enum": "DefensiveBlow",
+    "klass": "战士",
+    "icon": "488",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/DefensiveBlow.cs"
+   },
+   {
+    "site_id": 147,
+    "name": "Crushing Wave",
+    "type": "CrushingWave",
+    "enum": "CrushingWave",
+    "klass": "战士",
+    "icon": "450",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/CrushingWave.cs"
+   },
+   {
+    "site_id": 156,
+    "name": "Elemental Swords",
+    "type": "ElementalSwords",
+    "enum": "ElementalSwords",
+    "klass": "战士",
+    "icon": "502",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/ElementalSwords.cs"
+   },
+   {
+    "site_id": 53,
+    "name": "Fire Bounce",
+    "type": "FireBounce",
+    "enum": "FireBounce",
+    "klass": "法师",
+    "icon": "0",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/FireBounce.cs"
+   },
+   {
+    "site_id": 47,
+    "name": "Chain Lightning",
+    "type": "ChainLightning",
+    "enum": "ChainLightning",
+    "klass": "法师",
+    "icon": "220",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/ChainLightning.cs"
+   },
+   {
+    "site_id": 50,
+    "name": "Tempest",
+    "type": "Tempest",
+    "enum": "Tempest",
+    "klass": "法师",
+    "icon": "226",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Tempest.cs"
+   },
+   {
+    "site_id": 51,
+    "name": "Judgement Of Heaven",
+    "type": "JudgementOfHeaven",
+    "enum": "JudgementOfHeaven",
+    "klass": "法师",
+    "icon": "264",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/JudgementOfHeaven.cs"
+   },
+   {
+    "site_id": 131,
+    "name": "Mirror Image",
+    "type": "MirrorImage",
+    "enum": "MirrorImage",
+    "klass": "法师",
+    "icon": "252",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/MirrorImage.cs"
+   },
+   {
+    "site_id": 139,
+    "name": "Frost Bite",
+    "type": "FrostBite",
+    "enum": "FrostBite",
+    "klass": "法师",
+    "icon": "390",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/FrostBite.cs"
+   },
+   {
+    "site_id": 55,
+    "name": "Superior Magic Shield",
+    "type": "SuperiorMagicShield",
+    "enum": "SuperiorMagicShield",
+    "klass": "法师",
+    "icon": "444",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/SuperiorMagicShield.cs"
+   },
+   {
+    "site_id": 56,
+    "name": "Burning",
+    "type": "Burning",
+    "enum": "Burning",
+    "klass": "法师",
+    "icon": "484",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Burning.cs"
+   },
+   {
+    "site_id": 144,
+    "name": "Asteroid",
+    "type": "Asteroid",
+    "enum": "Asteroid",
+    "klass": "法师",
+    "icon": "392",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Asteroid.cs"
+   },
+   {
+    "site_id": 137,
+    "name": "Ice Rain",
+    "type": "IceRain",
+    "enum": "IceRain",
+    "klass": "法师",
+    "icon": "486",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/IceRain.cs"
+   },
+   {
+    "site_id": 54,
+    "name": "Elemental Hurricane",
+    "type": "ElementalHurricane",
+    "enum": "ElementalHurricane",
+    "klass": "法师",
+    "icon": "436",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/ElementalHurricane.cs"
+   },
+   {
+    "site_id": 57,
+    "name": "Shock",
+    "type": "Shocked",
+    "enum": "Shocked",
+    "klass": "法师",
+    "icon": "532",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Shocked.cs"
+   },
+   {
+    "site_id": 157,
+    "name": "Storm",
+    "type": "Storm",
+    "enum": "Storm",
+    "klass": "法师",
+    "icon": "492",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Storm.cs"
+   },
+   {
+    "site_id": 58,
+    "name": "Lightning Strike",
+    "type": "LightningStrike",
+    "enum": "LightningStrike",
+    "klass": "法师",
+    "icon": "452",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/LightningStrike.cs"
+   },
+   {
+    "site_id": 158,
+    "name": "Tornado",
+    "type": "Tornado",
+    "enum": "Tornado",
+    "klass": "法师",
+    "icon": "508",
+    "impl_file": "ServerLibrary/Models/Magics/Wizard/Tornado.cs"
+   },
+   {
+    "site_id": 124,
+    "name": "Empowered Explosive Talisman",
+    "type": "AugmentExplosiveTalisman",
+    "enum": "AugmentExplosiveTalisman",
+    "klass": "道士",
+    "icon": "24",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentExplosiveTalisman.cs"
+   },
+   {
+    "site_id": 125,
+    "name": "Empowered Evil Slayer",
+    "type": "AugmentEvilSlayer",
+    "enum": "AugmentEvilSlayer",
+    "klass": "道士",
+    "icon": "72",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentEvilSlayer.cs"
+   },
+   {
+    "site_id": 71,
+    "name": "Elemental Superiority",
+    "type": "ElementalSuperiority",
+    "enum": "ElementalSuperiority",
+    "klass": "道士",
+    "icon": "176",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/ElementalSuperiority.cs"
+   },
+   {
+    "site_id": 129,
+    "name": "Strength Of Faith",
+    "type": "StrengthOfFaith",
+    "enum": "StrengthOfFaith",
+    "klass": "道士",
+    "icon": "244",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/StrengthOfFaith.cs"
+   },
+   {
+    "site_id": 77,
+    "name": "Celestial Light",
+    "type": "CelestialLight",
+    "enum": "CelestialLight",
+    "klass": "道士",
+    "icon": "242",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/CelestialLight.cs"
+   },
+   {
+    "site_id": 78,
+    "name": "Empowered Healing",
+    "type": "EmpoweredHealing",
+    "enum": "EmpoweredHealing",
+    "klass": "道士",
+    "icon": "256",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/EmpoweredHealing.cs"
+   },
+   {
+    "site_id": 79,
+    "name": "Life Steal",
+    "type": "LifeSteal",
+    "enum": "LifeSteal",
+    "klass": "道士",
+    "icon": "270",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/LifeSteal.cs"
+   },
+   {
+    "site_id": 143,
+    "name": "Demonic Recovery",
+    "type": "DemonicRecovery",
+    "enum": "DemonicRecovery",
+    "klass": "道士",
+    "icon": "536",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/DemonicRecovery.cs"
+   },
+   {
+    "site_id": 80,
+    "name": "Improved Explosive Talisman",
+    "type": "ImprovedExplosiveTalisman",
+    "enum": "ImprovedExplosiveTalisman",
+    "klass": "道士",
+    "icon": "246",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/ImprovedExplosiveTalisman.cs"
+   },
+   {
+    "site_id": 81,
+    "name": "Empowered Poison Dust",
+    "type": "AugmentPoisonDust",
+    "enum": "AugmentPoisonDust",
+    "klass": "道士",
+    "icon": "268",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/GreaterPoisonDust.cs"
+   },
+   {
+    "site_id": 134,
+    "name": "Summon Demonic Creature",
+    "type": "SummonDemonicCreature",
+    "enum": "SummonDemonicCreature",
+    "klass": "道士",
+    "icon": "304",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/SummonDemonicCreature.cs"
+   },
+   {
+    "site_id": 82,
+    "name": "Cursed Doll",
+    "type": "CursedDoll",
+    "enum": "CursedDoll",
+    "klass": "道士",
+    "icon": "272",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/CursedDoll.cs"
+   },
+   {
+    "site_id": 128,
+    "name": "Demon Explosion",
+    "type": "DemonExplosion",
+    "enum": "DemonExplosion",
+    "klass": "道士",
+    "icon": "306",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/DemonExplosion.cs"
+   },
+   {
+    "site_id": 83,
+    "name": "Thunder Kick",
+    "type": "ThunderKick",
+    "enum": "ThunderKick",
+    "klass": "道士",
+    "icon": "248",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/ThunderKick.cs"
+   },
+   {
+    "site_id": 126,
+    "name": "Empowered Purification",
+    "type": "AugmentPurification",
+    "enum": "AugmentPurification",
+    "klass": "道士",
+    "icon": "238",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentPurification.cs"
+   },
+   {
+    "site_id": 85,
+    "name": "Parasite",
+    "type": "Parasite",
+    "enum": "Parasite",
+    "klass": "道士",
+    "icon": "396",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/Parasite.cs"
+   },
+   {
+    "site_id": 140,
+    "name": "Infection",
+    "type": "Infection",
+    "enum": "Infection",
+    "klass": "道士",
+    "icon": "446",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/Infection.cs"
+   },
+   {
+    "site_id": 127,
+    "name": "Empowered Resurrection",
+    "type": "AugmentResurrection",
+    "enum": "AugmentResurrection",
+    "klass": "道士",
+    "icon": "152",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentResurrection.cs"
+   },
+   {
+    "site_id": 86,
+    "name": "Spiritualism",
+    "type": "Spiritualism",
+    "enum": "Spiritualism",
+    "klass": "道士",
+    "icon": "394",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/Spiritualism.cs"
+   },
+   {
+    "site_id": 148,
+    "name": "Neutralize",
+    "type": "Neutralize",
+    "enum": "Neutralize",
+    "klass": "道士",
+    "icon": "480",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/Neutralize.cs"
+   },
+   {
+    "site_id": 149,
+    "name": "Empowered Neutralize",
+    "type": "AugmentNeutralize",
+    "enum": "AugmentNeutralize",
+    "klass": "道士",
+    "icon": "480",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentNeutralize.cs"
+   },
+   {
+    "site_id": 159,
+    "name": "Empowered Celestial Light",
+    "type": "AugmentCelestialLight",
+    "enum": "AugmentCelestialLight",
+    "klass": "道士",
+    "icon": "462",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/AugmentCelestialLight.cs"
+   },
+   {
+    "site_id": 151,
+    "name": "Searing Light",
+    "type": "SearingLight",
+    "enum": "SearingLight",
+    "klass": "道士",
+    "icon": "438",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/SearingLight.cs"
+   },
+   {
+    "site_id": 84,
+    "name": "Soul Resonance",
+    "type": "SoulResonance",
+    "enum": "SoulResonance",
+    "klass": "道士",
+    "icon": "482",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/SoulResonance.cs"
+   },
+   {
+    "site_id": 160,
+    "name": "Corpse Exploder",
+    "type": "CorpseExploder",
+    "enum": "CorpseExploder",
+    "klass": "道士",
+    "icon": "490",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/CorpseExploder.cs"
+   },
+   {
+    "site_id": 150,
+    "name": "Dark Soul Prison",
+    "type": "DarkSoulPrison",
+    "enum": "DarkSoulPrison",
+    "klass": "道士",
+    "icon": "454",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/DarkSoulPrison.cs"
+   },
+   {
+    "site_id": 161,
+    "name": "Summon Dead",
+    "type": "SummonDead",
+    "enum": "SummonDead",
+    "klass": "道士",
+    "icon": "514",
+    "impl_file": "ServerLibrary/Models/Magics/Taoist/SummonDead.cs"
+   },
+   {
+    "site_id": 87,
+    "name": "Willow Dance",
+    "type": "WillowDance",
+    "enum": "WillowDance",
+    "klass": "刺客",
+    "icon": "308",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/WillowDance.cs"
+   },
+   {
+    "site_id": 88,
+    "name": "Vine Tree Dance",
+    "type": "VineTreeDance",
+    "enum": "VineTreeDance",
+    "klass": "刺客",
+    "icon": "310",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/VineTreeDance.cs"
+   },
+   {
+    "site_id": 89,
+    "name": "Discipline",
+    "type": "Discipline",
+    "enum": "Discipline",
+    "klass": "刺客",
+    "icon": "314",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Discipline.cs"
+   },
+   {
+    "site_id": 112,
+    "name": "Bloody Flower",
+    "type": "BloodyFlower",
+    "enum": "BloodyFlower",
+    "klass": "刺客",
+    "icon": "374",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/BloodyFlower.cs"
+   },
+   {
+    "site_id": 90,
+    "name": "Poisonous Cloud",
+    "type": "PoisonousCloud",
+    "enum": "PoisonousCloud",
+    "klass": "刺客",
+    "icon": "312",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/PoisonousCloud.cs"
+   },
+   {
+    "site_id": 91,
+    "name": "Full Bloom",
+    "type": "FullBloom",
+    "enum": "FullBloom",
+    "klass": "刺客",
+    "icon": "328",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/FullBloom.cs"
+   },
+   {
+    "site_id": 92,
+    "name": "Cloak",
+    "type": "Cloak",
+    "enum": "Cloak",
+    "klass": "刺客",
+    "icon": "324",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Cloak.cs"
+   },
+   {
+    "site_id": 93,
+    "name": "White Lotus",
+    "type": "WhiteLotus",
+    "enum": "WhiteLotus",
+    "klass": "刺客",
+    "icon": "330",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/WhiteLotus.cs"
+   },
+   {
+    "site_id": 94,
+    "name": "Calamity Of Full Moon",
+    "type": "CalamityOfFullMoon",
+    "enum": "CalamityOfFullMoon",
+    "klass": "刺客",
+    "icon": "340",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/CalamityOfFullMoon.cs"
+   },
+   {
+    "site_id": 95,
+    "name": "Wraith Grip",
+    "type": "WraithGrip",
+    "enum": "WraithGrip",
+    "klass": "刺客",
+    "icon": "316",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/WraithGrip.cs"
+   },
+   {
+    "site_id": 96,
+    "name": "Red Lotus",
+    "type": "RedLotus",
+    "enum": "RedLotus",
+    "klass": "刺客",
+    "icon": "332",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/RedLotus.cs"
+   },
+   {
+    "site_id": 97,
+    "name": "Hell Fire",
+    "type": "HellFire",
+    "enum": "HellFire",
+    "klass": "刺客",
+    "icon": "318",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/HellFire.cs"
+   },
+   {
+    "site_id": 98,
+    "name": "Pledge Of Blood",
+    "type": "PledgeOfBlood",
+    "enum": "PledgeOfBlood",
+    "klass": "刺客",
+    "icon": "352",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/PledgeOfBlood.cs"
+   },
+   {
+    "site_id": 99,
+    "name": "Rake",
+    "type": "Rake",
+    "enum": "Rake",
+    "klass": "刺客",
+    "icon": "376",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Rake.cs"
+   },
+   {
+    "site_id": 100,
+    "name": "Sweetbrier",
+    "type": "SweetBrier",
+    "enum": "SweetBrier",
+    "klass": "刺客",
+    "icon": "334",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/SweetBrier.cs"
+   },
+   {
+    "site_id": 101,
+    "name": "Summon Puppet",
+    "type": "SummonPuppet",
+    "enum": "SummonPuppet",
+    "klass": "刺客",
+    "icon": "326",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/SummonPuppet.cs"
+   },
+   {
+    "site_id": 102,
+    "name": "Karma",
+    "type": "Karma",
+    "enum": "Karma",
+    "klass": "刺客",
+    "icon": "342",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Karma.cs"
+   },
+   {
+    "site_id": 103,
+    "name": "Touch Of The Departed",
+    "type": "TouchOfTheDeparted",
+    "enum": "TouchOfTheDeparted",
+    "klass": "刺客",
+    "icon": "354",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/TouchOfTheDeparted.cs"
+   },
+   {
+    "site_id": 104,
+    "name": "Waning Moon",
+    "type": "WaningMoon",
+    "enum": "WaningMoon",
+    "klass": "刺客",
+    "icon": "350",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/WaningMoon.cs"
+   },
+   {
+    "site_id": 105,
+    "name": "Ghost Walk",
+    "type": "GhostWalk",
+    "enum": "GhostWalk",
+    "klass": "刺客",
+    "icon": "356",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/GhostWalk.cs"
+   },
+   {
+    "site_id": 106,
+    "name": "Elemental Puppet",
+    "type": "ElementalPuppet",
+    "enum": "ElementalPuppet",
+    "klass": "刺客",
+    "icon": "358",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/ElementalPuppet.cs"
+   },
+   {
+    "site_id": 107,
+    "name": "Rejuvenation",
+    "type": "Rejuvenation",
+    "enum": "Rejuvenation",
+    "klass": "刺客",
+    "icon": "336",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Rejuvenation.cs"
+   },
+   {
+    "site_id": 108,
+    "name": "Resolution",
+    "type": "Resolution",
+    "enum": "Resolution",
+    "klass": "刺客",
+    "icon": "344",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Resolution.cs"
+   },
+   {
+    "site_id": 109,
+    "name": "Change Of Seasons",
+    "type": "ChangeOfSeasons",
+    "enum": "ChangeOfSeasons",
+    "klass": "刺客",
+    "icon": "360",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/ChangeOfSeasons.cs"
+   },
+   {
+    "site_id": 110,
+    "name": "Release",
+    "type": "Release",
+    "enum": "Release",
+    "klass": "刺客",
+    "icon": "378",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Release.cs"
+   },
+   {
+    "site_id": 111,
+    "name": "Flame Splash",
+    "type": "FlameSplash",
+    "enum": "FlameSplash",
+    "klass": "刺客",
+    "icon": "320",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/FlameSplash.cs"
+   },
+   {
+    "site_id": 113,
+    "name": "The New Beginning",
+    "type": "TheNewBeginning",
+    "enum": "TheNewBeginning",
+    "klass": "刺客",
+    "icon": "346",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/TheNewBeginning.cs"
+   },
+   {
+    "site_id": 114,
+    "name": "Dance Of Swallow",
+    "type": "DanceOfSwallow",
+    "enum": "DanceOfSwallow",
+    "klass": "刺客",
+    "icon": "362",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DanceOfSwallow.cs"
+   },
+   {
+    "site_id": 115,
+    "name": "Dark Conversion",
+    "type": "DarkConversion",
+    "enum": "DarkConversion",
+    "klass": "刺客",
+    "icon": "364",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DarkConversion.cs"
+   },
+   {
+    "site_id": 116,
+    "name": "Dragon Repulse",
+    "type": "DragonRepulse",
+    "enum": "DragonRepulse",
+    "klass": "刺客",
+    "icon": "322",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DragonRepulse.cs"
+   },
+   {
+    "site_id": 117,
+    "name": "Advent Of Demon",
+    "type": "AdventOfDemon",
+    "enum": "AdventOfDemon",
+    "klass": "刺客",
+    "icon": "338",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/AdventOfDemon.cs"
+   },
+   {
+    "site_id": 118,
+    "name": "Advent Of Devil",
+    "type": "AdventOfDevil",
+    "enum": "AdventOfDevil",
+    "klass": "刺客",
+    "icon": "348",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/AdventOfDevil.cs"
+   },
+   {
+    "site_id": 119,
+    "name": "Abyss",
+    "type": "Abyss",
+    "enum": "Abyss",
+    "klass": "刺客",
+    "icon": "366",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Abyss.cs"
+   },
+   {
+    "site_id": 120,
+    "name": "Flash Of Light",
+    "type": "FlashOfLight",
+    "enum": "FlashOfLight",
+    "klass": "刺客",
+    "icon": "368",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/FlashOfLight.cs"
+   },
+   {
+    "site_id": 121,
+    "name": "Stealth",
+    "type": "Stealth",
+    "enum": "Stealth",
+    "klass": "刺客",
+    "icon": "380",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Stealth.cs"
+   },
+   {
+    "site_id": 122,
+    "name": "Evasion",
+    "type": "Evasion",
+    "enum": "Evasion",
+    "klass": "刺客",
+    "icon": "370",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Evasion.cs"
+   },
+   {
+    "site_id": 123,
+    "name": "Raging Wind",
+    "type": "RagingWind",
+    "enum": "RagingWind",
+    "klass": "刺客",
+    "icon": "372",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/RagingWind.cs"
+   },
+   {
+    "site_id": 162,
+    "name": "Dragon Blood",
+    "type": "DragonBlood",
+    "enum": "DragonBlood",
+    "klass": "刺客",
+    "icon": "382",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DragonBlood.cs"
+   },
+   {
+    "site_id": 163,
+    "name": "Fatal Blow",
+    "type": "FatalBlow",
+    "enum": "FatalBlow",
+    "klass": "刺客",
+    "icon": "474",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/FatalBlow.cs"
+   },
+   {
+    "site_id": 141,
+    "name": "Massacre",
+    "type": "Massacre",
+    "enum": "Massacre",
+    "klass": "刺客",
+    "icon": "382",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Massacre.cs"
+   },
+   {
+    "site_id": 164,
+    "name": "Last Stand",
+    "type": "LastStand",
+    "enum": "LastStand",
+    "klass": "刺客",
+    "icon": "448",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/LastStand.cs"
+   },
+   {
+    "site_id": 165,
+    "name": "Magic Combustion",
+    "type": "MagicCombustion",
+    "enum": "MagicCombustion",
+    "klass": "刺客",
+    "icon": "478",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/MagicCombustion.cs"
+   },
+   {
+    "site_id": 166,
+    "name": "Vitality",
+    "type": "Vitality",
+    "enum": "Vitality",
+    "klass": "刺客",
+    "icon": "472",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Vitality.cs"
+   },
+   {
+    "site_id": 145,
+    "name": "Art of Shadows",
+    "type": "ArtOfShadows",
+    "enum": "ArtOfShadows",
+    "klass": "刺客",
+    "icon": "396",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/ArtOfShadows.cs"
+   },
+   {
+    "site_id": 167,
+    "name": "Chain",
+    "type": "Chain",
+    "enum": "Chain",
+    "klass": "刺客",
+    "icon": "476",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Chain.cs"
+   },
+   {
+    "site_id": 168,
+    "name": "Concentration",
+    "type": "Concentration",
+    "enum": "Concentration",
+    "klass": "刺客",
+    "icon": "384",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Concentration.cs"
+   },
+   {
+    "site_id": 169,
+    "name": "Dual Weapon Skills",
+    "type": "DualWeaponSkills",
+    "enum": "DualWeaponSkills",
+    "klass": "刺客",
+    "icon": "464",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DualWeaponSkills.cs"
+   },
+   {
+    "site_id": 170,
+    "name": "Containment",
+    "type": "Containment",
+    "enum": "Containment",
+    "klass": "刺客",
+    "icon": "440",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Containment.cs"
+   },
+   {
+    "site_id": 171,
+    "name": "Dragon Wave",
+    "type": "DragonWave",
+    "enum": "DragonWave",
+    "klass": "刺客",
+    "icon": "542",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/DragonWave.cs"
+   },
+   {
+    "site_id": 172,
+    "name": "Hemorrhage",
+    "type": "Hemorrhage",
+    "enum": "Hemorrhage",
+    "klass": "刺客",
+    "icon": "494",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/Hemorrhage.cs"
+   },
+   {
+    "site_id": 173,
+    "name": "Burning Fire",
+    "type": "BurningFire",
+    "enum": "BurningFire",
+    "klass": "刺客",
+    "icon": "456",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/BurningFire.cs"
+   },
+   {
+    "site_id": 174,
+    "name": "Chain Of Fire",
+    "type": "ChainOfFire",
+    "enum": "ChainOfFire",
+    "klass": "刺客",
+    "icon": "520",
+    "impl_file": "ServerLibrary/Models/Magics/Assassin/ChainOfFire.cs"
+   }
+  ],
+  "website_only_zircon_tagged_without_server_impl": [
+   {
+    "id": 136,
+    "name": "_Blank_",
+    "klass": "刺客",
+    "type": "Unused",
+    "ver": [
+     "ei",
+     "mei",
+     "zircon"
+    ],
+    "icon": "0",
+    "zh": "（未使用）",
+    "levels": "0 / 0 / 0 级"
+   }
+  ],
+  "website_only_mud3_legacy_top30": [
+   {
+    "id": -44,
+    "name": "云石召唤",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "云石召唤",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -43,
+    "name": "幽灵盾（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -42,
+    "name": "幽灵盾（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -41,
+    "name": "幽灵盾（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -40,
+    "name": "幽灵盾（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -39,
+    "name": "移花术",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "移花术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -38,
+    "name": "心灵启示",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "心灵启示",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -37,
+    "name": "通天月魂断波",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天月魂断波",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -36,
+    "name": "通天霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -35,
+    "name": "通天风掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天风掌",
+    "levels": "99/18/19"
+   },
+   {
+    "id": -34,
+    "name": "通天大火球",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天大火球",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -33,
+    "name": "通天冰月神掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天冰月神掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -32,
+    "name": "强魔震法（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -31,
+    "name": "强魔震法（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -30,
+    "name": "强魔震法（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -29,
+    "name": "强魔震法（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -28,
+    "name": "霹雳圈",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "霹雳圈",
+    "levels": "99/34/35"
+   },
+   {
+    "id": -27,
+    "name": "霹雳壁",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "霹雳壁",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -26,
+    "name": "魔防系术（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -25,
+    "name": "魔防系术（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -24,
+    "name": "魔防系术（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -23,
+    "name": "魔防系术（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -22,
+    "name": "魔防系术",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -21,
+    "name": "乱降雷电术",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "乱降雷电术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -20,
+    "name": "连锁月魂断波",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁月魂断波",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -19,
+    "name": "连锁霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -18,
+    "name": "连锁风掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁风掌",
+    "levels": "99/18/19"
+   },
+   {
+    "id": -17,
+    "name": "连锁大火球",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁大火球",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -16,
+    "name": "连锁冰月神掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁冰月神掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -15,
+    "name": "聚集月魂断玉",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集月魂断玉",
+    "levels": "99/99/99"
+   }
+  ],
+  "website_only_mud3_legacy": [
+   {
+    "id": -44,
+    "name": "云石召唤",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "云石召唤",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -43,
+    "name": "幽灵盾（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -42,
+    "name": "幽灵盾（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -41,
+    "name": "幽灵盾（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -40,
+    "name": "幽灵盾（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "幽灵盾（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -39,
+    "name": "移花术",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "移花术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -38,
+    "name": "心灵启示",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "心灵启示",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -37,
+    "name": "通天月魂断波",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天月魂断波",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -36,
+    "name": "通天霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -35,
+    "name": "通天风掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天风掌",
+    "levels": "99/18/19"
+   },
+   {
+    "id": -34,
+    "name": "通天大火球",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天大火球",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -33,
+    "name": "通天冰月神掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "通天冰月神掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -32,
+    "name": "强魔震法（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -31,
+    "name": "强魔震法（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -30,
+    "name": "强魔震法（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -29,
+    "name": "强魔震法（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "强魔震法（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -28,
+    "name": "霹雳圈",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "霹雳圈",
+    "levels": "99/34/35"
+   },
+   {
+    "id": -27,
+    "name": "霹雳壁",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "霹雳壁",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -26,
+    "name": "魔防系术（雷）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（雷）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -25,
+    "name": "魔防系术（火）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（火）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -24,
+    "name": "魔防系术（风）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（风）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -23,
+    "name": "魔防系术（冰）",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术（冰）",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -22,
+    "name": "魔防系术",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "魔防系术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -21,
+    "name": "乱降雷电术",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "乱降雷电术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -20,
+    "name": "连锁月魂断波",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁月魂断波",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -19,
+    "name": "连锁霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -18,
+    "name": "连锁风掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁风掌",
+    "levels": "99/18/19"
+   },
+   {
+    "id": -17,
+    "name": "连锁大火球",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁大火球",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -16,
+    "name": "连锁冰月神掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "连锁冰月神掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -15,
+    "name": "聚集月魂断玉",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集月魂断玉",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -14,
+    "name": "聚集霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -13,
+    "name": "聚集灵魂火符",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集灵魂火符",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -12,
+    "name": "聚集雷电术",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集雷电术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -11,
+    "name": "聚集火球",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集火球",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -10,
+    "name": "聚集风掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集风掌",
+    "levels": "99/18/19"
+   },
+   {
+    "id": -9,
+    "name": "聚集冰月神掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "聚集冰月神掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -8,
+    "name": "火焰壁",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "火焰壁",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -7,
+    "name": "分身术",
+    "klass": "老版·召唤",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "分身术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -6,
+    "name": "分散月魂断玉",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "分散月魂断玉",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -5,
+    "name": "分散霹雳掌",
+    "klass": "老版·装备",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "分散霹雳掌",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -4,
+    "name": "分散灵魂火符",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "分散灵魂火符",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -3,
+    "name": "移花接玉",
+    "klass": "老版·符咒",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "移花接玉",
+    "levels": "38/41/44"
+   },
+   {
+    "id": -2,
+    "name": "防御系术",
+    "klass": "老版·装备",
+    "type": "辅助",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "防御系术",
+    "levels": "99/99/99"
+   },
+   {
+    "id": -1,
+    "name": "凝血离魂",
+    "klass": "老版·召唤",
+    "type": "攻击魔法",
+    "ver": [
+     "mud3"
+    ],
+    "icon": "",
+    "zh": "凝血离魂",
+    "levels": "46/48/50"
+   }
+  ],
+  "enum_player_skills_without_website_entry": [
+   {
+    "magic": "AugmentPotionMastery",
+    "enum_value": 122
+   },
+   {
+    "magic": "Shuriken",
+    "enum_value": 132
+   },
+   {
+    "magic": "HundredFist",
+    "enum_value": 133
+   },
+   {
+    "magic": "OffensiveBlow",
+    "enum_value": 134
+   },
+   {
+    "magic": "TaecheonSword",
+    "enum_value": 135
+   },
+   {
+    "magic": "FireSword",
+    "enum_value": 136
+   },
+   {
+    "magic": "FlameArt",
+    "enum_value": 137
+   },
+   {
+    "magic": "IceAura",
+    "enum_value": 243
+   },
+   {
+    "magic": "IceDragon",
+    "enum_value": 244
+   },
+   {
+    "magic": "IceBreaker",
+    "enum_value": 245
+   },
+   {
+    "magic": "FrozenDragon",
+    "enum_value": 246
+   },
+   {
+    "magic": "UnityWithNature",
+    "enum_value": 247
+   },
+   {
+    "magic": "BindingTalisman",
+    "enum_value": 347
+   },
+   {
+    "magic": "BrainStorm",
+    "enum_value": 348
+   },
+   {
+    "magic": "HeavenlySky",
+    "enum_value": 349
+   },
+   {
+    "magic": "PoisonCloud",
+    "enum_value": 350
+   },
+   {
+    "magic": "SupremeHealing",
+    "enum_value": 351
+   },
+   {
+    "magic": "FlamingDaggers",
+    "enum_value": 454
+   },
+   {
+    "magic": "Shredding",
+    "enum_value": 455
+   },
+   {
+    "magic": "FourWheels",
+    "enum_value": 456
+   },
+   {
+    "magic": "CrescentMoon",
+    "enum_value": 457
+   },
+   {
+    "magic": "ManaBurn",
+    "enum_value": 458
+   }
+  ],
+  "enum_alias_applied": [
+   {
+    "website_type": "AdvancedPotionMastery",
+    "enum": "AugmentPotionMastery",
+    "rule": "Advanced*↔Augment* 前缀规则（同规则已由 4 组网站条目验证）"
+   }
+  ],
+  "enum_match": {
+   "website_types_matched_to_enum": 174,
+   "website_types_unmatched": 44,
+   "unmatched": [
+    {
+     "id": -44,
+     "name": "云石召唤",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "云石召唤",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -43,
+     "name": "幽灵盾（雷）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "幽灵盾（雷）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -42,
+     "name": "幽灵盾（火）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "幽灵盾（火）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -41,
+     "name": "幽灵盾（风）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "幽灵盾（风）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -40,
+     "name": "幽灵盾（冰）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "幽灵盾（冰）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -39,
+     "name": "移花术",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "移花术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -38,
+     "name": "心灵启示",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "心灵启示",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -37,
+     "name": "通天月魂断波",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "通天月魂断波",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -36,
+     "name": "通天霹雳掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "通天霹雳掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -35,
+     "name": "通天风掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "通天风掌",
+     "levels": "99/18/19"
+    },
+    {
+     "id": -34,
+     "name": "通天大火球",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "通天大火球",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -33,
+     "name": "通天冰月神掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "通天冰月神掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -32,
+     "name": "强魔震法（雷）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "强魔震法（雷）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -31,
+     "name": "强魔震法（火）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "强魔震法（火）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -30,
+     "name": "强魔震法（风）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "强魔震法（风）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -29,
+     "name": "强魔震法（冰）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "强魔震法（冰）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -28,
+     "name": "霹雳圈",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "霹雳圈",
+     "levels": "99/34/35"
+    },
+    {
+     "id": -27,
+     "name": "霹雳壁",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "霹雳壁",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -26,
+     "name": "魔防系术（雷）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "魔防系术（雷）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -25,
+     "name": "魔防系术（火）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "魔防系术（火）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -24,
+     "name": "魔防系术（风）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "魔防系术（风）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -23,
+     "name": "魔防系术（冰）",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "魔防系术（冰）",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -22,
+     "name": "魔防系术",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "魔防系术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -21,
+     "name": "乱降雷电术",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "乱降雷电术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -20,
+     "name": "连锁月魂断波",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "连锁月魂断波",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -19,
+     "name": "连锁霹雳掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "连锁霹雳掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -18,
+     "name": "连锁风掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "连锁风掌",
+     "levels": "99/18/19"
+    },
+    {
+     "id": -17,
+     "name": "连锁大火球",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "连锁大火球",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -16,
+     "name": "连锁冰月神掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "连锁冰月神掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -15,
+     "name": "聚集月魂断玉",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集月魂断玉",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -14,
+     "name": "聚集霹雳掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集霹雳掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -13,
+     "name": "聚集灵魂火符",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集灵魂火符",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -12,
+     "name": "聚集雷电术",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集雷电术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -11,
+     "name": "聚集火球",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集火球",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -10,
+     "name": "聚集风掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集风掌",
+     "levels": "99/18/19"
+    },
+    {
+     "id": -9,
+     "name": "聚集冰月神掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "聚集冰月神掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -8,
+     "name": "火焰壁",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "火焰壁",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -7,
+     "name": "分身术",
+     "klass": "老版·召唤",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "分身术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -6,
+     "name": "分散月魂断玉",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "分散月魂断玉",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -5,
+     "name": "分散霹雳掌",
+     "klass": "老版·装备",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "分散霹雳掌",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -4,
+     "name": "分散灵魂火符",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "分散灵魂火符",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -3,
+     "name": "移花接玉",
+     "klass": "老版·符咒",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "移花接玉",
+     "levels": "38/41/44"
+    },
+    {
+     "id": -2,
+     "name": "防御系术",
+     "klass": "老版·装备",
+     "type": "辅助",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "防御系术",
+     "levels": "99/99/99"
+    },
+    {
+     "id": -1,
+     "name": "凝血离魂",
+     "klass": "老版·召唤",
+     "type": "攻击魔法",
+     "ver": [
+      "mud3"
+     ],
+     "icon": "",
+     "zh": "凝血离魂",
+     "levels": "46/48/50"
+    }
+   ]
+  }
+ },
+ "mapping": {
+  "rule": [
+   "① 库↔网站：name/magic 归一（小写去非字母数字）与网站 type 或 name 相等即匹配；一条库行只匹配一条网站条目。",
+   "② 网站 type → MagicType 枚举：同名归一匹配；Advanced*↔Augment* 前缀规则（已由 AdvancedDefiance/AugmentDefiance 等 4 组同规则条目验证）。",
+   "③ EI 技能号 = MagicInfo.Icon // 2 + 1（来源 GodotClient/Controls/MagicBar.cs:287 与 MagicDialog.cs LegacyEiSkillIdFromIcon），用它对齐 ClientData/Magic.exp.txt 的 #id。",
+   "④ 中文名不投票、不合并：四源（magic.exp / zh-glossary / wiki terminology / 游戏显示表 db_names.json）全部列出，冲突即标『待人工确认』。"
+  ],
+  "stats": {
+   "mapped_rows": 61,
+   "zh_all_sources_agree": 22,
+   "zh_single_source_only": 1,
+   "zh_conflict": 38,
+   "zh_no_source": 0,
+   "zh_conflict_display_has_support": 29,
+   "ei_id_present_in_magic_exp": 49,
+   "enum_value_found": 61,
+   "server_impl_found": 61
+  },
+  "server_impl_class_mismatch": [
+   {
+    "db_index": 18,
+    "magic": "ReflectDamage",
+    "db_required_class": "Taoist",
+    "site_klass": "战士",
+    "impl_folder": "Warrior",
+    "impl_file": "ServerLibrary/Models/Magics/Warrior/ReflectDamage.cs"
+   }
+  ],
+  "unmapped_pending_human": [
+   {
+    "db_index": 8,
+    "db_name": "Dragon Rise",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "翔空剑法",
+     "zh_glossary": "龙影剑法",
+     "zh_wiki_terminology": "龙影剑法",
+     "zh_game_display_db_names": "翔空剑法"
+    }
+   },
+   {
+    "db_index": 10,
+    "db_name": "Destructive Surge",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "破血狂杀",
+     "zh_wiki_terminology": "破血狂杀",
+     "zh_game_display_db_names": "十方斩"
+    }
+   },
+   {
+    "db_index": 13,
+    "db_name": "Beckon",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "召唤",
+     "zh_wiki_terminology": "召唤",
+     "zh_game_display_db_names": "斗转星移"
+    }
+   },
+   {
+    "db_index": 14,
+    "db_name": "Might",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "蛮力",
+     "zh_wiki_terminology": "蛮力",
+     "zh_game_display_db_names": "破血狂杀"
+    }
+   },
+   {
+    "db_index": 24,
+    "db_name": "Lightning Ball",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "霹雳掌",
+     "zh_glossary": "雷电术",
+     "zh_wiki_terminology": "雷电术",
+     "zh_game_display_db_names": "霹雳掌"
+    }
+   },
+   {
+    "db_index": 25,
+    "db_name": "Ice Bolt",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "冰月神掌",
+     "zh_glossary": "冰箭术",
+     "zh_wiki_terminology": "冰箭术",
+     "zh_game_display_db_names": "冰月神掌"
+    }
+   },
+   {
+    "db_index": 26,
+    "db_name": "Gust Blast",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "风掌",
+     "zh_glossary": "狂风冲击",
+     "zh_wiki_terminology": "风震天",
+     "zh_game_display_db_names": "风掌"
+    }
+   },
+   {
+    "db_index": 29,
+    "db_name": "Teleportation",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "瞬间移动",
+     "zh_glossary": "瞬息移动",
+     "zh_wiki_terminology": "瞬息移动",
+     "zh_game_display_db_names": "瞬息移动"
+    }
+   },
+   {
+    "db_index": 30,
+    "db_name": "Adamantine Fire Ball",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "大火球",
+     "zh_glossary": "金刚火球",
+     "zh_wiki_terminology": "大火球",
+     "zh_game_display_db_names": "大火球"
+    }
+   },
+   {
+    "db_index": 31,
+    "db_name": "Thunder Bolt",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "雷电术",
+     "zh_glossary": "雷霆电击",
+     "zh_wiki_terminology": "雷光术",
+     "zh_game_display_db_names": "雷电术"
+    }
+   },
+   {
+    "db_index": 32,
+    "db_name": "Ice Blades",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "冰月震天",
+     "zh_glossary": "冰刃术",
+     "zh_wiki_terminology": "冰咆哮",
+     "zh_game_display_db_names": "冰月震天"
+    }
+   },
+   {
+    "db_index": 33,
+    "db_name": "Cyclone",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "击风",
+     "zh_glossary": "龙卷风",
+     "zh_wiki_terminology": "龙卷风",
+     "zh_game_display_db_names": "击风"
+    }
+   },
+   {
+    "db_index": 36,
+    "db_name": "Frozen Earth",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "冰沙掌",
+     "zh_glossary": "寒冰大地",
+     "zh_wiki_terminology": "冰震大地",
+     "zh_game_display_db_names": "冰沙掌"
+    }
+   },
+   {
+    "db_index": 39,
+    "db_name": "Expel Undead",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "圣言术",
+     "zh_glossary": "驱逐亡灵",
+     "zh_wiki_terminology": "超度亡灵",
+     "zh_game_display_db_names": "圣言术"
+    }
+   },
+   {
+    "db_index": 40,
+    "db_name": "Geo Manipulation",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "异形换位",
+     "zh_glossary": "地脉操纵",
+     "zh_wiki_terminology": "缩地术",
+     "zh_game_display_db_names": "异形换位"
+    }
+   },
+   {
+    "db_index": 42,
+    "db_name": "Fire Storm",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "爆裂火焰",
+     "zh_glossary": "火焰风暴",
+     "zh_wiki_terminology": "火焰风暴",
+     "zh_game_display_db_names": "爆裂火焰"
+    }
+   },
+   {
+    "db_index": 43,
+    "db_name": "Lightning Wave",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "地狱雷光",
+     "zh_glossary": "雷电波",
+     "zh_wiki_terminology": "雷电风暴",
+     "zh_game_display_db_names": "地狱雷光"
+    }
+   },
+   {
+    "db_index": 44,
+    "db_name": "Ice Storm",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "冰咆哮",
+     "zh_glossary": "寒冰风暴",
+     "zh_wiki_terminology": "冰风暴",
+     "zh_game_display_db_names": "冰咆哮"
+    }
+   },
+   {
+    "db_index": 45,
+    "db_name": "Dragon Tornado",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "龙卷风",
+     "zh_glossary": "龙卷风暴",
+     "zh_wiki_terminology": "神龙风暴",
+     "zh_game_display_db_names": "龙卷风"
+    }
+   },
+   {
+    "db_index": 49,
+    "db_name": "Renounce",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "舍身",
+     "zh_wiki_terminology": "迷魂咒",
+     "zh_game_display_db_names": "凝血离魂"
+    }
+   },
+   {
+    "db_index": 60,
+    "db_name": "Spirit Sword",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "精神力战法",
+     "zh_glossary": "灵剑术",
+     "zh_wiki_terminology": "精神力战法",
+     "zh_game_display_db_names": "精神力战法"
+    }
+   },
+   {
+    "db_index": 175,
+    "db_name": "LightningBeam",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "疾光电影",
+     "zh_glossary": "雷电光柱",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "疾光电影"
+    }
+   },
+   {
+    "db_index": 177,
+    "db_name": "EvilSlayer",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "月魂断玉",
+     "zh_glossary": "召唤骷髅",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "月魂断玉"
+    }
+   },
+   {
+    "db_index": 180,
+    "db_name": "MagicResistance",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "幽灵盾",
+     "zh_glossary": "魔法抵抗",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "幽灵盾"
+    }
+   },
+   {
+    "db_index": 181,
+    "db_name": "MassInvisibility",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "集体隐身术",
+     "zh_glossary": "群体隐身",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "集体隐身术"
+    }
+   },
+   {
+    "db_index": 182,
+    "db_name": "GreaterEvilSlayer",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "月魂灵波",
+     "zh_glossary": "强召唤骷髅",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "月魂灵波"
+    }
+   },
+   {
+    "db_index": 183,
+    "db_name": "Resilience",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "神圣战甲术",
+     "zh_glossary": "坚韧",
+     "zh_wiki_terminology": "护体术",
+     "zh_game_display_db_names": "神圣战甲术"
+    }
+   },
+   {
+    "db_index": 185,
+    "db_name": "CombatKick",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "空拳刀法",
+     "zh_glossary": "气功波",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "空拳刀法"
+    }
+   },
+   {
+    "db_index": 187,
+    "db_name": "MassHeal",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "群体治愈术",
+     "zh_glossary": "群体治愈",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "群体治愈术"
+    }
+   },
+   {
+    "db_index": 188,
+    "db_name": "SummonJinSkeleton",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "超强召唤骷髅",
+     "zh_glossary": "召唤金骷髅",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "超强召唤骷髅"
+    }
+   },
+   {
+    "db_index": 189,
+    "db_name": "BloodLust",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "猛虎强势",
+     "zh_glossary": "嗜血术",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "猛虎强势"
+    }
+   },
+   {
+    "db_index": 190,
+    "db_name": "Resurrection",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "回生术",
+     "zh_glossary": "复活术",
+     "zh_wiki_terminology": "复活术",
+     "zh_game_display_db_names": "回生术"
+    }
+   },
+   {
+    "db_index": 191,
+    "db_name": "ScortchedEarth",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "地域火",
+     "zh_glossary": null,
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "地狱火"
+    }
+   },
+   {
+    "db_index": 192,
+    "db_name": "BlowEarth",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": "风震天",
+     "zh_glossary": "大地崩裂",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "风震天"
+    }
+   },
+   {
+    "db_index": 193,
+    "db_name": "GreaterFrozenEarth",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "强寒冰大地",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "魄冰刺"
+    }
+   },
+   {
+    "db_index": 195,
+    "db_name": "MeteorShower",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "流星火雨",
+     "zh_wiki_terminology": null,
+     "zh_game_display_db_names": "焰天火雨"
+    }
+   },
+   {
+    "db_index": 196,
+    "db_name": "Purification",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "净化术",
+     "zh_wiki_terminology": "净化术",
+     "zh_game_display_db_names": "云寂术"
+    }
+   },
+   {
+    "db_index": 197,
+    "db_name": "Transparency",
+    "reason": "四源中文名冲突或缺失",
+    "values": {
+     "zh_magic_exp": null,
+     "zh_glossary": "透明术",
+     "zh_wiki_terminology": "透明术",
+     "zh_game_display_db_names": "妙影无踪"
+    }
+   }
+  ],
+  "rows": [
+   {
+    "db_index": 1,
+    "magic_enum": "Swordsmanship",
+    "enum_value": 100,
+    "db_name": "Swordsmanship",
+    "db_icon": 4,
+    "ei_id_icon_div2_plus1": 3,
+    "ei_id_in_magic_exp": true,
+    "site_id": 1,
+    "site_name": "Swordsmanship",
+    "site_type": "Swordsmanship",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Swordsmanship.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "基本剑术",
+    "zh_glossary": "基本剑术",
+    "zh_wiki_terminology": "基本剑术",
+    "zh_game_display_db_names": "基本剑术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 3,
+    "magic_enum": "Slaying",
+    "enum_value": 102,
+    "db_name": "Slaying",
+    "db_icon": 12,
+    "ei_id_icon_div2_plus1": 7,
+    "ei_id_in_magic_exp": true,
+    "site_id": 3,
+    "site_name": "Slaying",
+    "site_type": "Slaying",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Slaying.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "攻杀剑术",
+    "zh_glossary": "攻杀剑术",
+    "zh_wiki_terminology": "攻杀剑术",
+    "zh_game_display_db_names": "攻杀剑术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 4,
+    "magic_enum": "Thrusting",
+    "enum_value": 103,
+    "db_name": "Thrusting",
+    "db_icon": 22,
+    "ei_id_icon_div2_plus1": 12,
+    "ei_id_in_magic_exp": true,
+    "site_id": 4,
+    "site_name": "Thrusting",
+    "site_type": "Thrusting",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Thrusting.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "刺杀剑术",
+    "zh_glossary": "刺杀剑术",
+    "zh_wiki_terminology": "刺杀剑术",
+    "zh_game_display_db_names": "刺杀剑术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 5,
+    "magic_enum": "HalfMoon",
+    "enum_value": 104,
+    "db_name": "Half Moon",
+    "db_icon": 48,
+    "ei_id_icon_div2_plus1": 25,
+    "ei_id_in_magic_exp": true,
+    "site_id": 5,
+    "site_name": "Half Moon",
+    "site_type": "HalfMoon",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/HalfMoon.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "半月弯刀",
+    "zh_glossary": "半月弯刀",
+    "zh_wiki_terminology": "半月弯刀",
+    "zh_game_display_db_names": "半月弯刀",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 6,
+    "magic_enum": "ShoulderDash",
+    "enum_value": 105,
+    "db_name": "Shoulder Dash",
+    "db_icon": 52,
+    "ei_id_icon_div2_plus1": 27,
+    "ei_id_in_magic_exp": true,
+    "site_id": 6,
+    "site_name": "Shoulder Dash",
+    "site_type": "ShoulderDash",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/ShoulderDash.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "野蛮冲撞",
+    "zh_glossary": "野蛮冲撞",
+    "zh_wiki_terminology": "野蛮冲撞",
+    "zh_game_display_db_names": "野蛮冲撞",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 7,
+    "magic_enum": "FlamingSword",
+    "enum_value": 106,
+    "db_name": "Flaming Sword",
+    "db_icon": 50,
+    "ei_id_icon_div2_plus1": 26,
+    "ei_id_in_magic_exp": true,
+    "site_id": 7,
+    "site_name": "Flaming Sword",
+    "site_type": "FlamingSword",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/FlamingSword.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "烈火剑法",
+    "zh_glossary": "烈火剑法",
+    "zh_wiki_terminology": "烈火剑法",
+    "zh_game_display_db_names": "烈火剑法",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 8,
+    "magic_enum": "DragonRise",
+    "enum_value": 107,
+    "db_name": "Dragon Rise",
+    "db_icon": 68,
+    "ei_id_icon_div2_plus1": 35,
+    "ei_id_in_magic_exp": true,
+    "site_id": 8,
+    "site_name": "Dragon Rise",
+    "site_type": "DragonRise",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/DragonRise.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "翔空剑法",
+    "zh_glossary": "龙影剑法",
+    "zh_wiki_terminology": "龙影剑法",
+    "zh_game_display_db_names": "翔空剑法",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 9,
+    "magic_enum": "BladeStorm",
+    "enum_value": 108,
+    "db_name": "Blade Storm",
+    "db_icon": 66,
+    "ei_id_icon_div2_plus1": 34,
+    "ei_id_in_magic_exp": true,
+    "site_id": 9,
+    "site_name": "Blade Storm",
+    "site_type": "BladeStorm",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/BladeStorm.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "莲月剑法",
+    "zh_glossary": "莲月剑法",
+    "zh_wiki_terminology": "莲月剑法",
+    "zh_game_display_db_names": "莲月剑法",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 10,
+    "magic_enum": "DestructiveSurge",
+    "enum_value": 109,
+    "db_name": "Destructive Surge",
+    "db_icon": 204,
+    "ei_id_icon_div2_plus1": 103,
+    "ei_id_in_magic_exp": false,
+    "site_id": 10,
+    "site_name": "Destructive Surge",
+    "site_type": "DestructiveSurge",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/DestructiveSurge.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "破血狂杀",
+    "zh_wiki_terminology": "破血狂杀",
+    "zh_game_display_db_names": "十方斩",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 11,
+    "magic_enum": "Interchange",
+    "enum_value": 110,
+    "db_name": "Interchange",
+    "db_icon": 212,
+    "ei_id_icon_div2_plus1": 107,
+    "ei_id_in_magic_exp": false,
+    "site_id": 11,
+    "site_name": "Interchange",
+    "site_type": "Interchange",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Interchange.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "乾坤大挪移",
+    "zh_wiki_terminology": "乾坤大挪移",
+    "zh_game_display_db_names": "乾坤大挪移",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 12,
+    "magic_enum": "Defiance",
+    "enum_value": 111,
+    "db_name": "Defiance",
+    "db_icon": 202,
+    "ei_id_icon_div2_plus1": 102,
+    "ei_id_in_magic_exp": false,
+    "site_id": 12,
+    "site_name": "Defiance",
+    "site_type": "Defiance",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Defiance.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "铁布衫",
+    "zh_wiki_terminology": "铁布衫",
+    "zh_game_display_db_names": "铁布衫",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 13,
+    "magic_enum": "Beckon",
+    "enum_value": 112,
+    "db_name": "Beckon",
+    "db_icon": 214,
+    "ei_id_icon_div2_plus1": 108,
+    "ei_id_in_magic_exp": false,
+    "site_id": 13,
+    "site_name": "Beckon",
+    "site_type": "Beckon",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Beckon.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "召唤",
+    "zh_wiki_terminology": "召唤",
+    "zh_game_display_db_names": "斗转星移",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 14,
+    "magic_enum": "Might",
+    "enum_value": 113,
+    "db_name": "Might",
+    "db_icon": 210,
+    "ei_id_icon_div2_plus1": 106,
+    "ei_id_in_magic_exp": false,
+    "site_id": 14,
+    "site_name": "Might",
+    "site_type": "Might",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/Might.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "蛮力",
+    "zh_wiki_terminology": "蛮力",
+    "zh_game_display_db_names": "破血狂杀",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 18,
+    "magic_enum": "ReflectDamage",
+    "enum_value": 117,
+    "db_name": "Reflect Damage",
+    "db_icon": 250,
+    "ei_id_icon_div2_plus1": 126,
+    "ei_id_in_magic_exp": false,
+    "site_id": 18,
+    "site_name": "Reflect Damage",
+    "site_type": "ReflectDamage",
+    "site_klass": "战士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Warrior/ReflectDamage.cs",
+    "server_impl_folder": "Warrior",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "移花接玉",
+    "zh_wiki_terminology": "移花接玉",
+    "zh_game_display_db_names": "移花接玉",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 23,
+    "magic_enum": "FireBall",
+    "enum_value": 201,
+    "db_name": "Fire Ball",
+    "db_icon": 0,
+    "ei_id_icon_div2_plus1": 1,
+    "ei_id_in_magic_exp": true,
+    "site_id": 23,
+    "site_name": "Fire Ball",
+    "site_type": "FireBall",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/FireBall.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "火球术",
+    "zh_glossary": "火球术",
+    "zh_wiki_terminology": "火球术",
+    "zh_game_display_db_names": "火球术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 24,
+    "magic_enum": "LightningBall",
+    "enum_value": 202,
+    "db_name": "Lightning Ball",
+    "db_icon": 80,
+    "ei_id_icon_div2_plus1": 41,
+    "ei_id_in_magic_exp": true,
+    "site_id": 24,
+    "site_name": "Lightning Ball",
+    "site_type": "LightningBall",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/LightningBall.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "霹雳掌",
+    "zh_glossary": "雷电术",
+    "zh_wiki_terminology": "雷电术",
+    "zh_game_display_db_names": "霹雳掌",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 25,
+    "magic_enum": "IceBolt",
+    "enum_value": 203,
+    "db_name": "Ice Bolt",
+    "db_icon": 76,
+    "ei_id_icon_div2_plus1": 39,
+    "ei_id_in_magic_exp": true,
+    "site_id": 25,
+    "site_name": "Ice Bolt",
+    "site_type": "IceBolt",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/IceBolt.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "冰月神掌",
+    "zh_glossary": "冰箭术",
+    "zh_wiki_terminology": "冰箭术",
+    "zh_game_display_db_names": "冰月神掌",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 26,
+    "magic_enum": "GustBlast",
+    "enum_value": 204,
+    "db_name": "Gust Blast",
+    "db_icon": 132,
+    "ei_id_icon_div2_plus1": 67,
+    "ei_id_in_magic_exp": true,
+    "site_id": 26,
+    "site_name": "Gust Blast",
+    "site_type": "GustBlast",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/GustBlast.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "风掌",
+    "zh_glossary": "狂风冲击",
+    "zh_wiki_terminology": "风震天",
+    "zh_game_display_db_names": "风掌",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 27,
+    "magic_enum": "Repulsion",
+    "enum_value": 205,
+    "db_name": "Repulsion",
+    "db_icon": 14,
+    "ei_id_icon_div2_plus1": 8,
+    "ei_id_in_magic_exp": true,
+    "site_id": 27,
+    "site_name": "Repulsion",
+    "site_type": "Repulsion",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/Repulsion.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "抗拒火环",
+    "zh_glossary": "抗拒火环",
+    "zh_wiki_terminology": "抗拒火环",
+    "zh_game_display_db_names": "抗拒火环",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 28,
+    "magic_enum": "ElectricShock",
+    "enum_value": 206,
+    "db_name": "Electric Shock",
+    "db_icon": 38,
+    "ei_id_icon_div2_plus1": 20,
+    "ei_id_in_magic_exp": true,
+    "site_id": 28,
+    "site_name": "Electric Shock",
+    "site_type": "ElectricShock",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/ElectricShock.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "诱惑之光",
+    "zh_glossary": "诱惑之光",
+    "zh_wiki_terminology": "诱惑之光",
+    "zh_game_display_db_names": "诱惑之光",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 29,
+    "magic_enum": "Teleportation",
+    "enum_value": 207,
+    "db_name": "Teleportation",
+    "db_icon": 40,
+    "ei_id_icon_div2_plus1": 21,
+    "ei_id_in_magic_exp": true,
+    "site_id": 29,
+    "site_name": "Teleportation",
+    "site_type": "Teleportation",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/Teleportation.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "瞬间移动",
+    "zh_glossary": "瞬息移动",
+    "zh_wiki_terminology": "瞬息移动",
+    "zh_game_display_db_names": "瞬息移动",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 30,
+    "magic_enum": "AdamantineFireBall",
+    "enum_value": 208,
+    "db_name": "Adamantine Fire Ball",
+    "db_icon": 8,
+    "ei_id_icon_div2_plus1": 5,
+    "ei_id_in_magic_exp": true,
+    "site_id": 30,
+    "site_name": "Adamantine Fire Ball",
+    "site_type": "AdamantineFireBall",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/AdamantineFireBall.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "大火球",
+    "zh_glossary": "金刚火球",
+    "zh_wiki_terminology": "大火球",
+    "zh_game_display_db_names": "大火球",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 31,
+    "magic_enum": "ThunderBolt",
+    "enum_value": 209,
+    "db_name": "Thunder Bolt",
+    "db_icon": 20,
+    "ei_id_icon_div2_plus1": 11,
+    "ei_id_in_magic_exp": true,
+    "site_id": 31,
+    "site_name": "Thunder Bolt",
+    "site_type": "ThunderBolt",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/ThunderBolt.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "雷电术",
+    "zh_glossary": "雷霆电击",
+    "zh_wiki_terminology": "雷光术",
+    "zh_game_display_db_names": "雷电术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 32,
+    "magic_enum": "IceBlades",
+    "enum_value": 210,
+    "db_name": "Ice Blades",
+    "db_icon": 78,
+    "ei_id_icon_div2_plus1": 40,
+    "ei_id_in_magic_exp": true,
+    "site_id": 32,
+    "site_name": "Ice Blades",
+    "site_type": "IceBlades",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/IceBlades.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "冰月震天",
+    "zh_glossary": "冰刃术",
+    "zh_wiki_terminology": "冰咆哮",
+    "zh_game_display_db_names": "冰月震天",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 33,
+    "magic_enum": "Cyclone",
+    "enum_value": 211,
+    "db_name": "Cyclone",
+    "db_icon": 146,
+    "ei_id_icon_div2_plus1": 74,
+    "ei_id_in_magic_exp": true,
+    "site_id": 33,
+    "site_name": "Cyclone",
+    "site_type": "Cyclone",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/Cyclone.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "击风",
+    "zh_glossary": "龙卷风",
+    "zh_wiki_terminology": "龙卷风",
+    "zh_game_display_db_names": "击风",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 36,
+    "magic_enum": "FrozenEarth",
+    "enum_value": 214,
+    "db_name": "Frozen Earth",
+    "db_icon": 104,
+    "ei_id_icon_div2_plus1": 53,
+    "ei_id_in_magic_exp": true,
+    "site_id": 36,
+    "site_name": "Frozen Earth",
+    "site_type": "FrozenEarth",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/FrozenEarth.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "冰沙掌",
+    "zh_glossary": "寒冰大地",
+    "zh_wiki_terminology": "冰震大地",
+    "zh_game_display_db_names": "冰沙掌",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 38,
+    "magic_enum": "FireWall",
+    "enum_value": 216,
+    "db_name": "Fire Wall",
+    "db_icon": 42,
+    "ei_id_icon_div2_plus1": 22,
+    "ei_id_in_magic_exp": true,
+    "site_id": 38,
+    "site_name": "Fire Wall",
+    "site_type": "FireWall",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/FireWall.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "火墙",
+    "zh_glossary": "火墙",
+    "zh_wiki_terminology": "火墙",
+    "zh_game_display_db_names": "火墙",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 39,
+    "magic_enum": "ExpelUndead",
+    "enum_value": 217,
+    "db_name": "Expel Undead",
+    "db_icon": 62,
+    "ei_id_icon_div2_plus1": 32,
+    "ei_id_in_magic_exp": true,
+    "site_id": 39,
+    "site_name": "Expel Undead",
+    "site_type": "ExpelUndead",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/ExpelUndead.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "圣言术",
+    "zh_glossary": "驱逐亡灵",
+    "zh_wiki_terminology": "超度亡灵",
+    "zh_game_display_db_names": "圣言术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 40,
+    "magic_enum": "GeoManipulation",
+    "enum_value": 218,
+    "db_name": "Geo Manipulation",
+    "db_icon": 206,
+    "ei_id_icon_div2_plus1": 104,
+    "ei_id_in_magic_exp": true,
+    "site_id": 40,
+    "site_name": "Geo Manipulation",
+    "site_type": "GeoManipulation",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/GeoManipulation.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "异形换位",
+    "zh_glossary": "地脉操纵",
+    "zh_wiki_terminology": "缩地术",
+    "zh_game_display_db_names": "异形换位",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 41,
+    "magic_enum": "MagicShield",
+    "enum_value": 219,
+    "db_name": "Magic Shield",
+    "db_icon": 60,
+    "ei_id_icon_div2_plus1": 31,
+    "ei_id_in_magic_exp": true,
+    "site_id": 41,
+    "site_name": "Magic Shield",
+    "site_type": "MagicShield",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/MagicShield.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "魔法盾",
+    "zh_glossary": "魔法盾",
+    "zh_wiki_terminology": "魔法盾",
+    "zh_game_display_db_names": "魔法盾",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 42,
+    "magic_enum": "FireStorm",
+    "enum_value": 220,
+    "db_name": "Fire Storm",
+    "db_icon": 44,
+    "ei_id_icon_div2_plus1": 23,
+    "ei_id_in_magic_exp": true,
+    "site_id": 42,
+    "site_name": "Fire Storm",
+    "site_type": "FireStorm",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/FireStorm.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "爆裂火焰",
+    "zh_glossary": "火焰风暴",
+    "zh_wiki_terminology": "火焰风暴",
+    "zh_game_display_db_names": "爆裂火焰",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 43,
+    "magic_enum": "LightningWave",
+    "enum_value": 221,
+    "db_name": "Lightning Wave",
+    "db_icon": 46,
+    "ei_id_icon_div2_plus1": 24,
+    "ei_id_in_magic_exp": true,
+    "site_id": 43,
+    "site_name": "Lightning Wave",
+    "site_type": "LightningWave",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/LightningWave.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "地狱雷光",
+    "zh_glossary": "雷电波",
+    "zh_wiki_terminology": "雷电风暴",
+    "zh_game_display_db_names": "地狱雷光",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 44,
+    "magic_enum": "IceStorm",
+    "enum_value": 222,
+    "db_name": "Ice Storm",
+    "db_icon": 64,
+    "ei_id_icon_div2_plus1": 33,
+    "ei_id_in_magic_exp": true,
+    "site_id": 44,
+    "site_name": "Ice Storm",
+    "site_type": "IceStorm",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/IceStorm.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "冰咆哮",
+    "zh_glossary": "寒冰风暴",
+    "zh_wiki_terminology": "冰风暴",
+    "zh_game_display_db_names": "冰咆哮",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 45,
+    "magic_enum": "DragonTornado",
+    "enum_value": 223,
+    "db_name": "Dragon Tornado",
+    "db_icon": 142,
+    "ei_id_icon_div2_plus1": 72,
+    "ei_id_in_magic_exp": true,
+    "site_id": 45,
+    "site_name": "Dragon Tornado",
+    "site_type": "DragonTornado",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/DragonTornado.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "龙卷风",
+    "zh_glossary": "龙卷风暴",
+    "zh_wiki_terminology": "神龙风暴",
+    "zh_game_display_db_names": "龙卷风",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 49,
+    "magic_enum": "Renounce",
+    "enum_value": 227,
+    "db_name": "Renounce",
+    "db_icon": 222,
+    "ei_id_icon_div2_plus1": 112,
+    "ei_id_in_magic_exp": false,
+    "site_id": 49,
+    "site_name": "Renounce",
+    "site_type": "Renounce",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/Renounce.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "舍身",
+    "zh_wiki_terminology": "迷魂咒",
+    "zh_game_display_db_names": "凝血离魂",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 59,
+    "magic_enum": "Heal",
+    "enum_value": 300,
+    "db_name": "Heal",
+    "db_icon": 2,
+    "ei_id_icon_div2_plus1": 2,
+    "ei_id_in_magic_exp": true,
+    "site_id": 59,
+    "site_name": "Heal",
+    "site_type": "Heal",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Heal.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "治愈术",
+    "zh_glossary": "治愈术",
+    "zh_wiki_terminology": "治愈术",
+    "zh_game_display_db_names": "治愈术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 60,
+    "magic_enum": "SpiritSword",
+    "enum_value": 301,
+    "db_name": "Spirit Sword",
+    "db_icon": 6,
+    "ei_id_icon_div2_plus1": 4,
+    "ei_id_in_magic_exp": true,
+    "site_id": 60,
+    "site_name": "Spirit Sword",
+    "site_type": "SpiritSword",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/SpiritSword.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "精神力战法",
+    "zh_glossary": "灵剑术",
+    "zh_wiki_terminology": "精神力战法",
+    "zh_game_display_db_names": "精神力战法",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 61,
+    "magic_enum": "PoisonDust",
+    "enum_value": 302,
+    "db_name": "Poison Dust",
+    "db_icon": 10,
+    "ei_id_icon_div2_plus1": 6,
+    "ei_id_in_magic_exp": true,
+    "site_id": 61,
+    "site_name": "Poison Dust",
+    "site_type": "PoisonDust",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/PoisonDust.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "施毒术",
+    "zh_glossary": "施毒术",
+    "zh_wiki_terminology": "施毒术",
+    "zh_game_display_db_names": "施毒术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 175,
+    "magic_enum": "LightningBeam",
+    "enum_value": 213,
+    "db_name": "LightningBeam",
+    "db_icon": 18,
+    "ei_id_icon_div2_plus1": 10,
+    "ei_id_in_magic_exp": true,
+    "site_id": 35,
+    "site_name": "Lightning Beam",
+    "site_type": "LightningBeam",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/LightningBeam.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "疾光电影",
+    "zh_glossary": "雷电光柱",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "疾光电影",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 176,
+    "magic_enum": "ExplosiveTalisman",
+    "enum_value": 303,
+    "db_name": "ExplosiveTalisman",
+    "db_icon": 24,
+    "ei_id_icon_div2_plus1": 13,
+    "ei_id_in_magic_exp": true,
+    "site_id": 62,
+    "site_name": "Explosive Talisman",
+    "site_type": "ExplosiveTalisman",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/ExplosiveTalisman.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "灵魂火符",
+    "zh_glossary": "灵魂火符",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "灵魂火符",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 177,
+    "magic_enum": "EvilSlayer",
+    "enum_value": 304,
+    "db_name": "EvilSlayer",
+    "db_icon": 72,
+    "ei_id_icon_div2_plus1": 37,
+    "ei_id_in_magic_exp": true,
+    "site_id": 63,
+    "site_name": "Evil Slayer",
+    "site_type": "EvilSlayer",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/EvilSlayer.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "月魂断玉",
+    "zh_glossary": "召唤骷髅",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "月魂断玉",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 178,
+    "magic_enum": "SummonSkeleton",
+    "enum_value": 332,
+    "db_name": "SummonSkeleton",
+    "db_icon": 32,
+    "ei_id_icon_div2_plus1": 17,
+    "ei_id_in_magic_exp": true,
+    "site_id": 130,
+    "site_name": "Summon Skeleton",
+    "site_type": "SummonSkeleton",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/SummonSkeleton.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "召唤骷髅",
+    "zh_glossary": "召唤骷髅",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "召唤骷髅",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 179,
+    "magic_enum": "Invisibility",
+    "enum_value": 305,
+    "db_name": "Invisibility",
+    "db_icon": 34,
+    "ei_id_icon_div2_plus1": 18,
+    "ei_id_in_magic_exp": true,
+    "site_id": 64,
+    "site_name": "Invisibility",
+    "site_type": "Invisibility",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Invisibility.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "隐身术",
+    "zh_glossary": "隐身术",
+    "zh_wiki_terminology": "隐身术",
+    "zh_game_display_db_names": "隐身术",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 180,
+    "magic_enum": "MagicResistance",
+    "enum_value": 306,
+    "db_name": "MagicResistance",
+    "db_icon": 26,
+    "ei_id_icon_div2_plus1": 14,
+    "ei_id_in_magic_exp": true,
+    "site_id": 65,
+    "site_name": "Magic Resistance",
+    "site_type": "MagicResistance",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/MagicResistance.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "幽灵盾",
+    "zh_glossary": "魔法抵抗",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "幽灵盾",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 181,
+    "magic_enum": "MassInvisibility",
+    "enum_value": 307,
+    "db_name": "MassInvisibility",
+    "db_icon": 36,
+    "ei_id_icon_div2_plus1": 19,
+    "ei_id_in_magic_exp": true,
+    "site_id": 66,
+    "site_name": "Mass Invisibility",
+    "site_type": "MassInvisibility",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/MassInvisibility.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "集体隐身术",
+    "zh_glossary": "群体隐身",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "集体隐身术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 182,
+    "magic_enum": "GreaterEvilSlayer",
+    "enum_value": 308,
+    "db_name": "GreaterEvilSlayer",
+    "db_icon": 74,
+    "ei_id_icon_div2_plus1": 38,
+    "ei_id_in_magic_exp": true,
+    "site_id": 67,
+    "site_name": "Greater Evil Slayer",
+    "site_type": "GreaterEvilSlayer",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/GreaterEvilSlayer.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "月魂灵波",
+    "zh_glossary": "强召唤骷髅",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "月魂灵波",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 183,
+    "magic_enum": "Resilience",
+    "enum_value": 309,
+    "db_name": "Resilience",
+    "db_icon": 28,
+    "ei_id_icon_div2_plus1": 15,
+    "ei_id_in_magic_exp": true,
+    "site_id": 68,
+    "site_name": "Resilience",
+    "site_type": "Resilience",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Resilience.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "神圣战甲术",
+    "zh_glossary": "坚韧",
+    "zh_wiki_terminology": "护体术",
+    "zh_game_display_db_names": "神圣战甲术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 184,
+    "magic_enum": "TrapOctagon",
+    "enum_value": 310,
+    "db_name": "TrapOctagon",
+    "db_icon": 30,
+    "ei_id_icon_div2_plus1": 16,
+    "ei_id_in_magic_exp": true,
+    "site_id": 69,
+    "site_name": "Trap Octagon",
+    "site_type": "TrapOctagon",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/TrapOctagon.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "困魔咒",
+    "zh_glossary": "困魔咒",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "困魔咒",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 185,
+    "magic_enum": "CombatKick",
+    "enum_value": 311,
+    "db_name": "CombatKick",
+    "db_icon": 70,
+    "ei_id_icon_div2_plus1": 36,
+    "ei_id_in_magic_exp": true,
+    "site_id": 70,
+    "site_name": "Combat Kick",
+    "site_type": "CombatKick",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/CombatKick.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "空拳刀法",
+    "zh_glossary": "气功波",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "空拳刀法",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 186,
+    "magic_enum": "SummonShinsu",
+    "enum_value": 333,
+    "db_name": "SummonShinsu",
+    "db_icon": 58,
+    "ei_id_icon_div2_plus1": 30,
+    "ei_id_in_magic_exp": true,
+    "site_id": 133,
+    "site_name": "Summon Shinsu",
+    "site_type": "SummonShinsu",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/SummonShinsu.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "召唤神兽",
+    "zh_glossary": "召唤神兽",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "召唤神兽",
+    "zh_status": "一致"
+   },
+   {
+    "db_index": 187,
+    "magic_enum": "MassHeal",
+    "enum_value": 313,
+    "db_name": "MassHeal",
+    "db_icon": 56,
+    "ei_id_icon_div2_plus1": 29,
+    "ei_id_in_magic_exp": true,
+    "site_id": 72,
+    "site_name": "Mass Heal",
+    "site_type": "MassHeal",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/MassHeal.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "群体治愈术",
+    "zh_glossary": "群体治愈",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "群体治愈术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 188,
+    "magic_enum": "SummonJinSkeleton",
+    "enum_value": 334,
+    "db_name": "SummonJinSkeleton",
+    "db_icon": 208,
+    "ei_id_icon_div2_plus1": 105,
+    "ei_id_in_magic_exp": true,
+    "site_id": 132,
+    "site_name": "Summon Jin Skeleton",
+    "site_type": "SummonJinSkeleton",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/SummonJinSkeleton.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "超强召唤骷髅",
+    "zh_glossary": "召唤金骷髅",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "超强召唤骷髅",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 189,
+    "magic_enum": "BloodLust",
+    "enum_value": 314,
+    "db_name": "BloodLust",
+    "db_icon": 186,
+    "ei_id_icon_div2_plus1": 94,
+    "ei_id_in_magic_exp": true,
+    "site_id": 73,
+    "site_name": "Blood Lust",
+    "site_type": "BloodLust",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/BloodLust.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "猛虎强势",
+    "zh_glossary": "嗜血术",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "猛虎强势",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 190,
+    "magic_enum": "Resurrection",
+    "enum_value": 315,
+    "db_name": "Resurrection",
+    "db_icon": 152,
+    "ei_id_icon_div2_plus1": 77,
+    "ei_id_in_magic_exp": true,
+    "site_id": 74,
+    "site_name": "Resurrection",
+    "site_type": "Resurrection",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Resurrection.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "回生术",
+    "zh_glossary": "复活术",
+    "zh_wiki_terminology": "复活术",
+    "zh_game_display_db_names": "回生术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 191,
+    "magic_enum": "ScortchedEarth",
+    "enum_value": 212,
+    "db_name": "ScortchedEarth",
+    "db_icon": 16,
+    "ei_id_icon_div2_plus1": 9,
+    "ei_id_in_magic_exp": true,
+    "site_id": 34,
+    "site_name": "Scorched Earth",
+    "site_type": "ScortchedEarth",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/ScortchedEarth.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "地域火",
+    "zh_glossary": null,
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "地狱火",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 192,
+    "magic_enum": "BlowEarth",
+    "enum_value": 215,
+    "db_name": "BlowEarth",
+    "db_icon": 144,
+    "ei_id_icon_div2_plus1": 73,
+    "ei_id_in_magic_exp": true,
+    "site_id": 37,
+    "site_name": "Blow Earth",
+    "site_type": "BlowEarth",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/BlowEarth.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": "风震天",
+    "zh_glossary": "大地崩裂",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "风震天",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 193,
+    "magic_enum": "GreaterFrozenEarth",
+    "enum_value": 224,
+    "db_name": "GreaterFrozenEarth",
+    "db_icon": 114,
+    "ei_id_icon_div2_plus1": 58,
+    "ei_id_in_magic_exp": false,
+    "site_id": 46,
+    "site_name": "Greater Frozen Earth",
+    "site_type": "GreaterFrozenEarth",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/GreaterFrozenEarth.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "强寒冰大地",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "魄冰刺",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 194,
+    "magic_enum": "ThunderStrike",
+    "enum_value": 230,
+    "db_name": "ThunderStrike",
+    "db_icon": 120,
+    "ei_id_icon_div2_plus1": 61,
+    "ei_id_in_magic_exp": false,
+    "site_id": 52,
+    "site_name": "Thunder Storm",
+    "site_type": "ThunderStrike",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/ThunderStrike.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": null,
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "怒神霹雳",
+    "zh_status": "单一源"
+   },
+   {
+    "db_index": 195,
+    "magic_enum": "MeteorShower",
+    "enum_value": 226,
+    "db_name": "MeteorShower",
+    "db_icon": 218,
+    "ei_id_icon_div2_plus1": 110,
+    "ei_id_in_magic_exp": false,
+    "site_id": 48,
+    "site_name": "Meteor Shower",
+    "site_type": "MeteorShower",
+    "site_klass": "法师",
+    "server_impl_file": "ServerLibrary/Models/Magics/Wizard/MeteorShower.cs",
+    "server_impl_folder": "Wizard",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "流星火雨",
+    "zh_wiki_terminology": null,
+    "zh_game_display_db_names": "焰天火雨",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 196,
+    "magic_enum": "Purification",
+    "enum_value": 316,
+    "db_name": "Purification",
+    "db_icon": 138,
+    "ei_id_icon_div2_plus1": 70,
+    "ei_id_in_magic_exp": false,
+    "site_id": 75,
+    "site_name": "Purification",
+    "site_type": "Purification",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Purification.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "净化术",
+    "zh_wiki_terminology": "净化术",
+    "zh_game_display_db_names": "云寂术",
+    "zh_status": "冲突→待人工确认"
+   },
+   {
+    "db_index": 197,
+    "magic_enum": "Transparency",
+    "enum_value": 317,
+    "db_name": "Transparency",
+    "db_icon": 140,
+    "ei_id_icon_div2_plus1": 71,
+    "ei_id_in_magic_exp": false,
+    "site_id": 76,
+    "site_name": "Transparency",
+    "site_type": "Transparency",
+    "site_klass": "道士",
+    "server_impl_file": "ServerLibrary/Models/Magics/Taoist/Transparency.cs",
+    "server_impl_folder": "Taoist",
+    "server_impl_folder_matches_class": false,
+    "zh_magic_exp": null,
+    "zh_glossary": "透明术",
+    "zh_wiki_terminology": "透明术",
+    "zh_game_display_db_names": "妙影无踪",
+    "zh_status": "冲突→待人工确认"
+   }
+  ]
+ },
+ "field_diff": {
+  "total_pairs": 61,
+  "per_field": {
+   "power": {
+    "db_fields": "MinBasePower/MaxBasePower/MinLevelPower/MaxLevelPower",
+    "一致": 53,
+    "不一致": 8,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 18,
+      "name": "Reflect Damage",
+      "verdict": "不一致",
+      "site": [
+       35,
+       35,
+       40,
+       40
+      ],
+      "db": [
+       30,
+       30,
+       90,
+       90
+      ],
+      "site_text": "35-35，每级 +40-40"
+     },
+     {
+      "db_index": 191,
+      "name": "ScortchedEarth",
+      "verdict": "不一致",
+      "site": [
+       12,
+       16,
+       14,
+       18
+      ],
+      "db": [
+       8,
+       12,
+       10,
+       14
+      ],
+      "site_text": "12-16，每级 +14-18"
+     },
+     {
+      "db_index": 192,
+      "name": "BlowEarth",
+      "verdict": "不一致",
+      "site": [
+       12,
+       16,
+       13,
+       17
+      ],
+      "db": [
+       8,
+       12,
+       10,
+       14
+      ],
+      "site_text": "12-16，每级 +13-17"
+     },
+     {
+      "db_index": 193,
+      "name": "GreaterFrozenEarth",
+      "verdict": "不一致",
+      "site": [
+       16,
+       20,
+       16,
+       20
+      ],
+      "db": [
+       15,
+       20,
+       15,
+       20
+      ],
+      "site_text": "16-20，每级 +16-20"
+     },
+     {
+      "db_index": 194,
+      "name": "ThunderStrike",
+      "verdict": "不一致",
+      "site": [
+       14,
+       18,
+       14,
+       18
+      ],
+      "db": [
+       18,
+       24,
+       16,
+       22
+      ],
+      "site_text": "14-18，每级 +14-18"
+     },
+     {
+      "db_index": 195,
+      "name": "MeteorShower",
+      "verdict": "不一致",
+      "site": [
+       14,
+       22,
+       32,
+       40
+      ],
+      "db": [
+       25,
+       35,
+       20,
+       30
+      ],
+      "site_text": "14-22，每级 +32-40"
+     },
+     {
+      "db_index": 196,
+      "name": "Purification",
+      "verdict": "不一致",
+      "site": [
+       10,
+       20,
+       15,
+       30
+      ],
+      "db": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "site_text": "10-20，每级 +15-30"
+     },
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": [
+       5,
+       10,
+       5,
+       15
+      ],
+      "db": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "site_text": "5-10，每级 +5-15"
+     }
+    ]
+   },
+   "cost": {
+    "db_fields": "BaseCost/LevelCost",
+    "一致": 53,
+    "不一致": 8,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 18,
+      "name": "Reflect Damage",
+      "verdict": "不一致",
+      "site": [
+       10,
+       10
+      ],
+      "db": [
+       50,
+       100
+      ],
+      "site_text": "10，每级 +10"
+     },
+     {
+      "db_index": 191,
+      "name": "ScortchedEarth",
+      "verdict": "不一致",
+      "site": [
+       15,
+       11
+      ],
+      "db": [
+       10,
+       10
+      ],
+      "site_text": "15，每级 +11"
+     },
+     {
+      "db_index": 192,
+      "name": "BlowEarth",
+      "verdict": "不一致",
+      "site": [
+       15,
+       13
+      ],
+      "db": [
+       10,
+       10
+      ],
+      "site_text": "15，每级 +13"
+     },
+     {
+      "db_index": 193,
+      "name": "GreaterFrozenEarth",
+      "verdict": "不一致",
+      "site": [
+       20,
+       20
+      ],
+      "db": [
+       25,
+       20
+      ],
+      "site_text": "20，每级 +20"
+     },
+     {
+      "db_index": 194,
+      "name": "ThunderStrike",
+      "verdict": "不一致",
+      "site": [
+       30,
+       70
+      ],
+      "db": [
+       30,
+       25
+      ],
+      "site_text": "30，每级 +70"
+     },
+     {
+      "db_index": 195,
+      "name": "MeteorShower",
+      "verdict": "不一致",
+      "site": [
+       40,
+       38
+      ],
+      "db": [
+       45,
+       35
+      ],
+      "site_text": "40，每级 +38"
+     },
+     {
+      "db_index": 196,
+      "name": "Purification",
+      "verdict": "不一致",
+      "site": [
+       10,
+       20
+      ],
+      "db": [
+       20,
+       10
+      ],
+      "site_text": "10，每级 +20"
+     },
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": [
+       80,
+       120
+      ],
+      "db": [
+       30,
+       20
+      ],
+      "site_text": "80，每级 +120"
+     }
+    ]
+   },
+   "delay": {
+    "db_fields": "Delay",
+    "一致": 60,
+    "不一致": 1,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": 5000,
+      "db": 0,
+      "site_text": "5000ms"
+     }
+    ]
+   },
+   "levels": {
+    "db_fields": "NeedLevel1/2/3",
+    "一致": 56,
+    "不一致": 5,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 18,
+      "name": "Reflect Damage",
+      "verdict": "不一致",
+      "site": [
+       53,
+       58,
+       63
+      ],
+      "db": [
+       48,
+       51,
+       54
+      ],
+      "site_text": "53 / 58 / 63 级"
+     },
+     {
+      "db_index": 194,
+      "name": "ThunderStrike",
+      "verdict": "不一致",
+      "site": [
+       54,
+       59,
+       64
+      ],
+      "db": [
+       38,
+       41,
+       44
+      ],
+      "site_text": "54 / 59 / 64 级"
+     },
+     {
+      "db_index": 195,
+      "name": "MeteorShower",
+      "verdict": "不一致",
+      "site": [
+       43,
+       45,
+       47
+      ],
+      "db": [
+       43,
+       46,
+       49
+      ],
+      "site_text": "43 / 45 / 47 级"
+     },
+     {
+      "db_index": 196,
+      "name": "Purification",
+      "verdict": "不一致",
+      "site": [
+       38,
+       41,
+       44
+      ],
+      "db": [
+       38,
+       40,
+       42
+      ],
+      "site_text": "38 / 41 / 44 级"
+     },
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": [
+       43,
+       45,
+       47
+      ],
+      "db": [
+       43,
+       46,
+       49
+      ],
+      "site_text": "43 / 45 / 47 级"
+     }
+    ]
+   },
+   "exp": {
+    "db_fields": "Experience1/2/3",
+    "一致": 53,
+    "不一致": 8,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 18,
+      "name": "Reflect Damage",
+      "verdict": "不一致",
+      "site": [
+       10000,
+       18000,
+       32000
+      ],
+      "db": [
+       10000,
+       15000,
+       30000
+      ],
+      "site_text": "10000 / 18000 / 32000"
+     },
+     {
+      "db_index": 176,
+      "name": "ExplosiveTalisman",
+      "verdict": "不一致",
+      "site": [
+       200,
+       300,
+       400
+      ],
+      "db": [
+       300,
+       400,
+       500
+      ],
+      "site_text": "200 / 300 / 400"
+     },
+     {
+      "db_index": 187,
+      "name": "MassHeal",
+      "verdict": "不一致",
+      "site": [
+       1000,
+       1100,
+       1200
+      ],
+      "db": [
+       1000,
+       1200,
+       1400
+      ],
+      "site_text": "1000 / 1100 / 1200"
+     },
+     {
+      "db_index": 193,
+      "name": "GreaterFrozenEarth",
+      "verdict": "不一致",
+      "site": [
+       1000,
+       1500,
+       3000
+      ],
+      "db": [
+       2000,
+       3000,
+       6000
+      ],
+      "site_text": "1000 / 1500 / 3000"
+     },
+     {
+      "db_index": 194,
+      "name": "ThunderStrike",
+      "verdict": "不一致",
+      "site": [
+       15000,
+       20000,
+       30000
+      ],
+      "db": [
+       2000,
+       3000,
+       6000
+      ],
+      "site_text": "15000 / 20000 / 30000"
+     },
+     {
+      "db_index": 195,
+      "name": "MeteorShower",
+      "verdict": "不一致",
+      "site": [
+       5000,
+       7500,
+       15000
+      ],
+      "db": [
+       4000,
+       6000,
+       12000
+      ],
+      "site_text": "5000 / 7500 / 15000"
+     },
+     {
+      "db_index": 196,
+      "name": "Purification",
+      "verdict": "不一致",
+      "site": [
+       1000,
+       1500,
+       3000
+      ],
+      "db": [
+       2000,
+       3000,
+       6000
+      ],
+      "site_text": "1000 / 1500 / 3000"
+     },
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": [
+       5000,
+       7500,
+       15000
+      ],
+      "db": [
+       4000,
+       6000,
+       12000
+      ],
+      "site_text": "5000 / 7500 / 15000"
+     }
+    ]
+   },
+   "class": {
+    "db_fields": "RequiredClass",
+    "一致": 60,
+    "不一致": 1,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 18,
+      "name": "Reflect Damage",
+      "verdict": "不一致",
+      "site": "Warrior",
+      "db": "Taoist",
+      "site_text": null
+     }
+    ]
+   },
+   "icon": {
+    "db_fields": "Icon",
+    "一致": 56,
+    "不一致": 5,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 193,
+      "name": "GreaterFrozenEarth",
+      "verdict": "不一致",
+      "site": 218,
+      "db": 114,
+      "site_text": "218"
+     },
+     {
+      "db_index": 194,
+      "name": "ThunderStrike",
+      "verdict": "不一致",
+      "site": 266,
+      "db": 120,
+      "site_text": "266"
+     },
+     {
+      "db_index": 195,
+      "name": "MeteorShower",
+      "verdict": "不一致",
+      "site": 224,
+      "db": 218,
+      "site_text": "224"
+     },
+     {
+      "db_index": 196,
+      "name": "Purification",
+      "verdict": "不一致",
+      "site": 238,
+      "db": 138,
+      "site_text": "238"
+     },
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": 240,
+      "db": 140,
+      "site_text": "240"
+     }
+    ]
+   },
+   "school": {
+    "db_fields": "School(与网站 school 文本)",
+    "一致": 60,
+    "不一致": 1,
+    "网站无": 0,
+    "库无": 0,
+    "样例": [
+     {
+      "db_index": 197,
+      "name": "Transparency",
+      "verdict": "不一致",
+      "site": "Dark",
+      "db": "Phantom",
+      "site_text": "Dark"
+     }
+    ]
+   },
+   "prop": {
+    "db_fields": "Property(与网站 prop 文本)",
+    "一致": 61,
+    "不一致": 0,
+    "网站无": 0,
+    "库无": 0,
+    "样例": []
+   }
+  },
+  "mismatch_list": [
+   {
+    "field": "power",
+    "db_index": 18,
+    "name": "Reflect Damage",
+    "site": [
+     35,
+     35,
+     40,
+     40
+    ],
+    "db": [
+     30,
+     30,
+     90,
+     90
+    ],
+    "site_text": "35-35，每级 +40-40"
+   },
+   {
+    "field": "power",
+    "db_index": 191,
+    "name": "ScortchedEarth",
+    "site": [
+     12,
+     16,
+     14,
+     18
+    ],
+    "db": [
+     8,
+     12,
+     10,
+     14
+    ],
+    "site_text": "12-16，每级 +14-18"
+   },
+   {
+    "field": "power",
+    "db_index": 192,
+    "name": "BlowEarth",
+    "site": [
+     12,
+     16,
+     13,
+     17
+    ],
+    "db": [
+     8,
+     12,
+     10,
+     14
+    ],
+    "site_text": "12-16，每级 +13-17"
+   },
+   {
+    "field": "power",
+    "db_index": 193,
+    "name": "GreaterFrozenEarth",
+    "site": [
+     16,
+     20,
+     16,
+     20
+    ],
+    "db": [
+     15,
+     20,
+     15,
+     20
+    ],
+    "site_text": "16-20，每级 +16-20"
+   },
+   {
+    "field": "power",
+    "db_index": 194,
+    "name": "ThunderStrike",
+    "site": [
+     14,
+     18,
+     14,
+     18
+    ],
+    "db": [
+     18,
+     24,
+     16,
+     22
+    ],
+    "site_text": "14-18，每级 +14-18"
+   },
+   {
+    "field": "power",
+    "db_index": 195,
+    "name": "MeteorShower",
+    "site": [
+     14,
+     22,
+     32,
+     40
+    ],
+    "db": [
+     25,
+     35,
+     20,
+     30
+    ],
+    "site_text": "14-22，每级 +32-40"
+   },
+   {
+    "field": "power",
+    "db_index": 196,
+    "name": "Purification",
+    "site": [
+     10,
+     20,
+     15,
+     30
+    ],
+    "db": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "site_text": "10-20，每级 +15-30"
+   },
+   {
+    "field": "power",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": [
+     5,
+     10,
+     5,
+     15
+    ],
+    "db": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "site_text": "5-10，每级 +5-15"
+   },
+   {
+    "field": "cost",
+    "db_index": 18,
+    "name": "Reflect Damage",
+    "site": [
+     10,
+     10
+    ],
+    "db": [
+     50,
+     100
+    ],
+    "site_text": "10，每级 +10"
+   },
+   {
+    "field": "cost",
+    "db_index": 191,
+    "name": "ScortchedEarth",
+    "site": [
+     15,
+     11
+    ],
+    "db": [
+     10,
+     10
+    ],
+    "site_text": "15，每级 +11"
+   },
+   {
+    "field": "cost",
+    "db_index": 192,
+    "name": "BlowEarth",
+    "site": [
+     15,
+     13
+    ],
+    "db": [
+     10,
+     10
+    ],
+    "site_text": "15，每级 +13"
+   },
+   {
+    "field": "cost",
+    "db_index": 193,
+    "name": "GreaterFrozenEarth",
+    "site": [
+     20,
+     20
+    ],
+    "db": [
+     25,
+     20
+    ],
+    "site_text": "20，每级 +20"
+   },
+   {
+    "field": "cost",
+    "db_index": 194,
+    "name": "ThunderStrike",
+    "site": [
+     30,
+     70
+    ],
+    "db": [
+     30,
+     25
+    ],
+    "site_text": "30，每级 +70"
+   },
+   {
+    "field": "cost",
+    "db_index": 195,
+    "name": "MeteorShower",
+    "site": [
+     40,
+     38
+    ],
+    "db": [
+     45,
+     35
+    ],
+    "site_text": "40，每级 +38"
+   },
+   {
+    "field": "cost",
+    "db_index": 196,
+    "name": "Purification",
+    "site": [
+     10,
+     20
+    ],
+    "db": [
+     20,
+     10
+    ],
+    "site_text": "10，每级 +20"
+   },
+   {
+    "field": "cost",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": [
+     80,
+     120
+    ],
+    "db": [
+     30,
+     20
+    ],
+    "site_text": "80，每级 +120"
+   },
+   {
+    "field": "delay",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": 5000,
+    "db": 0,
+    "site_text": "5000ms"
+   },
+   {
+    "field": "levels",
+    "db_index": 18,
+    "name": "Reflect Damage",
+    "site": [
+     53,
+     58,
+     63
+    ],
+    "db": [
+     48,
+     51,
+     54
+    ],
+    "site_text": "53 / 58 / 63 级"
+   },
+   {
+    "field": "levels",
+    "db_index": 194,
+    "name": "ThunderStrike",
+    "site": [
+     54,
+     59,
+     64
+    ],
+    "db": [
+     38,
+     41,
+     44
+    ],
+    "site_text": "54 / 59 / 64 级"
+   },
+   {
+    "field": "levels",
+    "db_index": 195,
+    "name": "MeteorShower",
+    "site": [
+     43,
+     45,
+     47
+    ],
+    "db": [
+     43,
+     46,
+     49
+    ],
+    "site_text": "43 / 45 / 47 级"
+   },
+   {
+    "field": "levels",
+    "db_index": 196,
+    "name": "Purification",
+    "site": [
+     38,
+     41,
+     44
+    ],
+    "db": [
+     38,
+     40,
+     42
+    ],
+    "site_text": "38 / 41 / 44 级"
+   },
+   {
+    "field": "levels",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": [
+     43,
+     45,
+     47
+    ],
+    "db": [
+     43,
+     46,
+     49
+    ],
+    "site_text": "43 / 45 / 47 级"
+   },
+   {
+    "field": "exp",
+    "db_index": 18,
+    "name": "Reflect Damage",
+    "site": [
+     10000,
+     18000,
+     32000
+    ],
+    "db": [
+     10000,
+     15000,
+     30000
+    ],
+    "site_text": "10000 / 18000 / 32000"
+   },
+   {
+    "field": "exp",
+    "db_index": 176,
+    "name": "ExplosiveTalisman",
+    "site": [
+     200,
+     300,
+     400
+    ],
+    "db": [
+     300,
+     400,
+     500
+    ],
+    "site_text": "200 / 300 / 400"
+   },
+   {
+    "field": "exp",
+    "db_index": 187,
+    "name": "MassHeal",
+    "site": [
+     1000,
+     1100,
+     1200
+    ],
+    "db": [
+     1000,
+     1200,
+     1400
+    ],
+    "site_text": "1000 / 1100 / 1200"
+   },
+   {
+    "field": "exp",
+    "db_index": 193,
+    "name": "GreaterFrozenEarth",
+    "site": [
+     1000,
+     1500,
+     3000
+    ],
+    "db": [
+     2000,
+     3000,
+     6000
+    ],
+    "site_text": "1000 / 1500 / 3000"
+   },
+   {
+    "field": "exp",
+    "db_index": 194,
+    "name": "ThunderStrike",
+    "site": [
+     15000,
+     20000,
+     30000
+    ],
+    "db": [
+     2000,
+     3000,
+     6000
+    ],
+    "site_text": "15000 / 20000 / 30000"
+   },
+   {
+    "field": "exp",
+    "db_index": 195,
+    "name": "MeteorShower",
+    "site": [
+     5000,
+     7500,
+     15000
+    ],
+    "db": [
+     4000,
+     6000,
+     12000
+    ],
+    "site_text": "5000 / 7500 / 15000"
+   },
+   {
+    "field": "exp",
+    "db_index": 196,
+    "name": "Purification",
+    "site": [
+     1000,
+     1500,
+     3000
+    ],
+    "db": [
+     2000,
+     3000,
+     6000
+    ],
+    "site_text": "1000 / 1500 / 3000"
+   },
+   {
+    "field": "exp",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": [
+     5000,
+     7500,
+     15000
+    ],
+    "db": [
+     4000,
+     6000,
+     12000
+    ],
+    "site_text": "5000 / 7500 / 15000"
+   },
+   {
+    "field": "class",
+    "db_index": 18,
+    "name": "Reflect Damage",
+    "site": "Warrior",
+    "db": "Taoist",
+    "site_text": null
+   },
+   {
+    "field": "icon",
+    "db_index": 193,
+    "name": "GreaterFrozenEarth",
+    "site": 218,
+    "db": 114,
+    "site_text": "218"
+   },
+   {
+    "field": "icon",
+    "db_index": 194,
+    "name": "ThunderStrike",
+    "site": 266,
+    "db": 120,
+    "site_text": "266"
+   },
+   {
+    "field": "icon",
+    "db_index": 195,
+    "name": "MeteorShower",
+    "site": 224,
+    "db": 218,
+    "site_text": "224"
+   },
+   {
+    "field": "icon",
+    "db_index": 196,
+    "name": "Purification",
+    "site": 238,
+    "db": 138,
+    "site_text": "238"
+   },
+   {
+    "field": "icon",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": 240,
+    "db": 140,
+    "site_text": "240"
+   },
+   {
+    "field": "school",
+    "db_index": 197,
+    "name": "Transparency",
+    "site": "Dark",
+    "db": "Phantom",
+    "site_text": "Dark"
+   }
+  ]
+ },
+ "baseline_snapshot": {
+  "source": "/Users/tetsuya/Development/Mir3-Research/docs/research/ei-ui-layout/magic-icon-metadata-2026-09-25.json",
+  "md5": "8acfb36261334f8d77a6fa8c33f5b51b",
+  "db_source_in_artifact": "/home/tetsuya/development/zircon/Debug/Client/Data/System.db",
+  "evidence_level": "current-client-db + primary-resource-frame-metadata",
+  "record_count": 174,
+  "website_zircon_types": 174,
+  "name_set_symmetric_difference": 0,
+  "old_records_absent_from_current_db": 113,
+  "field_deltas_vs_current": [
+   {
+    "magic": "ReflectDamage",
+    "field": "class",
+    "old": "Warrior",
+    "current": "Taoist",
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "ReflectDamage",
+    "field": "need_level1",
+    "old": 53,
+    "current": 48,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "GreaterFrozenEarth",
+    "field": "icon",
+    "old": 218,
+    "current": 114,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "ThunderStrike",
+    "field": "icon",
+    "old": 266,
+    "current": 120,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "ThunderStrike",
+    "field": "need_level1",
+    "old": 54,
+    "current": 38,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "MeteorShower",
+    "field": "icon",
+    "old": 224,
+    "current": 218,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "Purification",
+    "field": "icon",
+    "old": 238,
+    "current": 138,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "Transparency",
+    "field": "icon",
+    "old": 240,
+    "current": 140,
+    "verdict": "相对旧库回退/变更"
+   },
+   {
+    "magic": "Transparency",
+    "field": "school",
+    "old": "Dark",
+    "current": "Phantom",
+    "verdict": "相对旧库回退/变更"
+   }
+  ],
+  "field_deltas_by_field": {
+   "class": 1,
+   "need_level1": 2,
+   "icon": 5,
+   "school": 1
+  }
+ },
+ "client_usability": {
+  "icon_library": {
+   "path": "/Users/tetsuya/mir2ei/Data/MIcon.Zl",
+   "status": "checked",
+   "container": "ZLv0",
+   "declared_count": 1773,
+   "decodable_frames": 224,
+   "frame_min": 0,
+   "frame_max": 1010,
+   "db_icon_missing_count": 4,
+   "db_icon_missing": [
+    {
+     "db_index": 193,
+     "magic": "GreaterFrozenEarth",
+     "icon": 114,
+     "icon_div2_plus1": 58,
+     "bound_icon_frame_1000_plus": 1057,
+     "bound_frame_present": false
+    },
+    {
+     "db_index": 194,
+     "magic": "ThunderStrike",
+     "icon": 120,
+     "icon_div2_plus1": 61,
+     "bound_icon_frame_1000_plus": 1060,
+     "bound_frame_present": false
+    },
+    {
+     "db_index": 196,
+     "magic": "Purification",
+     "icon": 138,
+     "icon_div2_plus1": 70,
+     "bound_icon_frame_1000_plus": 1069,
+     "bound_frame_present": false
+    },
+    {
+     "db_index": 197,
+     "magic": "Transparency",
+     "icon": 140,
+     "icon_div2_plus1": 71,
+     "bound_icon_frame_1000_plus": 1070,
+     "bound_frame_present": false
+    }
+   ],
+   "website_zircon_icon_missing_count": 0,
+   "website_zircon_icon_missing": [],
+   "suggestion_from_website": [
+    {
+     "db_index": 193,
+     "magic": "GreaterFrozenEarth",
+     "db_icon": 114,
+     "website_icon": 218,
+     "website_icon_present_in_lib": true
+    },
+    {
+     "db_index": 195,
+     "magic": "MeteorShower",
+     "db_icon": 218,
+     "website_icon": 224,
+     "website_icon_present_in_lib": true
+    },
+    {
+     "db_index": 194,
+     "magic": "ThunderStrike",
+     "db_icon": 120,
+     "website_icon": 266,
+     "website_icon_present_in_lib": true
+    },
+    {
+     "db_index": 196,
+     "magic": "Purification",
+     "db_icon": 138,
+     "website_icon": 238,
+     "website_icon_present_in_lib": true
+    },
+    {
+     "db_index": 197,
+     "magic": "Transparency",
+     "db_icon": 140,
+     "website_icon": 240,
+     "website_icon_present_in_lib": true
+    }
+   ]
+  },
+  "skill_window_school_tabs": {
+   "evidence": "GodotClient/Controls/MagicDialog.cs:39 LegacySchoolOrder + LegacyUiSkin.cs:123 ApplyLegacyEiLayout（默认 UI = legacy，见 AutoLoginArgs.cs:279 LegacyUi => !Has(\"--zircon-ui\")）",
+   "legacy_tabs": [
+    "Fire",
+    "Ice",
+    "Lightning",
+    "Wind",
+    "Holy",
+    "Dark",
+    "Phantom",
+    "Physical"
+   ],
+   "tab_default": "Fire",
+   "visible_in_legacy_tabs": 47,
+   "hidden_in_legacy_tabs": 14,
+   "hidden_by_school": {
+    "Passive": 2,
+    "Toggle": 3,
+    "Active": 9
+   },
+   "hidden": [
+    {
+     "db_index": 1,
+     "magic": "Swordsmanship",
+     "school": "Passive",
+     "klass": "战士",
+     "site_name": "Swordsmanship"
+    },
+    {
+     "db_index": 3,
+     "magic": "Slaying",
+     "school": "Passive",
+     "klass": "战士",
+     "site_name": "Slaying"
+    },
+    {
+     "db_index": 4,
+     "magic": "Thrusting",
+     "school": "Toggle",
+     "klass": "战士",
+     "site_name": "Thrusting"
+    },
+    {
+     "db_index": 5,
+     "magic": "HalfMoon",
+     "school": "Toggle",
+     "klass": "战士",
+     "site_name": "Half Moon"
+    },
+    {
+     "db_index": 6,
+     "magic": "ShoulderDash",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Shoulder Dash"
+    },
+    {
+     "db_index": 7,
+     "magic": "FlamingSword",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Flaming Sword"
+    },
+    {
+     "db_index": 8,
+     "magic": "DragonRise",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Dragon Rise"
+    },
+    {
+     "db_index": 9,
+     "magic": "BladeStorm",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Blade Storm"
+    },
+    {
+     "db_index": 10,
+     "magic": "DestructiveSurge",
+     "school": "Toggle",
+     "klass": "战士",
+     "site_name": "Destructive Surge"
+    },
+    {
+     "db_index": 11,
+     "magic": "Interchange",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Interchange"
+    },
+    {
+     "db_index": 12,
+     "magic": "Defiance",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Defiance"
+    },
+    {
+     "db_index": 13,
+     "magic": "Beckon",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Beckon"
+    },
+    {
+     "db_index": 14,
+     "magic": "Might",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Might"
+    },
+    {
+     "db_index": 18,
+     "magic": "ReflectDamage",
+     "school": "Active",
+     "klass": "战士",
+     "site_name": "Reflect Damage"
+    }
+   ],
+   "reference_impl": "Client/Scenes/Views/MagicDialog.cs 按 MagicInfo.School 动态建页签（含 Active/Passive/Toggle），故原版客户端无此缺口"
+  },
+  "skill_books": {
+   "count": 61,
+   "image_counter": {
+    "304": 54,
+    "70": 7
+   },
+   "majority_image": 304,
+   "image_not_majority": [
+    {
+     "item_index": 1365,
+     "item_name": "ScortchedEarth",
+     "shape_magic_index": 191,
+     "magic": "ScortchedEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 20,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1366,
+     "item_name": "BlowEarth",
+     "shape_magic_index": 192,
+     "magic": "BlowEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 23,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1367,
+     "item_name": "GreaterFrozenEarth",
+     "shape_magic_index": 193,
+     "magic": "GreaterFrozenEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1368,
+     "item_name": "ThunderStrike",
+     "shape_magic_index": 194,
+     "magic": "ThunderStrike",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1369,
+     "item_name": "MeteorShower",
+     "shape_magic_index": 195,
+     "magic": "MeteorShower",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1370,
+     "item_name": "Purification",
+     "shape_magic_index": 196,
+     "magic": "Purification",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1371,
+     "item_name": "Transparency",
+     "shape_magic_index": 197,
+     "magic": "Transparency",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    }
+   ],
+   "required_amount_ne_needlevel1": [
+    {
+     "item_index": 1282,
+     "item_name": "Defiance",
+     "shape_magic_index": 12,
+     "magic": "Defiance",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 33,
+     "magic_need_level1": 44,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1285,
+     "item_name": "Reflect Damage",
+     "shape_magic_index": 18,
+     "magic": "ReflectDamage",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 53,
+     "magic_need_level1": 48,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1365,
+     "item_name": "ScortchedEarth",
+     "shape_magic_index": 191,
+     "magic": "ScortchedEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 20,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1366,
+     "item_name": "BlowEarth",
+     "shape_magic_index": 192,
+     "magic": "BlowEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 23,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1367,
+     "item_name": "GreaterFrozenEarth",
+     "shape_magic_index": 193,
+     "magic": "GreaterFrozenEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1368,
+     "item_name": "ThunderStrike",
+     "shape_magic_index": 194,
+     "magic": "ThunderStrike",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1369,
+     "item_name": "MeteorShower",
+     "shape_magic_index": 195,
+     "magic": "MeteorShower",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1370,
+     "item_name": "Purification",
+     "shape_magic_index": 196,
+     "magic": "Purification",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1371,
+     "item_name": "Transparency",
+     "shape_magic_index": 197,
+     "magic": "Transparency",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    }
+   ],
+   "unobtainable_no_drop_no_shop_no_quest": [
+    {
+     "item_index": 1280,
+     "item_name": "Destructive Surge",
+     "shape_magic_index": 10,
+     "magic": "DestructiveSurge",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 40,
+     "magic_need_level1": 40,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1281,
+     "item_name": "Interchange",
+     "shape_magic_index": 11,
+     "magic": "Interchange",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 42,
+     "magic_need_level1": 42,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1282,
+     "item_name": "Defiance",
+     "shape_magic_index": 12,
+     "magic": "Defiance",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 33,
+     "magic_need_level1": 44,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1283,
+     "item_name": "Beckon",
+     "shape_magic_index": 13,
+     "magic": "Beckon",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 46,
+     "magic_need_level1": 46,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1284,
+     "item_name": "Might",
+     "shape_magic_index": 14,
+     "magic": "Might",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 48,
+     "magic_need_level1": 48,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1285,
+     "item_name": "Reflect Damage",
+     "shape_magic_index": 18,
+     "magic": "ReflectDamage",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 53,
+     "magic_need_level1": 48,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1288,
+     "item_name": "Ice Bolt",
+     "shape_magic_index": 25,
+     "magic": "IceBolt",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 9,
+     "magic_need_level1": 9,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1289,
+     "item_name": "Gust Blast",
+     "shape_magic_index": 26,
+     "magic": "GustBlast",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 10,
+     "magic_need_level1": 10,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1295,
+     "item_name": "Ice Blades",
+     "shape_magic_index": 32,
+     "magic": "IceBlades",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 17,
+     "magic_need_level1": 17,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1298,
+     "item_name": "Frozen Earth",
+     "shape_magic_index": 36,
+     "magic": "FrozenEarth",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 22,
+     "magic_need_level1": 22,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1300,
+     "item_name": "Expel Undead",
+     "shape_magic_index": 39,
+     "magic": "ExpelUndead",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 26,
+     "magic_need_level1": 26,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1303,
+     "item_name": "Fire Storm",
+     "shape_magic_index": 42,
+     "magic": "FireStorm",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 32,
+     "magic_need_level1": 32,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1304,
+     "item_name": "Lightning Wave",
+     "shape_magic_index": 43,
+     "magic": "LightningWave",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 33,
+     "magic_need_level1": 33,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1306,
+     "item_name": "Dragon Tornado",
+     "shape_magic_index": 45,
+     "magic": "DragonTornado",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 35,
+     "magic_need_level1": 35,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1307,
+     "item_name": "Renounce",
+     "shape_magic_index": 49,
+     "magic": "Renounce",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 46,
+     "magic_need_level1": 46,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1317,
+     "item_name": "Resilience",
+     "shape_magic_index": 183,
+     "magic": "Resilience",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 25,
+     "magic_need_level1": 25,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1318,
+     "item_name": "Trap Octagon",
+     "shape_magic_index": 184,
+     "magic": "TrapOctagon",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 27,
+     "magic_need_level1": 27,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1319,
+     "item_name": "Taoist Combat Kick",
+     "shape_magic_index": 185,
+     "magic": "CombatKick",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 28,
+     "magic_need_level1": 28,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1322,
+     "item_name": "Resurrection",
+     "shape_magic_index": 190,
+     "magic": "Resurrection",
+     "magic_index_exists": true,
+     "image": 304,
+     "image_is_majority": true,
+     "required_type": "Level",
+     "required_amount": 35,
+     "magic_need_level1": 35,
+     "level_matches_need1": true,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1365,
+     "item_name": "ScortchedEarth",
+     "shape_magic_index": 191,
+     "magic": "ScortchedEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 20,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1366,
+     "item_name": "BlowEarth",
+     "shape_magic_index": 192,
+     "magic": "BlowEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 23,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1367,
+     "item_name": "GreaterFrozenEarth",
+     "shape_magic_index": 193,
+     "magic": "GreaterFrozenEarth",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1368,
+     "item_name": "ThunderStrike",
+     "shape_magic_index": 194,
+     "magic": "ThunderStrike",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1369,
+     "item_name": "MeteorShower",
+     "shape_magic_index": 195,
+     "magic": "MeteorShower",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1370,
+     "item_name": "Purification",
+     "shape_magic_index": 196,
+     "magic": "Purification",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 38,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    },
+    {
+     "item_index": 1371,
+     "item_name": "Transparency",
+     "shape_magic_index": 197,
+     "magic": "Transparency",
+     "magic_index_exists": true,
+     "image": 70,
+     "image_is_majority": false,
+     "required_type": "Level",
+     "required_amount": 0,
+     "magic_need_level1": 43,
+     "level_matches_need1": false,
+     "drop_entries": 0,
+     "npc_good_entries": 0,
+     "quest_reward_entries": 0
+    }
+   ],
+   "obtainability_note": "仅检查 DropInfo/NPCGood/QuestReward 三处；宝箱/活动/脚本发放未覆盖",
+   "shape_join_failures": []
+  },
+  "display_names": {
+   "table": "/Users/tetsuya/Development/Zircon/GodotClient/translations/db_names.json",
+   "table_keys": 248,
+   "db_magic_without_display_name": []
+  }
+ },
+ "referential_integrity": {
+  "book_shape_to_magicinfo": {
+   "total": 61,
+   "dangling": []
+  },
+  "magicinfo_magic_in_enum": {
+   "total": 61,
+   "not_in_enum": []
+  },
+  "magicinfo_magic_has_server_impl": {
+   "total": 61,
+   "missing": []
+  },
+  "magic_ring_items": {
+   "count": 0,
+   "note": "ItemEffect=MagicRing 的物品为 0 ⇒ 没有技能处于 ItemRequired 状态（PlayerObject.cs:2360-2376 只在该物品效果下设置 ItemRequired），客户端 MagicDialog.cs:899-905 的 MagicRing 分支当前不会触发"
+  },
+  "magic_ring_dangling_shape": []
+ },
+ "risks": [
+  {
+   "severity": "high",
+   "type": "确认缺陷（回归，独立佐证）",
+   "title": "当前库相对 2026-09-25 旧库快照回退了 9 个字段值（共 9 处差异）",
+   "evidence": "快照 /Users/tetsuya/Development/Mir3-Research/docs/research/ei-ui-layout/magic-icon-metadata-2026-09-25.json（MagicInfoDump --icons；库源=/home/tetsuya/development/zircon/Debug/Client/Data/System.db）；快照 174 条技能名与网站 zircon 集对称差 0；旧库有而当前库没有的技能 113 条。明细：ReflectDamage.class Warrior→Taoist; ReflectDamage.need_level1 53→48; GreaterFrozenEarth.icon 218→114; ThunderStrike.icon 266→120; ThunderStrike.need_level1 54→38; MeteorShower.icon 224→218; Purification.icon 238→138; Transparency.icon 240→140; Transparency.school Dark→Phantom",
+   "fix_target": "System.db MagicInfo（Index 18 / 193–197）"
+  },
+  {
+   "severity": "high",
+   "type": "确认缺陷",
+   "title": "MagicInfo.Icon 指向客户端图库不存在的帧 → 技能图标空白/灰块",
+   "evidence": "MIcon.Zl 可解帧集合内不含 114, 120, 138, 140；技能窗口与快捷栏均 `if (tex != null)` 才绘制（GodotClient/Controls/MagicDialog.cs:1079,1444；MagicBar.cs:207）；且 2026-09-25 旧库快照在同 4 行用的是存在于图库的 218/266/238/240",
+   "fix_target": "System.db MagicInfo.Icon（Index 193/194/195/196/197）",
+   "suggested_value": "取自网站基准且已在图库中存在的帧号（见 client_usability.icon_library.suggestion_from_website）"
+  },
+  {
+   "severity": "high",
+   "type": "确认缺陷（表现层）",
+   "title": "默认（legacy EI）技能窗口只含 8 个元素页签，14 个库内技能不可见",
+   "evidence": "MagicDialog.cs LegacySchoolOrder 只含 Fire/Ice/Lightning/Wind/Holy/Dark/Phantom/Physical；MagicInfo.School 为 Passive/Toggle/Active 的行被过滤掉",
+   "fix_target": "GodotClient/Controls/MagicDialog.cs 页签→School 的映射（显示层），或改数据分类（需决策）",
+   "note": "源码注释已明示此差异为『数据分类差异，不是渲染缺陷』；原版 Client/ 动态建页签无此缺口。"
+  },
+  {
+   "severity": "high",
+   "type": "确认缺陷",
+   "title": "7 本技能书用错物品图标帧（与 54 本主用帧 304 不同）",
+   "evidence": "ItemInfo.Image=[70] 的帧在 StoreItem.Zl/Inventory.Zl 中解出的是『人参』素材，不是书（已渲染核对）；同帧还被消耗品『Ginseng Of Eternity』使用",
+   "fix_target": "System.db ItemInfo.Image（ItemInfo.Index 1365-1371）"
+  },
+  {
+   "severity": "high",
+   "type": "确认缺陷",
+   "title": "1 条 MagicInfo.RequiredClass 与服务端实现目录/网站职业三方不一致",
+   "evidence": "ReflectDamage: 库=Taoist 网站=战士 实现=Warrior（ServerLibrary/Models/Magics/Warrior/ReflectDamage.cs）",
+   "fix_target": "System.db MagicInfo.RequiredClass / ItemInfo.RequiredClass（技能书）"
+  },
+  {
+   "severity": "medium",
+   "type": "确认缺陷（当前不可达）",
+   "title": "9 本技能书 RequiredAmount 与 MagicInfo.NeedLevel1 不一致",
+   "evidence": "学习技能只校验 UserItem.RequiredAmount（PlayerObject.cs:7525-7527），ItemUse 的 Book 分支不查 NeedLevel1（PlayerObject.cs:7324-7405）",
+   "fix_target": "System.db ItemInfo.RequiredAmount"
+  },
+  {
+   "severity": "medium",
+   "type": "确认缺陷",
+   "title": "26 本技能书既无掉落、无 NPC 出售、也无任务奖励 → 对应技能当前无法获得",
+   "evidence": "DropInfo/NPCGood/QuestReward 三处均为 0 条（ItemInfo.Drops 反向链同样为空）；宝箱/活动未覆盖",
+   "fix_target": "DropInfo / NPCGood（或确认这些技能本就不该开放）"
+  },
+  {
+   "severity": "medium",
+   "type": "待人工确认",
+   "title": "当前库比 2026-09-25 旧库少了 113 条 MagicInfo 行（174 → 61）",
+   "evidence": "旧快照 174 条技能名与网站 zircon 集对称差 0，说明 174 那批是真实存在过的库内容，不是网站臆造",
+   "fix_target": "需确认这是有意精简还是导入遗漏；若是遗漏，恢复时用旧快照的 icon/class/level"
+  },
+  {
+   "severity": "low",
+   "type": "待人工确认",
+   "title": "网站基准 ver 的『zircon』标签是基标签，且其技能集等于 2026-09-25 旧库而非当前库",
+   "evidence": "Mir3-Research/Tools/common/ver_tags.py:195-203 对所有非老版技能恒定追加 \"zircon\"；而该 174 条与旧库快照 174 条名称对称差为 0 —— 当前库只有 61 行，两者相差 113 行",
+   "fix_target": "对账口径/文档：引用网站技能数时须注明对应的是哪一版库"
+  },
+  {
+   "severity": "low",
+   "type": "待人工确认",
+   "title": "中文译名四源不一致 38 条（含 wiki/glossary 疑似错挂）",
+   "evidence": "例：wiki terminology 把 Evil Slayer 记为『召唤骷髅』、Greater Evil Slayer 记为『超强召唤骷髅』，而 Magic.exp.txt #37/#38 为『月魂断玉/月魂灵波』，游戏显示表 db_names.json 同 EI —— 错在网站侧，不要按网站改库",
+   "fix_target": "网站数据（terminology/glossary），非 System.db"
+  },
+  {
+   "severity": "info",
+   "type": "已解释（数据分类差异，非缺陷）",
+   "title": "44 条『仅 mud3 老版』与 22 条『枚举有、网站无』条目",
+   "evidence": "44 条 ver 仅 mud3 的老版条目 id 为负、不在 MagicType 枚举内，是 MUD3 老版 dat 独有；22 条枚举条目不属玩家技能表（含 `Unused=438`=_Blank_ 与 Enum.cs 标注 //NOT CODED 的条目）",
+   "fix_target": "无需处理；列出以避免后续把它当缺陷反复排查"
+  }
+ ]
+}

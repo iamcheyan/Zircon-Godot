@@ -14,10 +14,16 @@ public partial class NPCRepairPanel : DXControl
     private readonly List<CellLinkInfo> _links = new();
     private readonly DXItemGrid _grid;
     private readonly DXLabel _cost;
+    private readonly DXLabel _title;
+    private readonly DXLabel _costLabel;
     private readonly DXButton _repair;
     private readonly DXCheckButton _special;
     private readonly DXCheckButton _guildFunds;
     private readonly LegacyWindowFrame _frame;
+    private readonly DXImageControl _legacyTop;
+    private readonly List<DXImageControl> _legacyMidTiles = new();
+    private readonly List<DXButton> _sourceButtons = new();
+    private bool _legacyEiLayout;
     private readonly List<CellLinkInfo> _pendingLinks = new();
     private HashSet<ItemType> _allowedTypes;
 
@@ -33,13 +39,45 @@ public partial class NPCRepairPanel : DXControl
         Size = new Vector2I(404, 292);
         _frame = new LegacyWindowFrame { Size = Size, HasTitle = true, HasFooter = false };
         AddControl(_frame);
-        AddControl(new DXLabel { Text = "修理物品", FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(404, 18), IsControl = false });
+        // legacy 三段式木质框架（默认隐藏；ApplyLegacyEiLayout 时替换掉 _frame 的现代外框）：
+        // F1100 顶段 + F1101 中段平铺，与 NPC 对话框同一套素材。
+        _legacyTop = new DXImageControl
+        {
+            LibraryFile = LibraryFile.GameInter,
+            Index = 1100,
+            FixedSize = true,
+            StretchImage = false,
+            Size = new Vector2I(552, 138),
+            Location = new Vector2I(-64, -59),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddControl(_legacyTop);
+        for (int i = 0; i < 16; i++)
+        {
+            var tile = new DXImageControl
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 1101,
+                FixedSize = true,
+                StretchImage = false,
+                Size = new Vector2I(552, 18),
+                Location = new Vector2I(-64, 128 - 7 + i * 18),
+                Visible = false,
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            _legacyMidTiles.Add(tile);
+            AddControl(tile);
+        }
+        _title = new DXLabel { Text = "修理物品", FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(404, 18), IsControl = false };
+        AddControl(_title);
         _grid = new DXItemGrid { GridSize = new Vector2I(11, 5), Location = new Vector2I(9, 37), GridType = GridType.Repair, ItemGrid = _items, GridPadding = 0, Border = false }; AddControl(_grid);
         foreach (var cell in _grid.Cells)
             cell.LinkChanged += (o) => RebuildLinks();
 
         int bottom = 224;
-        AddControl(new DXLabel { Text = "修理费用：", FontSize = 9, TextColour = Colors.White, Location = new Vector2I(9, bottom), Size = new Vector2I(79, 20), IsControl = false, Border = true, BorderColour = new Color(1f, .75f, .25f) });
+        _costLabel = new DXLabel { Text = "修理费用：", FontSize = 9, TextColour = Colors.White, Location = new Vector2I(9, bottom), Size = new Vector2I(79, 20), IsControl = false, Border = true, BorderColour = new Color(1f, .75f, .25f) };
+        AddControl(_costLabel);
         _cost = new DXLabel { Text = "0", FontSize = 10, TextColour = Colors.White, Location = new Vector2I(88, bottom), Size = new Vector2I(248, 20), IsControl = false, Border = true, BorderColour = new Color(1f, .75f, .25f) }; AddControl(_cost);
         _special = new DXCheckButton("特殊修理") { Location = new Vector2I(210, bottom + 25), Size = new Vector2I(100, 19), FontSize = 9 };
         _special.Changed += (o, e) => { if (_special.Checked) ClearUnavailableSpecialItems(); RebuildLinks(); }; AddControl(_special);
@@ -154,7 +192,101 @@ public partial class NPCRepairPanel : DXControl
     {
         var button = new DXButton { Text = text, Type = DXButton.ButtonType.SmallButton, FontSize = 9, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(x, y), Size = new Vector2I(79, 25) };
         button.MouseClick += (o, e) => action();
+        _sourceButtons.Add(button);
         AddControl(button);
+    }
+
+    /// <summary>
+    /// 旧版 EI 皮肤下的修理面板。原来这一态**没有任何 legacy 处理**：主体是半透明
+    /// 现代外框（能透出背后的地图/NPC）、按钮是无美术的扁平矩形，与旁边的 EI 商店面板、
+    /// NPC 对话窗完全不是一套皮（2026-10-18 看图诊断确认）。
+    ///
+    /// 为什么不直接套某一帧：素材库里没有"11x5 维修格 + 费用行 + 四容器钮"的整帧
+    /// （F250 是 3x4 大格的修理框、F1002 是"商品列表 + 小信息板"组合帧、F1001 是 3x3 格），
+    /// 所以采用与 NPC 对话框**同一套三段式木质框架**：F1100 顶段 + F1101 纵向平铺中段
+    /// （实测 F1101 就是窗口中段的黑底身体 + 左右木栏，见 LEGACY_DIALOG_GEOMETRY §8.1），
+    /// 这样面板不透明、且与玩家看惯的对话框同风格。
+    /// 修理钮用素材里唯一的修理钮 F263/264/265（64x19，韩文「수리」烤在图内，原版即如此）。
+    /// 面板内部落位是首版排布，按实机截图微调（与 goods 面板当初的做法一致）。
+    /// </summary>
+    public void ApplyLegacyEiLayout()
+    {
+        _legacyEiLayout = true;
+        const int width = 552;
+        Size = new Vector2I(width, 372);
+        _frame.Visible = false;
+
+        // 顶段：F1100（alpha 可见区 384x138，bbox 原点 (64,59) -> 锚点 -(64,59)）
+        _legacyTop.Visible = true;
+        _legacyTop.Location = new Vector2I(-64, -59);
+        _legacyTop.Size = new Vector2I(width, 138);
+
+        // 中段：F1101（可见 383x18）自 y=128 每 18px 平铺到面板底部
+        for (int i = 0; i < _legacyMidTiles.Count; i++)
+        {
+            int y = 128 + i * 18;
+            DXImageControl tile = _legacyMidTiles[i];
+            if (y + 18 <= Size.Y)
+            {
+                tile.Visible = true;
+                tile.Location = new Vector2I(-64, y - 7);
+                tile.Size = new Vector2I(width, 18);
+            }
+            else tile.Visible = false;
+        }
+
+        _title.Location = new Vector2I(0, 10);
+        _title.Size = new Vector2I(width, 18);
+
+        // 11x5 维修格 = 386x176，居中放在面板上部
+        _grid.Location = new Vector2I((width - 386) / 2, 146);
+
+        // 费用行：格子下方（数值已由 Lang 模板带标签，不再重复前置"修理费用："）
+        _costLabel.Visible = false;
+        _cost.Location = new Vector2I(30, 330);
+        _cost.Size = new Vector2I(300, 20);
+
+        // 两个复选框（保留现代控件外观；改用经典底仍需素材证据）
+        _special.Location = new Vector2I(330, 328);
+        _special.Size = new Vector2I(100, 19);
+        _guildFunds.Location = new Vector2I(330, 350);
+        _guildFunds.Size = new Vector2I(110, 19);
+
+        // 修理钮：素材唯一的修理钮（F263 普通 / F264 悬停 / F265 按下）
+        _repair.Location = new Vector2I(455, 338);
+        _repair.Size = new Vector2I(64, 19);
+        _repair.FontSize = 9;
+        _repair.Text = "";
+        _repair.LibraryFile = LibraryFile.GameInter;
+        _repair.Index = 263;
+        _repair.HoverIndex = 264;
+        _repair.PressedIndex = 265;
+
+        // 四个来源钮：素材里没有对应按钮帧（只有 修理/出售/保管/交换 四类），
+        // 暂留文字钮，位置排在左下，待人工确认后再换素材。
+        for (int i = 0; i < _sourceButtons.Count; i++)
+        {
+            DXButton b = _sourceButtons[i];
+            b.Size = new Vector2I(34, 34);
+            b.Location = new Vector2I(21 + i * 40, 336);
+        }
+    }
+
+    /// <summary>审计用：legacy EI 修理面板的关键常量是否自洽（视觉正确性靠截图判断）。</summary>
+    public bool AuditLegacyEiLayout(out string details)
+    {
+        bool ok = _legacyEiLayout
+            && Size == new Vector2I(552, 372)
+            && _legacyTop.Visible && !_frame.Visible
+            && _legacyTop.LibraryFile == LibraryFile.GameInter && _legacyTop.Index == 1100
+            && _grid.Location == new Vector2I(83, 146)
+            && _repair.LibraryFile == LibraryFile.GameInter
+            && _repair.Index == 263 && _repair.HoverIndex == 264 && _repair.PressedIndex == 265
+            && !_costLabel.Visible
+            && _sourceButtons.Count == 4;
+        details = $"size={Size} top={_legacyTop.Index}@{_legacyTop.Location} tiles={_legacyMidTiles.Count} "
+            + $"grid={_grid.Location} repair={_repair.Index}/{_repair.HoverIndex}/{_repair.PressedIndex}@{_repair.Location} costLabelHidden={!_costLabel.Visible}";
+        return ok;
     }
 
     private void ImportCells(IEnumerable<DXItemCell> cells)

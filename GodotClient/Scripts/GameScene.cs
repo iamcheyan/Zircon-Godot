@@ -5311,9 +5311,13 @@ public partial class GameScene : Control
         }
 
         if (_mainPanel != null)
+            // HUD 底板必须**压住视口底边**（用户 2026-10-16 复报"屏幕底还有 1-2 像素缝"）。
+            // 逻辑视口高 = 窗口高/缩放，非整数缩放时是小数，(int) 截断会留下 1 逻辑像素
+            // （≈1~2 设备像素）的缝，屏幕最底就露出地图。故向上取整：宁可多压 1px 也不留缝。
+            // 配合 MainPanelContentHeight（素材底 3 行是黑边）与"底板豁免钳制"共同保证贴底。
             _mainPanel.Location = new Vector2I(
                 Math.Max(0, (int)((vp.X - _mainPanel.Size.X) / 2f)),
-                Math.Max(0, (int)(vp.Y - _mainPanel.Size.Y)));
+                Math.Max(0, (int)Math.Ceiling(vp.Y - _mainPanel.Size.Y)));
 
         if (_beltDialog != null && _mainPanel != null)
             _beltDialog.ApplyDefaultAnchor(vp, _mainPanel.Location, _mainPanel.Size);
@@ -5540,6 +5544,9 @@ public partial class GameScene : Control
             if (child is not Control control || !IsInstanceValid(control) || !control.Visible)
                 continue;
             if (control.Size.X <= 0 || control.Size.Y <= 0) continue;
+            // HUD 底板**豁免**：它天生要压住视口底边（素材底部有黑边会被屏幕裁掉），
+            // 被夹回视口内就会在屏幕底留出 1~2 像素缝（用户 2026-10-16 复报）。
+            if (control == _mainPanel) continue;
 
             float maxX = Mathf.Max(0, logicalViewport.X - control.Size.X);
             float maxY = Mathf.Max(0, logicalViewport.Y - control.Size.Y);

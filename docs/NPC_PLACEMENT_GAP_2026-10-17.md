@@ -112,6 +112,10 @@ python3 Tools/NpcMover/place.py diff                 # 预览待入库改动
 
 ## 八、修复执行记录（2026-10-17 已执行、已入库、已实机验证）
 
+> **先读 §9**：本节记录的是 10-17 在 Mac 上的那次执行（当时确实安装并逐字节验证通过），
+> 但 Mac 的 `~/mir2ei` 是 Syncthing **receiveonly 副本**，写入会在下一次同步时被对端静默还原。
+> 10-18 已在**发送端 debian(192.168.3.82)** 重新入库并双向核对，最终状态见 §9。
+
 ### 8.1 变更内容
 
 | 表 | 行 | 改前 | 改后 |
@@ -177,3 +181,64 @@ workspace 里 `MapRegion #11369`（比奇 `Hexa Holy Stone`，NPC #370）曾被�
 另：`DBImporter` / `SystemDbProbe` 必须 `export MIR3_ZIRCON_ROOT=/Users/tetsuya/Development/Zircon`
 才能编译（否则 `CS0246: 未找到 Library`），且 Mir3-Research 目录里遗留的 Linux 二进制
 要重新 `dotnet build`（否则 `Exec format error`）。
+
+## 九、更正与最终入库位置（2026-10-18）
+
+### 9.1 关键更正：库的"真身"在 debian，Mac 上的写入会被回退
+
+- `~/mir2ei` 是 **Syncthing 同步目录**：debian 侧为 **sendonly**（名为 "Mir2EI client — Debian source"），
+  Mac 侧为 **receiveonly**（"Mir2EI client"）。receiveonly 副本上的本地修改会被静默还原
+  —— **这正是 10-17 在 Mac 上装好的库（`88c4aef7…`）后来回到旧值（`083532c9…`）的原因**
+  （无 conflict 副本，文件 mtime 保持原样）。
+- 结论：**改 `~/mir2ei` 里的数据库必须在发送端 debian(192.168.3.82) 做**，
+  这与 AGENTS 的「开发只在 82 进行」「System.db 必须多处一致」两条约定一致。
+- 两台机器的库副本形态不同：
+  | 机器 | `Debug/ServerCore/Database` | 实体副本数 |
+  |---|---|---|
+  | Mac | 软链 → `~/mir2ei/Database` | **2**（`mir2ei/Database` + `mir2ei/Data`；`Debug/Client` 亦为软链） |
+  | debian | **实体目录** | **4**（`Debug/ServerCore/Database`、`Debug/Client/Data`、`~/mir2ei/Database`、`<repo>/System.db`） |
+
+### 9.2 导入器的参照物：工作区 vs `_baseline`（不是 vs 现有库）
+
+`DBImporter` 的改动集 = **`workspace/*.json` 与 `workspace/_baseline/*.json` 的差**；
+`--src` 只是"被改的那份库"（先复制、再套用差量），因此：
+
+- `sync.sh` 第 7 步"重置基线"会把**待同步状态消费掉**：一旦基线被重置成新库状态，
+  再跑就是 `NO_CHANGES=1`，即使磁盘上的库并不是那个状态。
+- 若要用同一份工作区**重新应用**已丢失的改动：先把 `_baseline` 里对应行**还原成库中的实际值**，
+  再跑 `sync.sh`。本次即如此（把 `_baseline/MapRegion.json` 的 #5090 改回 (222,159)），
+  随后 `place.py diff` 恰好显示 **1 处**改动，可作入库前的自检。
+
+### 9.3 debian 上的最终入库（本次唯一有效写入）
+
+| 项 | 值 |
+|---|---|
+| 备份 | 4 份实体副本 → `~/db_backups/debian-20261018_075740/`；`sync.sh` 另存 4 份 gz 到 `Debug/ServerCore/Database/Backup/System/System-copy* 2026-10-18 07-58.db.gz` |
+| 变更 | `MapRegion#5090` (222,159) → **(222,157)**；`变更 1 处：MapRegion×1`、引用完整性通过、`round-trip 语义一致` |
+| 安装 | 4 份实体副本全部 `083532c9…` → **`1a5e0e48…`**；库版本 `2026.10.18.1` |
+| 字节级核对 | 与备份库比：**等长，仅 2 字节不同** —— 偏移 `1788025` `0o237→0o235`（159→157）、偏移 `3382879` `'6'→'8'`（版本末位） |
+| 读回 | 从已安装库重导出：`Region#5090 = (222,157)`、版本 `2026.10.18.1`；`place.py diff` 清空 |
+| 同步到 Mac | 约 90 秒后 4 条逻辑路径全为 `1a5e0e48…`（Syncthing 推送） |
+
+### 9.4 工具修复（Mir3-Research `Tools/dbeditor`，提交 `7f1ebaa3`）
+
+- `sync.sh`：端口探测改用 `lsof` 取监听进程名，**非 dotnet/ServerCore 不算服务端**
+  （macOS 上 7000 被 AirPlay 接收器 ControlCenter 占用，之前每次同步都误报）；非服务端监听时
+  给导入器传 `--no-port-check`。
+- `sync.sh`：安装目标改为 **realpath 去重后的全部实体副本**（Mac 2 份 / debian 4 份），
+  既保证"每一份都一致"，又不会把软链替换成实体文件。
+- `DBImporter`：端口提示改为 7000/7001 都探，并说明可用 `--no-port-check` 静音。
+
+### 9.5 审计截图：/tmp 证据已被重启清空 → 改为入库到 `.artifacts/`
+
+2026-10-18 07:5x 复查时发现 `/tmp` 已被清空（机器重启），**10-17 那批 `_tmp` 截图（1533 张巡检
++ 34 张 UI 遮罩审计等）全部丢失**。因此本轮改为：巡检脚本与截图产物**落进仓库**：
+
+- 巡检脚本：`tools/npc_full_sweep.sh`（Linux/macOS 通用、分块可续跑）；
+- 截图压缩：`tools/pack_audit_shots.sh`（把整屏 PNG 缩成可入库的 JPEG 缩略图）；
+- 产物目录：`.artifacts/npc-full-sweep-2026-10-18/`（见该目录 `REPORT.md`）；
+- 原图（整屏 PNG）留在本地 `~/audit-raw/`，不入库（体积原因）。
+
+> 复跑（2026-10-18，新库）的逐 NPC 结果与截图索引见
+> [NPC_FULL_SWEEP_2026-10-17.md](NPC_FULL_SWEEP_2026-10-17.md) 的复跑章节与
+> `.artifacts/npc-full-sweep-2026-10-18/REPORT.md`。

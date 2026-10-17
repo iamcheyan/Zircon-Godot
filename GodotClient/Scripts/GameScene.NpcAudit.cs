@@ -258,6 +258,16 @@ public partial class GameScene
         {
             rec.Errors.Add("npc_not_found");
             GD.PrintErr($"[NpcAudit] [{entry.Index}] 未找到 NPC 对象 (player=({_playerLocation.X},{_playerLocation.Y}))");
+            // 自带诊断：列出当前地图上所有 NPC 对象，用来判定"位置不对"还是"整条缺失"（#275 靠此定位）。
+            int listed = 0;
+            foreach (var ob in _objects.Values)
+            {
+                if (ob?.Type != ObjectRenderer.Kind.NPC) continue;
+                GD.PrintErr($"[NpcAudit]   地图NPC object={ob.ObjectID} info={GetNpcInfo(ob.ObjectID)?.NPCName} "
+                    + $"name={ob.DisplayName} cell=({ob.CellX},{ob.CellY})");
+                listed++;
+            }
+            GD.PrintErr($"[NpcAudit]   当前地图 NPC 对象共 {listed} 个 (mapIndex={_playerMapIndex})");
             return rec;
         }
 

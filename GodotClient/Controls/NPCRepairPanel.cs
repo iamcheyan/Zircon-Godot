@@ -22,6 +22,28 @@ public partial class NPCRepairPanel : DXControl
     private readonly LegacyWindowFrame _frame;
     private readonly DXImageControl _legacyTop;
     private readonly List<DXImageControl> _legacyMidTiles = new();
+    private readonly RepairSlotBackdrop _legacySlots;
+
+    /// <summary>
+    /// 维修格的"暗槽 + 金线"自绘底。为什么需要它：`DXItemCell` 只在激活/悬停时才画边框
+    /// （`UpdateBorder() → Border = active`），而原版背包/商店的格子是**烤进面板贴图**里的；
+    /// 素材库里没有 11x5 格的修理面板整帧（F250 是 3x4 大格、F1001 是 3x3），所以这里自绘。
+    /// </summary>
+    private sealed partial class RepairSlotBackdrop : DXControl
+    {
+        public int Columns = 11, Rows = 5, Pitch = 35, SlotWidth = 33, SlotHeight = 33;
+
+        protected override void DrawControl()
+        {
+            for (int row = 0; row < Rows; row++)
+                for (int col = 0; col < Columns; col++)
+                {
+                    var rect = new Rect2(col * Pitch, row * Pitch, SlotWidth, SlotHeight);
+                    DrawRect(rect, new Color(0f, 0f, 0f, 0.45f), true);
+                    DrawRect(rect, new Color(0.62f, 0.51f, 0.29f, 0.85f), false, 1f);
+                }
+        }
+    }
     private readonly List<DXButton> _sourceButtons = new();
     private bool _legacyEiLayout;
     private readonly List<CellLinkInfo> _pendingLinks = new();
@@ -69,6 +91,15 @@ public partial class NPCRepairPanel : DXControl
             _legacyMidTiles.Add(tile);
             AddControl(tile);
         }
+        // 维修格自绘底（默认隐藏；legacy 布局时显示在真实格子下方）
+        _legacySlots = new RepairSlotBackdrop
+        {
+            Location = new Vector2I(0, 146),
+            Size = new Vector2I(11 * 35, 5 * 35),
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddControl(_legacySlots);
         _title = new DXLabel { Text = "修理物品", FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, AutoSize = false, Location = new Vector2I(0, 8), Size = new Vector2I(404, 18), IsControl = false };
         AddControl(_title);
         _grid = new DXItemGrid { GridSize = new Vector2I(11, 5), Location = new Vector2I(9, 37), GridType = GridType.Repair, ItemGrid = _items, GridPadding = 0, Border = false }; AddControl(_grid);
@@ -212,8 +243,11 @@ public partial class NPCRepairPanel : DXControl
     public void ApplyLegacyEiLayout()
     {
         _legacyEiLayout = true;
-        const int width = 552;
-        Size = new Vector2I(width, 400);
+        // 关键：F1100/F1101 的 alpha 可见区宽 **384**（画布 512 宽是含透明边），
+        // 所以面板与所有控件都必须落在 0..384 内 —— 上一版用 552 宽，控件直接落到木框外的草地上
+        // （2026-10-18 视觉复核发现"小长条跨右边框""按钮浮在草地上"）。
+        const int width = 384;
+        Size = new Vector2I(width, 410);
         _frame.Visible = false;
 
         // 顶段：F1100（alpha 可见区 384x138，bbox 原点 (64,59) -> 锚点 -(64,59)）
@@ -238,23 +272,24 @@ public partial class NPCRepairPanel : DXControl
         _title.Location = new Vector2I(0, 10);
         _title.Size = new Vector2I(width, 18);
 
-        // 11x5 维修格 = 386x176，居中放在面板上部
-        _grid.Location = new Vector2I((width - 386) / 2, 140);
+        // 11x5 维修格 = 385x175（格距 35），放面板上部；先铺自绘槽底，真实格子叠在上面
+        _legacySlots.Visible = true;
+        _legacySlots.Location = new Vector2I(0, 146);
+        _grid.Location = new Vector2I(0, 146);
 
         // 费用行：格子正下方（数值已由 Lang 模板带标签，不再重复前置"修理费用："）
-        // x 从 60 起：面板常贴在屏幕左缘，太靠左会被视口裁掉（2026-10-18 A/B 看图发现）
         _costLabel.Visible = false;
-        _cost.Location = new Vector2I(60, 322);
+        _cost.Location = new Vector2I(10, 328);
         _cost.Size = new Vector2I(300, 20);
 
-        // 两个复选框（保留现代控件外观；改用经典底仍需素材证据）
-        _special.Location = new Vector2I(330, 348);
+        // 两个复选框
+        _special.Location = new Vector2I(175, 352);
         _special.Size = new Vector2I(100, 19);
-        _guildFunds.Location = new Vector2I(330, 370);
+        _guildFunds.Location = new Vector2I(175, 374);
         _guildFunds.Size = new Vector2I(110, 19);
 
         // 修理钮：素材唯一的修理钮（F263 普通 / F264 悬停 / F265 按下）
-        _repair.Location = new Vector2I(455, 350);
+        _repair.Location = new Vector2I(312, 356);
         _repair.Size = new Vector2I(64, 19);
         _repair.FontSize = 9;
         _repair.Text = "";
@@ -269,7 +304,7 @@ public partial class NPCRepairPanel : DXControl
         {
             DXButton b = _sourceButtons[i];
             b.Size = new Vector2I(34, 34);
-            b.Location = new Vector2I(60 + i * 40, 348);
+            b.Location = new Vector2I(10 + i * 40, 352);
         }
     }
 
@@ -277,17 +312,19 @@ public partial class NPCRepairPanel : DXControl
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = _legacyEiLayout
-            && Size == new Vector2I(552, 400)
+            && Size == new Vector2I(384, 410)
             && _legacyTop.Visible && !_frame.Visible
             && _legacyTop.LibraryFile == LibraryFile.GameInter && _legacyTop.Index == 1100
-            && _grid.Location == new Vector2I(83, 140)
+            && _legacySlots.Visible && _legacySlots.Location == new Vector2I(0, 146)
+            && _grid.Location == new Vector2I(0, 146)
             && _repair.LibraryFile == LibraryFile.GameInter
             && _repair.Index == 263 && _repair.HoverIndex == 264 && _repair.PressedIndex == 265
-            && _cost.Location == new Vector2I(60, 322)
+            && _cost.Location == new Vector2I(10, 328)
             && !_costLabel.Visible
             && _sourceButtons.Count == 4;
         details = $"size={Size} top={_legacyTop.Index}@{_legacyTop.Location} tiles={_legacyMidTiles.Count} "
-            + $"grid={_grid.Location} cost={_cost.Location} repair={_repair.Index}/{_repair.HoverIndex}/{_repair.PressedIndex}@{_repair.Location} costLabelHidden={!_costLabel.Visible}";
+            + $"slots={_legacySlots.Location} grid={_grid.Location} cost={_cost.Location} "
+            + $"repair={_repair.Index}/{_repair.HoverIndex}/{_repair.PressedIndex}@{_repair.Location}";
         return ok;
     }
 

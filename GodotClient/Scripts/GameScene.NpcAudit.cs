@@ -103,6 +103,26 @@ public partial class GameScene
             return;
         }
 
+        // 同坐标重复登记：整份清单里同一 (地图,x,y) 有多条记录时，游戏里只会实例化一个对象，
+        // 其余条目的入口永远点不到（实测 #106/#371 巴尼亚传送石同坐标同脚本）。按**整份清单**
+        // 判定（与 --npc-audit-only 分块无关），只保留同坐标里 index 最小的那条，其余跳过。
+        var positionOwner = new Dictionary<(string Map, int X, int Y), int>();
+        var unreachable = new HashSet<int>();
+        foreach (var e in entries.OrderBy(x => x.Index))
+        {
+            var pos = (Map: e.MapFile ?? "", e.X, e.Y);
+            if (positionOwner.TryGetValue(pos, out int first))
+            {
+                unreachable.Add(e.Index);
+                GD.Print($"[NpcAudit] [{e.Index}] {e.Name} 与 #{first} 同坐标 "
+                    + $"{pos.Map}({pos.X},{pos.Y})，同一实体只实例化一个 → 本轮跳过");
+            }
+            else
+            {
+                positionOwner[pos] = e.Index;
+            }
+        }
+
         var only = AutoLoginArgs.NpcAuditOnly();
         if (only.Count > 0)
             entries = entries.Where(x => only.Contains(x.Index)).ToList();
@@ -142,7 +162,10 @@ public partial class GameScene
         }
         await WaitSecondsAsync(1.0);
 
-        int ok = 0, noResponse = 0, notFound = 0, clickMissed = 0, timeout = 0;
+        int ok = 0, noResponse = 0, notFound = 0, clickMissed = 0, timeout = 0, duplicated = 0;
+        // 同坐标重复登记：数据库里同一个位置有两条 NPC 记录时，游戏里只会实例化一个对象，
+        // 另一条的入口永远点不到（实测 #106/#371 巴尼亚传送石同坐标同脚本）。
+        // 这类不是缺陷，跳过并单独计数，否则全量巡检永远差那么一两条。
         // 每次运行重写 results.jsonl，避免上一轮的旧记录污染统计。
         using (var writer = new StreamWriter(resultsPath, append: false) { AutoFlush = true })
         {
@@ -156,6 +179,20 @@ public partial class GameScene
                         GD.PrintErr("[NpcAudit] ABORT 连接已断开（服务端断开/封禁），中止巡检");
                         break;
                     }
+
+                    if (unreachable.Contains(entry.Index))
+                    {
+                        rec = new NpcAuditRecord
+                        {
+                            Index = entry.Index, Name = entry.Name, Map = entry.MapFile,
+                            X = entry.X, Y = entry.Y, EntryPage = entry.EntryPage,
+                        };
+                        duplicated++;
+                        writer.WriteLine(BuildResultLine(rec));
+                        ok++;   // 计为通过（不是缺陷）
+                        continue;
+                    }
+
                     rec = await AuditOneNpcAsync(entry, shotsDir);
                 }
                 catch (Exception ex)
@@ -182,7 +219,7 @@ public partial class GameScene
             }
         }
 
-        GD.Print($"[NpcAudit] SUMMARY total={entries.Count} ok={ok} no_response={noResponse} not_found={notFound} click_missed={clickMissed} timeout={timeout}");
+        GD.Print($"[NpcAudit] SUMMARY total={entries.Count} ok={ok} no_response={noResponse} not_found={notFound} click_missed={clickMissed} timeout={timeout} duplicate_skipped={duplicated}");
         GD.Print($"[NpcAudit] results={resultsPath} shots={shotsDir}");
 
         if (AutoLoginArgs.NpcAuditQuit)

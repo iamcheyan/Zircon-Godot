@@ -36,6 +36,7 @@ public partial class GameScene
     private bool _pilotLastStageOk;
     private Task _pilotWalkWatcher;
     private readonly List<string> _pilotWalkShots = new();
+    private readonly List<string> _pilotCombatShots = new();
     private bool _pilotDieCaptured;
     private string _pilotDieShot;
     private readonly List<Dictionary<string, object>> _pilotLog = new();
@@ -177,7 +178,7 @@ public partial class GameScene
         GD.Print($"[MonsterPilot] locked target name={name} id={_pilotTargetId} cell=({_pilotTarget.CellX},{_pilotTarget.CellY}) image={_pilotTarget.MonsterInfo?.Image}");
         // 从锁定那一刻起就一直挂一个 Walking 观察器：怪物被其它因素驱动走路时
         // （自然漫步 / 我们没预料到的路径）也不会漏记（Red Boar 等实测 walk 伪失败）。
-        _pilotWalkWatcher = WatchForWalkingAsync(outDir, name);
+        _pilotWalkWatcher = WatchForAnimationAsync(outDir, name);
         CaptureMonsterAuditShot(outDir, 0, name + "_spawn");
 
         // ---- 阶段 1：站立待机（真实 Standing / StoneStanding 帧推进 ≥ 2 帧）----
@@ -368,6 +369,20 @@ public partial class GameScene
                 () => IsCombatAnim(_pilotTarget.Animation),
                 (prev, cur) => IsCombatAnim(cur.Animation)
                     && (cur.Animation != prev.Animation || cur.Frame != prev.Frame), 1, 30.0);
+            if (!_pilotLastStageOk && _pilotCombatShots.Count > 0)
+            {
+                WritePilotLog(outDir, name + "_combat", new Dictionary<string, object>
+                {
+                    ["stage"] = 3,
+                    ["label"] = name + "_combat",
+                    ["targetId"] = _pilotTargetId,
+                    ["ok"] = true,
+                    ["hits"] = _pilotCombatShots.Count,
+                    ["shots"] = _pilotCombatShots,
+                    ["source"] = "background-combat-watcher",
+                });
+                _pilotLastStageOk = true;
+            }
             if (!_pilotLastStageOk)
             {
                 var back = Functions.DirectionFromPoint(
@@ -451,22 +466,34 @@ public partial class GameScene
     }
 
     /// <summary>
-    /// 后台 Walking 观察器：pilot 全程一直跑，只要目标出现新的 Walking 帧就立即截图留证。
-    /// 用于兜底“我们主动退却没触发走路，但怪物自己走动过”的情形。
+    /// 后台动画观察器：pilot 全程一直跑，目标只要出现新的 Walking / Combat* 帧就立即截图留证。
+    /// 兜底两类漏记：(1) 怪物自己走动发生在采样窗口外；(2) 慢出手的怪（AttackDelay 大、
+    /// 或要等玩家靠近）在 combat 采样窗口结束后才攻击 —— Flame Lion 实测 60s 窗口过后
+    /// 才发出 ObjectAttack。
     /// </summary>
-    private async Task WatchForWalkingAsync(string outDir, string name)
+    private async Task WatchForAnimationAsync(string outDir, string name)
     {
-        var prevFrame = -1;
-        while (IsInstanceValid(_pilotTarget) && !_pilotDisposed)
+        int prevWalkFrame = -1, prevCombatFrame = -1;
+        MirAnimation? prevCombatAnim = null;
+        while (!_pilotDisposed && IsInstanceValid(_pilotTarget))
         {
             await NextFrameAsync();
             if (!IsInstanceValid(_pilotTarget)) break;
-            if (_pilotTarget.Animation != MirAnimation.Walking) continue;
-            if (_pilotTarget.FrameIndex == prevFrame) continue;
-            prevFrame = _pilotTarget.FrameIndex;
-            var shot = CaptureMonsterAuditShot(outDir, 200 + _pilotWalkShots.Count, name + "_walk_bg");
-            _pilotWalkShots.Add(shot);
-            if (_pilotWalkShots.Count >= 4) return;
+            var anim = _pilotTarget.Animation;
+            int frame = _pilotTarget.FrameIndex;
+            if (anim == MirAnimation.Walking && frame != prevWalkFrame && _pilotWalkShots.Count < 4)
+            {
+                prevWalkFrame = frame;
+                _pilotWalkShots.Add(CaptureMonsterAuditShot(outDir, 200 + _pilotWalkShots.Count, name + "_walk_bg"));
+            }
+            else if (IsCombatAnim(anim) && (anim != prevCombatAnim || frame != prevCombatFrame)
+                     && _pilotCombatShots.Count < 4)
+            {
+                prevCombatAnim = anim;
+                prevCombatFrame = frame;
+                _pilotCombatShots.Add(CaptureMonsterAuditShot(outDir, 300 + _pilotCombatShots.Count, name + "_combat_bg"));
+            }
+            if (_pilotWalkShots.Count >= 4 && _pilotCombatShots.Count >= 4) return;
         }
     }
 

@@ -550,6 +550,11 @@ public partial class GameScene
                 }
             }
         }
+        // 半径 8 内找不到“自身+正前格都空”的位点时，也要做点什么：
+        // 先走一步换个位置，下一次重试再找（否则会静止在同一面墙前反复失败，
+        // Ghoul Champion 在 D203 实测踩到）。
+        SendMouseMove((MirDirection)(_pilotTarget?.ObjectID % 8 ?? 0), 1, false);
+        await WaitSecondsAsync(0.6);
     }
 
     private async Task<bool> WaitForSpawnAsync(string name, int before, double timeoutSec)

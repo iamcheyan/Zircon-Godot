@@ -1,0 +1,5 @@
+{"stage":1,"label":"Cow_idle","targetId":6030,"name":"Cow","image":"Cow","hit1":{"anim":"Standing","frame":1,"dir":"DownLeft","cell":"211,452","tickMs":15693,"shot":"/tmp/monster_audit_runs/Cow/011_Cow_idle.png"},"hit2":{"anim":"Standing","frame":2,"dir":"DownLeft","cell":"211,452","tickMs":16180,"shot":"/tmp/monster_audit_runs/Cow/012_Cow_idle.png"},"ok":true,"hits":2,"required":2}
+{"stage":2,"label":"Cow_walk","targetId":6030,"ai":2,"status":"blocked","reason":"passive-monster-no-active-chase"}
+{"stage":3,"label":"Cow_combat","targetId":6030,"ai":2,"status":"blocked","reason":"passive-monster-no-active-attack"}
+{"stage":4,"label":"Cow_dead","targetId":6030,"hit1":{"anim":"Die","frame":0,"dir":"DownLeft","cell":"211,452","tickMs":16852,"shot":"/tmp/monster_audit_runs/Cow/040_Cow_die.png"},"hit2":{"anim":"Struck","frame":0,"dir":"DownLeft","cell":"211,452","tickMs":17096,"shot":"/tmp/monster_audit_runs/Cow/041_Cow_struck.png"},"dieHits":1,"struckHits":1,"combatHits":0,"ok":true,"transitions":["die:Die#0@211,452","struck:Struck#0@211,452"]}
+{"name":"Cow","targetId":6030,"image":"Cow","ai":2,"passive":true,"removed":false}

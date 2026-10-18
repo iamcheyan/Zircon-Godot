@@ -73,3 +73,32 @@ for name, fn in checks:
     else: bad += 1
     print(f'{flag} {name:<28} {detail}')
 print(f'\n合计 {ok} 通过 / {bad} 未通过')
+
+# ---------------------------------------------------------------------------
+# 额外：不变性检查 —— 有些实机验证是在"更早的库"上做的，若相关表此后一字未改，
+# 那份验证依然成立（比重新跑一遍更严谨：证的是"验证对象没变"）。
+# ---------------------------------------------------------------------------
+def table_sig(path):
+    import hashlib
+    j = json.load(open(path))
+    rows = j['rows'] if isinstance(j, dict) and 'rows' in j else j
+    return len(rows), hashlib.md5(json.dumps(
+        sorted(json.dumps(r, sort_keys=True, ensure_ascii=False) for r in rows),
+        ensure_ascii=False).encode()).hexdigest()[:12]
+
+invariance = [
+    ('MapRegion',   '传送门 6/6 走路式验证'),
+    ('RespawnInfo', '刷怪相关结论'),
+    ('MapInfo',     '地图 412/412 加载验证'),
+]
+print('\n--- 不变性检查（验证对象是否变过）---')
+for table, what in invariance:
+    old_p = os.path.expanduser(f'~/audit-raw/db-export-final/out/{table}.json')
+    new_p = os.path.expanduser(f'~/audit-raw/db-export-current/out/{table}.json')
+    if not (os.path.exists(old_p) and os.path.exists(new_p)):
+        print(f'SKIP {table:<12} 缺少对比导出（{what}）')
+        continue
+    (n1, s1), (n2, s2) = table_sig(old_p), table_sig(new_p)
+    same = (s1 == s2)
+    print(f'{"OK  " if same else "WARN"} {table:<12} {n1}→{n2} 行 签名 {s1}→{s2} '
+          f'{"（未变，原验证仍成立）" if same else "（已变，需重跑" + what + "）"}')

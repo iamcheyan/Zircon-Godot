@@ -3344,9 +3344,12 @@ public partial class GameScene : Control
             UpdateOtherPlayerPosition(player);
         }
         else if (_objects.TryGetValue(objectID, out var ob))
-            {
-                ob.Direction = dir;
-                ob.PlayRangeAttack();
+        {
+            ob.Direction = dir;
+            // 旧端 S.ObjectAttack 一律按 MirAction.Attack 入队 → Combat1
+            // （CConnection.cs:1277、MonsterObject.cs:2520）。原来统一播 Combat2，
+            // 只配 Combat1 的怪就完全没有攻击动作（实测 Otherworld 系）。
+            ob.PlayAttack();
         }
 
         if (targetID != 0)
@@ -3405,7 +3408,9 @@ public partial class GameScene : Control
         else if (_objects.TryGetValue(objectID, out var ob))
         {
             ob.Direction = dir;
-            ob.SetAnimation(MirAnimation.Combat1);
+            // 旧端 S.ObjectRangeAttack 入队 MirAction.RangeAttack → Combat2
+            // （CConnection.cs:1321、MonsterObject.cs:2523-2524）。
+            ob.PlayRangeAttack();
         }
 
         foreach (uint targetID in targets ?? Enumerable.Empty<uint>())

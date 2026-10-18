@@ -211,6 +211,17 @@ public partial class ObjectRenderer : MapObjectNode
 
     public void PlayRangeAttack() => SetAnimation(MirAnimation.Combat2);
 
+    /// <summary>
+    /// 普通攻击（S.ObjectAttack 的 MirAction.Attack）。
+    /// 旧端 CConnection.Process(S.ObjectAttack) 一律入队 MirAction.Attack，
+    /// 而 MonsterObject.SetAnimation 把 MirAction.Attack 映射到 **Combat1**
+    /// （Client/Models/MonsterObject.cs:2520-2521）；只有 MirAction.RangeAttack
+    /// 才是 Combat2（同文件 2523-2524）。旧 Godot 端把怪物普通攻击统一播成
+    /// Combat2，导致异界系等只配了 Combat1 的怪看不出攻击动作（实测
+    /// Otherworld Tentacle Demon 收到 ObjectAttack 却始终没有 Combat 帧）。
+    /// </summary>
+    public void PlayAttack() => SetAnimation(MirAnimation.Combat1);
+
     public void PlayAttackSound()
     {
         if (Type != Kind.Monster) return;

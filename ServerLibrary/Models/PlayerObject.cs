@@ -3689,6 +3689,12 @@ namespace Server.Models
 
                 foreach (QuestReward reward in quest.Rewards)
                 {
+                    // 2026-10-18 修复「完成任务即掉线」：QuestReward #143/#145/#148 的 Item 引用为空，
+                    // 下面 new ItemCheck(reward.Item, ...) 会在构造函数里读 item.Info -> NullReferenceException，
+                    // 冒到收包处理的 catch 后 rethrow，客户端会话当场断掉。奖励行缺 Item 时跳过该条，
+                    // 其余奖励照常发放（宁可少发一件，也不能整条任务崩会话）。
+                    if (reward == null || reward.Item == null) continue;
+
                     switch (Class)
                     {
                         case MirClass.Warrior:
@@ -12932,6 +12938,9 @@ namespace Server.Models
 
             foreach (var reward in nextFame.ItemRewards)
             {
+                // 同 QuestReward 那处：奖励行缺 Item 时跳过，避免 ItemCheck 构造函数读 item.Info 空引用
+                if (reward == null || reward.Item == null) continue;
+
                 ItemCheck check = new ItemCheck(reward.Item, reward.Amount, UserItemFlags.None, TimeSpan.Zero);
 
                 checks.Add(check);

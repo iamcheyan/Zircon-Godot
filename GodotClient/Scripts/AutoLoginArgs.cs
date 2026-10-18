@@ -212,6 +212,45 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --map-audit：逐图实机走查（实现见 GameScene.MapAudit.cs）。用 GM 命令 @move 把角色带到每张图，
+    /// 验证客户端真的解析并加载了该图（13 字节/格地图修复后的实机验证），同时留档截图。
+    /// </summary>
+    public static bool MapAudit => Has("--map-audit");
+
+    /// <summary>--map-audit-out &lt;dir&gt;：截图与结果目录（缺省 /tmp/map_audit）。</summary>
+    public static string MapAuditOut => GetValue("--map-audit-out") ?? "/tmp/map_audit";
+
+    /// <summary>--map-audit-only D601,D602：只跑指定地图文件（缺省 = 清单为空，不跑）。</summary>
+    public static List<string> MapAuditOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--map-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string stem = part.Trim();
+            if (stem.Length > 0 && !result.Contains(stem)) result.Add(stem);
+        }
+        return result;
+    }
+
+    /// <summary>--map-audit-quit=0|1：走查结束后是否退出进程（缺省 1）。</summary>
+    public static bool MapAuditQuit
+    {
+        get
+        {
+            string raw = GetValue("--map-audit-quit");
+            if (raw != null && raw.StartsWith("--")) raw = null;
+            if (string.IsNullOrWhiteSpace(raw)) return true;
+            return raw.Trim().ToLowerInvariant() switch
+            {
+                "0" or "false" or "no" or "off" => false,
+                _ => true,
+            };
+        }
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

@@ -9737,6 +9737,14 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.4).Timeout += StartHudUiAudit;
         }
 
+        // 逐图实机走查：@move 到每张图，验证客户端真能解析加载（13 字节/格地图修复后的实机验证）
+        // 并留档截图（实现见 GameScene.MapAudit.cs）。
+        if (AutoLoginArgs.MapAudit && !_mapAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _mapAuditStarted = true;
+            GetTree().CreateTimer(1.6).Timeout += StartMapAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

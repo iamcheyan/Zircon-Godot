@@ -74,10 +74,23 @@ namespace Server.Models
 
             int offSet = 28 + Width * Height / 4 * 3;
 
+            // 2026-10-18：发行数据里存在 **13 字节/格** 的 .map（39 张：D601–D619、0_00xx、d60x–d61x 等；
+            // 空间连通性检验 + 三副本 MD5 一致，证明是另一种格大小而非拷贝损坏）。
+            // 这里原来硬编码 * 14，读这些图会越界（IndexOutOfRangeException），整张图不可用。
+            // 按文件实际长度推算格大小；两种布局的 flag 都在 +0，所以只需换步长。
+            int stride = 14;
+            if (Width > 0 && Height > 0 && fileBytes.Length > offSet)
+            {
+                int perCell = (fileBytes.Length - offSet) / (Width * Height);
+                if (perCell is 13 or 14) stride = perCell;
+            }
+            if (stride != 14)
+                SEnvir.Log($"Map {Info.FileName}: 单元格 {stride} 字节/格（非默认 14），按该步长读取。");
+
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
                 {
-                    byte flag = fileBytes[offSet + (x * Height + y) * 14];
+                    byte flag = fileBytes[offSet + (x * Height + y) * stride];
 
                     if ((flag & 0x02) != 2 || (flag & 0x01) != 1) continue;
 

@@ -34,6 +34,8 @@ public partial class GameScene
     private ObjectRenderer _pilotTarget;
     private uint _pilotTargetId;
     private bool _pilotLastStageOk;
+    private Task _pilotWalkWatcher;
+    private readonly List<string> _pilotWalkShots = new();
     private bool _pilotDieCaptured;
     private string _pilotDieShot;
     private readonly List<Dictionary<string, object>> _pilotLog = new();
@@ -173,6 +175,9 @@ public partial class GameScene
         _pilotDieCaptured = false;
         _pilotDieShot = null;
         GD.Print($"[MonsterPilot] locked target name={name} id={_pilotTargetId} cell=({_pilotTarget.CellX},{_pilotTarget.CellY}) image={_pilotTarget.MonsterInfo?.Image}");
+        // 从锁定那一刻起就一直挂一个 Walking 观察器：怪物被其它因素驱动走路时
+        // （自然漫步 / 我们没预料到的路径）也不会漏记（Red Boar 等实测 walk 伪失败）。
+        _pilotWalkWatcher = WatchForWalkingAsync(outDir, name);
         CaptureMonsterAuditShot(outDir, 0, name + "_spawn");
 
         // ---- 阶段 1：站立待机（真实 Standing / StoneStanding 帧推进 ≥ 2 帧）----
@@ -275,6 +280,21 @@ public partial class GameScene
                     new Dictionary<string, object> { ["retry"] = true });
                 // 跑开也看不到走路：BOSS 类（Lv250）通常原地攻击不移动，或地形堵死。
                 // 这是怪物行为/地形限制，不是动画缺陷 → 按 blocked 记录并注明原因。
+                // 兜底：后台观察器可能已经在别处抓到过真实 Walking 帧
+                if (!_pilotLastStageOk && _pilotWalkShots.Count > 0)
+                {
+                    WritePilotLog(outDir, name + "_walk", new Dictionary<string, object>
+                    {
+                        ["stage"] = 2,
+                        ["label"] = name + "_walk",
+                        ["targetId"] = _pilotTargetId,
+                        ["ok"] = true,
+                        ["hits"] = _pilotWalkShots.Count,
+                        ["shots"] = _pilotWalkShots,
+                        ["source"] = "background-walk-watcher",
+                    });
+                    _pilotLastStageOk = true;
+                }
                 if (!_pilotLastStageOk)
                 {
                     WritePilotLog(outDir, name + "_walk_status", new Dictionary<string, object>
@@ -383,12 +403,35 @@ public partial class GameScene
             ["removed"] = removed,
         });
         GD.Print($"[MonsterPilot] done name={name} out={outDir}");
+        _pilotDisposed = true;
         // 恢复原本的地图光照（pilot 只在自身会话内临时抬亮）
         if (_lightLayer != null)
         {
             _lightLayer.SetAuditLightOverride(null);
         }
     }
+
+    /// <summary>
+    /// 后台 Walking 观察器：pilot 全程一直跑，只要目标出现新的 Walking 帧就立即截图留证。
+    /// 用于兜底“我们主动退却没触发走路，但怪物自己走动过”的情形。
+    /// </summary>
+    private async Task WatchForWalkingAsync(string outDir, string name)
+    {
+        var prevFrame = -1;
+        while (IsInstanceValid(_pilotTarget) && !_pilotDisposed)
+        {
+            await NextFrameAsync();
+            if (!IsInstanceValid(_pilotTarget)) break;
+            if (_pilotTarget.Animation != MirAnimation.Walking) continue;
+            if (_pilotTarget.FrameIndex == prevFrame) continue;
+            prevFrame = _pilotTarget.FrameIndex;
+            var shot = CaptureMonsterAuditShot(outDir, 200 + _pilotWalkShots.Count, name + "_walk_bg");
+            _pilotWalkShots.Add(shot);
+            if (_pilotWalkShots.Count >= 4) return;
+        }
+    }
+
+    private bool _pilotDisposed;
 
     /// <summary>AI=1/2 为 Passive=true 怪（不主动索敌追击）；其余 default 主动。</summary>
     private static bool IsPassiveAi(int ai) => ai is 1 or 2 or 4 or 5 or 135 or 136 or 129 or 130 or 12;

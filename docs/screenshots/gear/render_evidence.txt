@@ -1,0 +1,1 @@
+[PlayerView] 首帧诊断: body=/home/tetsuya/mir2ei/Data/M-HumEx1.Zl hair=/home/tetsuya/mir2ei/Data/M-Hair.Zl helmet=/home/tetsuya/mir2ei/Data/M-Helmet2.Zl weapon1=/home/tetsuya/mir2ei/Data/M-Weapon1.Zl dir=Up frame=0 anim=Standing DrawFrame=0 ArmourFrame=5000 HairFrame=0 Cell=(472,426) Pos=(376, 282)

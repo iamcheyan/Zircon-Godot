@@ -9745,6 +9745,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.6).Timeout += StartMapAudit;
         }
 
+        // 怪物实机走查：@monster 逐只刷出并截图（实现见 GameScene.MonsterAudit.cs）。
+        if (AutoLoginArgs.MonsterAudit && !_monsterAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _monsterAuditStarted = true;
+            GetTree().CreateTimer(1.6).Timeout += StartMonsterAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

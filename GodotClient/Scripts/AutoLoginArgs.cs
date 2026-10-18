@@ -251,6 +251,45 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --monster-audit：怪物实机走查（实现见 GameScene.MonsterAudit.cs）。用 @monster 逐只刷出，
+    /// 断言对象真的出现并留档截图（审计的"怪物实机截图"）。
+    /// </summary>
+    public static bool MonsterAudit => Has("--monster-audit");
+
+    /// <summary>--monster-audit-out &lt;dir&gt;：截图与结果目录（缺省 /tmp/monster_audit）。</summary>
+    public static string MonsterAuditOut => GetValue("--monster-audit-out") ?? "/tmp/monster_audit";
+
+    /// <summary>--monster-audit-only A,B：只跑指定怪物名（缺省 = 空，不跑）。</summary>
+    public static List<string> MonsterAuditOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--monster-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string name = part.Trim();
+            if (name.Length > 0 && !result.Contains(name)) result.Add(name);
+        }
+        return result;
+    }
+
+    /// <summary>--monster-audit-quit=0|1：走查结束后是否退出进程（缺省 1）。</summary>
+    public static bool MonsterAuditQuit
+    {
+        get
+        {
+            string raw = GetValue("--monster-audit-quit");
+            if (raw != null && raw.StartsWith("--")) raw = null;
+            if (string.IsNullOrWhiteSpace(raw)) return true;
+            return raw.Trim().ToLowerInvariant() switch
+            {
+                "0" or "false" or "no" or "off" => false,
+                _ => true,
+            };
+        }
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

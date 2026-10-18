@@ -195,6 +195,23 @@ public static class AutoLoginArgs
         }
     }
 
+    /// <summary>
+    /// --hud-ui-audit-only a,b：只走查指定窗口（缺省 = 全部）。用于诊断个别窗口/控件，
+    /// 不必跑满 34 个窗口（一次全量窗口阶段约 10 分钟）。
+    /// </summary>
+    public static List<string> HudUiAuditOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--hud-ui-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(','))
+        {
+            string trimmed = part.Trim();
+            if (trimmed.Length > 0) result.Add(trimmed);
+        }
+        return result;
+    }
+
     /// <summary>--hud-ui-audit-quit=0|1：走查结束后是否退出进程（缺省 1 = 退出，便于脚本化）。</summary>
     public static bool HudUiAuditQuit
     {

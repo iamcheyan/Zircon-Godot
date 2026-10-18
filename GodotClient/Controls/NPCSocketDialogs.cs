@@ -25,6 +25,12 @@ public sealed partial class NPCSocketDialog : DXWindow
         AddControl(new DXLabel { Text = "镶嵌", FontSize = 10, TextColour = new Color(1f, .85f, .3f), DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Center, VAlign = VerticalAlignment.Center, Location = new Vector2I(0, 8), Size = new Vector2I(188, 18), IsControl = false });
         Panel = new NPCSocketPanel { Location = Vector2I.Zero };
         AddControl(Panel);
+
+        // 2026-10-18：Panel 是最后加入的，会盖住上面的 ✕ 与「关闭」按钮
+        // （--hud-ui-audit 悬停自校验实测这两个按钮 unreachable、鼠标命中的是 Panel 自身）
+        // → 面板加完再把本窗按钮提到最前。
+        foreach (DXControl c in Controls)
+            if (c is DXButton b) b.BringToFront();
     }
 
     public void Result(Library.Network.ServerPackets.NPCSocketItem packet) => Panel.Result(packet);

@@ -48,6 +48,11 @@ public sealed partial class NPCSocketPanel : DXControl
         _start = new DXButton { Text = "开始", Type = DXButton.ButtonType.Default, Size = new Vector2I(70, 24), Location = new Vector2I(16, 280), LibraryFile = LibraryFile.Interface, Index = -1 };
         _start.MouseClick += (s, e) => Send();
         AddControl(_start);
+
+        // 2026-10-18：实测本面板的按钮点不到（鼠标下方命中 NPCSocketPanel 自身，
+        // 被后加的动画/覆盖层压在下面）→ 构造结束时统一把所有按钮提到最前。
+        foreach (DXControl c in Controls)
+            if (c is DXButton b) b.BringToFront();
     }
 
     public bool AuditLayout(out string details)
@@ -326,6 +331,9 @@ public sealed partial class NPCSocketCombinePanel : DXControl
         };
         _resultAnimation.AfterAnimation += (s, e) => { _resultAnimation.Visible = false; FinishOperation(); };
         AddControl(_combineAnimation); AddControl(_combineOverlay); AddControl(_resultAnimation);
+        // 这些动画/覆盖层是运行时按钮之后才加的，会再次盖住按钮 → 加完再提一次
+        foreach (DXControl c in Controls)
+            if (c is DXButton b) b.BringToFront();
         for (int i = 0; i < _gems.Length; i++)
         {
             int slot = i;
@@ -334,6 +342,11 @@ public sealed partial class NPCSocketCombinePanel : DXControl
         _start = new DXButton { Text = "合成", Type = DXButton.ButtonType.Default, Size = new Vector2I(70, 24), Location = new Vector2I(17, 285), LibraryFile = LibraryFile.Interface, Index = -1 };
         _start.MouseClick += (s, e) => Send();
         AddControl(_start);
+
+        // 2026-10-18：实测本面板的按钮点不到（鼠标下方命中 NPCSocketPanel 自身，
+        // 被后加的动画/覆盖层压在下面）→ 构造结束时统一把所有按钮提到最前。
+        foreach (DXControl c in Controls)
+            if (c is DXButton b) b.BringToFront();
     }
 
     public bool AuditLayout(out string details)

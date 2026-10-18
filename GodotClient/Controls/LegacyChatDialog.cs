@@ -66,7 +66,12 @@ public sealed partial class LegacyChatDialog : DXWindow
 
         public ChatScrollBar()
         {
-            Size = new Vector2I(572, 388);
+            // 2026-10-18 修复：此处原为整窗 572x388。该控件 MouseFilter=Pass（供鼠标在其范围内滚轮翻页），
+            // 于是它盖住了窗口底部那 6 个频道按钮，鼠标永远命中的是滚动条而不是按钮
+            // （--hud-ui-audit 悬停自校验实测 6 个按钮 unreachable，实际悬停=ChatScrollBar）。
+            // 收窄到竖条自身范围即可：子控件（ChainView/BeadHit/上下箭）用的是绝对偏移与各自的 Size，
+            // 不受父容器尺寸影响；文字区的滚轮翻页由 _historyClip 自己的 MouseWheel 负责，行为不丢。
+            Size = new Vector2I(TrackX + ButtonW, DownY + ButtonH);
             MouseFilter = MouseFilterEnum.Pass;
             MouseWheel += (s, e) => ScrollByRows?.Invoke(e.Delta > 0 ? 1 : -1);
 
@@ -305,7 +310,17 @@ public sealed partial class LegacyChatDialog : DXWindow
             //   arg2 = 360+2k -> "屏蔽/激活"绿态（该键 arg9/+0x30 = 0，悬停态不画帧，只画文字）
             //   arg3 = 361+2k -> 按下金态
             // 故此处不常显绿帧：普通态画空、悬停不画帧（提示文字走 Tooltip）、按下画 arg3。
-            button.Size = MirSkin.GetSize(LibraryFile.GameInter, channelFrames[i].Item1);
+            // 2026-10-18 修复：普通态帧是空的（灰白图标烘焙在背景 F350 里），
+            // MirSkin.GetSize 对空帧返回 0x0 → 按钮尺寸为 0，鼠标既悬停不到也点不到
+            // （--hud-ui-audit 悬停自校验实测这 6 个频道按钮全部 unreachable，
+            //   实际悬停命中的是窗口自身）。给一个覆盖烘焙图标范围的命中框，
+            // 不改三态美术逻辑（Index/-1 与 PressedIndex 照旧）。
+            Vector2I channelArtSize = MirSkin.GetSize(LibraryFile.GameInter, channelFrames[i].Item1);
+            button.Size = channelArtSize == Vector2I.Zero ? new Vector2I(30, 26) : channelArtSize;
+            // 必须置 FixedSize：DXButton 的 Index setter 在 !FixedSize 时会按帧重算 Size，
+            // 而下面正好要把 Index 置 -1（普通态不画帧）→ 尺寸会被重算成 0，按钮既悬停不到也点不到。
+            // （同一坑在 MagicDialog 的页签上已有记录。）
+            button.FixedSize = true;
             button.Index = -1;
             button.HoverIndex = -1;
             button.PressedIndex = channelFrames[i].Item2;
@@ -341,6 +356,15 @@ public sealed partial class LegacyChatDialog : DXWindow
         _close.TooltipText = Lang.CommonControlClose;
         _close.MouseClick += (_, _) => CloseChat();
         AddControl(_close);
+
+        // 2026-10-18：把本窗所有按钮提到最前。
+        // 起因：--hud-ui-audit 的"悬停自校验"实测本窗 6 个按钮点不到 —— 鼠标下方命中的是
+        // ChatScrollBar（它的 Size 是整窗 572x388，MouseFilter=Pass，用于整窗滚轮滚动），
+        // 按钮被同尺寸的兄弟控件压在下面。BringToFront 走 Godot 的 MoveChild，
+        // 命中与绘制顺序一起修好，同时保留滚动条原有的整窗滚动行为。
+        foreach (DXControl c in Controls)
+            if (c is DXButton b) b.BringToFront();
+
         Visible = false;
     }
 

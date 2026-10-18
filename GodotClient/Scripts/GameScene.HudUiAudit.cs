@@ -223,7 +223,9 @@ public partial class GameScene
         GD.Print("[HudUi] === 阶段 2：窗口内控件 ===");
         int perWindow = AutoLoginArgs.HudUiAuditLimit;
 
-        foreach (var (wLabel, get) in HudUiWindowTargets())
+        List<string> onlyWindows = AutoLoginArgs.HudUiAuditOnly();
+        foreach (var (wLabel, get) in HudUiWindowTargets()
+                     .Where(t => onlyWindows.Count == 0 || onlyWindows.Contains(t.Label)))
         {
             DXWindow w = null;
             try { w = get(); }
@@ -435,6 +437,9 @@ public partial class GameScene
             await HudUiFramesAsync(1);
             Control hovered = HubUiHoveredControl();
             if (hovered != null && (hovered == c || c.IsAncestorOf(hovered))) return (point, name, true);
+            // 未命中时记录该候选坐标下**实际**悬停到什么：用于判断"是被别的控件挡住"还是"坐标空间不对"
+            string hitName = hovered == null ? "(空)" : $"{hovered.GetType().Name}#{hovered.GetInstanceId()}";
+            GD.Print($"[HudUi]   候选 {name} 未命中 at={point} 实际悬停={hitName}");
         }
         return (last, "none_hit", false);
     }

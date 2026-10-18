@@ -1,0 +1,5 @@
+{"stage":1,"label":"Deer_idle","targetId":6028,"name":"Deer","image":"Deer","hit1":{"anim":"Standing","frame":1,"dir":"Up","cell":"454,402","tickMs":15996,"shot":"/tmp/monster_audit_runs/Deer/011_Deer_idle.png"},"hit2":{"anim":"Standing","frame":2,"dir":"Up","cell":"454,402","tickMs":16471,"shot":"/tmp/monster_audit_runs/Deer/012_Deer_idle.png"},"ok":true,"hits":2,"required":2}
+{"stage":2,"label":"Deer_walk","targetId":6028,"ai":2,"status":"blocked","reason":"passive-monster-no-active-chase"}
+{"stage":3,"label":"Deer_combat","targetId":6028,"ai":2,"status":"blocked","reason":"passive-monster-no-active-attack"}
+{"stage":4,"label":"Deer_dead","targetId":6028,"hit1":{"anim":"Die","frame":0,"dir":"Up","cell":"454,402","tickMs":17158,"shot":"/tmp/monster_audit_runs/Deer/040_Deer_die.png"},"hit2":{"anim":"Struck","frame":0,"dir":"Up","cell":"454,402","tickMs":17426,"shot":"/tmp/monster_audit_runs/Deer/041_Deer_struck.png"},"dieHits":1,"struckHits":1,"combatHits":0,"ok":true,"transitions":["die:Die#0@454,402","struck:Struck#0@454,402"]}
+{"name":"Deer","targetId":6028,"image":"Deer","ai":2,"passive":true,"removed":false}

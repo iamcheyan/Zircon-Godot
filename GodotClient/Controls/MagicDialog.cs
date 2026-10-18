@@ -331,22 +331,6 @@ public partial class MagicDialog : DXWindow
         => (_legacyRuntimeEntries.Count + LegacyPageSize - 1) / LegacyPageSize;
 
 
-    /// <summary>
-    /// EI 经典窗口只有 8 个学派页签，而库里的技能还分 Active/Toggle/Passive/
-    /// Atrocity/Kill/Assassination 等新学派——它们**没有任何界面入口**，玩家在技能窗里
-    /// 看不到、也绑定不了（审计 skills 报告第 2 条「14 个技能不可见」）。
-    /// 实测自绘额外页签在这套自绘输入体系里可达性有问题（可见但点不动，详见
-    /// BuildLegacySchoolButtons 注释），故改为在**内容层**把这些学派并入"剑(Physical)"页签。
-    /// 语义上吻合：这些正是近战系的主动/被动/开关类技能。
-    /// </summary>
-    private static bool SchoolMatchesTab(MagicSchool magicSchool, MagicSchool tab)
-    {
-        if (magicSchool == tab) return true;
-        return tab == MagicSchool.Physical && magicSchool
-            is MagicSchool.Active or MagicSchool.Toggle or MagicSchool.Passive
-            or MagicSchool.Atrocity or MagicSchool.Kill or MagicSchool.Assassination;
-    }
-
     private void BuildLegacySchoolButtons()
     {
         foreach (var button in _schoolButtons.Values)
@@ -374,6 +358,17 @@ public partial class MagicDialog : DXWindow
         };
         _tabOrder = schools.Select(x => x.school).ToList();
 
+        // 追加"可见技能里出现、但不属于 8 个经典学派"的页签（Active/Toggle/Passive 等）
+        if (GameScene.Game != null)
+        {
+            foreach (MagicSchool sc in GetVisibleMagicInfos(GameScene.Game)
+                         .Select(x => x.Info?.School ?? MagicSchool.None)
+                         .Where(x => x != MagicSchool.None && x != MagicSchool.Discipline
+                                     && !_tabOrder.Contains(x))
+                         .Distinct())
+                _tabOrder.Add(sc);
+        }
+
         foreach (var entry in schools)
         {
             MagicSchool school = entry.school;
@@ -399,7 +394,49 @@ public partial class MagicDialog : DXWindow
             _schoolButtons[school] = button;
         }
 
+        // 额外学派页签：与经典页签**同构**（真实美术帧才点得动），帧复用"剑"页签那对
+        // （450–464 只有 8 组互不相同的美术，新学派确实没有专属图标），文字标签用中文。
+        // 位置选择（实测驱动）：原先竖排在经典页签正下方的 y=296/314，其中两个被同区域的
+        // 其它控件盖住（`--hud-ui-audit` 的"悬停自校验"报 unreachable:none_hit，而最下面那个
+        // 能点到）→ 改到技能列表下沿之外的空白横排：列表是 (15,70)-(390,488)、滚动条到 y=492，
+        // 故 y=491 处 x<120 一带是空的。
+        int extraX = 4;
+        foreach (MagicSchool extra in _tabOrder.Where(sc => !_schoolButtons.ContainsKey(sc)))
+        {
+            MagicSchool school = extra;
+            var textButton = new DXButton
+            {
+                LibraryFile = LibraryFile.GameInter,
+                Index = 464,
+                HoverIndex = 465,
+                PressedIndex = 465,
+                Location = new Vector2I(extraX, 491),
+                Size = new Vector2I(36, 18),
+                FixedSize = true,
+                Text = LegacyExtraSchoolLabel(school),
+                FontSize = 8,
+            };
+            textButton.MouseClick += (_, _) => SelectSchool(school);
+            AddControl(textButton);
+            _schoolButtons[school] = textButton;
+            extraX += 38;
+        }
     }
+
+    /// <summary>
+    /// EI 8 个经典学派之外、Zircon 数据模型新增学派的**中文**页签名。
+    /// 这些分类在经典素材里没有对应图标，故以文字页签出现（见 BuildLegacySchoolButtons 注释）。
+    /// </summary>
+    private static string LegacyExtraSchoolLabel(MagicSchool school) => school switch
+    {
+        MagicSchool.Active => "主动",
+        MagicSchool.Toggle => "开关",
+        MagicSchool.Passive => "被动",
+        MagicSchool.Atrocity => "残暴",
+        MagicSchool.Kill => "杀戮",
+        MagicSchool.Assassination => "刺杀",
+        _ => "其它",
+    };
 
     public bool AuditLayout(out string details)
     {
@@ -516,13 +553,15 @@ public partial class MagicDialog : DXWindow
             // 2026-10-18 补充裁决（全游戏审计 skills 报告第 2 条「14 个技能不可见」）：
             // 这条数据分类差异**确实造成玩家可见的症状**——现库 Active 9 个、Toggle 3 个、
             // Passive 2 个共 14 个技能（含全部武士技能）在技能窗里没有任何入口，无法查看/绑定。
-            // 处置（两次迭代后定稿）：8 个经典页签**原样不动**。
-            // 第一版做法是在其下方自绘三个文字页签（主动/开关/被动）。实机走查发现**页签可见、
-            // 点击却到不了处理器**：审计合成真实鼠标事件点在控件屏幕中心，12 个控件都点到、
-            // 0 灰块，但 SelectSchool 只收到经典页签的 Fire/Holy，额外页签一次都没收到
-            // （收窄热区到 13x16 也一样）。自绘页签在这套自绘输入体系里不可达，故**放弃新增 UI**，
-            // 改为在**内容层**把额外学派并入"剑(Physical)"页签（见 SchoolMatchesTab）：
-            // 语义也吻合——Active/Toggle/Passive 这些正是近战系的主动/被动技能。
+            // 处置：8 个经典页签**原样不动**，在其下方追加新学派的中文文字页签
+            // （主动/开关/被动…），让这些技能有明确入口。
+            //
+            // 重要更正（2026-10-18 晚）：中途曾判定"自绘页签可见但点不动、故废弃该方案"，
+            // 那是**我自己审计的错**——走查算点击坐标时用了 GetViewport().GetCanvasTransform()
+            // （世界相机的变换），对 UI 层控件是错的，鼠标根本没落在控件上。改用
+            // Control.GetScreenTransform() 并加"悬停控件自校验"后 74/74 次点击全部命中，
+            // 8 个经典页签的 SelectSchool 也全部收到。故自绘文字页签可达，方案恢复。
+            // （教训记入 docs/AUDIT/WORKLOG.md：验证工具的坐标空间必须自校验。）
             foreach (var button in _schoolButtons.Values)
             {
                 RemoveControl(button);
@@ -531,7 +570,7 @@ public partial class MagicDialog : DXWindow
             _schoolButtons.Clear();
             BuildLegacySchoolButtons();
             SelectSchool(_selectedSchool, preserveState: true);
-            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count} entries={visible.Count(x => SchoolMatchesTab(x.Info.School, _selectedSchool))}");
+            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count} entries={visible.Count(x => x.Info.School == _selectedSchool)}");
             return;
         }
 
@@ -700,7 +739,7 @@ public partial class MagicDialog : DXWindow
         if (game == null) return;
 
         var schoolEntries = GetVisibleMagicInfos(game)
-            .Where(x => SchoolMatchesTab(x.Info.School, school))
+            .Where(x => x.Info.School == school)
             .OrderBy(x => x.Info.NeedLevel1)
             .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
             .ToArray();

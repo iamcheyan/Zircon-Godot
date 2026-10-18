@@ -295,10 +295,13 @@ public partial class GameScene
                 await HudUiHoverAsync(b);
                 string sigBefore = HudUiSignature();
                 string note = "";
-                try { await HudUiClickAsync(b); }
+                string receiver = "";
+                try { receiver = await HudUiClickAsync(b); }
                 catch (Exception ex) { note = "exception:" + ex.GetType().Name + ": " + ex.Message; }
                 await HudUiFramesAsync(8);
 
+                bool unreachable = receiver.StartsWith("unreachable");
+                if (unreachable && note.Length == 0) note = "unreachable";
                 var opened = WindowManager.OpenWindows.Where(x => !before.Contains(x) && x != w).ToList();
                 string shot = HudUiShot(outDir, label);
                 int grayDelta = DXButton.FallbackDrawReports.Count - grayBefore;
@@ -314,10 +317,11 @@ public partial class GameScene
                     gray = grayDelta,
                     opened = opened.Select(x => x.GetType().Name).ToArray(),
                     changed,
+                    receiver,
                     shot,
                     note = note.Length > 0 ? note : (changed || grayDelta != 0 || opened.Count > 0 ? "" : "no_visible_effect"),
                 }));
-                GD.Print($"[HudUi] {label}: text='{text}' gray={grayDelta} changed={changed} opened=[{string.Join(",", opened.Select(x => x.GetType().Name))}] shot={shot} {note}");
+                GD.Print($"[HudUi] {label}: text='{text}' gray={grayDelta} changed={changed} receiver={receiver} opened=[{string.Join(",", opened.Select(x => x.GetType().Name))}] shot={shot} {note}");
 
                 foreach (DXWindow x in opened)
                 {
@@ -341,12 +345,32 @@ public partial class GameScene
     }
 
     /// <summary>合成一次真实鼠标点击：motion（建立 hover/enter 状态）→ down → up。</summary>
-    private async Task HudUiClickAsync(DXControl c)
+    /// <summary>
+    /// 悬停探测：返回屏幕点 p 上**真正会接收事件**的控件名。
+    /// 走查此前只记录"打算点哪个控件"，不记录"实际谁收到了"——2026-10-18 技能窗页签
+    /// 就会出现"控件被点到、0 灰块，但处理器一次没触发"的现象，无法定位截获者。
+    /// </summary>
+    private string HudUiReceiverAt()
     {
-        if (c == null || !IsInstanceValid(c) || !c.IsVisibleInTree()) return;
-        Vector2 p = HudUiCenterOnScreen(c);
-        Input.ParseInputEvent(new InputEventMouseMotion { Position = p, GlobalPosition = p });
+        try
+        {
+            Control hovered = GetViewport()?.GuiGetHoveredControl();
+            if (hovered == null) return "(null)";
+            string name = hovered.Name.ToString();
+            Control parent = hovered.GetParent() as Control;
+            return parent != null ? $"{parent.Name}/{name}" : name;
+        }
+        catch (Exception ex) { return $"err:{ex.GetType().Name}"; }
+    }
+
+    private async Task<string> HudUiClickAsync(DXControl c)
+    {
+        if (c == null || !IsInstanceValid(c) || !c.IsVisibleInTree()) return "not_visible";
+        (Vector2 p, string method, bool hit) = await HudUiAimAsync(c);
+        GD.Print($"[HudUi] 瞄准 {c.GetType().Name} 用 {method} hit={hit} at={p}");
+        if (!hit) return $"unreachable:{method}";   // 三种坐标算法都没命中 → 不点，如实上报
         await HudUiFramesAsync(1);
+        string receiver = HudUiReceiverAt();
         Input.ParseInputEvent(new InputEventMouseButton
         {
             Position = p,
@@ -363,28 +387,62 @@ public partial class GameScene
             ButtonIndex = MouseButton.Left,
             Pressed = false,
         });
+        return receiver;
     }
 
     private async Task HudUiHoverAsync(DXControl c)
     {
         if (c == null || !IsInstanceValid(c) || !c.IsVisibleInTree()) return;
-        Vector2 p = HudUiCenterOnScreen(c);
+        (Vector2 p, _, _) = await HudUiAimAsync(c);
         Input.ParseInputEvent(new InputEventMouseMotion { Position = p, GlobalPosition = p });
         await HudUiFramesAsync(2);
     }
 
-    /// <summary>控件中心点：控件坐标 → 视口坐标（考虑 canvas 变换，UI 缩放时也点得准）。</summary>
-    private Vector2 HudUiCenterOnScreen(DXControl c)
+    /// <summary>
+    /// 瞄准：算出"鼠标下方**确实就是目标控件**"的屏幕点。
+    /// 起因（2026-10-18）：走查原本只按 `GetViewport().GetCanvasTransform() * 控件全局矩形中心`
+    /// 换算，而那是**世界相机**的变换，对 UI 层（CanvasLayer 上的窗口控件）是错的——
+    /// 实测 `GuiGetHoveredControl()` 在几乎每次点击位置都返回 null，即点根本没落在控件上。
+    /// 后果：`176 击 0 灰块 PASS` 只证明了"画得出来"，没证明"点得到"。
+    /// 现在改为多候选逐个试，并用悬停控件自校验；命中即用，全部未命中则退回最后一个候选并记录。
+    /// </summary>
+    private async Task<(Vector2 Point, string Method, bool Hit)> HudUiAimAsync(DXControl c)
     {
-        Rect2 r = c.GetGlobalRect();
-        Vector2 canvasPoint = r.Position + r.Size * 0.5f;
+        var candidates = new List<(string Name, Vector2 Point)>();
+        Vector2 center = c.Size * 0.5f;
+
+        try { candidates.Add(("screen_transform", c.GetScreenTransform() * center)); }
+        catch { /* 旧版 Godot 无此 API */ }
         try
         {
-            Viewport vp = GetViewport();
-            if (vp != null) return vp.GetCanvasTransform() * canvasPoint;
+            Vector2 g = (c.GetGlobalTransform() * center);
+            candidates.Add(("global_transform", g));
         }
-        catch { /* 拿不到视口变换就退回画布坐标 */ }
-        return canvasPoint;
+        catch { }
+        try
+        {
+            Rect2 r = c.GetGlobalRect();
+            Vector2 canvasPoint = r.Position + r.Size * 0.5f;
+            candidates.Add(("canvas_transform", GetViewport().GetCanvasTransform() * canvasPoint));
+        }
+        catch { }
+
+        Vector2 last = candidates.Count > 0 ? candidates[candidates.Count - 1].Point : Vector2.Zero;
+        foreach (var (name, point) in candidates)
+        {
+            last = point;
+            Input.ParseInputEvent(new InputEventMouseMotion { Position = point, GlobalPosition = point });
+            await HudUiFramesAsync(1);
+            Control hovered = HubUiHoveredControl();
+            if (hovered != null && (hovered == c || c.IsAncestorOf(hovered))) return (point, name, true);
+        }
+        return (last, "none_hit", false);
+    }
+
+    private Control HubUiHoveredControl()
+    {
+        try { return GetViewport()?.GuiGetHoveredControl(); }
+        catch { return null; }
     }
 
     private List<DXButton> HudUiCollectButtons(DXControl root, int max, int maxDepth)

@@ -55,6 +55,32 @@ import restore_cleaned_content as rcc  # noqa: E402
 TABLES = ["MagicInfo", "ItemInfo", "QuestInfo", "QuestReward"]
 
 
+NAME_FIELDS = {"MonsterInfo": "MonsterName", "ItemInfo": "ItemName", "MagicInfo": "Name",
+               "NPCInfo": "NPCName", "MapInfo": "FileName", "QuestInfo": "QuestName",
+               "SetInfo": "SetName", "CurrencyInfo": "Name"}
+
+
+def build_name_trim_mods(ws_dir):
+    """名字字段的首尾空白（实测全库仅 MonsterInfo#196 'Pachon ' 一处）。
+    引用一律按 Index，不按名字，所以 trim 安全；_Identity 是派生字段需同步改。"""
+    mods, notes = [], []
+    for table, field in NAME_FIELDS.items():
+        path = Path(ws_dir) / f"{table}.json"
+        if not path.exists():
+            continue
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        rows = doc["rows"] if isinstance(doc, dict) else doc
+        for r in rows:
+            v = r.get(field)
+            if isinstance(v, str) and v != v.strip():
+                mods.append({"table": table, "Index": r["Index"], "field": field, "new": v.strip()})
+                if isinstance(r.get("_Identity"), str) and r["_Identity"] != r["_Identity"].strip():
+                    mods.append({"table": table, "Index": r["Index"], "field": "_Identity",
+                                 "new": r["_Identity"].strip()})
+                notes.append(f"[trim] {table}#{r['Index']} {v!r} → {v.strip()!r}")
+    return mods, notes
+
+
 def letters_only(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (s or "").lower())
 
@@ -237,6 +263,8 @@ def main():
     ap.add_argument("--verify-db", type=Path, default=None)
     ap.add_argument("--out", type=Path, default=Path("/tmp/restore_batch2_preview.json"))
     ap.add_argument("--rollback", type=Path)
+    ap.add_argument("--trim-names", action="store_true",
+                    help="额外把所有名字字段的首尾空白去掉（引用按 Index，安全）")
     args = ap.parse_args()
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -263,6 +291,13 @@ def main():
         cur_item, cur_quest, cur_reward, old_item, old_reward, args.workspace)
     modifications = mods_a + mods_b
     notes = notes_a + notes_b
+    if args.trim_names:
+        mods_t, notes_t = build_name_trim_mods(args.workspace)
+        modifications += mods_t
+        notes += notes_t
+        print(f"\n== 名字首尾空白：{len(mods_t)} 处 ==")
+        for m in mods_t:
+            print(f"  {m['table']}#{m['Index']}.{m['field']} → {m['new']!r}")
 
     print(f"\n== 组 A：技能显示名修改 {len(mods_a)} 条 ==")
     for m in mods_a:
@@ -305,6 +340,8 @@ def main():
             problems.append(f"QuestReward#{r['Index']} 引用的物品 #{it} 不存在")
     reward_idx = {r["Index"] for r in after_reward}
     for m in mods_b:
+        if m["field"] != "Rewards":
+            continue
         for ref in m["new"]:
             if ref["Index"] not in reward_idx:
                 problems.append(f"QuestInfo#{m['Index']}.Rewards 引用的奖励 #{ref['Index']} 不存在")

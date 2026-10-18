@@ -33,6 +33,8 @@ public partial class GameScene
 
     private ObjectRenderer _pilotTarget;
     private uint _pilotTargetId;
+    private bool _pilotDieCaptured;
+    private string _pilotDieShot;
     private readonly List<Dictionary<string, object>> _pilotLog = new();
 
     /// <summary>当前客户端加载的地图名（MapView.MapFileName）；MirMap 本身不带文件名。</summary>
@@ -167,6 +169,8 @@ public partial class GameScene
             return;
         }
         _pilotTargetId = _pilotTarget.ObjectID;
+        _pilotDieCaptured = false;
+        _pilotDieShot = null;
         GD.Print($"[MonsterPilot] locked target name={name} id={_pilotTargetId} cell=({_pilotTarget.CellX},{_pilotTarget.CellY}) image={_pilotTarget.MonsterInfo?.Image}");
         CaptureMonsterAuditShot(outDir, 0, name + "_spawn");
 
@@ -296,6 +300,12 @@ public partial class GameScene
         // 高级/高血量怪（如 Lv250 BOSS）在测试角色的正常输出下不能在 90s 内击杀，
         // 这是测试手段的限制而不是动画缺陷。未采到 Die 且目标仍活着时，记为
         // blocked（附原因）而不是 FAIL，避免把“打不死”误判成“死亡动画错”。
+        // 一击秒杀时逐帧采样来不及看到 Die 帧；OnObjectDied 里有同步瞬时截图兜底。
+        if (_pilotDieCaptured && !string.IsNullOrEmpty(_pilotDieShot))
+        {
+            deathRow["dieInstantShot"] = _pilotDieShot;
+            deathRow["ok"] = true;
+        }
         if (deathRow.TryGetValue("dieHits", out var dhObj) && dhObj is int dh && dh == 0
             && IsInstanceValid(_pilotTarget) && !_pilotTarget.Dead)
         {

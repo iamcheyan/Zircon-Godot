@@ -8678,6 +8678,15 @@ public partial class GameScene : Control
             ob.Dead = true;
             ob.SetAnimation(MirAnimation.Die);
             ob.PlayDieSound();
+            // pilot 专用：死亡瞬间同步截图。低级怪一击秒杀时 ObjectDied 与
+            // ObjectRemove 可能同批到达，逐帧采样协程来不及看到 Die 帧
+            // （Wasp Hatchling 实测）。这里在切到 Die 动画的第一时间直接取证。
+            if (AutoLoginArgs.MonsterPilot && _pilotTargetId == objectID && !_pilotDieCaptured)
+            {
+                _pilotDieCaptured = true;
+                _pilotDieShot = CaptureMonsterAuditShot(AutoLoginArgs.MonsterPilotOut, 45, ob.MonsterInfo?.MonsterName + "_die_instant");
+                GD.Print($"[MonsterPilot] Die 瞬间截图: {_pilotDieShot} anim={ob.Animation} frame={ob.FrameIndex} dir={ob.Direction}");
+            }
             if (AutoLoginArgs.OperationAuditExt && _operationAuditExtStage == 16
                 && objectID == _operationAuditExtCombatTargetId)
             {

@@ -57,7 +57,31 @@ namespace Server.Models
 
         public void Load()
         {
-            var path = Path.Combine(Config.MapPath, Info.FileName + ".map");
+            // 2026-10-18：DB 里的地图文件名与磁盘文件大小写不一致有 10 例（如 MapInfo.FileName="d501"
+            // 而磁盘是 "D501.map"；客户端 MapView.ResolveMapFile 早已有回退，服务端没有）——
+            // Linux 文件系统区分大小写，直接用 DB 名字拼路径会 FileNotFound，整张图不可用。
+            string path = Path.Combine(Config.MapPath, Info.FileName + ".map");
+
+            if (!File.Exists(path) && Directory.Exists(Config.MapPath))
+            {
+                try
+                {
+                    foreach (var candidate in Directory.EnumerateFiles(Config.MapPath, "*.map"))
+                    {
+                        if (string.Equals(Path.GetFileNameWithoutExtension(candidate), Info.FileName,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            SEnvir.Log($"Map {Info.FileName}: 文件名大小写回退到 {Path.GetFileName(candidate)}。");
+                            path = candidate;
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SEnvir.Log($"Map {Info.FileName}: 扫描地图目录失败 {Config.MapPath}: {ex.Message}");
+                }
+            }
 
             if (!File.Exists(path))
             {

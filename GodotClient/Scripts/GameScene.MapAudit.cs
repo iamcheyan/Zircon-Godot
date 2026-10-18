@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Godot;
 using Library;
+using C = Library.Network.ClientPackets;
 
 namespace ZirconClient.Scripts;
 
@@ -25,8 +26,9 @@ namespace ZirconClient.Scripts;
 public partial class GameScene
 {
     private bool _mapAuditStarted;
-
+    private bool _portalAuditStarted;
     internal void StartMapAudit() => _ = RunMapAuditAsync();
+    internal void StartPortalAudit() => _ = RunPortalAuditAsync();
 
     private async Task RunMapAuditAsync()
     {
@@ -67,7 +69,7 @@ public partial class GameScene
             else
             {
                 SendChat($"@move {stem}");
-                loaded = await WaitUntilAsync(() => _playerMapIndex == info.Index && _mapView?.Map != null, 12000);
+                loaded = await WaitUntilAsync(() => _playerMapIndex == info.Index && _mapView?.Map != null, 25000);
                 if (loaded)
                 {
                     width = _mapView.Map.Width;
@@ -98,6 +100,106 @@ public partial class GameScene
 
         GD.Print($"[MapAudit] SUMMARY total={rows.Count} loaded={okCount} failed={rows.Count - okCount}");
         if (AutoLoginArgs.MapAuditQuit) GetTree().Quit(rows.Count == okCount ? 0 : 1);
+    }
+
+    /// <summary>
+    /// 传送门实机验证（--portal-audit）：规格 <c>"srcMap:x:y:dstMap,..."</c>。
+    /// 用 @move 把角色**放到源格上**，看服务端是否把角色送到目标地图——用于验收
+    /// "端点不可站"修复（原格不可站 → 踩门没反应；改到可站格后应正常传送）。
+    /// </summary>
+    private async Task RunPortalAuditAsync()
+    {
+        string outDir = AutoLoginArgs.PortalAuditOut;
+        try { Directory.CreateDirectory(outDir); }
+        catch (Exception ex) { GD.PrintErr($"[PortalAudit] 无法创建输出目录 {outDir}: {ex.Message}"); }
+
+        for (int i = 0; i < 180 && (_mapView?.Map == null || !_startGameShown); i++)
+            await NextFrameAsync();
+        await WaitSecondsAsync(0.6);
+
+        var rows = new List<string>();
+        int okCount = 0;
+        var specs = AutoLoginArgs.PortalAuditOnly();
+        GD.Print($"[PortalAudit] start 共 {specs.Count} 个传送门 out={outDir}");
+
+        foreach (string spec in specs)
+        {
+            string[] parts = spec.Split(':');
+            if (parts.Length is not (4 or 5)
+                || !int.TryParse(parts[1], out int x) || !int.TryParse(parts[2], out int y))
+            {
+                rows.Add(JsonSerializer.Serialize(new { spec, ok = false, note = "bad_spec" }));
+                GD.PrintErr($"[PortalAudit] 规格非法: {spec}（应为 srcMap:x:y:dstMap）");
+                continue;
+            }
+
+            string srcStem = parts[0], dstStem = parts[parts.Length - 1];
+            var dstInfo = Globals.MapInfoList?.Binding.FirstOrDefault(m => m.FileName == dstStem);
+            int mapBefore = _playerMapIndex;
+            int mapAfterTeleport = -1;
+            bool ok = false;
+            string note = "";
+            int dir = 0;
+            bool walkMode = parts.Length == 5 && int.TryParse(parts[3], out dir);
+
+            if (dstInfo == null)
+            {
+                note = "dst_mapinfo_missing";
+            }
+            else
+            {
+                SendChat($"@move {srcStem} {x} {y}");
+                await WaitSecondsAsync(1.2);
+
+                // 强化判定：必须真的站在源图上，才谈"踩门是否生效"，否则会把"传送失败"误判成"门没开"
+                var srcInfo = Globals.MapInfoList?.Binding.FirstOrDefault(m => m.FileName == srcStem);
+                mapAfterTeleport = _playerMapIndex;
+                if (srcInfo != null && _playerMapIndex != srcInfo.Index)
+                    note = $"teleport_failed(on map {_playerMapIndex}, want {srcInfo.Index})";
+
+                // 走路模式（5 段规格 srcMap:x:y:dir:dstMap）：@move 是直接置位、不会触发"踩格"事件，
+                // 必须真的走一步踩上门格，才能验证传送门本身是否生效。
+                if (walkMode)
+                {
+                    if (_playerLocation.X != x || _playerLocation.Y != y)
+                    {
+                        note = $"from_cell_not_reached({_playerLocation.X},{_playerLocation.Y})";
+                    }
+                    else
+                    {
+                        _net.Connection.Enqueue(new C.Move { Direction = (MirDirection)dir, Distance = 1 });
+                        await WaitSecondsAsync(1.0);
+                    }
+                }
+
+                if (note.Length == 0)
+                    ok = await WaitUntilAsync(() => _playerMapIndex == dstInfo.Index, 12000);
+                if (!ok && note.Length == 0)
+                    note = _playerMapIndex == mapBefore ? "still_on_source_map" : "moved_elsewhere";
+                await WaitSecondsAsync(0.4);
+            }
+
+            string shot = CaptureMapAuditShot(outDir, $"{srcStem}_{x}_{y}_to_{dstStem}");
+            if (ok) okCount++;
+            rows.Add(JsonSerializer.Serialize(new
+            {
+                portal = spec,
+                fromMapIndex = mapBefore,
+                mapAfterTeleport,
+                toMapIndex = _playerMapIndex,
+                expectedMap = dstStem,
+                ok,
+                shot,
+                note,
+            }));
+            GD.Print($"[PortalAudit] {spec}: ok={ok} map {mapBefore}->{_playerMapIndex} {note} shot={shot}");
+        }
+
+        try { File.WriteAllLines(Path.Combine(outDir, "results.jsonl"), rows); }
+        catch (Exception ex) { GD.PrintErr($"[PortalAudit] 写 results.jsonl 失败: {ex.Message}"); }
+
+        GD.Print($"[PortalAudit] SUMMARY total={rows.Count} passed={okCount} failed={rows.Count - okCount}");
+        if (AutoLoginArgs.PortalAuditQuit) GetTree().Quit(rows.Count == okCount ? 0 : 1);
     }
 
     private string CaptureMapAuditShot(string outDir, string stem)

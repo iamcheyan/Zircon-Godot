@@ -9752,6 +9752,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.6).Timeout += StartMonsterAudit;
         }
 
+        // 传送门实机验证：站到源格上看是否被送到目标地图（实现见 GameScene.MapAudit.cs）。
+        if (AutoLoginArgs.PortalAudit && !_portalAuditStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _portalAuditStarted = true;
+            GetTree().CreateTimer(1.6).Timeout += StartPortalAudit;
+        }
+
         if (AutoLoginArgs.InteractionAudit && !_interactionAuditStarted && _startGameShown && _mapView?.Map != null
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.NPC)
             && _objects.Values.Any(x => x?.Type == ObjectRenderer.Kind.Player))

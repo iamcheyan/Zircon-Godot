@@ -290,6 +290,45 @@ public static class AutoLoginArgs
     }
 
     /// <summary>
+    /// --portal-audit：传送门实机验证（实现见 GameScene.MapAudit.cs）。站到源格上看是否被送到目标地图，
+    /// 用于验收"端点不可站"修复。
+    /// </summary>
+    public static bool PortalAudit => Has("--portal-audit");
+
+    /// <summary>--portal-audit-out &lt;dir&gt;：截图与结果目录（缺省 /tmp/portal_audit）。</summary>
+    public static string PortalAuditOut => GetValue("--portal-audit-out") ?? "/tmp/portal_audit";
+
+    /// <summary>--portal-audit-only "srcMap:x:y:dstMap,srcMap:x:y:dstMap"：要验的传送门清单。</summary>
+    public static List<string> PortalAuditOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--portal-audit-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string spec = part.Trim();
+            if (spec.Length > 0 && !result.Contains(spec)) result.Add(spec);
+        }
+        return result;
+    }
+
+    /// <summary>--portal-audit-quit=0|1：结束后是否退出进程（缺省 1）。</summary>
+    public static bool PortalAuditQuit
+    {
+        get
+        {
+            string raw = GetValue("--portal-audit-quit");
+            if (raw != null && raw.StartsWith("--")) raw = null;
+            if (string.IsNullOrWhiteSpace(raw)) return true;
+            return raw.Trim().ToLowerInvariant() switch
+            {
+                "0" or "false" or "no" or "off" => false,
+                _ => true,
+            };
+        }
+    }
+
+    /// <summary>
     /// --stay-select：与 --user 联用——登录成功后**停在选角屏**，
     /// 不自动进入游戏、也不对空账号自动建角。用于选角屏截图验证
     /// （洞窟槽位角色、创建面板等）。

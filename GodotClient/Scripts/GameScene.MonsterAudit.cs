@@ -45,10 +45,12 @@ public partial class GameScene
         for (int i = 0; i < names.Count; i++)
         {
             string name = names[i];
+            List<string> beforeList = ListMonstersNearby(14);
             SendChat($"@monster {name} 1");
-            bool spawned = await WaitUntilAsync(() => FindMonsterNearby(name, 12) != null, 6000);
-            ObjectRenderer found = spawned ? FindMonsterNearby(name, 12) : null;
-            if (spawned) await WaitSecondsAsync(0.5);
+            bool spawned = await WaitUntilAsync(() => ListMonstersNearby(14).Count > beforeList.Count, 6000);
+            await WaitSecondsAsync(0.5);
+            List<string> afterList = ListMonstersNearby(14);
+            string newNames = string.Join("/", afterList.Where(x => !beforeList.Contains(x)));
 
             string shot = CaptureMonsterAuditShot(outDir, i, name);
             if (spawned) okCount++;
@@ -56,13 +58,12 @@ public partial class GameScene
             {
                 monster = name,
                 spawned,
-                objectId = found?.ObjectID ?? 0,
-                cellX = found?.CellX ?? -1,
-                cellY = found?.CellY ?? -1,
-                display = found?.DisplayName ?? "",
+                beforeCount = beforeList.Count,
+                afterCount = afterList.Count,
+                newDisplay = newNames,
                 shot,
             }));
-            GD.Print($"[MonsterAudit] {name}: spawned={spawned} cell=({found?.CellX},{found?.CellY}) shot={shot}");
+            GD.Print($"[MonsterAudit] {name}: spawned={spawned} {beforeList.Count}->{afterList.Count} new=[{newNames}] shot={shot}");
         }
 
         try { File.WriteAllLines(Path.Combine(outDir, "results.jsonl"), rows); }
@@ -73,19 +74,24 @@ public partial class GameScene
         if (AutoLoginArgs.MonsterAuditQuit) GetTree().Quit(rows.Count == okCount ? 0 : 1);
     }
 
-    /// <summary>在玩家附近（半径内）找名字匹配的怪物对象。</summary>
-    private ObjectRenderer FindMonsterNearby(string name, int radius)
+    /// <summary>
+    /// 统计玩家附近（半径内）的怪物对象，并返回它们的显示名。
+    /// 不用名字匹配：客户端显示名是本地化中文，而 @monster 用的是库内英文名，
+    /// 两者对不上会导致"全都没刷出"的假象（2026-10-18 实测踩到）。
+    /// 改为对比"发送前后半径内怪物数量"，与名字无关。
+    /// </summary>
+    private List<string> ListMonstersNearby(int radius)
     {
-        if (_objects == null) return null;
+        var found = new List<string>();
+        if (_objects == null) return found;
         foreach (ObjectRenderer ob in _objects.Values)
         {
             if (ob?.Type != ObjectRenderer.Kind.Monster) continue;
-            if (!string.Equals(ob.DisplayName, name, StringComparison.OrdinalIgnoreCase)) continue;
             int dx = Math.Abs(ob.CellX - _playerLocation.X);
             int dy = Math.Abs(ob.CellY - _playerLocation.Y);
-            if (dx <= radius && dy <= radius) return ob;
+            if (dx <= radius && dy <= radius) found.Add(string.IsNullOrEmpty(ob.DisplayName) ? "?" : ob.DisplayName);
         }
-        return null;
+        return found;
     }
 
     private string CaptureMonsterAuditShot(string outDir, int index, string name)

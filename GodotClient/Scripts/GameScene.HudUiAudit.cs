@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -136,6 +137,24 @@ public partial class GameScene
 
     // ---------- 阶段 1：HUD 入口 ----------
 
+
+    /// <summary>
+    /// 反射读控件的 MouseClick 事件订阅者数量。合成鼠标事件对 HUD 按钮不生效时（被上层控件
+    /// 遮挡/不在同一画布层），这是判断"按钮到底有没有接处理器"最直接的证据：0 个订阅者 = 死按钮。
+    /// </summary>
+    private static int HudUiCountClickHandlers(DXControl c)
+    {
+        if (c == null) return -1;
+        try
+        {
+            FieldInfo f = typeof(DXControl).GetField("MouseClick",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            if (f?.GetValue(c) is Delegate d) return d.GetInvocationList().Length;
+            return 0;
+        }
+        catch { return -1; }
+    }
+
     private async Task HudUiPhaseHudAsync(string outDir, List<string> rows)
     {
         GD.Print("[HudUi] === 阶段 1：HUD 入口 ===");
@@ -149,6 +168,7 @@ public partial class GameScene
             }
 
             bool visible = btn.IsVisibleInTree();
+            int handlers = HudUiCountClickHandlers(btn);
             var before = WindowManager.OpenWindows.ToList();
             int grayBefore = DXButton.FallbackDrawReports.Count;
             string note = "";
@@ -157,26 +177,40 @@ public partial class GameScene
             await HudUiFramesAsync(8);
 
             var opened = WindowManager.OpenWindows.Where(w => !before.Contains(w)).ToList();
+            var closed = before.Where(w => !WindowManager.OpenWindows.Contains(w)).ToList();
             string shot = HudUiShot(outDir, label);
             int grayDelta = DXButton.FallbackDrawReports.Count - grayBefore;
+            // legacy 模式下背包/状态等窗口是常显的，HUD 按钮走 Toggle -> 表现为"关闭"，
+            // 所以"打开"与"关闭"都要记录，否则会把正常响应误判成没反应。
+            bool responded = opened.Count > 0 || closed.Count > 0;
             string openedNames = string.Join(",", opened.Select(w => w.GetType().Name));
+            string closedNames = string.Join(",", closed.Select(w => w.GetType().Name));
             rows.Add(HudUiRow(new
             {
                 phase = "hud",
                 label,
                 text = btn.Text ?? "",
                 visible,
+                handlers,
                 opened = opened.Select(w => w.GetType().Name).ToArray(),
+                closed = closed.Select(w => w.GetType().Name).ToArray(),
+                responded,
                 gray = grayDelta,
                 shot,
                 note,
             }));
-            GD.Print($"[HudUi] {label}: visible={visible} opened=[{openedNames}] gray={grayDelta} shot={shot} {note}");
+            GD.Print($"[HudUi] {label}: visible={visible} handlers={handlers} opened=[{openedNames}] "
+                + $"closed=[{closedNames}] gray={grayDelta} shot={shot} {note}");
 
-            // 回到干净状态：关掉本次打开的所有窗口（含退出/注销确认框，绝不在框内点确认）
+            // 回到干净状态：关掉本次打开的所有窗口（含退出/注销确认框，绝不在框内点确认）；
+            // 本次被关掉的常显窗口（背包/状态）重新打开，避免影响后续入口的判断。
             foreach (DXWindow w in opened)
             {
                 try { WindowManager.Close(w); } catch (Exception ex) { GD.PrintErr($"[HudUi] 关窗失败: {ex.Message}"); }
+            }
+            foreach (DXWindow w in closed)
+            {
+                try { WindowManager.Open(w, _uiLayer); } catch { }
             }
             await HudUiFramesAsync(4);
         }
@@ -234,6 +268,7 @@ public partial class GameScene
                 DXButton b = buttons[i];
                 if (b == null || !IsInstanceValid(b)) continue;
                 string text = (b.Text ?? "").Trim();
+                int clickHandlers = HudUiCountClickHandlers(b);
                 string label = $"{wLabel}_b{i}" + (text.Length > 0 ? "_" + HudUiSanitize(text) : "");
                 bool danger = HudUiIsDanger(text);
 
@@ -275,6 +310,7 @@ public partial class GameScene
                     label = wLabel,
                     index = i,
                     text,
+                    handlers = clickHandlers,
                     gray = grayDelta,
                     opened = opened.Select(x => x.GetType().Name).ToArray(),
                     changed,

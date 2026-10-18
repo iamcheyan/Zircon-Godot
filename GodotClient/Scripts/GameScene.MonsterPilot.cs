@@ -362,10 +362,24 @@ public partial class GameScene
         {
             // GM 已在 walk 阶段关掉（保持 off），不再重复 toggle。
             // @superman 也不能发：默认已是无敌，再发会关掉无敌导致测试角色被打死。
+            // 不可移动的远程怪（MoveDelay=0，如异界红魔）必须站在其射程内才会出手；
+            // 先贴近到相邻再采样；仍采不到时再退开 1 格（它的远程范围）重试。
             await CaptureStageAsync(outDir, 3, name + "_combat",
                 () => IsCombatAnim(_pilotTarget.Animation),
                 (prev, cur) => IsCombatAnim(cur.Animation)
                     && (cur.Animation != prev.Animation || cur.Frame != prev.Frame), 1, 30.0);
+            if (!_pilotLastStageOk)
+            {
+                var back = Functions.DirectionFromPoint(
+                    new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY), _playerLocation);
+                SendMouseMove(back, 1, false);
+                await WaitSecondsAsync(0.6);
+                await CaptureStageAsync(outDir, 3, name + "_combat_retry",
+                    () => IsCombatAnim(_pilotTarget.Animation),
+                    (prev, cur) => IsCombatAnim(cur.Animation)
+                        && (cur.Animation != prev.Animation || cur.Frame != prev.Frame), 1, 30.0,
+                    new Dictionary<string, object> { ["retry"] = true });
+            }
         }
 
         // ---- 阶段 4：死亡（先观察后打击）----

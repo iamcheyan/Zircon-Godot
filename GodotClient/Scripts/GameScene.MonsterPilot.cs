@@ -189,13 +189,16 @@ public partial class GameScene
         // MirAnimation.StoneStanding 而不是 Standing（ObjectRenderer.cs:296-298），
         // 只认 Standing 会误判为 failed。两者都算待机。
         bool IsIdleAnim() => _pilotTarget.Animation is MirAnimation.Standing or MirAnimation.StoneStanding;
-        // 刚刷出的怪可能立刻开始追人（Zuma Fanatic 实测 8s 内一直是 Walking），
-        // 先给它一个安静的待机窗口：连捕 3 轮，任一轮采到 2 个待机帧即通过。
+        // 石像待机（Zuma 系）的 StoneStanding 帧表只有 1 帧（FrameSet.cs:152），
+        // 本来就不该有帧推进，硬要求 2 帧会把正确行为误判成缺陷（Zuma Fanatic/
+        // Guardian/Keeper/King 实测 idle=FAIL）。因此：帧数 >1 的动画仍要求看到
+        // 帧推进；单帧动画允许静止出现两次作为证据。
         for (int idleTry = 0; idleTry < 3 && !_pilotLastStageOk; idleTry++)
         {
             await CaptureStageAsync(outDir, 1, name + "_idle" + (idleTry == 0 ? "" : "_r" + idleTry),
                 IsIdleAnim,
-                (prev, cur) => cur.Animation == prev.Animation && cur.Frame != prev.Frame,
+                (prev, cur) => cur.Animation == prev.Animation
+                    && (cur.Frame != prev.Frame || IsSingleFrameAnim(cur.Animation)),
                 2, 6.0);
             if (!_pilotLastStageOk) await WaitSecondsAsync(1.0);
         }
@@ -578,6 +581,13 @@ public partial class GameScene
         if (hits == 0) GD.PrintErr($"[MonsterPilot] {name} 未捕获到 Die 动画，死亡阶段记为 failed");
         WritePilotLog(outDir, name + "_dead", row);
     }
+
+    /// <summary>该动画在当前目标的帧表里只有 1 帧（静止姿态，如石像待机）。</summary>
+    private bool IsSingleFrameAnim(MirAnimation anim)
+        => IsInstanceValid(_pilotTarget)
+           && _pilotTarget.FrameTable != null
+           && _pilotTarget.FrameTable.TryGetValue(anim, out var f)
+           && f != null && f.FrameCount <= 1;
 
     private static bool IsCombatAnim(MirAnimation anim)
         => anim is MirAnimation.Combat1 or MirAnimation.Combat2 or MirAnimation.Combat3

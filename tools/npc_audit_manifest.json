@@ -1086,17 +1086,17 @@
     },
     {
       "index": 106,
-      "name": "六面神石",
+      "name": "Jack",
       "mapFile": "2",
       "mapDesc": "Banya Village",
-      "x": 314,
-      "y": 193,
-      "category": "传送",
-      "mud3File": "13Move_SnakeVally2",
+      "x": 150,
+      "y": 180,
+      "category": "物品碎片",
+      "mud3File": null,
       "services": [
-        "城镇与地下城瞬间移动传送"
+        "碎片兑换（100x Fragment + 2万金 → Fragment (II)；25x Fragment (II) + 5万金 → Fragment (III)）"
       ],
-      "entryPage": 170
+      "entryPage": 38147
     },
     {
       "index": 118,

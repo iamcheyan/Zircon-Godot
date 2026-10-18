@@ -233,17 +233,27 @@ public partial class GameScene
         // 一击秒杀时 ObjectStruck/ObjectDied/ObjectRemove 同批到达，Die 帧永远抓不到。
         // 因此先启动持续采样协程（记录 Combat*/Struck/Die 每次 (anim,frame,cell)
         // 跃迁并立即截图），再让 CombatController 顶部自动攻击分支真实出手。
-        // 注意：这里不再切 GM。实测（mp_wolf4/wolf7）主动怪走到脚边后，若再
-        // @gamemaster 把怪停下，玩家反而进不了相邻格、60~70s 杀不死（只发出 1 次
-        // C.Attack）。保持 GM=off 让怪继续追贴，玩家自动攻击能稳定命中并秒杀，
-        // 也才是真实的战斗链路（mp_wolf2 实测 walk/combat/Die 全部 ok:true）。
-        // 不发 @superman：默认无敌已足够，toggle 反而会关掉无敌。
+        //
+        // 实测两种失败模式：
+        //  a) 再 @gamemaster 把怪停下 → 玩家进不了相邻格，60~70s 杀不死（只 1 次 C.Attack）；
+        //  b) 完全不切 GM 且怪每 800ms 攻击 → 2026-10-19 Oma Warrior 只发出极少次攻击、
+        //     175 次 combat / 14 次 struck 却没死（怪的攻击反复打断玩家的出手）。
+        // 因此这里折中：**先把目标打到相邻格并确认，再开打**，并在 60s 内
+        // 每 3 秒重发一次目标选中（ObjectRemove/受击可能清掉选中），直到死亡或超时。
+        // 不 @superman：默认无敌已足够，toggle 反而会关掉无敌。
         var sampler = RunTransitionSamplerAsync(outDir, name);
-        _combatController.TargetObject = _pilotTarget;
         await WaitUntilAsync(() =>
-            Functions.Distance(_playerLocation, new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY)) <= 1, 15000.0);
-        await WaitUntilAsync(() => !IsInstanceValid(_pilotTarget) || _pilotTarget.Dead, 60.0);
+            Functions.Distance(_playerLocation, new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY)) <= 1, 20000.0);
+        double killDeadline = Godot.Time.GetTicksMsec() + 90000.0;
+        while (Godot.Time.GetTicksMsec() < killDeadline)
+        {
+            if (!IsInstanceValid(_pilotTarget) || _pilotTarget.Dead) break;
+            // 追击/受击可能清掉选中，周期性重新选中（只选本 pilot 自己那只）。
+            _combatController.TargetObject = _pilotTarget;
+            await WaitSecondsAsync(3.0);
+        }
         _combatController.TargetObject = null;
+        await WaitSecondsAsync(1.0);
         var deathRow = await sampler;
         WritePilotLog(outDir, name + "_dead", deathRow);
 

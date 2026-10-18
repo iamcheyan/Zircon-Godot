@@ -1658,7 +1658,13 @@ namespace Server.Envir
 
                             // 正常一天是静默的；出现孤立成员行才留痕，便于事后定位
                             if (guildDayResetOrphans > 0)
-                                Log($"[Guild] 跨天重置：已通知 {guildDayResetMembers} 名在线成员，跳过 {guildDayResetOrphans} 个无账号引用的成员行");
+                            {
+                                // 跨天是重要事件，除 Log 外再直写 stdout：实测 Log 走的是内存队列 +
+                                // UseLogConsole 开关，重定向到文件时不一定落盘，会让"跨天到底跑没跑"无法判定
+                                string dayResetLine = $"[Guild] 跨天重置：已通知 {guildDayResetMembers} 名在线成员，跳过 {guildDayResetOrphans} 个无账号引用的成员行";
+                                Log(dayResetLine);
+                                Console.WriteLine(dayResetLine);
+                            }
 
                             GC.Collect(2, GCCollectionMode.Forced);
                         }

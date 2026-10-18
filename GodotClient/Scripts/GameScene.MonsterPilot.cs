@@ -110,6 +110,16 @@ public partial class GameScene
         GD.Print($"[MonsterPilot] pilot map={pilotMap} (from RespawnInfo)");
         // 证据截图必须看得清怪物；Night 图光照 0.25 会让截图全黑。
         await ApplyPilotLightingAsync();
+
+        // 管理员登录默认 GameMaster=true（Config.cs:156），而 @gamemaster 是 TOGGLE。
+        // **必须在刷怪之前**就关掉：潜伏型怪（CarnivorousPlant 构造里 Visible=false，
+        // 只有 Target 进入 FindRange 才广播 ObjectShow）在 GM=on 时永远拿不到 Target
+        // （ShouldAttackTarget 对 GameMaster 直接 return false），于是服务端从不
+        // AddObject，客户端 _objects 里根本不会出现它 → pilot 误判"刷怪失败"
+        // （Carnivorous Plant 实测 4 次全失败）。
+        // 用带确认的关闭方式：@gamemaster 是 TOGGLE，光靠"我记得现在是什么状态"
+        // 已经踩过三次坑（重复 toggle 把 GM 又打开 → 怪不出手 / 潜伏怪不可见）。
+        await EnsureGameMasterOffAsync();
         // 不带坐标 = map.GetRandomLocation()（MapMove.cs），避免写死坐标越界
         // （实测 `@move 31 100 100` 被服务端拒 "Coords outside of map boundary"）。
         SendChat($"@move {pilotMap}");
@@ -241,14 +251,7 @@ public partial class GameScene
                     ["reason"] = "monster-cannot-move-moveDelay-zero",
                 });
             }
-            // 管理员登录默认 GM=true；这里只发一次把它关掉，让怪能锁定玩家。
-            // 必须放在 MoveDelay 分支之前：之前用 goto 跳过这里，导致不可移动的怪
-            // （AI=15 异界系、AI=17 Arachnid Gazer）GM 仍为 on，而
-            // ShouldAttackTarget 对 GameMaster 直接 return false，怪物根本不出手，
-            // combat 阶段全部误判 FAIL（实测 Otherworld Sea General 63 次
-            // ObjectAttack 全是玩家自己攻击的回声）。
-            SendChat("@gamemaster");
-            await WaitSecondsAsync(0.3);
+            // GM 已在刷怪前关掉（见上文），这里绝不能再 toggle。
             if (moveDelay <= 0)
             {
                 // 不移动的怪不需要退却逼迫，直接进入下一阶段
@@ -508,6 +511,38 @@ public partial class GameScene
     }
 
     private bool _pilotDisposed;
+
+    /// <summary>
+    /// 确保服务端 GameMaster 处于 off，并用回话自我确认。
+    /// `@gamemaster` 是 TOGGLE（ServerLibrary/.../ToggleGameMaster.cs），发一次不一定
+    /// 是想要的方向；这里读服务端回话（"GAMEMASTER activated/deactivated"），
+    /// 方向不对就再发一次，最多 3 次。避免"以为关了其实开着"整类误判。
+    /// </summary>
+    private async Task EnsureGameMasterOffAsync()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int before = _legacyChatDialog?.MessageCount ?? 0;
+            SendChat("@gamemaster");
+            await WaitSecondsAsync(0.6);
+            int after = _legacyChatDialog?.MessageCount ?? 0;
+            var msgs = _legacyChatDialog?.RecentMessages(Math.Max(1, after - before)) ?? new List<string>();
+            string said = string.Join(" | ", msgs);
+            if (said.Contains("deactivated", StringComparison.OrdinalIgnoreCase))
+            {
+                GD.Print("[MonsterPilot] GM 已确认关闭");
+                return;
+            }
+            if (said.Contains("activated", StringComparison.OrdinalIgnoreCase))
+            {
+                GD.Print("[MonsterPilot] 这次 toggle 把 GM 打开了，再发一次关掉");
+                continue;
+            }
+            GD.Print($"[MonsterPilot] 没读到 GM 回话（{said}），按已关闭继续");
+            return;
+        }
+        GD.PrintErr("[MonsterPilot] GM 状态确认失败（3 次），后续 combat/walk 证据可能不可信");
+    }
 
     /// <summary>AI=1/2 为 Passive=true 怪（不主动索敌追击）；其余 default 主动。</summary>
     private static bool IsPassiveAi(int ai) => ai is 1 or 2 or 4 or 5 or 135 or 136 or 129 or 130 or 12;

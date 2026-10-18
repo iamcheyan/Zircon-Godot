@@ -406,3 +406,17 @@ python3 -c "import sys;sys.path.insert(0,'/Users/tetsuya/Development/Mir3-Resear
 - 孤儿 `ItemInfoStat` 的「父行是否真的不存在」这一条，是由导出 JSON 缺 `Item` 键推断的
   （未直接读 `System.db`）。如需坐实，可在**只读副本**上执行：
   `SELECT COUNT(*) FROM ItemInfoStat s LEFT JOIN ItemInfo i ON i.Index=s.Item WHERE i.Index IS NULL;`
+
+---
+
+> **现状（2026-10-18 晚，修复后）**：本册记录的是**审计当日的发现**，不是当前状态。
+> 各项修复进展、验证方式与仍未做的边界，见总报告 [GAME_AUDIT_2026-10-18.md](../GAME_AUDIT_2026-10-18.md)
+> 的「修复台账」（已到第 20 行）与「口径类问题」；过程与教训见 [WORKLOG.md](WORKLOG.md)。
+> 与修复相关的关键变化（摘要）：
+> - 数据类：580 处清洗回归内容按旧库原值补回；15 只零属性怪物按同等级参照怪推导补属性；
+>   16+2 条技能显示名从枚举标识改回旧库显示名；34 条经典任务恢复 `Experience` 令牌奖励 + 反链；
+>   怪物名尾空格 `Pachon ` 已 trim。
+> - 代码类：跨天行会重置的空引用（及同形状 91 处）、`@monster` 名字含空格刷不出、任务/名望奖励空 Item 守卫、
+>   13 字节/格地图、地图名大小写回退、技能窗新学派专属页签、两处「控件被压住/尺寸被清成 0」的点击缺陷。
+> - 口径未做（需决策）：被有意清洗的 199 怪物 / 582 物品 / 175 地图 / 8 图 32 行刷怪；
+>   3 条空 `Item` 奖励行（旧库无来源）；5–6 个无交互 NPC（缺 MUD3 脚本源）。

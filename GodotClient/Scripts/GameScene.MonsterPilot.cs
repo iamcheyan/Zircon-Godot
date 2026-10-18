@@ -165,7 +165,11 @@ public partial class GameScene
             var preIds = new HashSet<uint>(_objects.Values
                 .Where(o => o?.Type == ObjectRenderer.Kind.Monster && o.MonsterInfo?.MonsterName == name)
                 .Select(o => o.ObjectID));
-            SendChat($"@monster {name} 1");
+            // 不带数量：`@monster <名字>` 默认就是 1 只。带上 " 1" 会被 SpawnMob 的
+            // "整串先当名字试" 规则误解析成另一只怪 —— 实测 `@monster Otherworld Ship
+            // Guard 1` 刷出来的是 **Otherworld Ship Guard 1**（Index 417，日志里
+            // 显示名"异界船卫士1"），因为那个名字本身就在库里。
+            SendChat($"@monster {name}");
             // 潜伏型怪（CarnivorousPlant 构造里 Visible=false，只在玩家进入 FindRange 后
             // 按 3s 周期广播 ObjectShow，ServerLibrary/Models/Monsters/CarnivorousPlant.cs:18-56）
             // 要等一个多周期才可见，超时给到 18s。

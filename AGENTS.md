@@ -26,6 +26,9 @@
    ```bash
    export MIR3_EI_ROOT=/home/tetsuya/mir2ei
    export MIR3_MUD3_ROOT=/home/tetsuya/NAS/TMP/Mud3
+   # ⚠ 该路径需要先挂载 NAS。2026-10-18 实测两台机器上都不存在（NAS 未挂载）→
+   #   依赖 MUD3 源的任务（如从原版脚本恢复 NPC 对话，工具见 Mir3-Research/Tools/NpcMover）
+   #   会因此阻塞；动手前先确认路径可用。
    export MIR3_ZIRCON_ROOT=/home/tetsuya/development/Zircon
    ```
 

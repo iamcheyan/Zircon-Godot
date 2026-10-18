@@ -1,0 +1,20 @@
+{
+  "counts": {
+    "movements": 1757,
+    "endpoints": 3514,
+    "flag_counts": {
+      "source_blocked": 6,
+      "destination_blocked": 4,
+      "source_blocked_warn": 1
+    },
+    "movements_with_any_flag": 11,
+    "endpoints_ok": 3503,
+    "endpoints_blocked": 10,
+    "endpoints_pocket": 0,
+    "distinct_ordered_map_edges": 877,
+    "ordered_map_edges_with_reverse": 747,
+    "one_way_ordered_map_edges": 130,
+    "region_pair_exact_reverse": 0,
+    "maps_in_movements": 412
+  }
+}

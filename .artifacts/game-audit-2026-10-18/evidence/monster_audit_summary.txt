@@ -1,0 +1,8 @@
+# 怪物走查（最终库 fac891e4 / 版本 2026.10.18.6）
+# 源日志: ~/audit-raw/monster_final3.log
+[MonsterAudit] 就位 loc={X=368,Y=316} （刷怪落点=正前方一格，每只前轮换候选格）
+[MonsterAudit] start 共 121 只 out=/Users/tetsuya/audit-raw/monster_final3
+[MonsterAudit] SUMMARY total=121 spawned=121 missing=0
+
+# 失败行（应为空）:
+（无）

@@ -1,0 +1,29 @@
+# HUD 走查：全量回归 + 深度走查
+
+## 回归（--limit 15）
+[HudUi] SUMMARY clicks=183 gray_blocks=0 PASS
+
+## 深度（--limit 100，每窗全部控件）
+[HudUi] SUMMARY clicks=222 gray_blocks=0 PASS
+
+## 技能窗三个新学派页签（实机）
+[MagicLegacy] SelectSchool Passive
+[MagicLegacy] category=Passive count=2 page=1/1
+[MagicLegacy] SelectSchool Toggle
+[MagicLegacy] category=Toggle count=3 page=1/1
+[MagicLegacy] SelectSchool Active
+[MagicLegacy] category=Active count=9 page=1/2
+
+## 两处点击缺陷修复后（--hud-ui-audit-only legacy_chat,npc_socket）
+npc_socket_b0 -> @Control@2718/@Control@2701
+npc_socket_b1_关闭 -> @Control@2718/@Control@2702
+npc_socket_b2_开始 -> @Control@2717/@Control@2716
+legacy_chat_b0 -> @Control@342/ChatScrollArrow
+legacy_chat_b1 -> @Control@342/@Control@341
+legacy_chat_b2 -> @Control@353/@Control@344
+legacy_chat_b3 -> @Control@353/@Control@345
+legacy_chat_b4 -> @Control@353/@Control@346
+legacy_chat_b5 -> @Control@353/@Control@347
+legacy_chat_b6 -> @Control@353/@Control@348
+legacy_chat_b7 -> @Control@353/@Control@349
+legacy_chat_b8 -> @Control@353/@Control@352

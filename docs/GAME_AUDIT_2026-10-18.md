@@ -132,6 +132,18 @@
    而误判为"没触发"。跨天这类重要事件现在除 `Log()` 外**再直写一次 stdout**。
    —— 教训：**"没看到日志"不等于"代码没跑"**。
 
+## 五之三、证据包（可直接翻验）
+
+关键结论的原始证据已固化入库（不必翻 /tmp）：
+
+| 文件 | 证明什么 |
+|---|---|
+| `.artifacts/game-audit-2026-10-18/evidence/midnight_crossing.log` | 跨天那一刻的真实日志：`23:59:59 [Guild] 跨天重置：已通知 0 名在线成员，跳过 20 个无账号引用的成员行`，服务端存活 |
+| `.artifacts/game-audit-2026-10-18/evidence/monster_audit_summary.txt` | 最终库上 `total=121 spawned=121 missing=0`，失败行（空） |
+| `.artifacts/game-audit-2026-10-18/evidence/hud_audit_summary.txt` | 全量回归与深度走查的 SUMMARY、三个新学派页签实机输出、两处点击缺陷修复后的 receiver |
+| `.artifacts/game-audit-2026-10-18/evidence/portal_flag_counts_current.json` | 当前库用审计工具重跑的端点判定计数 |
+| `tools/audit/verify_fix_ledger.py` | 台账 26 个可核查点的逐条指纹审计 + 不变性检查（可重复运行） |
+
 ## 六、复现手册
 
 ```bash

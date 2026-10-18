@@ -176,9 +176,16 @@ public partial class GameScene
         CaptureMonsterAuditShot(outDir, 0, name + "_spawn");
 
         // ---- 阶段 1：站立待机（真实 Standing 帧推进 ≥ 2 帧）----
-        await CaptureStageAsync(outDir, 1, name + "_idle",
-            () => _pilotTarget.Animation == MirAnimation.Standing,
-            (prev, cur) => cur.Animation == MirAnimation.Standing && cur.Frame != prev.Frame, 2, 8.0);
+        // 刚刷出的怪可能立刻开始追人（Zuma Fanatic 实测 8s 内一直是 Walking），
+        // 先给它一个安静的待机窗口：连捕 3 轮，任一轮采到 2 个 Standing 帧即通过。
+        for (int idleTry = 0; idleTry < 3 && !_pilotLastStageOk; idleTry++)
+        {
+            await CaptureStageAsync(outDir, 1, name + "_idle" + (idleTry == 0 ? "" : "_r" + idleTry),
+                () => _pilotTarget.Animation == MirAnimation.Standing,
+                (prev, cur) => cur.Animation == MirAnimation.Standing && cur.Frame != prev.Frame,
+                2, 6.0);
+            if (!_pilotLastStageOk) await WaitSecondsAsync(1.0);
+        }
 
         // ---- 阶段 2：行走 ----
         // 被动怪 (AI=1/2 Passive=true)：只在 SeenByPlayers>0 时 10% 概率漫步，

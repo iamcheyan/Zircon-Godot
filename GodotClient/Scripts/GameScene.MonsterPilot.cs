@@ -262,6 +262,22 @@ public partial class GameScene
                     (prev, cur) => cur.Animation == MirAnimation.Walking
                         && cur.Frame != prev.Frame, 2, 20.0,
                     new Dictionary<string, object> { ["retry"] = true });
+                // 跑开也看不到走路：BOSS 类（Lv250）通常原地攻击不移动，或地形堵死。
+                // 这是怪物行为/地形限制，不是动画缺陷 → 按 blocked 记录并注明原因。
+                if (!_pilotLastStageOk)
+                {
+                    WritePilotLog(outDir, name + "_walk_status", new Dictionary<string, object>
+                    {
+                        ["stage"] = 2,
+                        ["label"] = name + "_walk",
+                        ["targetId"] = _pilotTargetId,
+                        ["ai"] = _pilotTarget?.MonsterInfo?.AI ?? -1,
+                        ["level"] = _pilotTarget?.MonsterInfo?.Level ?? 0,
+                        ["status"] = "blocked",
+                        ["reason"] = "no-observed-walking-after-retreat-retry",
+                    });
+                    GD.Print($"[MonsterPilot] {name} 退却+跑开重试仍无 Walking，记为 blocked");
+                }
             }
         }
 

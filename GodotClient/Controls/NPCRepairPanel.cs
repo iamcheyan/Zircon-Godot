@@ -243,24 +243,22 @@ public partial class NPCRepairPanel : DXControl
     public void ApplyLegacyEiLayout()
     {
         _legacyEiLayout = true;
-        // 关键：F1100/F1101 的 alpha 可见区宽 **384**（画布 512 宽是含透明边），
-        // 所以面板与所有控件都必须落在 0..384 内 —— 上一版用 552 宽，控件直接落到木框外的草地上
-        // （2026-10-18 视觉复核发现"小长条跨右边框""按钮浮在草地上"）。
+        // 关键：F1100/F1101 的 alpha 可见区宽 **384**（512 画布含透明边），
+        // 面板与所有控件都必须落在 0..384 内。
+        // 也不再用 F1100 顶段：面板贴在 NPC 对话框下方，对话框自己已经有顶段，
+        // 再画一个顶段会得到「两个木头顶段夹一块黑身子」的空带（2026-10-18 第三轮视觉复核）。
+        // 现在只平铺 F1101（黑底身体 + 左右木栏），使面板读起来就是对话框身体的延续。
         const int width = 384;
-        Size = new Vector2I(width, 410);
+        Size = new Vector2I(width, 286);
         _frame.Visible = false;
+        _legacyTop.Visible = false;
 
-        // 顶段：F1100（alpha 可见区 384x138，bbox 原点 (64,59) -> 锚点 -(64,59)）
-        _legacyTop.Visible = true;
-        _legacyTop.Location = new Vector2I(-64, -59);
-        _legacyTop.Size = new Vector2I(width, 138);
-
-        // 中段：F1101（可见 383x18）自 y=128 每 18px 平铺到面板底部
+        // 中段：F1101（可见 383x18）自 y=0 每 18px 平铺满整个面板
         for (int i = 0; i < _legacyMidTiles.Count; i++)
         {
-            int y = 128 + i * 18;
+            int y = i * 18;
             DXImageControl tile = _legacyMidTiles[i];
-            if (y + 18 <= Size.Y)
+            if (y + 18 <= Size.Y + 18)
             {
                 tile.Visible = true;
                 tile.Location = new Vector2I(-64, y - 7);
@@ -269,27 +267,27 @@ public partial class NPCRepairPanel : DXControl
             else tile.Visible = false;
         }
 
-        _title.Location = new Vector2I(0, 10);
+        _title.Location = new Vector2I(0, 4);
         _title.Size = new Vector2I(width, 18);
 
-        // 11x5 维修格 = 385x175（格距 35），放面板上部；先铺自绘槽底，真实格子叠在上面
+        // 11x5 维修格 = 385x175（格距 35），紧贴标题下方；先铺自绘槽底，真实格子叠在上面
         _legacySlots.Visible = true;
-        _legacySlots.Location = new Vector2I(0, 146);
-        _grid.Location = new Vector2I(0, 146);
+        _legacySlots.Location = new Vector2I(0, 26);
+        _grid.Location = new Vector2I(0, 26);
 
         // 费用行：格子正下方（数值已由 Lang 模板带标签，不再重复前置"修理费用："）
         _costLabel.Visible = false;
-        _cost.Location = new Vector2I(10, 328);
+        _cost.Location = new Vector2I(10, 208);
         _cost.Size = new Vector2I(300, 20);
 
-        // 两个复选框
-        _special.Location = new Vector2I(175, 352);
-        _special.Size = new Vector2I(100, 19);
-        _guildFunds.Location = new Vector2I(175, 374);
+        // 两个复选框（同宽同列，避免上宽下窄的错位观感）
+        _special.Location = new Vector2I(175, 232);
+        _special.Size = new Vector2I(110, 19);
+        _guildFunds.Location = new Vector2I(175, 254);
         _guildFunds.Size = new Vector2I(110, 19);
 
         // 修理钮：素材唯一的修理钮（F263 普通 / F264 悬停 / F265 按下）
-        _repair.Location = new Vector2I(312, 356);
+        _repair.Location = new Vector2I(308, 236);
         _repair.Size = new Vector2I(64, 19);
         _repair.FontSize = 9;
         _repair.Text = "";
@@ -304,7 +302,7 @@ public partial class NPCRepairPanel : DXControl
         {
             DXButton b = _sourceButtons[i];
             b.Size = new Vector2I(34, 34);
-            b.Location = new Vector2I(10 + i * 40, 352);
+            b.Location = new Vector2I(10 + i * 40, 232);
         }
     }
 
@@ -312,17 +310,16 @@ public partial class NPCRepairPanel : DXControl
     public bool AuditLegacyEiLayout(out string details)
     {
         bool ok = _legacyEiLayout
-            && Size == new Vector2I(384, 410)
-            && _legacyTop.Visible && !_frame.Visible
-            && _legacyTop.LibraryFile == LibraryFile.GameInter && _legacyTop.Index == 1100
-            && _legacySlots.Visible && _legacySlots.Location == new Vector2I(0, 146)
-            && _grid.Location == new Vector2I(0, 146)
+            && Size == new Vector2I(384, 286)
+            && !_legacyTop.Visible && !_frame.Visible
+            && _legacySlots.Visible && _legacySlots.Location == new Vector2I(0, 26)
+            && _grid.Location == new Vector2I(0, 26)
             && _repair.LibraryFile == LibraryFile.GameInter
             && _repair.Index == 263 && _repair.HoverIndex == 264 && _repair.PressedIndex == 265
-            && _cost.Location == new Vector2I(10, 328)
+            && _cost.Location == new Vector2I(10, 208)
             && !_costLabel.Visible
             && _sourceButtons.Count == 4;
-        details = $"size={Size} top={_legacyTop.Index}@{_legacyTop.Location} tiles={_legacyMidTiles.Count} "
+        details = $"size={Size} headerHidden={!_legacyTop.Visible} tiles={_legacyMidTiles.Count} "
             + $"slots={_legacySlots.Location} grid={_grid.Location} cost={_cost.Location} "
             + $"repair={_repair.Index}/{_repair.HoverIndex}/{_repair.PressedIndex}@{_repair.Location}";
         return ok;

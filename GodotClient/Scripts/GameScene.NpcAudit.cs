@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Godot;
 using Library;
+using C = Library.Network.ClientPackets;
 using ZirconClient.Controls;
 
 namespace ZirconClient.Scripts;
@@ -71,6 +72,12 @@ public partial class GameScene
         public int X;
         public int Y;
         public bool Clicked;
+        /// <summary>
+        /// 位置体检（2026-10-18）：传送到位后由服务端 SafeZoneChanged 下发的"是否在城镇安全区"。
+        /// 这是**游戏自己**对"在城里/在野外"的判定，用来核查"该在城里的 NPC 跑到郊区"的反馈。
+        /// null = 本次未采到（例如未到位或包未到）。
+        /// </summary>
+        public bool? InSafeZone;
         public int EntryPage;
         public readonly List<NpcAuditPageRecord> Pages = new();
         public readonly List<string> Errors = new();
@@ -215,7 +222,7 @@ public partial class GameScene
                 else if (rec.Errors.Contains("timeout")) timeout++;
                 else ok++;
 
-                GD.Print($"[NpcAudit] [{rec.Index}] {rec.Name} pages={rec.Pages.Count} clicked={rec.Clicked} errors=[{string.Join(",", rec.Errors)}]");
+                GD.Print($"[NpcAudit] [{rec.Index}] {rec.Name} pages={rec.Pages.Count} clicked={rec.Clicked} inSafeZone={(rec.InSafeZone.HasValue ? rec.InSafeZone.Value.ToString() : "null")} errors=[{string.Join(",", rec.Errors)}]");
             }
         }
 
@@ -250,6 +257,25 @@ public partial class GameScene
                             + $"player=({_playerLocation.X},{_playerLocation.Y}) mapIdx={_playerMapIndex} "
                             + $"want={entry.MapFile} ({entry.X},{entry.Y}) dialogVisible={_npcDialog?.Visible == true}");
                 return rec;
+            }
+        }
+
+        // 位置体检（2026-10-18）：@move 是 GM 传送，服务端**不会**重算安全区 → 客户端那个标记是旧的
+        // （实测：连已确认正确的比奇/蛇谷主城商店都读成 False，故不能用它下结论）。
+        // 必须**真的走一步**触发服务端的安全区判定（与传送门巡检同一手法）再读 SafeZoneChanged 下发的值。
+        // 再记录"这一步是否真的走动了"：只有走动成功后的读数才可信；4 个方向都走不动就记 null（不猜）。
+        await WaitSecondsAsync(0.3);
+        var beforeCell = _playerLocation;
+        rec.InSafeZone = null;
+        foreach (MirDirection dir in new[] { MirDirection.Up, MirDirection.Down, MirDirection.Left, MirDirection.Right })
+        {
+            try { _net?.Connection?.Enqueue(new C.Move { Direction = dir, Distance = 1 }); }
+            catch { /* 连接异常由外层处理 */ }
+            await WaitSecondsAsync(0.7);
+            if (_playerLocation != beforeCell)
+            {
+                rec.InSafeZone = GameScene.Game?.InSafeZone;   // 走动成功 → 该值已由服务端重算
+                break;
             }
         }
 
@@ -770,7 +796,7 @@ public partial class GameScene
         var sb = new StringBuilder(256);
         sb.Append('{');
         sb.Append($"\"index\":{rec.Index},\"name\":{JsonString(rec.Name)},\"map\":{JsonString(rec.Map)},");
-        sb.Append($"\"x\":{rec.X},\"y\":{rec.Y},\"clicked\":{(rec.Clicked ? "true" : "false")},\"entryPage\":{rec.EntryPage},\"pages\":[");
+        sb.Append($"\"x\":{rec.X},\"y\":{rec.Y},\"clicked\":{(rec.Clicked ? "true" : "false")},\"entryPage\":{rec.EntryPage},\"inSafeZone\":{(rec.InSafeZone.HasValue ? (rec.InSafeZone.Value ? "true" : "false") : "null")},\"pages\":[");
         for (int i = 0; i < rec.Pages.Count; i++)
         {
             if (i > 0) sb.Append(',');

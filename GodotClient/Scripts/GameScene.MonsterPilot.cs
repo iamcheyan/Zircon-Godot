@@ -132,14 +132,31 @@ public partial class GameScene
         // ---- 阶段 0：生成并锁定唯一目标 ----
         // 用“新出现的 ObjectID”作真值：@monster 刷在玩家正前格，新 ID 只可能是
         // 本 pilot 刚刷出的那只。半径计数会被地图切换/自然刷新干扰（实测踩过）。
-        var preIds = new HashSet<uint>(_objects.Values
-            .Where(o => o?.Type == ObjectRenderer.Kind.Monster && o.MonsterInfo?.MonsterName == name)
-            .Select(o => o.ObjectID));
-        SendChat($"@monster {name} 1");
-        var spawnedTarget = await WaitForNewMonsterAsync(name, preIds, 8.0);
+        //
+        // `@monster` 刷在玩家**正前格**，那格是墙体/已有怪物时会**静默失败**
+        // （Carnivorous Plant 实测踩到）。因此先找一个“自身 + 正前格都通行”
+        // 的位点站好，再刷怪；仍失败则最多重试 4 次换点。
+        ObjectRenderer spawnedTarget = null;
+        for (int attempt = 0; attempt < 4 && spawnedTarget == null; attempt++)
+        {
+            if (attempt > 0)
+            {
+                // 没 @turn 命令；用真实走一步换位后重新找空场
+                SendMouseMove((MirDirection)(attempt % 8), 1, false);
+                await WaitSecondsAsync(0.6);
+            }
+            await MoveToSpawnableCellAsync();
+            var preIds = new HashSet<uint>(_objects.Values
+                .Where(o => o?.Type == ObjectRenderer.Kind.Monster && o.MonsterInfo?.MonsterName == name)
+                .Select(o => o.ObjectID));
+            SendChat($"@monster {name} 1");
+            spawnedTarget = await WaitForNewMonsterAsync(name, preIds, 6.0);
+            if (spawnedTarget == null)
+                GD.Print($"[MonsterPilot] {name} 第 {attempt + 1} 次刷怪未出现新对象，换点重试");
+        }
         if (spawnedTarget == null)
         {
-            GD.PrintErr($"[MonsterPilot] {name} 未生成（等待新 ObjectID 超时）");
+            GD.PrintErr($"[MonsterPilot] {name} 未生成（4 次换向重试仍无新 ObjectID）");
             WritePilotLog(outDir, "spawn_failed", new Dictionary<string, object> { ["name"] = name });
             return;
         }
@@ -184,13 +201,30 @@ public partial class GameScene
             // 不要用 @move 传送退开：切图/传送会重建视野，目标可能直接掉出客户端
             // 对象表（实测 wolf8 walk=false）。更不能只退 1 次：怪物刷出时若已贴身，
             // 它根本不需要走路，就永远采不到 Walking（实测 wolfA，全程 0 次 ObjectMove）。
-            // 这里连续单步退开 6 格（走步不重建视野），逼怪物必须追 6 格才够得着。
-            var targetCell = new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY);
-            var awayDir = Functions.DirectionFromPoint(targetCell, _playerLocation);
-            for (int step = 0; step < 3; step++)
+            // 这里连续单步退开（走步不重建视野），逼怪物必须追才够得着。
+            // 退却方向必须逐格选“可站且朝向远离目标”的格子：固定朝一个方向
+            // 碰到墙/山体就退不动，怪物没路可追 → walk 伪失败（Scarecrow/
+            // Scorpion 实测在祖玛神殿石壁边踩到）。
+            for (int step = 0; step < 4; step++)
             {
-                SendMouseMove(awayDir, 1, false);
-                await WaitSecondsAsync(0.45);
+                var tc = new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY);
+                var best = Functions.DirectionFromPoint(tc, _playerLocation);
+                bool went = false;
+                for (int rot = 0; rot < 8; rot++)
+                {
+                    var dir = Functions.ShiftDirection(best, rot % 2 == 0 ? 1 : -1);
+                    var next = Functions.Move(_playerLocation, dir, 1);
+                    if (_mapView?.Map == null) break;
+                    if (next.X <= 1 || next.Y <= 1
+                        || next.X >= _mapView.Map.Width - 1 || next.Y >= _mapView.Map.Height - 1) continue;
+                    if (_mapView.Map.Cells[next.X, next.Y].Flag) continue;
+                    if (Functions.Distance(next, tc) <= Functions.Distance(_playerLocation, tc)) continue;
+                    SendMouseMove(dir, 1, false);
+                    await WaitSecondsAsync(0.5);
+                    went = true;
+                    break;
+                }
+                if (!went) break;
             }
             var startCell = new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY);
             await CaptureStageAsync(outDir, 2, name + "_walk",
@@ -473,6 +507,38 @@ public partial class GameScene
         if (hits == 0)
             GD.PrintErr($"[MonsterPilot] {label} 未捕获到真实动作状态（目标可能未触发该动作），记为 failed");
         WritePilotLog(outDir, label, row);
+    }
+
+    /// <summary>
+    /// 走到一个 “自身格 + 正前格” 都通行且没有怪物的位置，保证 @monster 能刷成功。
+    /// 服务端 SpawnMob 把怪刷在玩家正前格，那格不可站/已占时静默失败（实测踩到）。
+    /// </summary>
+    private async Task MoveToSpawnableCellAsync()
+    {
+        if (_mapView?.Map == null) return;
+        var map = _mapView.Map;
+        bool Free(int x, int y)
+            => x > 1 && y > 1 && x < map.Width - 1 && y < map.Height - 1
+               && !map.Cells[x, y].Flag
+               && !_objects.Values.Any(o => o != null && !o.Dead && o.CellX == x && o.CellY == y);
+        for (int radius = 0; radius <= 8; radius++)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                for (int dy = -radius; dy <= radius; dy++)
+                {
+                    if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != radius) continue;
+                    int x = _playerLocation.X + dx, y = _playerLocation.Y + dy;
+                    if (!Free(x, y)) continue;
+                    var dir = Functions.DirectionFromPoint(new System.Drawing.Point(x, y), _playerLocation);
+                    var front = Functions.Move(new System.Drawing.Point(x, y), dir);
+                    if (!Free(front.X, front.Y)) continue;
+                    SendChat($"@move {PilotCurrentMap} {x} {y}");
+                    await WaitSecondsAsync(0.7);
+                    return;
+                }
+            }
+        }
     }
 
     private async Task<bool> WaitForSpawnAsync(string name, int before, double timeoutSec)

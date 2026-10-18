@@ -46,13 +46,16 @@ godot-mono --path GodotClient -- --server 127.0.0.1 --port 7000 \
 
 | # | 怪物 | DB Index | Image / 图库 | AI | 起点图 | idle | walk | combat | dead | 结论 | 证据 |
 | --: | --- | --: | --- | --: | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Wolf（狼） | 14 | `Wolf` / Mon-7.Zl shape 5 | 3（主动） | 31 祖玛神殿 | ✅ 2 帧 | ✅ 3 帧 | ✅ `Combat2` | ✅ `Die`+`Struck` | **通过**，无缺陷 | `screenshots/` + `screenshots/pilot_log.jsonl` |
-| 2 | Chicken（鸡） | 8 | `Chicken` | 1（被动，可收割） | 01 边境城市 | ✅ | ⛔ blocked（被动怪不主动走/攻） | ⛔ blocked | 待测（需玩家击杀采样） | 进行中 | `mp_chicken` 会话 |
+| 1 | Wolf（狼） | 14 | `Wolf` / Mon-7.Zl shape 5 | 3（主动） | 31 祖玛神殿 | ✅ 2 帧 | ✅ 3 帧 | ✅ `Combat2` | ✅ `Die`+`Struck` | **通过**，无缺陷 | `screenshots/wolf/` |
+| 2 | Chicken（鸡） | 8 | `Chicken` | 1（被动，可收割） | 01 边境城市 | ✅ 2 帧 | ⛔ blocked（被动怪不主动追击） | ⛔ blocked（不主动攻击） | ✅ `Die`+`Struck` | **通过**（被动怪按实际能力验收，不伪造） | `screenshots/chicken/` |
 
 > 说明：本站账本只记录**已经跑出真实状态证据**的结论；未测项一律留空，不写成通过。
+> 被动怪（AI=1/2 → `Passive=true`）按 `MonsterObject.ProcessRoam` 的设计只在 `SeenByPlayers>0` 时
+> 2s 间隔 10% 概率漫步、且不主动攻击玩家，因此它们的 walk/combat 记为 blocked 而不是失败；
+> 受击与死亡由玩家击杀链路（`Struck`/`Die`）正常覆盖。
 
 ## 后续待办
 
-1. 被动怪（Chicken/Pig/Deer/Cow/Sheep 等 AI=1/2）：补「玩家击杀 → `Struck`/`Die`」采样，walk/combat 保持 `blocked` 并注明设计原因。
+1. 被动怪（Pig / Deer / Cow / Sheep 等 AI=1/2）：同一套流程可直接跑（已由 Chicken 验证通过）。
 2. 剩余在用怪物按 `in_use_intersection.json` 顺序逐只跑 pilot；每只一组截图 + 账本行 + 单独提交。
 3. 特殊形态（多形态 BOSS、`Shinsu` 双形态、`MonsterLookup` 里有额外外观的类型）需要在账本里单列，按实际存在的状态验收。

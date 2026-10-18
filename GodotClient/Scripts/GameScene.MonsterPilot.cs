@@ -289,6 +289,17 @@ public partial class GameScene
         _combatController.TargetObject = null;
         await WaitSecondsAsync(1.0);
         var deathRow = await sampler;
+        // 高级/高血量怪（如 Lv250 BOSS）在测试角色的正常输出下不能在 90s 内击杀，
+        // 这是测试手段的限制而不是动画缺陷。未采到 Die 且目标仍活着时，记为
+        // blocked（附原因）而不是 FAIL，避免把“打不死”误判成“死亡动画错”。
+        if (deathRow.TryGetValue("dieHits", out var dhObj) && dhObj is int dh && dh == 0
+            && IsInstanceValid(_pilotTarget) && !_pilotTarget.Dead)
+        {
+            deathRow["ok"] = false;
+            deathRow["status"] = "blocked";
+            deathRow["reason"] = "too-tanky-for-test-character";
+            GD.Print($"[MonsterPilot] {name} 90s 内未被击杀（高耐久），死亡段记 blocked 而非缺陷");
+        }
         WritePilotLog(outDir, name + "_dead", deathRow);
 
         // ---- 阶段 5：尸体/消失 ----

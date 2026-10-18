@@ -175,14 +175,18 @@ public partial class GameScene
         GD.Print($"[MonsterPilot] locked target name={name} id={_pilotTargetId} cell=({_pilotTarget.CellX},{_pilotTarget.CellY}) image={_pilotTarget.MonsterInfo?.Image}");
         CaptureMonsterAuditShot(outDir, 0, name + "_spawn");
 
-        // ---- 阶段 1：站立待机（真实 Standing 帧推进 ≥ 2 帧）----
+        // ---- 阶段 1：站立待机（真实 Standing / StoneStanding 帧推进 ≥ 2 帧）----
+        // Zuma 系（ZumaGuardian/Fanatic/King）默认以“石像”状态存在，客户端播的是
+        // MirAnimation.StoneStanding 而不是 Standing（ObjectRenderer.cs:296-298），
+        // 只认 Standing 会误判为 failed。两者都算待机。
+        bool IsIdleAnim() => _pilotTarget.Animation is MirAnimation.Standing or MirAnimation.StoneStanding;
         // 刚刷出的怪可能立刻开始追人（Zuma Fanatic 实测 8s 内一直是 Walking），
-        // 先给它一个安静的待机窗口：连捕 3 轮，任一轮采到 2 个 Standing 帧即通过。
+        // 先给它一个安静的待机窗口：连捕 3 轮，任一轮采到 2 个待机帧即通过。
         for (int idleTry = 0; idleTry < 3 && !_pilotLastStageOk; idleTry++)
         {
             await CaptureStageAsync(outDir, 1, name + "_idle" + (idleTry == 0 ? "" : "_r" + idleTry),
-                () => _pilotTarget.Animation == MirAnimation.Standing,
-                (prev, cur) => cur.Animation == MirAnimation.Standing && cur.Frame != prev.Frame,
+                IsIdleAnim,
+                (prev, cur) => cur.Animation == prev.Animation && cur.Frame != prev.Frame,
                 2, 6.0);
             if (!_pilotLastStageOk) await WaitSecondsAsync(1.0);
         }

@@ -1,0 +1,5 @@
+{"stage":1,"label":"Pig_idle","targetId":6026,"name":"Pig","image":"Pig","hit1":{"anim":"Standing","frame":1,"dir":"DownLeft","cell":"197,405","tickMs":15311,"shot":"/tmp/monster_audit_runs/Pig/011_Pig_idle.png"},"hit2":{"anim":"Standing","frame":2,"dir":"DownLeft","cell":"197,405","tickMs":15834,"shot":"/tmp/monster_audit_runs/Pig/012_Pig_idle.png"},"ok":true,"hits":2,"required":2}
+{"stage":2,"label":"Pig_walk","targetId":6026,"ai":2,"status":"blocked","reason":"passive-monster-no-active-chase"}
+{"stage":3,"label":"Pig_combat","targetId":6026,"ai":2,"status":"blocked","reason":"passive-monster-no-active-attack"}
+{"stage":4,"label":"Pig_dead","targetId":6026,"hit1":{"anim":"Die","frame":0,"dir":"DownLeft","cell":"197,405","tickMs":16544,"shot":"/tmp/monster_audit_runs/Pig/040_Pig_die.png"},"hit2":{"anim":"Struck","frame":0,"dir":"DownLeft","cell":"197,405","tickMs":16884,"shot":"/tmp/monster_audit_runs/Pig/041_Pig_struck.png"},"dieHits":1,"struckHits":1,"combatHits":0,"ok":true,"transitions":["die:Die#0@197,405","struck:Struck#0@197,405"]}
+{"name":"Pig","targetId":6026,"image":"Pig","ai":2,"passive":true,"removed":false}

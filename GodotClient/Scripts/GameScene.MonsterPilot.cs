@@ -156,7 +156,10 @@ public partial class GameScene
                 .Where(o => o?.Type == ObjectRenderer.Kind.Monster && o.MonsterInfo?.MonsterName == name)
                 .Select(o => o.ObjectID));
             SendChat($"@monster {name} 1");
-            spawnedTarget = await WaitForNewMonsterAsync(name, preIds, 6.0);
+            // 潜伏型怪（CarnivorousPlant 构造里 Visible=false，只在玩家进入 FindRange 后
+            // 按 3s 周期广播 ObjectShow，ServerLibrary/Models/Monsters/CarnivorousPlant.cs:18-56）
+            // 要等一个多周期才可见，超时给到 18s。
+            spawnedTarget = await WaitForNewMonsterAsync(name, preIds, 18.0);
             if (spawnedTarget == null)
                 GD.Print($"[MonsterPilot] {name} 第 {attempt + 1} 次刷怪未出现新对象，换点重试");
         }

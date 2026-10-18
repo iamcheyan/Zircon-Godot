@@ -216,6 +216,30 @@ public partial class GameScene
         }
         else
         {
+            // MoveDelay=0 的怪（如 AI=15 的异界海将、Fierce Falcon）服务端
+            // `MonsterObject.CanMove => ... && MoveDelay > 0`，永远不会走路；
+            // 这是数据/设计，不是动画缺陷 → walk 直接记 blocked，不占用 40s 采样。
+            int moveDelay = _pilotTarget.MonsterInfo?.MoveDelay ?? 0;
+            if (moveDelay <= 0)
+            {
+                GD.Print($"[MonsterPilot] {name} MoveDelay=0（服务端不可移动），walk 记为 blocked");
+                WritePilotLog(outDir, name + "_walk_status", new Dictionary<string, object>
+                {
+                    ["stage"] = 2,
+                    ["label"] = name + "_walk",
+                    ["targetId"] = _pilotTargetId,
+                    ["ai"] = _pilotTarget.MonsterInfo?.AI ?? -1,
+                    ["moveDelay"] = moveDelay,
+                    ["status"] = "blocked",
+                    ["reason"] = "monster-cannot-move-moveDelay-zero",
+                });
+            }
+            bool canMove = moveDelay > 0;
+            if (!canMove)
+            {
+                // 不移动的怪不需要退却逼迫，直接进入下一阶段
+                goto CombatStage;
+            }
             // 管理员登录默认 GM=true；这里只发一次把它关掉，让怪能锁定玩家。
             SendChat("@gamemaster");
             await WaitSecondsAsync(0.3);
@@ -312,6 +336,7 @@ public partial class GameScene
             }
         }
 
+        CombatStage:
         // ---- 阶段 3：攻击 ----
         // 被动怪：记为 blocked（CanRetaliate 通常仍会反击，但仅在玩家先打它时；
         // 由阶段 4 的玩家击杀驱动，真实 Struck/Die 已覆盖受击证据）。

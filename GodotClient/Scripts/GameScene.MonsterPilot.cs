@@ -33,6 +33,7 @@ public partial class GameScene
 
     private ObjectRenderer _pilotTarget;
     private uint _pilotTargetId;
+    private bool _pilotLastStageOk;
     private bool _pilotDieCaptured;
     private string _pilotDieShot;
     private readonly List<Dictionary<string, object>> _pilotLog = new();
@@ -236,8 +237,32 @@ public partial class GameScene
                 // 走路帧表中的 CellX/CellY 在 StartMove 时已直接跳到终点，
                 // “帧推进”才是稳定的步行证据；格变化作为附加信息记到 shot 行。
                 (prev, cur) => cur.Animation == MirAnimation.Walking
-                    && cur.Frame != prev.Frame, 2, 30.0,
+                    && cur.Frame != prev.Frame, 2, 20.0,
                 new Dictionary<string, object> { ["fromCell"] = $"{startCell.X},{startCell.Y}" });
+
+            // 倒退失败时（怪已经贴身且不需要追、或周围都是墙，Uma Infidel 实测）
+            // 再补一次：重新靠近目标贴身，然后立即大步跑开 2 格，逼它重新进入走路。
+            bool walkOk = _pilotLastStageOk;
+            if (!walkOk)
+            {
+                for (int i = 0; i < 30; i++)
+                {
+                    if (!IsInstanceValid(_pilotTarget)) break;
+                    if (Functions.Distance(_playerLocation,
+                            new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY)) <= 1) break;
+                    await NextFrameAsync();
+                }
+                var runDir = Functions.DirectionFromPoint(_pilotTarget.CellX == _playerLocation.X
+                        ? new System.Drawing.Point(_pilotTarget.CellX - 1, _pilotTarget.CellY)
+                        : new System.Drawing.Point(_pilotTarget.CellX, _pilotTarget.CellY), _playerLocation);
+                SendMouseMove(runDir, 2, true);
+                await WaitSecondsAsync(0.5);
+                await CaptureStageAsync(outDir, 2, name + "_walk2",
+                    () => _pilotTarget.Animation == MirAnimation.Walking,
+                    (prev, cur) => cur.Animation == MirAnimation.Walking
+                        && cur.Frame != prev.Frame, 2, 20.0,
+                    new Dictionary<string, object> { ["retry"] = true });
+            }
         }
 
         // ---- 阶段 3：攻击 ----
@@ -536,6 +561,7 @@ public partial class GameScene
         row["ok"] = hits >= requiredSamples;
         row["hits"] = hits;
         row["required"] = requiredSamples;
+        _pilotLastStageOk = hits >= requiredSamples;
         if (hits == 0)
             GD.PrintErr($"[MonsterPilot] {label} 未捕获到真实动作状态（目标可能未触发该动作），记为 failed");
         WritePilotLog(outDir, label, row);

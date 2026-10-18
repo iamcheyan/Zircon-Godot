@@ -242,15 +242,19 @@ public partial class GameScene
         // 主动怪：关 GM 模式 + @superman，怪会自己追上来攻击玩家。
         if (passive)
         {
-            GD.Print($"[MonsterPilot] {name} 被动怪，combat 阶段记为 blocked（不主动攻击）");
+            int ai = _pilotTarget.MonsterInfo?.AI ?? -1;
+            string reason = IsNonAttackingAi(ai)
+                ? "ai-semantics-no-player-attack"
+                : "passive-monster-no-active-attack";
+            GD.Print($"[MonsterPilot] {name} AI={ai} 不主动攻击玩家，combat 阶段记为 blocked（{reason}）");
             WritePilotLog(outDir, name + "_combat", new Dictionary<string, object>
             {
                 ["stage"] = 3,
                 ["label"] = name + "_combat",
                 ["targetId"] = _pilotTargetId,
-                ["ai"] = _pilotTarget.MonsterInfo?.AI ?? -1,
+                ["ai"] = ai,
                 ["status"] = "blocked",
-                ["reason"] = "passive-monster-no-active-attack",
+                ["reason"] = reason,
             });
         }
         else
@@ -325,7 +329,14 @@ public partial class GameScene
     }
 
     /// <summary>AI=1/2 为 Passive=true 怪（不主动索敌追击）；其余 default 主动。</summary>
-    private static bool IsPassiveAi(int ai) => ai is 1 or 2 or 4 or 5 or 135 or 136 or 129 or 130;
+    private static bool IsPassiveAi(int ai) => ai is 1 or 2 or 4 or 5 or 135 or 136 or 129 or 130 or 12;
+
+    /// <summary>
+    /// AI 语义上**不会攻击玩家**的类型：AI=12 HealerAnt 只治疗同类（
+    /// CanAttackTarget =&gt; CanHelpTarget，见 Monsters/HealerAnt.cs），
+    /// 玩家不是它的治疗对象，因此永远没有 Combat 动作。
+    /// </summary>
+    private static bool IsNonAttackingAi(int ai) => ai is 12;
 
     /// <summary>从 from 朝远离 target 的方向走 steps 格（只在 0.map 城内候选格里找可走点）。</summary>
     private System.Drawing.Point StepAwayFrom(System.Drawing.Point from, System.Drawing.Point target, int steps)

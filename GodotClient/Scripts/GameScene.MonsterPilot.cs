@@ -241,15 +241,19 @@ public partial class GameScene
                     ["reason"] = "monster-cannot-move-moveDelay-zero",
                 });
             }
-            bool canMove = moveDelay > 0;
-            if (!canMove)
+            // 管理员登录默认 GM=true；这里只发一次把它关掉，让怪能锁定玩家。
+            // 必须放在 MoveDelay 分支之前：之前用 goto 跳过这里，导致不可移动的怪
+            // （AI=15 异界系、AI=17 Arachnid Gazer）GM 仍为 on，而
+            // ShouldAttackTarget 对 GameMaster 直接 return false，怪物根本不出手，
+            // combat 阶段全部误判 FAIL（实测 Otherworld Sea General 63 次
+            // ObjectAttack 全是玩家自己攻击的回声）。
+            SendChat("@gamemaster");
+            await WaitSecondsAsync(0.3);
+            if (moveDelay <= 0)
             {
                 // 不移动的怪不需要退却逼迫，直接进入下一阶段
                 goto CombatStage;
             }
-            // 管理员登录默认 GM=true；这里只发一次把它关掉，让怪能锁定玩家。
-            SendChat("@gamemaster");
-            await WaitSecondsAsync(0.3);
             // 不要用 @move 传送退开：切图/传送会重建视野，目标可能直接掉出客户端
             // 对象表（实测 wolf8 walk=false）。更不能只退 1 次：怪物刷出时若已贴身，
             // 它根本不需要走路，就永远采不到 Walking（实测 wolfA，全程 0 次 ObjectMove）。

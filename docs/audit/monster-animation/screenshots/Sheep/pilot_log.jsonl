@@ -1,0 +1,5 @@
+{"stage":1,"label":"Sheep_idle","targetId":6075,"name":"Sheep","image":"Sheep","hit1":{"anim":"Standing","frame":1,"dir":"Up","cell":"207,252","tickMs":15706,"shot":"/tmp/monster_audit_runs/Sheep/011_Sheep_idle.png"},"hit2":{"anim":"Standing","frame":2,"dir":"Up","cell":"207,252","tickMs":16191,"shot":"/tmp/monster_audit_runs/Sheep/012_Sheep_idle.png"},"ok":true,"hits":2,"required":2}
+{"stage":2,"label":"Sheep_walk","targetId":6075,"ai":2,"status":"blocked","reason":"passive-monster-no-active-chase"}
+{"stage":3,"label":"Sheep_combat","targetId":6075,"ai":2,"status":"blocked","reason":"passive-monster-no-active-attack"}
+{"stage":4,"label":"Sheep_dead","targetId":6075,"hit1":{"anim":"Die","frame":0,"dir":"Up","cell":"207,252","tickMs":16793,"shot":"/tmp/monster_audit_runs/Sheep/040_Sheep_die.png"},"hit2":{"anim":"Struck","frame":0,"dir":"Up","cell":"207,252","tickMs":17019,"shot":"/tmp/monster_audit_runs/Sheep/041_Sheep_struck.png"},"dieHits":1,"struckHits":1,"combatHits":0,"ok":true,"transitions":["die:Die#0@207,252","struck:Struck#0@207,252"]}
+{"name":"Sheep","targetId":6075,"image":"Sheep","ai":2,"passive":true,"removed":false}

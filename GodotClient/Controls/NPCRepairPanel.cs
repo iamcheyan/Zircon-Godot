@@ -286,16 +286,16 @@ public partial class NPCRepairPanel : DXControl
         _guildFunds.Location = new Vector2I(175, 254);
         _guildFunds.Size = new Vector2I(110, 19);
 
-        // 修理钮：素材唯一的修理钮（F263 普通 / F264 悬停 / F265 按下）
-        // x=296 起：右缘 360，离右侧木栏（约 384 起）留出余量，避免"压着右边框"（第四轮视觉复核建议）
+        // 修理钮：用户要求「文字都用中文」——素材里唯一的修理钮 F263-265 是韩文「수리」烤在图内，
+        // 不再使用；改为中文文字钮，与左侧四个来源钮同款。
         _repair.Location = new Vector2I(296, 236);
         _repair.Size = new Vector2I(64, 19);
-        _repair.FontSize = 9;
-        _repair.Text = "";
-        _repair.LibraryFile = LibraryFile.GameInter;
-        _repair.Index = 263;
-        _repair.HoverIndex = 264;
-        _repair.PressedIndex = 265;
+        _repair.FontSize = 10;
+        _repair.Text = "修理";
+        _repair.LibraryFile = LibraryFile.Interface;
+        _repair.Index = -1;
+        _repair.HoverIndex = -1;
+        _repair.PressedIndex = -1;
 
         // 四个来源钮：素材里没有对应按钮帧（只有 修理/出售/保管/交换 四类），
         // 暂留文字钮，位置排在左下，待人工确认后再换素材。
@@ -315,8 +315,7 @@ public partial class NPCRepairPanel : DXControl
             && !_legacyTop.Visible && !_frame.Visible
             && _legacySlots.Visible && _legacySlots.Location == new Vector2I(0, 26)
             && _grid.Location == new Vector2I(0, 26)
-            && _repair.LibraryFile == LibraryFile.GameInter
-            && _repair.Index == 263 && _repair.HoverIndex == 264 && _repair.PressedIndex == 265
+            && _repair.Text == "修理" && _repair.Index == -1 && _repair.HoverIndex == -1 && _repair.PressedIndex == -1
             && _cost.Location == new Vector2I(10, 208)
             && !_costLabel.Visible
             && _sourceButtons.Count == 4;

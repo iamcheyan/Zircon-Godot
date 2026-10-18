@@ -676,40 +676,34 @@ public partial class InventoryDialog : DXWindow
     /// 右下角随模式换帧的 64x20 控件（原版只有一个：263/264/265 수리、270/271/272
     /// 판매、273/274/275 보관）。mode 0 原版该处是空槽，标题帧/按钮帧一律不画，
     /// 否则会出现 mode 0 也显示「수 리」和灰底方块的问题。
+    ///
+    /// 2026-10-18 按用户要求「文字都用中文」：这三个模式的素材帧是**韩文烤在图里**的
+    /// （수리/판매/보관），不再使用；改为中文文字钮（修理/出售/储存），与面板内其它按钮同款。
     /// </summary>
     private void ApplyLegacyModeArt()
     {
         if (_legacyModeArt != null)
         {
-            _legacyModeArt.Index = InvMode switch
-            {
-                InventoryMode.Repair => 263,
-                InventoryMode.Sell => 270,
-                InventoryMode.Storage => 273,
-                _ => -1,
-            };
-            _legacyModeArt.Visible = _legacyModeArt.Index >= 0;
+            // 韩文烤字美术一律不画（模式名已由顶部 _legacyModeLabel 用中文标出）
+            _legacyModeArt.Index = -1;
+            _legacyModeArt.Visible = false;
         }
         if (_legacyActionButton != null)
         {
-            int normal = InvMode switch
+            string label = InvMode switch
             {
-                InventoryMode.Repair => 264,
-                InventoryMode.Sell => 271,
-                InventoryMode.Storage => 274,
-                _ => -1,
+                InventoryMode.Repair => "修理",
+                InventoryMode.Sell => "出售",
+                InventoryMode.Storage => "储存",
+                _ => null,
             };
-            int hover = InvMode switch
-            {
-                InventoryMode.Repair => 265,
-                InventoryMode.Sell => 272,
-                InventoryMode.Storage => 275,
-                _ => -1,
-            };
-            _legacyActionButton.Index = normal;
-            _legacyActionButton.HoverIndex = hover;
-            _legacyActionButton.PressedIndex = hover;
-            bool npcMode = normal >= 0;
+            bool npcMode = label != null;
+            _legacyActionButton.Text = label ?? "";
+            _legacyActionButton.FontSize = 10;
+            _legacyActionButton.LibraryFile = LibraryFile.Interface;
+            _legacyActionButton.Index = -1;
+            _legacyActionButton.HoverIndex = -1;
+            _legacyActionButton.PressedIndex = -1;
             _legacyActionButton.Visible = npcMode;
         }
         // Index<0 的 DXButton 会画「生成按钮/兜底灰框」，mode 0 那格在原版是空的，

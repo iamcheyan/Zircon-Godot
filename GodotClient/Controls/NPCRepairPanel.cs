@@ -287,7 +287,8 @@ public partial class NPCRepairPanel : DXControl
         _guildFunds.Size = new Vector2I(110, 19);
 
         // 修理钮：素材唯一的修理钮（F263 普通 / F264 悬停 / F265 按下）
-        _repair.Location = new Vector2I(308, 236);
+        // x=296 起：右缘 360，离右侧木栏（约 384 起）留出余量，避免"压着右边框"（第四轮视觉复核建议）
+        _repair.Location = new Vector2I(296, 236);
         _repair.Size = new Vector2I(64, 19);
         _repair.FontSize = 9;
         _repair.Text = "";

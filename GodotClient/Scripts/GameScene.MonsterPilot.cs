@@ -715,7 +715,21 @@ public partial class GameScene
             => x > 1 && y > 1 && x < map.Width - 1 && y < map.Height - 1
                && !map.Cells[x, y].Flag
                && !_objects.Values.Any(o => o != null && !o.Dead && o.CellX == x && o.CellY == y);
-        for (int radius = 0; radius <= 8; radius++)
+        // 传送后玩家的朝向是服务端保留的旧朝向，不是"朝向我算出来的方向"；
+        // 之前按猜测的 dir 检查正前格，会选到正前方仍是墙的点，@monster 静默失败
+        // （Carnivorous Plant 在 31 图实测 4 次全失败）。改成要求候选点的
+        // **周围 8 格全部可站且无对象**，这样无论朝向如何，正前格都必然可用。
+        bool AllAroundFree(int x, int y)
+        {
+            for (int ox = -1; ox <= 1; ox++)
+                for (int oy = -1; oy <= 1; oy++)
+                {
+                    if (ox == 0 && oy == 0) continue;
+                    if (!Free(x + ox, y + oy)) return false;
+                }
+            return true;
+        }
+        for (int radius = 0; radius <= 10; radius++)
         {
             for (int dx = -radius; dx <= radius; dx++)
             {
@@ -723,10 +737,7 @@ public partial class GameScene
                 {
                     if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != radius) continue;
                     int x = _playerLocation.X + dx, y = _playerLocation.Y + dy;
-                    if (!Free(x, y)) continue;
-                    var dir = Functions.DirectionFromPoint(new System.Drawing.Point(x, y), _playerLocation);
-                    var front = Functions.Move(new System.Drawing.Point(x, y), dir);
-                    if (!Free(front.X, front.Y)) continue;
+                    if (!Free(x, y) || !AllAroundFree(x, y)) continue;
                     SendChat($"@move {PilotCurrentMap} {x} {y}");
                     await WaitSecondsAsync(0.7);
                     return;

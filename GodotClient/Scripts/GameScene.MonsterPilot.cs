@@ -232,7 +232,7 @@ public partial class GameScene
                 // 走路帧表中的 CellX/CellY 在 StartMove 时已直接跳到终点，
                 // “帧推进”才是稳定的步行证据；格变化作为附加信息记到 shot 行。
                 (prev, cur) => cur.Animation == MirAnimation.Walking
-                    && cur.Frame != prev.Frame, 3, 30.0,
+                    && cur.Frame != prev.Frame, 2, 30.0,
                 new Dictionary<string, object> { ["fromCell"] = $"{startCell.X},{startCell.Y}" });
         }
 

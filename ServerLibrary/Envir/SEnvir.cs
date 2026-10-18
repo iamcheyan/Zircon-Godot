@@ -1627,19 +1627,38 @@ namespace Server.Envir
 
                         if (nextCount.Day != Now.Day)
                         {
+                            int guildDayResetMembers = 0, guildDayResetOrphans = 0;
+
                             foreach (GuildInfo guild in GuildInfoList.Binding)
                             {
+                                if (guild == null) continue;
+
                                 guild.DailyContribution = 0;
                                 guild.DailyGrowth = 0;
 
                                 foreach (GuildMemberInfo member in guild.Members)
                                 {
-                                    member.DailyContribution = 0;
-                                    if (member.Account.Connection?.Player == null) continue;
+                                    if (member == null) continue;
 
-                                    member.Account.Connection.Enqueue(new S.GuildDayReset { ObserverPacket = false });
+                                    member.DailyContribution = 0;
+
+                                    AccountInfo memberAccount = member.Account;
+                                    if (memberAccount == null)
+                                    {
+                                        // 孤立成员行（账号引用缺失）：跳过并计数，不再让跨天重置把服务端带崩
+                                        guildDayResetOrphans++;
+                                        continue;
+                                    }
+                                    if (memberAccount.Connection?.Player == null) continue;
+
+                                    guildDayResetMembers++;
+                                    memberAccount.Connection.Enqueue(new S.GuildDayReset { ObserverPacket = false });
                                 }
                             }
+
+                            // 正常一天是静默的；出现孤立成员行才留痕，便于事后定位
+                            if (guildDayResetOrphans > 0)
+                                Log($"[Guild] 跨天重置：已通知 {guildDayResetMembers} 名在线成员，跳过 {guildDayResetOrphans} 个无账号引用的成员行");
 
                             GC.Collect(2, GCCollectionMode.Forced);
                         }

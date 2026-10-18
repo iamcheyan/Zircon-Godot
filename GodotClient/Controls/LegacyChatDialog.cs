@@ -424,6 +424,21 @@ public sealed partial class LegacyChatDialog : DXWindow
         return false;
     }
 
+    /// <summary>审计/诊断用：当前聊天条数（配合 RecentMessages 取"某条之后新增的消息"）。</summary>
+    public int MessageCount => _messages.Count;
+
+    /// <summary>
+    /// 审计/诊断用：取最近 count 条聊天文本（旧→新）。用于读服务端对 GM 命令回的报错，
+    /// 例如 "Could not find monster: X"（这类错误只进聊天，不进日志）。
+    /// </summary>
+    public IReadOnlyList<string> RecentMessages(int count)
+    {
+        var result = new List<string>();
+        int start = Math.Max(0, _messages.Count - Math.Max(1, count));
+        for (int i = start; i < _messages.Count; i++) result.Add(_messages[i].Text);
+        return result;
+    }
+
     public void AddMessage(string text, MessageType type, Color colour)
     {
         if (string.IsNullOrWhiteSpace(text)) return;

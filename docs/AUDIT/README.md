@@ -104,6 +104,10 @@ python3 tools/audit/npc_quests_audit.py
 
 # 3) 实机巡检（需先起服务端；脚本可续跑，按块跳过已完成）
 bash /tmp/zircon_run_server.sh &        # 服务端
+# ⚠ macOS 上 7000 常被系统 AirPlay 接收器（ControlCenter）占用，此时客户端会「连上 7000
+#   但一直不完成登录」（连到的是 AirPlay 不是游戏服）。跑巡检前务必确认服务端真实端口：
+#     lsof -nP -p $(pgrep -f ServerCore.dll) -a -iTCP -sTCP:LISTEN | grep LISTEN
+#   然后客户端用同一个端口，例如 --port 7001。此坑只影响 Mac 本机巡检，不影响 82 上的正常流程。
 OUT=$HOME/audit-raw/npc-full-sweep-$(date +%Y-%m-%d) bash tools/npc_full_sweep.sh
 
 # 4) 截图入库（缩略图）

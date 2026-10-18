@@ -1008,9 +1008,9 @@ namespace Server.Models
             {
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    if (member == Character.Account.GuildMember || member.Account.Connection?.Player == null) continue;
+                    if (member == Character.Account.GuildMember || member.Account?.Connection?.Player == null) continue;
 
-                    member.Account.Connection.Enqueue(new S.GuildMemberOffline { Index = Character.Account.GuildMember.Index, ObserverPacket = false });
+                    member.Account?.Connection.Enqueue(new S.GuildMemberOffline { Index = Character.Account.GuildMember.Index, ObserverPacket = false });
                 }
             }
 
@@ -1107,9 +1107,9 @@ namespace Server.Models
             {
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    if (member == Character.Account.GuildMember || member.Account.Connection?.Player == null) continue;
+                    if (member == Character.Account.GuildMember || member.Account?.Connection?.Player == null) continue;
 
-                    member.Account.Connection.Enqueue(new S.GuildMemberOnline
+                    member.Account?.Connection.Enqueue(new S.GuildMemberOnline
                     {
                         Index = Character.Account.GuildMember.Index,
                         Name = Name,
@@ -1732,11 +1732,11 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    if (member.Account.Connection == null) continue;
-                    if (member.Account.Connection.Stage != GameStage.Game && member.Account.Connection.Stage != GameStage.Observer) continue;
+                    if (member.Account?.Connection == null) continue;
+                    if (member.Account?.Connection.Stage != GameStage.Game && member.Account?.Connection.Stage != GameStage.Observer) continue;
                     if (SEnvir.IsBlocking(Character.Account, member.Account)) continue;
 
-                    member.Account.Connection.ReceiveChat(text, MessageType.Guild, linkedItems);
+                    member.Account?.Connection.ReceiveChat(text, MessageType.Guild, linkedItems);
                 }
             }
             else if (text.StartsWith("!@"))
@@ -1965,12 +1965,12 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in con.Account.GuildMember.Guild.Members)
                 {
-                    if (member.Account.Connection == null) continue;
-                    if (member.Account.Connection.Stage != GameStage.Game && member.Account.Connection.Stage != GameStage.Observer) continue;
+                    if (member.Account?.Connection == null) continue;
+                    if (member.Account?.Connection.Stage != GameStage.Game && member.Account?.Connection.Stage != GameStage.Observer) continue;
 
                     if (SEnvir.IsBlocking(con.Account, member.Account)) continue;
 
-                    member.Account.Connection.ReceiveChat(text, MessageType.Guild);
+                    member.Account?.Connection.ReceiveChat(text, MessageType.Guild);
                 }
             }
             else if (text.StartsWith("!@"))
@@ -4113,8 +4113,8 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
-                    member.Account.Connection?.ReceiveChat(string.Format(Connection.Language.ConsignGuildFundsUsed, Name, cost, item.Info.ItemName, result.Link.Count, p.Price), MessageType.System);
+                    member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                    member.Account?.Connection?.ReceiveChat(string.Format(Connection.Language.ConsignGuildFundsUsed, Name, cost, item.Info.ItemName, result.Link.Count, p.Price), MessageType.System);
                 }
             }
             else
@@ -4292,8 +4292,8 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
-                    member.Account.Connection?.ReceiveChat(string.Format(member.Account.Connection.Language.ConsignBuyGuildFundsUsed, Name, cost, info.Item.Info.ItemName, p.Count, info.Price), MessageType.System);
+                    member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                    member.Account?.Connection?.ReceiveChat(string.Format(member.Account?.Connection.Language.ConsignBuyGuildFundsUsed, Name, cost, info.Item.Info.ItemName, p.Count, info.Price), MessageType.System);
                 }
             }
             else
@@ -4845,7 +4845,7 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
             {
-                member.Account.Connection?.Player?.Enqueue(new S.GuildNoticeChanged { Notice = p.Notice, ObserverPacket = false });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildNoticeChanged { Notice = p.Notice, ObserverPacket = false });
             }
         }
         public void GuildEditMember(C.GuildEditMember p)
@@ -4884,7 +4884,7 @@ namespace Server.Models
                 update.Members.Add(info.ToClientInfo());
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                    member.Account.Connection?.Player?.Enqueue(update);
+                    member.Account?.Connection?.Player?.Enqueue(update);
 
                 info.Account.Connection?.Player?.Broadcast(new S.GuildChanged { ObjectID = info.Account.Connection.Player.ObjectID, GuildName = info.Guild.GuildName, GuildRank = info.Rank });
             }
@@ -4896,7 +4896,7 @@ namespace Server.Models
                 S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                    member.Account.Connection?.Player?.Enqueue(update);
+                    member.Account?.Connection?.Player?.Enqueue(update);
             }
         }
         /// <summary>
@@ -4941,7 +4941,7 @@ namespace Server.Models
             update.Members.Add(target.ToClientInfo());
 
             foreach (GuildMemberInfo member in guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
 
             self.Account.Connection?.Player?.Broadcast(new S.GuildChanged { ObjectID = self.Account.Connection.Player.ObjectID, GuildName = guild.GuildName, GuildRank = self.Rank });
             target.Account.Connection?.Player?.Broadcast(new S.GuildChanged { ObjectID = target.Account.Connection.Player.ObjectID, GuildName = guild.GuildName, GuildRank = target.Rank });
@@ -5003,12 +5003,12 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in guild.Members)
             {
-                if (member.Account.Connection?.Player == null) continue;
+                if (member.Account?.Connection?.Player == null) continue;
 
-                member.Account.Connection.ReceiveChat(string.Format(member.Account.Connection.Language.GuildMemberKicked, memberName, Name), MessageType.System);
-                member.Account.Connection.Player.Enqueue(new S.GuildKick { Index = info.Index, ObserverPacket = false });
-                member.Account.Connection.Player.RemoveAllObjects();
-                member.Account.Connection.Player.ApplyGuildBuff();
+                member.Account?.Connection.ReceiveChat(string.Format(member.Account?.Connection.Language.GuildMemberKicked, memberName, Name), MessageType.System);
+                member.Account?.Connection.Player.Enqueue(new S.GuildKick { Index = info.Index, ObserverPacket = false });
+                member.Account?.Connection.Player.RemoveAllObjects();
+                member.Account?.Connection.Player.ApplyGuildBuff();
             }
 
         }
@@ -5031,7 +5031,7 @@ namespace Server.Models
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
         }
         public void GuildIncreaseMember(C.GuildIncreaseMember p)
         {
@@ -5067,7 +5067,7 @@ namespace Server.Models
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
         }
         public void GuildIncreaseStorage(C.GuildIncreaseStorage p)
         {
@@ -5101,7 +5101,7 @@ namespace Server.Models
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
         }
         public void GuildInviteMember(C.GuildInviteMember p)
         {
@@ -5215,13 +5215,13 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
             {
-                member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -Globals.GuildWarCost, ObserverPacket = false });
-                member.Account.Connection?.Player?.Enqueue(new S.GuildWarStarted { GuildName = guild.GuildName, Duration = warInfo.Duration });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -Globals.GuildWarCost, ObserverPacket = false });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildWarStarted { GuildName = guild.GuildName, Duration = warInfo.Duration });
             }
 
             foreach (GuildMemberInfo member in guild.Members)
             {
-                member.Account.Connection?.Player?.Enqueue(new S.GuildWarStarted { GuildName = Character.Account.GuildMember.Guild.GuildName, Duration = warInfo.Duration });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildWarStarted { GuildName = Character.Account.GuildMember.Guild.GuildName, Duration = warInfo.Duration });
             }
         }
         public void GuildConquest(int index)
@@ -5292,20 +5292,20 @@ namespace Server.Models
             {
                 foreach (GuildMemberInfo member in ownerGuild.Members)
                 {
-                    if (member.Account.Connection?.Player == null) continue; //Offline
+                    if (member.Account?.Connection?.Player == null) continue; //Offline
 
-                    member.Account.Connection.ReceiveChat(member.Account.Connection.Language.GuildConquestSuccess, MessageType.System);
-                    member.Account.Connection.Enqueue(new S.GuildConquestDate { Index = castle.Index, WarTime = (date + castle.StartTime) - SEnvir.Now, ObserverPacket = false });
+                    member.Account?.Connection.ReceiveChat(member.Account?.Connection.Language.GuildConquestSuccess, MessageType.System);
+                    member.Account?.Connection.Enqueue(new S.GuildConquestDate { Index = castle.Index, WarTime = (date + castle.StartTime) - SEnvir.Now, ObserverPacket = false });
                 }
             }
 
             //Send War Date to guild.
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
             {
-                if (member.Account.Connection?.Player == null) continue; //Offline
+                if (member.Account?.Connection?.Player == null) continue; //Offline
 
-                member.Account.Connection.ReceiveChat(string.Format(member.Account.Connection.Language.GuildConquestDate, castle.Name), MessageType.System);
-                member.Account.Connection.Enqueue(new S.GuildConquestDate { Index = castle.Index, WarTime = (date + castle.StartTime) - SEnvir.Now, ObserverPacket = false });
+                member.Account?.Connection.ReceiveChat(string.Format(member.Account?.Connection.Language.GuildConquestDate, castle.Name), MessageType.System);
+                member.Account?.Connection.Enqueue(new S.GuildConquestDate { Index = castle.Index, WarTime = (date + castle.StartTime) - SEnvir.Now, ObserverPacket = false });
             }
         }
 
@@ -5339,7 +5339,7 @@ namespace Server.Models
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
         }
 
         public void GuildFlag(int flag)
@@ -5374,7 +5374,7 @@ namespace Server.Models
             S.GuildUpdate update = Character.Account.GuildMember.Guild.GetUpdatePacket();
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                member.Account.Connection?.Player?.Enqueue(update);
+                member.Account?.Connection?.Player?.Enqueue(update);
         }
 
         public void GuildToggleCastleGates()
@@ -5408,14 +5408,14 @@ namespace Server.Models
                     gate.CloseDoor();
 
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                        member.Account.Connection?.ReceiveChat(con => string.Format(con.Language.GuildGateClosed, castle.Name, gate.MonsterInfo.MonsterName), MessageType.System);
+                        member.Account?.Connection?.ReceiveChat(con => string.Format(con.Language.GuildGateClosed, castle.Name, gate.MonsterInfo.MonsterName), MessageType.System);
                 }
                 else
                 {
                     gate.OpenDoor();
 
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
-                        member.Account.Connection?.ReceiveChat(con => string.Format(con.Language.GuildGateOpened, castle.Name, gate.MonsterInfo.MonsterName), MessageType.System);
+                        member.Account?.Connection?.ReceiveChat(con => string.Format(con.Language.GuildGateOpened, castle.Name, gate.MonsterInfo.MonsterName), MessageType.System);
                 }
             }
         }
@@ -5471,7 +5471,7 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
             {
-                member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
             }
 
             foreach (var gate in castle.Gates)
@@ -5542,7 +5542,7 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
             {
-                member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
             }
 
             foreach (var guard in castle.Guards)
@@ -5618,13 +5618,13 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in memberInfo.Guild.Members)
             {
-                if (member == memberInfo || member.Account.Connection?.Player == null) continue;
+                if (member == memberInfo || member.Account?.Connection?.Player == null) continue;
 
-                member.Account.Connection.ReceiveChat(string.Format(member.Account.Connection.Language.GuildMemberJoined, GuildInvitation.Name, Name), MessageType.System);
-                member.Account.Connection.Player.Enqueue(update);
+                member.Account?.Connection.ReceiveChat(string.Format(member.Account?.Connection.Language.GuildMemberJoined, GuildInvitation.Name, Name), MessageType.System);
+                member.Account?.Connection.Player.Enqueue(update);
 
-                member.Account.Connection.Player.AddAllObjects();
-                member.Account.Connection.Player.ApplyGuildBuff();
+                member.Account?.Connection.Player.AddAllObjects();
+                member.Account?.Connection.Player.ApplyGuildBuff();
             }
 
             LogMilestone(MilestoneType.GuildJoin, 1);
@@ -5663,12 +5663,12 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in guild.Members)
             {
-                if (member.Account.Connection?.Player == null) continue;
+                if (member.Account?.Connection?.Player == null) continue;
 
-                member.Account.Connection.Player.Enqueue(new S.GuildKick { Index = index, ObserverPacket = false });
-                member.Account.Connection.ReceiveChat(string.Format(member.Account.Connection.Language.GuildMemberLeave, Name), MessageType.System);
-                member.Account.Connection.Player.RemoveAllObjects();
-                member.Account.Connection.Player.ApplyGuildBuff();
+                member.Account?.Connection.Player.Enqueue(new S.GuildKick { Index = index, ObserverPacket = false });
+                member.Account?.Connection.ReceiveChat(string.Format(member.Account?.Connection.Language.GuildMemberLeave, Name), MessageType.System);
+                member.Account?.Connection.Player.RemoveAllObjects();
+                member.Account?.Connection.Player.ApplyGuildBuff();
             }
 
             ApplyCastleBuff();
@@ -5760,12 +5760,12 @@ namespace Server.Models
 
             foreach (GuildMemberInfo member in memberInfo.Guild.Members)
             {
-                if (member == memberInfo || member.Account.Connection?.Player == null) continue;
+                if (member == memberInfo || member.Account?.Connection?.Player == null) continue;
 
-                member.Account.Connection.ReceiveChat(string.Format(member.Account.Connection.Language.GuildMemberJoined, SEnvir.StarterGuild, Name), MessageType.System);
-                member.Account.Connection.Player.Enqueue(update);
+                member.Account?.Connection.ReceiveChat(string.Format(member.Account?.Connection.Language.GuildMemberJoined, SEnvir.StarterGuild, Name), MessageType.System);
+                member.Account?.Connection.Player.Enqueue(update);
 
-                member.Account.Connection.Player.AddAllObjects();
+                member.Account?.Connection.Player.AddAllObjects();
             }
 
             ApplyCastleBuff();
@@ -7907,7 +7907,7 @@ namespace Server.Models
 
                         foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                         {
-                            PlayerObject player = member.Account.Connection?.Player;
+                            PlayerObject player = member.Account?.Connection?.Player;
 
                             if (player == null || player == this) continue;
 
@@ -7939,7 +7939,7 @@ namespace Server.Models
 
                         foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                         {
-                            PlayerObject player = member.Account.Connection?.Player;
+                            PlayerObject player = member.Account?.Connection?.Player;
 
                             if (player == null || player == this) continue;
 
@@ -8054,7 +8054,7 @@ namespace Server.Models
 
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                     {
-                        PlayerObject player = member.Account.Connection?.Player;
+                        PlayerObject player = member.Account?.Connection?.Player;
 
                         if (player == null || player == this) continue;
 
@@ -8121,7 +8121,7 @@ namespace Server.Models
 
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                     {
-                        PlayerObject player = member.Account.Connection?.Player;
+                        PlayerObject player = member.Account?.Connection?.Player;
 
                         if (player == null || player == this) continue;
 
@@ -8536,7 +8536,7 @@ namespace Server.Models
 
                         foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                         {
-                            PlayerObject player = member.Account.Connection?.Player;
+                            PlayerObject player = member.Account?.Connection?.Player;
 
                             if (player == null || player == this) continue;
 
@@ -10483,8 +10483,8 @@ namespace Server.Models
 
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                     {
-                        member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
-                        member.Account.Connection?.ReceiveChat(string.Format(member.Account.Connection.Language.NPCFundsBuy, Name, cost, item.Info.ItemName, item.Count), MessageType.System);
+                        member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                        member.Account?.Connection?.ReceiveChat(string.Format(member.Account?.Connection.Language.NPCFundsBuy, Name, cost, item.Info.ItemName, item.Count), MessageType.System);
                     }
                 }
                 else
@@ -12026,8 +12026,8 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                 {
-                    member.Account.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
-                    member.Account.Connection?.ReceiveChat(string.Format(member.Account.Connection.Language.NPCRepairGuildResult, Name, cost, count), MessageType.System);
+                    member.Account?.Connection?.Player?.Enqueue(new S.GuildFundsChanged { Change = -cost, ObserverPacket = false });
+                    member.Account?.Connection?.ReceiveChat(string.Format(member.Account?.Connection.Language.NPCRepairGuildResult, Name, cost, count), MessageType.System);
                 }
             }
             else
@@ -16541,15 +16541,15 @@ namespace Server.Models
                 {
                     foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                     {
-                        if (member.Account.Connection == null) continue;
+                        if (member.Account?.Connection == null) continue;
 
-                        member.Account.Connection.ReceiveChatWithObservers(con => string.Format(con.Language.GuildWarDeath, Name, Character.Account.GuildMember.Guild.GuildName, attacker.Name, attacker.Character.Account.GuildMember.Guild.GuildName), MessageType.System);
+                        member.Account?.Connection.ReceiveChatWithObservers(con => string.Format(con.Language.GuildWarDeath, Name, Character.Account.GuildMember.Guild.GuildName, attacker.Name, attacker.Character.Account.GuildMember.Guild.GuildName), MessageType.System);
                     }
                     foreach (GuildMemberInfo member in attacker.Character.Account.GuildMember.Guild.Members)
                     {
-                        if (member.Account.Connection == null) continue;
+                        if (member.Account?.Connection == null) continue;
 
-                        member.Account.Connection.ReceiveChatWithObservers(con => string.Format(con.Language.GuildWarDeath, Name, Character.Account.GuildMember.Guild.GuildName, attacker.Name, attacker.Character.Account.GuildMember.Guild.GuildName), MessageType.System);
+                        member.Account?.Connection.ReceiveChatWithObservers(con => string.Format(con.Language.GuildWarDeath, Name, Character.Account.GuildMember.Guild.GuildName, attacker.Name, attacker.Character.Account.GuildMember.Guild.GuildName), MessageType.System);
                     }
                 }
                 else
@@ -17230,9 +17230,9 @@ namespace Server.Models
 
                         foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                         {
-                            if (member.Account.Connection?.Player?.CurrentMap.Instance == instance)
+                            if (member.Account?.Connection?.Player?.CurrentMap.Instance == instance)
                             {
-                                var sequence = member.Account.Connection.Player.CurrentMap.InstanceSequence;
+                                var sequence = member.Account!.Connection.Player.CurrentMap.InstanceSequence;
 
                                 if (CheckInstanceFreeSpace(instance, sequence))
                                 {
@@ -17274,9 +17274,9 @@ namespace Server.Models
 
                         foreach (GuildMemberInfo member in Character.Account.GuildMember.Guild.Members)
                         {
-                            if (member.Account.Connection?.Player?.CurrentMap.Instance == instance)
+                            if (member.Account?.Connection?.Player?.CurrentMap.Instance == instance)
                             {
-                                var sequence = member.Account.Connection.Player.CurrentMap.InstanceSequence;
+                                var sequence = member.Account!.Connection.Player.CurrentMap.InstanceSequence;
 
                                 if (CheckInstanceFreeSpace(instance, sequence))
                                 {

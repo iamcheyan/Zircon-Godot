@@ -141,9 +141,9 @@ namespace Server.DBModels
 
             foreach (GuildMemberInfo member in Guild.Members)
             {
-                if (member.Account.Connection?.Player == null) continue;
+                if (member.Account?.Connection?.Player == null) continue;
 
-                member.Account.Connection.Enqueue(new S.GuildMemberContribution { Index = Index, Contribution = amount, ObserverPacket = false });
+                member.Account?.Connection.Enqueue(new S.GuildMemberContribution { Index = Index, Contribution = amount, ObserverPacket = false });
             }
         }
 

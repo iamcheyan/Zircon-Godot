@@ -76,9 +76,9 @@ godot-mono --path /home/tetsuya/development/Zircon/GodotClient -- --server 127.0
 | `@giveSkills` | 给技能 | `@giveSkills` |
 | `@levelSkill` | 技能升级 | `@levelSkill` |
 | `@levelWeapon` | 武器升级 | `@levelWeapon` |
-| `@toggleGM` | 切换 GameMaster 模式（怪物不主动攻击） | `@toggleGM` |
-| `@toggleSuperman` | 超人模式（无敌） | `@toggleSuperman` |
-| `@toggleObserver` | 观察者模式 | `@toggleObserver` |
+| `@gamemaster` | 切换 GameMaster 模式（怪物不主动攻击） | `@gamemaster` |
+| `@superman` | 超人模式（无敌） | `@superman` |
+| `@observer` | 观察者模式 | `@observer` |
 | `@resetDiscipline` | 重置修炼 | `@resetDiscipline` |
 | `@removePKPoints` | 清除 PK 值 | `@removePKPoints` |
 

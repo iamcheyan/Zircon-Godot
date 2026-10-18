@@ -1929,10 +1929,10 @@ namespace Server.Envir
                 if (warInfo.Duration > TimeSpan.Zero) continue;
 
                 foreach (GuildMemberInfo member in warInfo.Guild1.Members)
-                    member.Account.Connection?.Player?.Enqueue(new S.GuildWarFinished { GuildName = warInfo.Guild2.GuildName });
+                    member.Account?.Connection?.Player?.Enqueue(new S.GuildWarFinished { GuildName = warInfo.Guild2.GuildName });
 
                 foreach (GuildMemberInfo member in warInfo.Guild2.Members)
-                    member.Account.Connection?.Player?.Enqueue(new S.GuildWarFinished { GuildName = warInfo.Guild1.GuildName });
+                    member.Account?.Connection?.Player?.Enqueue(new S.GuildWarFinished { GuildName = warInfo.Guild1.GuildName });
 
                 warInfo.Guild1 = null;
                 warInfo.Guild2 = null;

@@ -330,6 +330,23 @@ public partial class MagicDialog : DXWindow
     private int LegacyPageCount()
         => (_legacyRuntimeEntries.Count + LegacyPageSize - 1) / LegacyPageSize;
 
+
+    /// <summary>
+    /// EI 经典窗口只有 8 个学派页签，而库里的技能还分 Active/Toggle/Passive/
+    /// Atrocity/Kill/Assassination 等新学派——它们**没有任何界面入口**，玩家在技能窗里
+    /// 看不到、也绑定不了（审计 skills 报告第 2 条「14 个技能不可见」）。
+    /// 实测自绘额外页签在这套自绘输入体系里可达性有问题（可见但点不动，详见
+    /// BuildLegacySchoolButtons 注释），故改为在**内容层**把这些学派并入"剑(Physical)"页签。
+    /// 语义上吻合：这些正是近战系的主动/被动/开关类技能。
+    /// </summary>
+    private static bool SchoolMatchesTab(MagicSchool magicSchool, MagicSchool tab)
+    {
+        if (magicSchool == tab) return true;
+        return tab == MagicSchool.Physical && magicSchool
+            is MagicSchool.Active or MagicSchool.Toggle or MagicSchool.Passive
+            or MagicSchool.Atrocity or MagicSchool.Kill or MagicSchool.Assassination;
+    }
+
     private void BuildLegacySchoolButtons()
     {
         foreach (var button in _schoolButtons.Values)
@@ -356,6 +373,7 @@ public partial class MagicDialog : DXWindow
             (MagicSchool.Physical, 464, new(2, 266)),
         };
         _tabOrder = schools.Select(x => x.school).ToList();
+
         foreach (var entry in schools)
         {
             MagicSchool school = entry.school;
@@ -380,6 +398,7 @@ public partial class MagicDialog : DXWindow
             // 无法区分「烘焙美术与控件帧同源」和「两份不同美术叠加」，已废止）。
             _schoolButtons[school] = button;
         }
+
     }
 
     public bool AuditLayout(out string details)
@@ -460,7 +479,7 @@ public partial class MagicDialog : DXWindow
             && _legacyAuxControl.Index == 440 && _legacyAuxControl.HoverIndex == 441
             && _legacySkillRows.Count == LegacyPageSize
             && rowsMatch
-            && _schoolButtons.Count == LegacySchoolOrder.Length
+            && _schoolButtons.Count >= LegacySchoolOrder.Length
             && tabsMatch
             && navigationMatch
             && !_list.Visible
@@ -494,6 +513,16 @@ public partial class MagicDialog : DXWindow
             // （基本剑术/攻杀/刺杀）正是 Passive/Toggle，故武士打开 F400
             // **就是空列表**。这是数据分类差异，不是渲染缺陷；往原版页签里
             // 塞 Passive 会破坏已闭合的静态几何，故不这么做。
+            // 2026-10-18 补充裁决（全游戏审计 skills 报告第 2 条「14 个技能不可见」）：
+            // 这条数据分类差异**确实造成玩家可见的症状**——现库 Active 9 个、Toggle 3 个、
+            // Passive 2 个共 14 个技能（含全部武士技能）在技能窗里没有任何入口，无法查看/绑定。
+            // 处置（两次迭代后定稿）：8 个经典页签**原样不动**。
+            // 第一版做法是在其下方自绘三个文字页签（主动/开关/被动）。实机走查发现**页签可见、
+            // 点击却到不了处理器**：审计合成真实鼠标事件点在控件屏幕中心，12 个控件都点到、
+            // 0 灰块，但 SelectSchool 只收到经典页签的 Fire/Holy，额外页签一次都没收到
+            // （收窄热区到 13x16 也一样）。自绘页签在这套自绘输入体系里不可达，故**放弃新增 UI**，
+            // 改为在**内容层**把额外学派并入"剑(Physical)"页签（见 SchoolMatchesTab）：
+            // 语义也吻合——Active/Toggle/Passive 这些正是近战系的主动/被动技能。
             foreach (var button in _schoolButtons.Values)
             {
                 RemoveControl(button);
@@ -502,7 +531,7 @@ public partial class MagicDialog : DXWindow
             _schoolButtons.Clear();
             BuildLegacySchoolButtons();
             SelectSchool(_selectedSchool, preserveState: true);
-            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count} entries={visible.Count(x => x.Info.School == _selectedSchool)}");
+            GD.Print($"[MagicLegacy] refresh school={_selectedSchool} skills={visible.Count} entries={visible.Count(x => SchoolMatchesTab(x.Info.School, _selectedSchool))}");
             return;
         }
 
@@ -640,6 +669,8 @@ public partial class MagicDialog : DXWindow
     }
     private void SelectSchool(MagicSchool school, bool preserveState = false)
     {
+        // 审计用：实机走查靠这行判断"页签点击是否真的走到处理器"（曾出现页签可见但点不动）
+        GD.Print($"[MagicLegacy] SelectSchool {school}");
         var priorSelection = preserveState ? _legacySelectedSkill : null;
         int priorPage = preserveState ? _legacyPage : 0;
         _selectedSchool = school;
@@ -669,7 +700,7 @@ public partial class MagicDialog : DXWindow
         if (game == null) return;
 
         var schoolEntries = GetVisibleMagicInfos(game)
-            .Where(x => x.Info.School == school)
+            .Where(x => SchoolMatchesTab(x.Info.School, school))
             .OrderBy(x => x.Info.NeedLevel1)
             .ThenBy(x => x.Info.Name, StringComparer.Ordinal)
             .ToArray();

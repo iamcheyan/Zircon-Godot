@@ -100,9 +100,9 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in ownerGuild.Members)
                 {
-                    if (member.Account.Connection?.Player == null) continue; //Offline
+                    if (member.Account?.Connection?.Player == null) continue; //Offline
 
-                    member.Account.Connection.Enqueue(new S.GuildConquestDate { Index = Castle.Index, WarTime = warTime, ObserverPacket = false });
+                    member.Account?.Connection.Enqueue(new S.GuildConquestDate { Index = Castle.Index, WarTime = warTime, ObserverPacket = false });
                 }
             }
 
@@ -112,9 +112,9 @@ namespace Server.Models
 
                 foreach (GuildMemberInfo member in participant.Members)
                 {
-                    if (member.Account.Connection?.Player == null) continue; //Offline
+                    if (member.Account?.Connection?.Player == null) continue; //Offline
 
-                    member.Account.Connection.Enqueue(new S.GuildConquestDate { Index = Castle.Index, WarTime = TimeSpan.MinValue, ObserverPacket = false });
+                    member.Account?.Connection.Enqueue(new S.GuildConquestDate { Index = Castle.Index, WarTime = TimeSpan.MinValue, ObserverPacket = false });
                 }
             }
         }

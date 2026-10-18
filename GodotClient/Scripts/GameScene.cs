@@ -9752,6 +9752,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.6).Timeout += StartMonsterAudit;
         }
 
+        // 单只怪物受控 pilot（与 MonsterAudit 共存, 优先级更高; 见 GameScene.MonsterPilot.cs）。
+        if (AutoLoginArgs.MonsterPilot && !_pilotStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _pilotStarted = true;
+            GetTree().CreateTimer(1.6).Timeout += StartMonsterPilot;
+        }
+
         // 传送门实机验证：站到源格上看是否被送到目标地图（实现见 GameScene.MapAudit.cs）。
         if (AutoLoginArgs.PortalAudit && !_portalAuditStarted && _startGameShown && _mapView?.Map != null)
         {

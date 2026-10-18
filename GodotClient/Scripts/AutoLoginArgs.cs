@@ -306,6 +306,24 @@ public static class AutoLoginArgs
         }
     }
 
+    /// <summary>--monster-pilot: 单只在用怪物受控实机验收 (实现见 GameScene.MonsterPilot.cs)。</summary>
+    public static bool MonsterPilot => Has("--monster-pilot");
+
+    public static string MonsterPilotOut => GetValue("--monster-pilot-out") ?? "/tmp/monster_pilot";
+
+    public static List<string> MonsterPilotOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--monster-pilot-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string name = part.Trim();
+            if (name.Length > 0 && !result.Contains(name)) result.Add(name);
+        }
+        return result;
+    }
+
     /// <summary>
     /// --portal-audit：传送门实机验证（实现见 GameScene.MapAudit.cs）。站到源格上看是否被送到目标地图，
     /// 用于验收"端点不可站"修复。

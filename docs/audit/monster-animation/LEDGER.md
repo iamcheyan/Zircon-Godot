@@ -7,62 +7,87 @@
 | 怪物 | idle | walk | combat | dead | 证据目录（screenshots/ 下） |
 | --- | --- | --- | --- | --- | --- |
 | Ant Commander | ✅ | ✅ | ✅ | ✅ | `Ant_Commander` |
-| Ant Healer | ✅ | ✅ | ❌ | ✅ | `Ant_Healer` |
-| Arachnid Broodmother | ✅ | ❌ | ✅ | ✅ | `Arachnid_Broodmother` |
-| Arachnid Gazer | ✅ | ❌ | ✅ | ✅ | `Arachnid_Gazer` |
+| Ant Healer | ✅ | ⛔ | ⛔ | ✅ | `Ant_Healer` |
+| Arachnid Broodmother | ✅ | ✅ | ✅ | ⛔ | `Arachnid_Broodmother` |
+| Arachnid Gazer | ✅ | ⛔ | ✅ | ✅ | `Arachnid_Gazer` |
+| Arch Lich Taedu | ✅ | ⛔ | ✅ | ⛔ | `Arch_Lich_Taedu` |
 | Armoured Ant | ✅ | ✅ | ✅ | ✅ | `Armoured_Ant` |
 | Banya Guardian | ✅ | ✅ | ✅ | ⛔ | `Banya_Guardian` |
 | Banya Left Guard | ✅ | ✅ | ✅ | ✅ | `Banya_Left_Guard` |
 | Banya Right Guard | ✅ | ✅ | ✅ | ⛔ | `Banya_Right_Guard` |
+| Banyo Warrior | ✅ | ✅ | ✅ | ⛔ | `Banyo_Warrior` |
 | Beetle | ✅ | ✅ | ✅ | ✅ | `Beetle` |
+| Black Boar | ✅ | ✅ | ✅ | ✅ | `Black_Boar` |
+| Bone Archer | ✅ | ✅ | ✅ | ✅ | `Bone_Archer` |
+| Bone Bladesman | ✅ | ✅ | ✅ | ✅ | `Bone_Bladesman` |
 | Butterfly Worm | ✅ | ✅ | ✅ | ✅ | `Butterfly_Worm` |
-| Carnivorous Plant | — | — | — | — | `Carnivorous_Plant` |
+| Carnivorous Plant | ✅ | ⛔ | ⛔ | ✅ | `Carnivorous_Plant` |
 | Cave Bat | ✅ | ✅ | ✅ | ✅ | `Cave_Bat` |
 | Cave Maggot | ✅ | ✅ | ✅ | ✅ | `Cave_Maggot` |
 | Centipede | ✅ | ✅ | ✅ | ✅ | `Centipede` |
 | Claw Cat | ✅ | ✅ | ✅ | ✅ | `Claw_Cat` |
+| Claw Serpent | ✅ | ✅ | ✅ | ✅ | `Claw_Serpent` |
 | Cow | ✅ | ⛔ | ⛔ | ✅ | `Cow` |
 | Decaying Ghoul | ✅ | ✅ | ✅ | ✅ | `Decaying_Ghoul` |
 | Deer | ✅ | ⛔ | ⛔ | ✅ | `Deer` |
-| Devouring Ghost | ✅ | ❌ | ✅ | ✅ | `Devouring_Ghost` |
+| Devouring Ghost | ✅ | ✅ | ✅ | ✅ | `Devouring_Ghost` |
+| Dungeon Goddess 1 | ✅ | ⛔ | ✅ | ✅ | `Dungeon_Goddess_1` |
 | Emperor Sa'Woo | ✅ | ✅ | ✅ | ⛔ | `Emperor_Sa'Woo` |
 | Evil Monkey | ✅ | ✅ | ✅ | ✅ | `Evil_Monkey` |
+| Evil Snake | ✅ | ✅ | ✅ | ⛔ | `Evil_Snake` |
+| Fierce Falcon | ✅ | ⛔ | ✅ | ⛔ | `Fierce_Falcon` |
+| Fierce Wind Demon | ✅ | ⛔ | ✅ | ⛔ | `Fierce_Wind_Demon` |
+| Flame Demon Soldier | ✅ | ⛔ | ✅ | ⛔ | `Flame_Demon_Soldier` |
+| Flame Lion | ✅ | ⛔ | ✅ | ✅ | `Flame_Lion` |
 | Flame Minotaur | ✅ | ✅ | ✅ | ✅ | `Flame_Minotaur` |
 | Forest Yeti | ✅ | ✅ | ✅ | ✅ | `Forest_Yeti` |
-| GhostSorcerer | ✅ | ❌ | ✅ | ✅ | `GhostSorcerer` |
-| Ghoul Champion | — | — | — | — | `Ghoul_Champion` |
+| GhostSorcerer | ✅ | ✅ | ✅ | ✅ | `GhostSorcerer` |
+| Ghoul Champion | ✅ | ✅ | ✅ | ✅ | `Ghoul_Champion` |
 | Giant Lizard | ✅ | ✅ | ✅ | ⛔ | `Giant_Lizard` |
+| Ice Break Demon Soldier | ✅ | ⛔ | ✅ | ⛔ | `Ice_Break_Demon_Soldier` |
 | Monkey | ✅ | ✅ | ✅ | ✅ | `Monkey` |
 | Mutant Lizard | ✅ | ✅ | ✅ | ✅ | `Mutant_Lizard` |
 | Mutant Maggot | ✅ | ✅ | ✅ | ✅ | `Mutant_Maggot` |
+| Numa Royal Guard | ✅ | ✅ | ✅ | ⛔ | `Numa_Royal_Guard` |
 | Oma | ✅ | ✅ | ✅ | ✅ | `Oma` |
-| Oma Warrior | ✅ | ✅ | ✅ | ❌ | `Oma_Warrior` |
+| Oma Warrior | ✅ | ✅ | ✅ | ✅ | `Oma_Warrior` |
+| Otherworld Light Guard | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Light_Guard` |
+| Otherworld Poison Demon | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Poison_Demon` |
+| Otherworld Red Mage | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Red_Mage` |
+| Otherworld Sea General | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Sea_General` |
+| Otherworld Ship Guard | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Ship_Guard` |
+| Otherworld Ship Guard 1 | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Ship_Guard_1` |
+| Otherworld Tentacle Demon | ✅ | ⛔ | ✅ | ⛔ | `Otherworld_Tentacle_Demon` |
 | Pig | ✅ | ⛔ | ⛔ | ✅ | `Pig` |
+| Red Boar | ✅ | ✅ | ✅ | ✅ | `Red_Boar` |
 | Red Moon Guardian | ✅ | ✅ | ✅ | ✅ | `Red_Moon_Guardian` |
 | Red Moon Protector | ✅ | ✅ | ✅ | ✅ | `Red_Moon_Protector` |
-| Red Moon The Fallen | ✅ | ❌ | ✅ | ⛔ | `Red_Moon_The_Fallen` |
+| Red Moon The Fallen | ✅ | ⛔ | ✅ | ⛔ | `Red_Moon_The_Fallen` |
 | Rotting Ghoul | ✅ | ✅ | ✅ | ✅ | `Rotting_Ghoul` |
 | Sand Shark | ✅ | ✅ | ✅ | ✅ | `Sand_Shark` |
-| Scarecrow | ✅ | ❌ | ✅ | ✅ | `Scarecrow` |
-| Scorpion | ✅ | ❌ | ✅ | ✅ | `Scorpion` |
+| Scarecrow | ✅ | ✅ | ✅ | ✅ | `Scarecrow` |
+| Scorpion | ✅ | ✅ | ✅ | ✅ | `Scorpion` |
 | Sheep | ✅ | ⛔ | ⛔ | ✅ | `Sheep` |
 | Skeleton | ✅ | ✅ | ✅ | ✅ | `Skeleton` |
 | Skeleton Axe Thrower | ✅ | ✅ | ✅ | ✅ | `Skeleton_Axe_Thrower` |
-| Skeleton Lord | ✅ | ✅ | ✅ | ❌ | `Skeleton_Lord` |
+| Skeleton Enforcer | ✅ | ⛔ | ✅ | ✅ | `Skeleton_Enforcer` |
+| Skeleton Lord | ✅ | ✅ | ✅ | ✅ | `Skeleton_Lord` |
 | Spiked Beetle | ✅ | ✅ | ✅ | ✅ | `Spiked_Beetle` |
 | Spined Dark Lizard | ✅ | ✅ | ✅ | ✅ | `Spined_Dark_Lizard` |
 | Spitting Spider | ✅ | ✅ | ✅ | ✅ | `Spitting_Spider` |
+| Stone Lion | ✅ | ✅ | ✅ | ✅ | `Stone_Lion` |
 | Tiger Snake | ✅ | ✅ | ✅ | ✅ | `Tiger_Snake` |
 | Uma Anguisher | ✅ | ✅ | ✅ | ✅ | `Uma_Anguisher` |
 | Uma Flame Thrower | ✅ | ✅ | ✅ | ✅ | `Uma_Flame_Thrower` |
-| Uma Infidel | ✅ | ❌ | ✅ | ✅ | `Uma_Infidel` |
+| Uma Infidel | ✅ | ✅ | ✅ | ✅ | `Uma_Infidel` |
 | Uma King | ✅ | ✅ | ✅ | ⛔ | `Uma_King` |
 | Vicious Rat | ✅ | ✅ | ✅ | ✅ | `Vicious_Rat` |
-| Wasp Hatchling | ✅ | ✅ | ✅ | ❌ | `Wasp_Hatchling` |
-| Zuma Fanatic | ❌ | ✅ | ✅ | ✅ | `Zuma_Fanatic` |
-| Zuma Guardian | ❌ | ✅ | ✅ | ✅ | `Zuma_Guardian` |
-| Zuma Keeper | ❌ | ✅ | ✅ | ⛔ | `Zuma_Keeper` |
-| Zuma King | ❌ | ✅ | ✅ | ⛔ | `Zuma_King` |
+| Wasp Hatchling | ✅ | ✅ | ✅ | ✅ | `Wasp_Hatchling` |
+| Wedge Moth | ✅ | ✅ | ✅ | ✅ | `Wedge_Moth` |
+| Zuma Fanatic | ✅ | ✅ | ✅ | ✅ | `Zuma_Fanatic` |
+| Zuma Guardian | ✅ | ✅ | ✅ | ✅ | `Zuma_Guardian` |
+| Zuma Keeper | ✅ | ✅ | ✅ | ⛔ | `Zuma_Keeper` |
+| Zuma King | ✅ | ✅ | ✅ | ⛔ | `Zuma_King` |
 | Zuma Sharpshooter | ✅ | ✅ | ✅ | ✅ | `Zuma_Sharpshooter` |
 | Chicken | ✅ | ⛔ | ⛔ | ✅ | `chicken` |
 | Wolf | ✅ | ✅ | ✅ | ✅ | `wolf` |

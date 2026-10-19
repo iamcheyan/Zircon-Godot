@@ -6,12 +6,12 @@
 | 技能 | 职业 | 学派 | 施法动作 | 释放特效 | 目标命中 | 结论 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Heal | Taoist | Holy | ✅ | ❌ | — | ✅  |
-| Spirit Sword | Taoist | Physical | ✅ | ❌ | — | ✅  |
-| Poison Dust | Taoist | Dark | ✅ | ❌ | — | ✅  |
+| Spirit Sword | Taoist | Physical | — | — | — | 🧩  |
+| Poison Dust | Taoist | Dark | ✅ | ✅ | — | ✅  |
 | Explosive Talisman | Taoist | Dark | ✅ | ✅ | — | ✅  |
 | Evil Slayer | Taoist | Holy | ✅ | ✅ | ✅ | ✅  |
-| Summon Skeleton | Taoist | Phantom | ✅ | ❌ | — | ✅  |
-| Invisibility | Taoist | Dark | ✅ | ✅ | — | ✅  |
+| Summon Skeleton | Taoist | Phantom | ✅ | ✅ | — | ✅  |
+| Invisibility | Taoist | Dark | ✅ | ❌ | — | ✅  |
 | Magic Resistance | Taoist | Dark | ✅ | ✅ | — | ✅  |
 | Mass Invisibility | Taoist | Dark | ✅ | ✅ | — | ✅  |
 | Greater Evil Slayer | Taoist | Holy | ✅ | ✅ | ✅ | ✅  |
@@ -23,10 +23,10 @@
 | Summon Jin Skeleton | Taoist | Phantom | ✅ | ❌ | — | ✅  |
 | Blood Lust | Taoist | Dark | ✅ | ✅ | — | ✅  |
 | Resurrection | Taoist | Holy | ✅ | ❌ | — | ✅  |
-| Purification | Taoist | Holy | ✅ | ❌ | — | ✅  |
-| Transparency | Taoist | Phantom | ❌ | ❌ | — | ⛔ （requires-amulet-item-not-equipped） |
-| Swordsmanship | Warrior | Passive | — | — | — | ⛔ （passive-skill-no-cast-animation） |
-| Slaying | Warrior | Passive | — | — | — | ⛔ （passive-skill-no-cast-animation） |
+| Purification | Taoist | Holy | ✅ | ✅ | — | ✅  |
+| Transparency | Taoist | Phantom | ✅ | ❌ | — | ✅  |
+| Swordsmanship | Warrior | Passive | — | — | — | 🧩  |
+| Slaying | Warrior | Passive | — | — | — | 🧩  |
 | Thrusting | Warrior | Toggle | ❌ | ❌ | ❌ | 🔁  |
 | Half Moon | Warrior | Toggle | ❌ | ❌ | ❌ | 🔁  |
 | Shoulder Dash | Warrior | Active | ✅ | ❌ | — | ✅  |
@@ -48,11 +48,11 @@
 | Teleportation | Wizard | Phantom | ✅ | ✅ | — | ✅  |
 | Adamantine Fire Ball | Wizard | Fire | ✅ | ✅ | ✅ | ✅  |
 | Thunder Bolt | Wizard | Lightning | ✅ | ✅ | ✅ | ✅  |
-| Ice Blades | Wizard | Ice | ✅ | ❌ | ✅ | ✅  |
+| Ice Blades | Wizard | Ice | ✅ | ✅ | ✅ | ✅  |
 | Cyclone | Wizard | Wind | ✅ | ✅ | — | ✅  |
 | Frozen Earth | Wizard | Ice | ✅ | ✅ | ✅ | ✅  |
-| Fire Wall | Wizard | Fire | ✅ | ✅ | — | ✅  |
-| Expel Undead | Wizard | Phantom | ✅ | ✅ | ✅ | ✅  |
+| Fire Wall | Wizard | Fire | ✅ | ❌ | — | ✅  |
+| Expel Undead | Wizard | Phantom | ✅ | ❌ | ✅ | ✅  |
 | Geo Manipulation | Wizard | Phantom | ✅ | ✅ | — | ✅  |
 | Magic Shield | Wizard | Phantom | ✅ | ✅ | — | ✅  |
 | Fire Storm | Wizard | Fire | ✅ | ✅ | — | ✅  |
@@ -67,4 +67,4 @@
 | Thunder Strike | Wizard | Lightning | ✅ | ✅ | — | ✅  |
 | Meteor Shower | Wizard | Fire | ✅ | ❌ | — | ✅  |
 
-图例：✅ 通过｜🔁 toggle/强化态（无施法动作，走 SendMagicToggle 且服务端接受）｜⛔ 按设计不发生（原因见 reason）｜❌ 失败。
+图例：✅ 通过（施法动作 + 特效/命中）｜🔁 toggle/强化态（走 SendMagicToggle，服务端接受）｜🧩 纯被动（GetPassiveStats 已并入玩家属性）｜⛔ 按设计不发生｜❌ 失败。

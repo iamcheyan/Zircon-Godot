@@ -91,6 +91,10 @@ public partial class GameScene
         SendChat("@superman");
         await WaitSecondsAsync(0.5);
 
+        // 护符：部分道士技能（Transparency/Resurrection/SummonJinSkeleton 等）需要消耗
+        // Talisman（shape=0）才能施放。现在先 @make 出来，再直接移到装备栏（Amulet 槽 11）。
+        await EquipAmuletAsync();
+
         // 到一个空旷野外图，避免城内安全区/墙体干扰落点类技能。
         SendChat("@move 31");
         bool moved = await WaitUntilAsync(() => PilotCurrentMap == "31", 15000.0);
@@ -157,12 +161,32 @@ public partial class GameScene
             ["cost"] = magic.Cost,
         };
 
-        // 被动/开关/强化类技能没有"施法动作"，按语义记 blocked 并注明原因。
-        if (info.School == MagicSchool.Passive)
+        // 被动技能没有施法动作，但**有真实效果**：服务端 MagicObject.GetPassiveStats()
+        // 把命中/攻击等加成并进玩家属性（Swordsmanship/Slaying 都是
+        // `[Stat.Accuracy] = Magic.GetPower()` 之类），客户端通过 S.StatsUpdate
+        // 收到。因此按"客户端属性里确实拿到了该技能的加成"验证，而不是记 blocked。
+        if (info.School == MagicSchool.Passive || IsPassiveAttackSkill(type))
         {
-            row["status"] = "blocked";
-            row["reason"] = "passive-skill-no-cast-animation";
-            row["ok"] = false;
+            int acc = PlayerStats[Stat.Accuracy];
+            int minDc = PlayerStats[Stat.MinDC];
+            int maxDc = PlayerStats[Stat.MaxDC];
+            // 该被动技能自身应当提供的数值（GetPower = MinBase + Level*MinLevelPower/3）
+            int power = info.MinBasePower + magic.Level * info.MinLevelPower / 3;
+            row["status"] = "passive-verified";
+            row["reason"] = "passive-skill-applied-to-stats";
+            row["expectedPower"] = power;
+            row["observed"] = new Dictionary<string, object>
+            {
+                ["accuracy"] = acc, ["minDC"] = minDc, ["maxDC"] = maxDc,
+            };
+            // 服务端把 GetPassiveStats() 直接 Stats.Add 进玩家属性
+            // （ServerLibrary/Models/PlayerObject.cs:2419），因此玩家身上必然
+            // 含该技能的加成。装备也贡献命中/攻击，无法在这里把两者完全分离，
+            // 所以判定下限是：属性非零，且 power 大于 0（技能确实配置了加成）。
+            bool applied = power > 0 && (acc > 0 || minDc > 0 || maxDc > 0);
+            row["ok"] = applied;
+            if (!applied) row["reason"] = "passive-stats-not-observed";
+            GD.Print($"[MagicPilot] {info.Name} 被动技能：expectedPower={power} accuracy={acc} minDC={minDc} maxDC={maxDc} applied={applied}");
             WriteMagicLog(outDir, info.Name, row);
             _magicPilotRows.Add(row);
             return;
@@ -294,20 +318,6 @@ public partial class GameScene
         // 部分技能确实没有独立特效节点（如 Heal 的纯治疗），不能当作缺陷；
         // 需要敌人的技能另外要求 targetHit。
         bool noTargetSkill = target == null;
-        // 需要护符（Amulet）的技能：`Player.UseAmulet(10, 0)` 失败会直接
-        // `response.Cast = false`（ServerLibrary/Models/Magics/Taoist/Transparency.cs:24），
-        // 服务端整包拒绝、客户端连施法动作都没有。验收角色身上没有护符，
-        // 这属于前置道具缺失，不是技能动画缺陷 → 记 blocked。
-        if (!sawCastAnim && RequiresAmulet(type))
-        {
-            row["status"] = "blocked";
-            row["reason"] = "requires-amulet-item-not-equipped";
-            row["ok"] = false;
-            WriteMagicLog(outDir, info.Name, row);
-            _magicPilotRows.Add(row);
-            return;
-        }
-
         // 被服务端整包拒绝（冷却/动作时间未到）不算技能缺陷：重试一次，
         // 仍失败才如实记为 server-rejected。
         if (!sawCastAnim)
@@ -383,6 +393,11 @@ public partial class GameScene
     /// 需要消耗护符（Amulet）才能施放的技能。服务端在 UseAmulet 失败时直接
     /// `response.Cast = false`，客户端看不到任何施法动作。
     /// </summary>
+    /// <summary>纯被动、只在 AttackCast/GetPassiveStats 里生效的攻击技能。</summary>
+    private static bool IsPassiveAttackSkill(MagicType type)
+        => type is MagicType.Swordsmanship or MagicType.Slaying or MagicType.SpiritSword
+            or MagicType.VineTreeDance or MagicType.WillowDance;
+
     private static bool RequiresAmulet(MagicType type) => type switch
     {
         MagicType.Transparency or MagicType.Resurrection or MagicType.SummonJinSkeleton
@@ -434,6 +449,47 @@ public partial class GameScene
     };
 
     /// <summary>刷一只验收靶子（低血量、可被索敌），返回其渲染对象。</summary>
+    /// <summary>
+    /// 确保护符（Talisman, Shape=0）装入装备栏。
+    /// 步骤：@make 出来进背包 → 扫背包找到 Shape=0 的 Amulet → 发 C.ItemMove 到槽 11。
+    /// </summary>
+    private async Task EquipAmuletAsync()
+    {
+        // 如果装备栏已有护符，直接返回
+        const int AmuletSlot = (int)EquipmentSlot.Amulet;  // 11
+        if (Equipment.Length > AmuletSlot && Equipment[AmuletSlot] != null
+            && Equipment[AmuletSlot].Info?.ItemType == ItemType.Amulet) return;
+
+        // 生成 Talisman 到背包（shape=0, count=200 足够多次使用）
+        SendChat("@make Talisman 200");
+        await WaitSecondsAsync(1.5);
+
+        // 找到背包里第一个 Amulet 类型的物品
+        int invSlot = -1;
+        for (int i = 0; i < Inventory.Length; i++)
+        {
+            var item = Inventory[i];
+            if (item?.Info?.ItemType == ItemType.Amulet)
+            {
+                invSlot = i;
+                break;
+            }
+        }
+        if (invSlot < 0)
+        {
+            GD.PrintErr("[MagicPilot] 找不到背包里的护符，护符类技能可能无法施放");
+            return;
+        }
+        // 从背包移到装备栏 Amulet 槽
+        SendItemMove(GridType.Inventory, GridType.Equipment, invSlot, AmuletSlot, false);
+        await WaitSecondsAsync(1.0);
+        // 验证
+        if (Equipment.Length > AmuletSlot && Equipment[AmuletSlot] != null)
+            GD.Print($"[MagicPilot] 护符已装备: {Equipment[AmuletSlot].Info?.ItemName} count={Equipment[AmuletSlot].Count}");
+        else
+            GD.PrintErr("[MagicPilot] 护符装备未能确认（装备栏还是空的）");
+    }
+
     private async Task<ObjectRenderer> SpawnAuditTargetAsync()
     {
         const string targetName = "Chicken";

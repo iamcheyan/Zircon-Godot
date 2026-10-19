@@ -9773,6 +9773,13 @@ public partial class GameScene : Control
             GetTree().CreateTimer(1.6).Timeout += StartMonsterPilot;
         }
 
+        // 逐个技能实机验收（见 GameScene.MagicPilot.cs）。
+        if (AutoLoginArgs.MagicPilot && !_magicPilotStarted && _startGameShown && _mapView?.Map != null)
+        {
+            _magicPilotStarted = true;
+            GetTree().CreateTimer(1.6).Timeout += StartMagicPilot;
+        }
+
         // 传送门实机验证：站到源格上看是否被送到目标地图（实现见 GameScene.MapAudit.cs）。
         if (AutoLoginArgs.PortalAudit && !_portalAuditStarted && _startGameShown && _mapView?.Map != null)
         {

@@ -324,8 +324,26 @@ public static class AutoLoginArgs
         return result;
     }
 
-    /// <summary>
-    /// --portal-audit：传送门实机验证（实现见 GameScene.MapAudit.cs）。站到源格上看是否被送到目标地图，
+    /// <summary>--magic-pilot: 逐个技能实机验收（实现见 GameScene.MagicPilot.cs）。</summary>
+    public static bool MagicPilot => Has("--magic-pilot");
+
+    public static string MagicPilotOut => GetValue("--magic-pilot-out") ?? "/tmp/magic_pilot";
+
+    /// <summary>只测指定技能（逗号分隔的 MagicType 名）；空 = 当前角色可学的全部。</summary>
+    public static List<string> MagicPilotOnly()
+    {
+        var result = new List<string>();
+        string raw = GetValue("--magic-pilot-only");
+        if (string.IsNullOrWhiteSpace(raw)) return result;
+        foreach (string part in raw.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string name = part.Trim();
+            if (name.Length > 0 && !result.Contains(name)) result.Add(name);
+        }
+        return result;
+    }
+
+    /// <summary>--portal-audit：传送门实机验证（实现见 GameScene.MapAudit.cs）。站到源格上看是否被送到目标地图，
     /// 用于验收"端点不可站"修复。
     /// </summary>
     public static bool PortalAudit => Has("--portal-audit");

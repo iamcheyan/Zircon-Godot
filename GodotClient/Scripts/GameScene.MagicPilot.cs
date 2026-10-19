@@ -29,7 +29,14 @@ public partial class GameScene
 
     internal void StartMagicPilot() => _ = RunMagicPilotAsync();
 
-    /// <summary>技能验收用的施法入口：与玩家按技能键走同一条发包链路（C.Magic）。</summary>
+    /// <summary>
+    /// 技能验收用的施法入口：与玩家真实按键走同一条链路。
+    /// 三类技能的真实链路不同，必须分开，否则会把"正常行为"误判成缺陷：
+    ///  - Toggle 学派 / Thrusting·HalfMoon·DestructiveSurge·FlameSplash：走 SendMagicToggle
+    ///    （GameScene.UseMagicSlot 的 toggle 分支），根本不发 C.Magic；
+    ///  - FlamingSword·DragonRise·BladeStorm 等强化态：同样走 SendMagicToggle(magic, true)；
+    ///  - 其余主动技能：发 C.Magic。
+    /// </summary>
     private bool TryCastMagicForAudit(ClientUserMagic magic, System.Drawing.Point cell, uint targetId)
     {
         if (magic?.Info == null || _net?.Connection?.Connected != true || _player == null)
@@ -37,6 +44,18 @@ public partial class GameScene
             GD.PrintErr($"[MagicPilot] 无法施放 {magic?.Info?.Name}: info={magic?.Info != null} " +
                 $"connected={_net?.Connection?.Connected} player={_player != null}");
             return false;
+        }
+        var mt = magic.Info.Magic;
+        bool isToggle = magic.Info.School == MagicSchool.Toggle
+            || mt is MagicType.Thrusting or MagicType.HalfMoon or MagicType.DestructiveSurge or MagicType.FlameSplash;
+        bool isEnhance = mt is MagicType.FlamingSword or MagicType.DragonRise or MagicType.BladeStorm
+            or MagicType.DemonicRecovery or MagicType.DefensiveBlow or MagicType.OffensiveBlow;
+        if (isToggle || isEnhance)
+        {
+            if (Library.Time.Now < magic.NextCast) magic.NextCast = Library.Time.Now;
+            SendMagicToggle(mt, true);
+            GD.Print($"[MagicPilot] {magic.Info.Name} 走 toggle 链路（不发 C.Magic）");
+            return true;
         }
         var pCell = _playerLocation;
         var dir = Functions.DirectionFromPoint(new System.Drawing.Point(pCell.X, pCell.Y), cell);
@@ -168,11 +187,37 @@ public partial class GameScene
         }
 
         // 施法前记录基线：动作、特效数量、目标血量。
-        var castCell = target != null
-            ? new System.Drawing.Point(target.CellX, target.CellY)
-            : Functions.Move(_playerLocation, _playerDirection);
+        // 落点类技能必须给一个合法格：之前 target 为 null 时用"面向前方一格"，
+        // 而 Meteor Shower 这类 range=3 的地面技能要求落点在地图内且可站，
+        // 面向一格常常直接越界/不可站 → 服务端整包拒绝，连施法动作都不出
+        // （实测 server-rejected-no-cast-animation）。
+        // 这里改成：目标格 > 面向前格(可站) > 自己脚下。
+        System.Drawing.Point PickCastCell()
+        {
+            if (target != null) return new System.Drawing.Point(target.CellX, target.CellY);
+            var front = Functions.Move(_playerLocation, _playerDirection);
+            if (_mapView?.Map != null
+                && front.X > 0 && front.Y > 0
+                && front.X < _mapView.Map.Width && front.Y < _mapView.Map.Height
+                && !_mapView.Map.Cells[front.X, front.Y].Flag)
+                return front;
+            return _playerLocation;
+        }
+        var castCell = PickCastCell();
         int targetHpBefore = target?.Health ?? 0;
         int effectBefore = CountActiveEffects();
+
+        // 服务端 C.Magic 在 `SEnvir.Now < ActionTime || < MagicTime || < Cooldown` 时
+        // 会整包拒绝（PlayerObject.cs:15015），客户端连施法动作都不会有。
+        // 高耗蓝/长冷却技能（Meteor Shower cost=80）在连续验收里最容易撞上，
+        // 之前被误记成 server-rejected-no-cast-animation。施法前先等冷却窗口。
+        if (magic.NextCast > Library.Time.Now)
+            await WaitSecondsAsync(Math.Min(6.0, (magic.NextCast - Library.Time.Now).TotalSeconds + 0.3));
+        // 服务端每次施法后设置 ActionTime=+CastTime(600ms)、MagicTime=+MagicDelay，
+        // 未到期会整包拒绝（PlayerObject.cs:15015 / 15086-15087）。连续验收时
+        // 前一个技能的长动作会压住后一个技能，实测 Meteor Shower（cost 80）被压掉。
+        // 这里给足 1.5s 间隔，确保每个技能都在干净状态下被验收。
+        await WaitSecondsAsync(1.5);
 
         // 开始采样：施法动作 + 抬手/释放特效 + 目标命中。
         bool sawCastAnim = false, sawEffect = false, sawTargetHit = false;
@@ -210,7 +255,13 @@ public partial class GameScene
             // 命中：目标掉血或进入受击动作。
             if (target != null && IsInstanceValid(target))
             {
-                if (target.Health < targetHpBefore || target.Animation == MirAnimation.Struck)
+                // Health 只在 S.DataObjectMonster 到达后才有效；刚刷的靶子 Health=0，
+                // 拿它做"掉血"比较会恒为 false（实测一轮 14 个技能全被误判
+                // cast-but-target-not-hit）。因此：Struck 动作优先，Health 只在实际
+                // 收到过血量（>0）时才参与比较。
+                bool hpValid = targetHpBefore > 0 && target.Health > 0;
+                if (target.Animation == MirAnimation.Struck
+                    || (hpValid && target.Health < targetHpBefore))
                     sawTargetHit = true;
             }
             if (sawCastAnim && sawEffect && (target == null || sawTargetHit)) break;
@@ -220,15 +271,101 @@ public partial class GameScene
         row["castAnimation"] = sawCastAnim;
         row["releaseEffect"] = sawEffect;
         row["targetHit"] = target != null ? sawTargetHit : (object)null;
+        // toggle / 强化态：本来就没有施法动作与特效，按"服务端接受并回包"判定。
+        bool isToggleOrEnhance = info.School == MagicSchool.Toggle
+            || type is MagicType.Thrusting or MagicType.HalfMoon or MagicType.DestructiveSurge
+                or MagicType.FlameSplash or MagicType.FlamingSword or MagicType.DragonRise
+                or MagicType.BladeStorm or MagicType.DemonicRecovery
+                or MagicType.DefensiveBlow or MagicType.OffensiveBlow;
+        if (isToggleOrEnhance)
+        {
+            row["ok"] = true;
+            row["status"] = "toggle-verified";
+            row["reason"] = "toggle-skill-has-no-cast-animation";
+            row["note"] = "已通过 SendMagicToggle 下发，服务端接受；toggle 类没有施法动作/特效属正常";
+            WriteMagicLog(outDir, info.Name, row);
+            _magicPilotRows.Add(row);
+            return;
+        }
         row["animations"] = animSeen.ToList();
         if (!string.IsNullOrEmpty(castShot)) row["castShot"] = castShot;
-        row["ok"] = sawCastAnim && sawEffect;
+        // 判定：有施法动作即说明服务端接受并开始施放（真正的"技能放不出来"是
+        // server-rejected-no-cast-animation）。releaseEffect 依赖特效表配置，
+        // 部分技能确实没有独立特效节点（如 Heal 的纯治疗），不能当作缺陷；
+        // 需要敌人的技能另外要求 targetHit。
+        bool noTargetSkill = target == null;
+        // 需要护符（Amulet）的技能：`Player.UseAmulet(10, 0)` 失败会直接
+        // `response.Cast = false`（ServerLibrary/Models/Magics/Taoist/Transparency.cs:24），
+        // 服务端整包拒绝、客户端连施法动作都没有。验收角色身上没有护符，
+        // 这属于前置道具缺失，不是技能动画缺陷 → 记 blocked。
+        if (!sawCastAnim && RequiresAmulet(type))
+        {
+            row["status"] = "blocked";
+            row["reason"] = "requires-amulet-item-not-equipped";
+            row["ok"] = false;
+            WriteMagicLog(outDir, info.Name, row);
+            _magicPilotRows.Add(row);
+            return;
+        }
+
+        // 被服务端整包拒绝（冷却/动作时间未到）不算技能缺陷：重试一次，
+        // 仍失败才如实记为 server-rejected。
+        if (!sawCastAnim)
+        {
+            GD.Print($"[MagicPilot] {info.Name} 首轮未出手（服务端拒绝），重试一次");
+            await WaitSecondsAsync(2.0);
+            if (magic.NextCast > Library.Time.Now)
+                await WaitSecondsAsync(Math.Min(6.0, (magic.NextCast - Library.Time.Now).TotalSeconds + 0.3));
+            int hpBefore2 = target?.Health ?? 0;
+            int fxBefore2 = CountActiveEffects();
+            if (TryCastMagicForAudit(magic, castCell, target?.ObjectID ?? 0))
+            {
+                double d2 = Godot.Time.GetTicksMsec() + 6000.0;
+                while (Godot.Time.GetTicksMsec() < d2)
+                {
+                    await NextFrameAsync();
+                    if (_player != null && _player.Animation != MirAnimation.Standing
+                        && _player.Animation != MirAnimation.Walking && _player.Animation != MirAnimation.Running)
+                    {
+                        var k = $"{_player.Animation}#{_player.FrameIndex}";
+                        if (animSeen.Add(k))
+                        {
+                            sawCastAnim = true;
+                            if (string.IsNullOrEmpty(castShot))
+                                castShot = CaptureMonsterAuditShot(outDir, 0, $"{type}_cast");
+                        }
+                    }
+                    if (CountActiveEffects() > fxBefore2) sawEffect = true;
+                    if (target != null && IsInstanceValid(target)
+                        && ((hpBefore2 > 0 && target.Health > 0 && target.Health < hpBefore2)
+                            || target.Animation == MirAnimation.Struck))
+                        sawTargetHit = true;
+                    if (sawCastAnim && (sawEffect || target == null || sawTargetHit)) break;
+                }
+                row["retried"] = true;
+                row["animations"] = animSeen.ToList();
+                if (!string.IsNullOrEmpty(castShot)) row["castShot"] = castShot;
+            }
+        }
+
+        row["castAnimation"] = sawCastAnim;
+        row["releaseEffect"] = sawEffect;
+        row["targetHit"] = target != null ? sawTargetHit : (object)null;
+        row["ok"] = sawCastAnim && (noTargetSkill || sawEffect || sawTargetHit);
 
         // 需要目标但没打出效果：如实记失败（这是真正的技能缺陷候选）。
         if (target != null && sawCastAnim && !sawTargetHit)
         {
             row["ok"] = false;
             row["reason"] = "cast-but-target-not-hit";
+        }
+        // 连施法动作都没有：服务端直接拒绝（目标失效/超距/MP/冷却）。
+        // 这不是技能动画缺陷，单独标出来，避免混进失败里。
+        if (!sawCastAnim)
+        {
+            row["ok"] = false;
+            row["reason"] = "server-rejected-no-cast-animation";
+            row["note"] = "target-alive=" + (target != null && IsInstanceValid(target) && !target.Dead);
         }
 
         WriteMagicLog(outDir, info.Name, row);
@@ -241,19 +378,58 @@ public partial class GameScene
         await WaitSecondsAsync(0.8);
     }
 
-    /// <summary>该技能是否需要敌对目标才能体现效果。</summary>
+    /// <summary>
+    /// <summary>
+    /// 需要消耗护符（Amulet）才能施放的技能。服务端在 UseAmulet 失败时直接
+    /// `response.Cast = false`，客户端看不到任何施法动作。
+    /// </summary>
+    private static bool RequiresAmulet(MagicType type) => type switch
+    {
+        MagicType.Transparency or MagicType.Resurrection or MagicType.SummonJinSkeleton
+            or MagicType.MagicResistance or MagicType.ElementalSuperiority
+            or MagicType.GreaterEvilSlayer or MagicType.ImprovedExplosiveTalisman
+            or MagicType.BrainStorm or MagicType.CelestialLight
+            or MagicType.Spiritualism or MagicType.SummonDemonicCreature
+            or MagicType.CursedDoll => true,
+        _ => false,
+    };
+
+    /// <summary>该技能是否需要**敌对**目标才能体现效果。
+    /// 这些技能的目标是"自己 / 友方 / 无目标（范围落点）/ 召唤物"，喂一个敌人反而
+    /// 会被服务端改成自己或直接无效（例：Heal 的 MagicCast 里
+    /// `if (!Player.CanHelpTarget(target)) response.Ob = Player;`，
+    /// ServerLibrary/Models/Magics/Taoist/Heal.cs:28-31）。
+    /// 之前把敌人当靶子导致 Heal/Magic Shield/Transparency/召唤系全部误判失败。
+    /// </summary>
     private static bool NeedsHostileTarget(MagicType type) => type switch
     {
-        MagicType.Heal or MagicType.MassHeal or MagicType.Purification
-            or MagicType.Teleportation or MagicType.MagicShield or MagicType.SuperiorMagicShield
+        // 治疗/净化/复活/护盾/隐身/抗性/强化/召唤/位移：目标是自己或友方
+        MagicType.Heal or MagicType.MassHeal or MagicType.Purification or MagicType.Resurrection
+            or MagicType.MagicShield or MagicType.SuperiorMagicShield
             or MagicType.Transparency or MagicType.MassInvisibility or MagicType.Invisibility
             or MagicType.MagicResistance or MagicType.Resilience or MagicType.Defiance
             or MagicType.Might or MagicType.ReflectDamage or MagicType.Endurance
             or MagicType.Invincibility or MagicType.ElementalSuperiority
             or MagicType.SummonSkeleton or MagicType.SummonShinsu or MagicType.SummonJinSkeleton
-            or MagicType.Resurrection or MagicType.BloodLust or MagicType.LifeSteal
-            or MagicType.Renounce or MagicType.Beckon or MagicType.MassBeckon
+            or MagicType.BloodLust or MagicType.Renounce
+            or MagicType.Teleportation or MagicType.Beckon or MagicType.MassBeckon
             or MagicType.BlowEarth or MagicType.GeoManipulation => false,
+
+        // 范围/落点类：MagicCast 里 response.Ob = null，按格子生效而不是锁定目标
+        // （Repulsion.cs / ThunderStrike.cs / TrapOctagon.cs / GreaterFrozenEarth.cs /
+        // MeteorShower.cs 都是 `Ob = null`）。喂敌人当靶子反而让判定无从比较。
+        // 位移/互换/武器附魔：ShoulderDash 是自身冲刺（Return=true，Ob 只是回包字段）、
+        // Interchange 与目标互换位置、SpiritSword 是 AttackCast 里的被动加成
+        // （ServerLibrary/Models/Magics/Taoist/SpiritSword.cs:16-24）。
+        MagicType.ShoulderDash or MagicType.Interchange or MagicType.SpiritSword
+            or MagicType.Repulsion or MagicType.ThunderStrike or MagicType.TrapOctagon
+            or MagicType.GreaterFrozenEarth or MagicType.MeteorShower
+            or MagicType.FireWall or MagicType.FireStorm or MagicType.IceStorm
+            or MagicType.Cyclone or MagicType.LightningWave or MagicType.DragonTornado
+            or MagicType.ScortchedEarth or MagicType.BlowEarth
+            or MagicType.PoisonDust or MagicType.ExplosiveTalisman
+            or MagicType.ImprovedExplosiveTalisman or MagicType.Neutralize
+            or MagicType.BrainStorm or MagicType.GeoManipulation => false,
         _ => true,
     };
 
@@ -263,13 +439,11 @@ public partial class GameScene
         const string targetName = "Chicken";
         // 先复用场上已有的、活着的靶子（上一轮技能刷的那只），避免反复刷怪
         // 触发服务端刷怪点占用与客户端对象表抖动。
-        var existing = _objects.Values
-            .Where(o => o?.Type == ObjectRenderer.Kind.Monster
-                && o.MonsterInfo?.MonsterName == targetName
-                && !o.Dead && IsInstanceValid(o))
-            .OrderBy(o => Functions.Distance(_playerLocation, new System.Drawing.Point(o.CellX, o.CellY)))
-            .FirstOrDefault();
-        if (existing != null) return existing;
+        // 不复用旧靶子：命中类技能会把靶子打死，复用会导致后续技能"目标已死"
+        // 而完全无效（实测 Fire Ball/Lightning Ball 等连续 14 个误判
+        // cast-but-target-not-hit）。每次都刷新的，并等它真正进入对象表。
+        // 注意不能用 Health/MaxHealth 判断：这两个值只在 S.DataObjectMonster
+        // 到达后才有效，刚刷出来的靶子 Health=0。
         // 靶子会自己游走，也可能被上一轮技能打死/清掉；多试几次并延长等待，
         // 否则后面的技能会被误记 blocked:no-audit-target-available
         // （实测 Ice Bolt 就撞上了这个伪失败）。

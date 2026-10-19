@@ -97,17 +97,17 @@ public partial class GameScene
         // （MonsterObject.cs:1487），怪物永不索敌 → chase/combat 无法验证。
         // 起点地图从目标怪的 RespawnInfo 第一个刷怪图取（Wolf=31, Chicken=01）。
         string pilotMap = RespawnMapFor(name);
-        if (string.IsNullOrEmpty(pilotMap))
+        bool mapFromRespawn = !string.IsNullOrEmpty(pilotMap);
+        // 没有 RespawnInfo 的怪（事件/召唤专用，例如 Dungeon Goddess 1：
+        // RespawnInfo 0 条）仍然要能验收：退回一个非安全区的默认野外图，
+        // 直接 @monster 刷出来测，不再直接判成"无法选起点"。
+        if (!mapFromRespawn)
         {
-            GD.PrintErr($"[MonsterPilot] {name} 无 RespawnInfo 刷怪图，无法选非安全区起点");
-            WritePilotLog(outDir, "spawn_failed", new Dictionary<string, object>
-            {
-                ["name"] = name,
-                ["reason"] = "no-respawn-map",
-            });
-            return;
+            pilotMap = "31";
+            GD.Print($"[MonsterPilot] {name} 无 RespawnInfo（事件/召唤怪），退回默认野外图 {pilotMap}");
         }
-        GD.Print($"[MonsterPilot] pilot map={pilotMap} (from RespawnInfo)");
+        else
+            GD.Print($"[MonsterPilot] pilot map={pilotMap} (from RespawnInfo)");
         // 证据截图必须看得清怪物；Night 图光照 0.25 会让截图全黑。
         await ApplyPilotLightingAsync();
 

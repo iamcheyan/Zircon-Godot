@@ -2122,9 +2122,9 @@
     },
     {
       "website_id": "mob-139",
-      "name_zh": "恶性怪",
-      "zircon_index": 106,
-      "zircon_en": "Mutant Lizard",
+      "name_zh": "水蜥蜴",
+      "zircon_index": 156,
+      "zircon_en": "Aqua Lizard",
       "confidence": "closed",
       "mud3_data": {}
     },

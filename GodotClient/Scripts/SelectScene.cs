@@ -132,6 +132,8 @@ public partial class SelectScene : Control
     private readonly List<DXButton> _createGenderButtons = new();
     private readonly List<Action> _unsubscribers = new();
 
+    private FocusIndicator _focusIndicator;
+    private DXControl _focusedControl;
     private static SelectScene _activeInstance;
 
     public override void _EnterTree()
@@ -177,6 +179,14 @@ public partial class SelectScene : Control
         _uiLayer = new CanvasLayer { Name = "UiScaleLayer" };
         AddChild(_uiLayer);
         BuildLegacySelectUi();
+        _focusIndicator = new FocusIndicator();
+        _uiLayer.AddChild(_focusIndicator);
+        if (_skinStart != null) _skinStart.MouseEnter += (s, e) => SetFocusedControl(_skinStart);
+        if (_skinCreate != null) _skinCreate.MouseEnter += (s, e) => SetFocusedControl(_skinCreate);
+        if (_skinDelete != null) _skinDelete.MouseEnter += (s, e) => SetFocusedControl(_skinDelete);
+        if (_skinExit != null) _skinExit.MouseEnter += (s, e) => SetFocusedControl(_skinExit);
+        if (_slotHit0 != null) _slotHit0.MouseEnter += (s, e) => SetFocusedControl(_slotHit0);
+        if (_slotHit1 != null) _slotHit1.MouseEnter += (s, e) => SetFocusedControl(_slotHit1);
         ApplySelectScale();
         // 调试审计：ZIRCON_UI_AUDIT=1 时列出所有超出逻辑画布的控件
         if (System.Environment.GetEnvironmentVariable("ZIRCON_UI_AUDIT") == "1")
@@ -230,6 +240,13 @@ public partial class SelectScene : Control
                     GD.Print($"[Select] 自动进入指定角色: {wantChar} (idx={target.CharacterIndex})");
                     _autoCharIndex = target.CharacterIndex;
                     CallDeferred(nameof(AutoStartGame));
+                }
+                else if (_characters.Count == 0)
+                {
+                    // 单机掌机包首次登录：账号刚创建、还没有角色。按 --char 指定的名字
+                    // 建一个，建角成功后 AfterCreateSuccess 会继续自动进游戏。
+                    GD.Print($"[Select] 账号无角色，自动按 --char 创建: {wantChar}");
+                    CallDeferred(nameof(AutoCreateCharacterNamed), wantChar);
                 }
                 else
                 {
@@ -287,17 +304,221 @@ public partial class SelectScene : Control
     /// 其它按键与场景内其它 UI 不受影响。用 `_UnhandledKeyInput` 而不是 `_Input`，
     /// 避免抢走输入框（创建角色时）的按键。
     /// </summary>
+    private List<DXControl> GetPhase0FocusTargets()
+    {
+        var list = new List<DXControl>();
+        if (_skinStart != null && _skinStart.Visible && _skinStart.Enabled) list.Add(_skinStart);
+        if (_slotHit0 != null && _slotHit0.Visible && _characters.Count > 0) list.Add(_slotHit0);
+        if (_slotHit1 != null && _slotHit1.Visible && _characters.Count > 1) list.Add(_slotHit1);
+        if (_skinCreate != null && _skinCreate.Visible && _skinCreate.Enabled) list.Add(_skinCreate);
+        if (_skinDelete != null && _skinDelete.Visible && _skinDelete.Enabled) list.Add(_skinDelete);
+        if (_skinExit != null && _skinExit.Visible && _skinExit.Enabled) list.Add(_skinExit);
+        return list;
+    }
+
+    private List<DXControl> GetPhase2FocusTargets()
+    {
+        var list = new List<DXControl>();
+        if (_skinConfirmYes != null && _skinConfirmYes.Visible) list.Add(_skinConfirmYes);
+        if (_skinConfirmNo != null && _skinConfirmNo.Visible) list.Add(_skinConfirmNo);
+        if (_skinClassWarrior != null && _skinClassWarrior.Visible) list.Add(_skinClassWarrior);
+        if (_skinClassWizard != null && _skinClassWizard.Visible) list.Add(_skinClassWizard);
+        if (_skinClassTaoist != null && _skinClassTaoist.Visible) list.Add(_skinClassTaoist);
+        if (_legacyCreateHit0 != null && _legacyCreateHit0.Visible) list.Add(_legacyCreateHit0);
+        if (_legacyCreateHit1 != null && _legacyCreateHit1.Visible) list.Add(_legacyCreateHit1);
+        return list;
+    }
+
+    public void SetFocusedControl(DXControl ctl)
+    {
+        if (_focusedControl == ctl)
+        {
+            if (ctl != null && _focusIndicator != null && _focusIndicator.Target != ctl)
+                _focusIndicator.SetTarget(ctl);
+            return;
+        }
+
+        if (_focusedControl != null)
+        {
+            _focusedControl.SetHovered(false);
+        }
+
+        _focusedControl = ctl;
+
+        if (_focusedControl != null)
+        {
+            _focusedControl.SetHovered(true);
+            _focusIndicator?.SetTarget(_focusedControl);
+            GD.Print($"[SelectFocus] 焦点移至: {_focusedControl.GetType().Name} pos={_focusedControl.Location} size={_focusedControl.Size}");
+        }
+        else
+        {
+            _focusIndicator?.SetTarget(null);
+        }
+    }
+
+    private DXControl FindNextFocus(DXControl current, Vector2 dir, List<DXControl> targets)
+    {
+        if (targets == null || targets.Count == 0) return null;
+        if (current == null || !targets.Contains(current)) return targets[0];
+
+        Vector2 currentCenter = current.GetGlobalRect().GetCenter();
+        DXControl best = null;
+        float bestScore = float.MaxValue;
+
+        foreach (var candidate in targets)
+        {
+            if (candidate == current || !candidate.IsVisibleInTree()) continue;
+            Vector2 candidateCenter = candidate.GetGlobalRect().GetCenter();
+            Vector2 diff = candidateCenter - currentCenter;
+
+            float dot = diff.Normalized().Dot(dir);
+            if (dot < 0.2f) continue;
+
+            float primaryDist = Math.Abs(diff.Dot(dir));
+            Vector2 perp = new Vector2(-dir.Y, dir.X);
+            float secondaryDist = Math.Abs(diff.Dot(perp));
+
+            float score = primaryDist + secondaryDist * 1.8f;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+
+        if (best == null)
+        {
+            int idx = targets.IndexOf(current);
+            if (dir.X > 0 || dir.Y > 0)
+                best = targets[(idx + 1) % targets.Count];
+            else
+                best = targets[(idx - 1 + targets.Count) % targets.Count];
+        }
+
+        return best;
+    }
+
+    private void CycleFocus(List<DXControl> targets, int delta)
+    {
+        if (targets == null || targets.Count == 0) return;
+        int idx = _focusedControl != null ? targets.IndexOf(_focusedControl) : -1;
+        int nextIdx = (idx + delta + targets.Count) % targets.Count;
+        SetFocusedControl(targets[nextIdx]);
+    }
+
+    private void ActivateFocusedControl()
+    {
+        if (_focusedControl == null || !_focusedControl.IsEnabled) return;
+
+        GD.Print($"[SelectFocus] A键确认激活焦点: {_focusedControl.GetType().Name} loc={_focusedControl.Location}");
+
+        if (_focusedControl == _skinStart)
+        {
+            OnStartPressed();
+        }
+        else if (_focusedControl == _slotHit0)
+        {
+            if (_legacySelectedIndex == 0)
+                OnStartPressed();
+            else
+                SelectSkinCharacter(0);
+        }
+        else if (_focusedControl == _slotHit1)
+        {
+            if (_legacySelectedIndex == 1)
+                OnStartPressed();
+            else
+                SelectSkinCharacter(1);
+        }
+        else if (_focusedControl == _skinCreate)
+        {
+            _skinCreate.TriggerClick();
+        }
+        else if (_focusedControl == _skinDelete)
+        {
+            _skinDelete.TriggerClick();
+        }
+        else if (_focusedControl == _skinExit)
+        {
+            GetTree().Quit();
+        }
+        else
+        {
+            _focusedControl.TriggerClick();
+        }
+    }
+
     public override void _UnhandledKeyInput(InputEvent @event)
     {
         base._UnhandledKeyInput(@event);
-        if (_legacyStartNoticeDialog == null || !IsInstanceValid(_legacyStartNoticeDialog)) return;
-        if (!_legacyStartNoticeDialog.Visible) return;
-        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
-        if (key.Keycode != Key.Space && key.Keycode != Key.Enter && key.Keycode != Key.KpEnter) return;
+        if (_legacyStartNoticeDialog != null && IsInstanceValid(_legacyStartNoticeDialog) && _legacyStartNoticeDialog.Visible)
+        {
+            if (@event is InputEventKey noticeKey && noticeKey.Pressed && !noticeKey.Echo)
+            {
+                if (noticeKey.Keycode == Key.Space || noticeKey.Keycode == Key.Enter || noticeKey.Keycode == Key.KpEnter)
+                {
+                    GetViewport()?.SetInputAsHandled();
+                    GD.Print("[LegacySelect] 公告框：空格/回车确认");
+                    OnLegacyStartNoticeConfirmed();
+                    return;
+                }
+            }
+            return;
+        }
 
-        GetViewport()?.SetInputAsHandled();
-        GD.Print("[LegacySelect] 公告框：空格/回车确认");
-        OnLegacyStartNoticeConfirmed();
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+
+        if (_selectPhase == 1 || _selectPhase == 4) return;
+
+        var targets = _selectPhase == 2 ? GetPhase2FocusTargets() : GetPhase0FocusTargets();
+        if (targets == null || targets.Count == 0) return;
+
+        if (key.Keycode == Key.Up)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(0, -1), targets));
+        }
+        else if (key.Keycode == Key.Down)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(0, 1), targets));
+        }
+        else if (key.Keycode == Key.Left)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(-1, 0), targets));
+        }
+        else if (key.Keycode == Key.Right)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(1, 0), targets));
+        }
+        else if (key.Keycode == Key.Tab)
+        {
+            GetViewport()?.SetInputAsHandled();
+            CycleFocus(targets, 1);
+        }
+        else if (key.Keycode == Key.Enter || key.Keycode == Key.KpEnter || key.Keycode == Key.Space)
+        {
+            GetViewport()?.SetInputAsHandled();
+            ActivateFocusedControl();
+        }
+        else if (key.Keycode == Key.Escape)
+        {
+            GetViewport()?.SetInputAsHandled();
+            if (_selectPhase == 2)
+            {
+                ExitLegacyCreate();
+            }
+            else
+            {
+                if (_focusedControl == _skinExit)
+                    GetTree().Quit();
+                else
+                    SetFocusedControl(_skinExit);
+            }
+        }
     }
 
     public override void _Process(double delta)
@@ -351,6 +572,12 @@ public partial class SelectScene : Control
     private void AutoCreateCharacter()
     {
         _net.Connection?.SendNewCharacter("TestHero", MirClass.Warrior, MirGender.Male);
+    }
+
+    private void AutoCreateCharacterNamed(string name)
+    {
+        _net.Connection?.SendNewCharacter(string.IsNullOrWhiteSpace(name) ? "TestHero" : name,
+            MirClass.Warrior, MirGender.Male);
     }
     private void AutoStartGame()
     {
@@ -481,6 +708,13 @@ public partial class SelectScene : Control
             SelectSkinCharacter(0);
         }
         _skinCreate.Enabled = _characters.Count < 4;
+        if (_selectPhase == 0)
+        {
+            if (_characters.Count > 0 && _skinStart != null && _skinStart.Enabled)
+                SetFocusedControl(_skinStart);
+            else if (_skinCreate != null && _skinCreate.Enabled)
+                SetFocusedControl(_skinCreate);
+        }
     }
 
     private void SelectSkinCharacter(int index)
@@ -1009,6 +1243,22 @@ public partial class SelectScene : Control
     public void SetSelectPhase(int phase)
     {
         _selectPhase = phase;
+        if (phase == 0)
+        {
+            if (_characters.Count > 0 && _skinStart != null && _skinStart.Enabled)
+                SetFocusedControl(_skinStart);
+            else if (_skinCreate != null && _skinCreate.Enabled)
+                SetFocusedControl(_skinCreate);
+        }
+        else if (phase == 2)
+        {
+            if (_skinConfirmYes != null)
+                SetFocusedControl(_skinConfirmYes);
+        }
+        else
+        {
+            SetFocusedControl(null);
+        }
         // 换相位即重新武装 BGM 计时（对应原版进入相位时把 +0x1160 置 1、+0x1164 清 0）
         _phaseBgmArmed = true;
         _phaseBgmAccumMs = 0;
@@ -1065,6 +1315,14 @@ public partial class SelectScene : Control
     /// </summary>
     private void PlayLegacyTransition(string name, Action onFinished = null, bool attachToRoot = false)
     {
+        // 掌机 headless（无显示后端）没有视频帧时钟，VideoStreamPlayer.Finished 永不触发，
+        // 过场会把流程卡死；此时直接执行后续步骤。
+        if (DisplayServer.GetName() == "headless")
+        {
+            GD.Print($"[LegacySelect] headless：跳过过场 {name}.ogv");
+            onFinished?.Invoke();
+            return;
+        }
         var path = System.IO.Path.Combine(MirSkin.UiDataPath, name + ".ogv");
         if (!System.IO.File.Exists(path))
         {

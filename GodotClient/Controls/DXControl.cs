@@ -156,6 +156,24 @@ public partial class DXControl : Control
     public bool IsHovered { get; private set; }
     protected bool IsPressed { get; private set; }
 
+    public void SetHovered(bool hovered)
+    {
+        if (IsHovered == hovered) return;
+        IsHovered = hovered;
+        if (hovered)
+            MouseEnter?.Invoke(this, EventArgs.Empty);
+        else
+            MouseLeave?.Invoke(this, EventArgs.Empty);
+        QueueRedraw();
+    }
+
+    public void TriggerClick()
+    {
+        if (!IsEnabled) return;
+        PlayClickSound();
+        MouseClick?.Invoke(this, EventArgs.Empty);
+    }
+
     // ---- 树操作 ----
     public void AddControl(DXControl c)
     {

@@ -10,6 +10,132 @@ namespace ZirconClient.Scripts;
 
 public partial class LoginScene : Control
 {
+    private List<DXControl> GetFocusTargets()
+    {
+        var list = new List<DXControl>();
+        if (_skinLogin != null && _skinLogin.Visible && _skinLogin.Enabled) list.Add(_skinLogin);
+        if (_skinRegister != null && _skinRegister.Visible && _skinRegister.Enabled) list.Add(_skinRegister);
+        if (_skinChange != null && _skinChange.Visible && _skinChange.Enabled) list.Add(_skinChange);
+        if (_skinExit != null && _skinExit.Visible && _skinExit.Enabled) list.Add(_skinExit);
+        return list;
+    }
+
+    public void SetFocusedControl(DXControl ctl)
+    {
+        if (_focusedControl == ctl)
+        {
+            if (ctl != null && _focusIndicator != null && _focusIndicator.Target != ctl)
+                _focusIndicator.SetTarget(ctl);
+            return;
+        }
+
+        if (_focusedControl != null)
+        {
+            _focusedControl.SetHovered(false);
+        }
+
+        _focusedControl = ctl;
+
+        if (_focusedControl != null)
+        {
+            _focusedControl.SetHovered(true);
+            _focusIndicator?.SetTarget(_focusedControl);
+        }
+        else
+        {
+            _focusIndicator?.SetTarget(null);
+        }
+    }
+
+    private DXControl FindNextFocus(DXControl current, Vector2 dir, List<DXControl> targets)
+    {
+        if (targets == null || targets.Count == 0) return null;
+        if (current == null || !targets.Contains(current)) return targets[0];
+
+        Vector2 currentCenter = current.GetGlobalRect().GetCenter();
+        DXControl best = null;
+        float bestScore = float.MaxValue;
+
+        foreach (var candidate in targets)
+        {
+            if (candidate == current || !candidate.IsVisibleInTree()) continue;
+            Vector2 candidateCenter = candidate.GetGlobalRect().GetCenter();
+            Vector2 diff = candidateCenter - currentCenter;
+
+            float dot = diff.Normalized().Dot(dir);
+            if (dot < 0.2f) continue;
+
+            float primaryDist = Math.Abs(diff.Dot(dir));
+            Vector2 perp = new Vector2(-dir.Y, dir.X);
+            float secondaryDist = Math.Abs(diff.Dot(perp));
+
+            float score = primaryDist + secondaryDist * 1.8f;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+
+        if (best == null)
+        {
+            int idx = targets.IndexOf(current);
+            if (dir.X > 0 || dir.Y > 0)
+                best = targets[(idx + 1) % targets.Count];
+            else
+                best = targets[(idx - 1 + targets.Count) % targets.Count];
+        }
+
+        return best;
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        base._UnhandledKeyInput(@event);
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
+
+        var targets = GetFocusTargets();
+        if (targets == null || targets.Count == 0) return;
+
+        if (key.Keycode == Key.Up)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(0, -1), targets));
+        }
+        else if (key.Keycode == Key.Down)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(0, 1), targets));
+        }
+        else if (key.Keycode == Key.Left)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(-1, 0), targets));
+        }
+        else if (key.Keycode == Key.Right)
+        {
+            GetViewport()?.SetInputAsHandled();
+            SetFocusedControl(FindNextFocus(_focusedControl, new Vector2(1, 0), targets));
+        }
+        else if (key.Keycode == Key.Tab)
+        {
+            GetViewport()?.SetInputAsHandled();
+            int idx = _focusedControl != null ? targets.IndexOf(_focusedControl) : -1;
+            SetFocusedControl(targets[(idx + 1) % targets.Count]);
+        }
+        else if (key.Keycode == Key.Enter || key.Keycode == Key.KpEnter || key.Keycode == Key.Space)
+        {
+            GetViewport()?.SetInputAsHandled();
+            if (_focusedControl != null && _focusedControl.IsEnabled)
+            {
+                _focusedControl.TriggerClick();
+            }
+            else if (_skinLogin != null && _skinLogin.IsEnabled)
+            {
+                OnLoginPressed();
+            }
+        }
+    }
     private Network.NetworkManager _net;
     private CanvasLayer _uiLayer;
     private LineEdit _emailEdit;
@@ -20,6 +146,8 @@ public partial class LoginScene : Control
     private LineEdit _keyEdit;
     private LineEdit _newPasswordEdit;
     private List<SelectInfo> _pendingCharacters;
+    private FocusIndicator _focusIndicator;
+    private DXControl _focusedControl;
     private DXTextInput _skinEmail, _skinPassword;
     private DXButton _skinLogin, _skinRegister, _skinChange, _skinRanking, _skinOptions, _skinExit, _skinActivation;
     private DXLabel _skinForgot;
@@ -36,6 +164,19 @@ public partial class LoginScene : Control
     private bool _selectTransitionStarted;
 
     private static LoginScene _activeInstance;
+
+    /// <summary>掌机排障埋点：ZIRCON_TRACE=1 时逐步打印 _Ready 进度（桌面默认静默）。</summary>
+    private static void Trace(string message)
+    {
+        if (System.Environment.GetEnvironmentVariable("ZIRCON_TRACE") != "1") return;
+        GD.Print($"[Trace] {message}");
+    }
+
+    /// <summary>
+    /// 无显示后端时（掌机先用 headless 跑通服务端/登录流程）：视频解码需要真实帧时钟，
+    /// VideoStreamPlayer.Play() 在 headless 下会卡住主线程，跳过播放而不是阻塞。
+    /// </summary>
+    private static bool NoVideoBackend => DisplayServer.GetName() == "headless";
 
     public override void _EnterTree()
     {
@@ -103,6 +244,7 @@ public partial class LoginScene : Control
         // 调试审计：ZIRCON_UI_AUDIT=1 时列出所有超出逻辑画布的控件
         if (System.Environment.GetEnvironmentVariable("ZIRCON_UI_AUDIT") == "1")
             UiScaler.AuditOverflow(_uiLayer, "LoginScene");
+        Trace("ui built");
         // 窗口大小变化后视口才更新，Resized（Control）可能错过时序，
         // 用 Viewport.SizeChanged 确保窗口变化时重新应用缩放。
         // 用户拖动窗口时这也正是「内容跟着窗口等比缩放」的驱动点。
@@ -120,24 +262,28 @@ public partial class LoginScene : Control
         int port = AutoLoginArgs.ServerPort
                    ?? (ClientSettings.UseNetworkConfig ? ClientSettings.Port : 7000);
         GD.Print($"[Login] 目标服务器: {host}:{port}");
-        foreach (var a in OS.GetCmdlineUserArgs()) GD.Print($"[Login] arg: {a}");
+        foreach (var a in AutoLoginArgs.AllArgs) GD.Print($"[Login] arg: {a}");
+        Trace($"target server {host}:{port}");
         // 单机模式：目标端口无监听时自动拉起本地 ServerCore（进程生命周期绑定，
         // 客户端退出时由 Shutdown 关闭）。远程 --server 参数指定时不触发。
         var launcher = GetNodeOrNull<SinglePlayerLauncher>("/root/SinglePlayerLauncher");
         if (launcher != null)
         {
             launcher.EnsureServerRunning(host, port);
+            Trace($"server ensure done spawned={launcher.IsSpawned}");
             if (launcher.IsSpawned && !launcher.WaitForServer(host, port))
             {
                 SetStatus(Lang.LoginUi447Label);
                 return;
             }
+            Trace("server ready");
         }
         if (!_net.Connect(host, port))
         {
             SetStatus(Lang.LoginNoneLabel);
             return;
         }
+        Trace("net connect requested");
 
         // 订阅网络事件（_ExitTree 统一退订，避免场景释放后回调已销毁对象）
         _net.Connection.ConnectedEvent += OnConnected;
@@ -210,10 +356,18 @@ public partial class LoginScene : Control
         if (_registerBtn != null && IsInstanceValid(_registerBtn)) _registerBtn.Disabled = false;
         if (_skinLogin != null) _skinLogin.Enabled = true;
         if (_skinRegister != null) _skinRegister.Enabled = true;
+        if (_skinLogin != null && _skinLogin.Enabled) SetFocusedControl(_skinLogin);
     }
 
     private void OnLoginResult(LoginResult result, string message, List<SelectInfo> characters, string address)
     {
+        if (result == LoginResult.AccountNotExists && AutoLoginArgs.AutoLogin && !_autoAccountCreationTried)
+        {
+            _autoAccountCreationTried = true;
+            GD.Print($"[Login] 账号不存在，自动创建单机账号: {AutoLoginArgs.User}");
+            _net.Connection.SendNewAccount(AutoLoginArgs.User, AutoLoginArgs.Password);
+            return;
+        }
         _pendingCharacters = characters ?? new List<SelectInfo>();
         _pendingLoginResult = result;
         _pendingLoginMessage = message;
@@ -222,6 +376,9 @@ public partial class LoginScene : Control
     }
     private LoginResult _pendingLoginResult;
     private string _pendingLoginMessage;
+    // 单机掌机包首次启动时账号库里没有测试账号：自动登录遇到 AccountNotExists
+    // 就创建一次，再重发 Login（只做一次，避免密码错误时死循环）。
+    private bool _autoAccountCreationTried;
     private void ShowLoginResult()
     {
         if (_selectTransitionStarted) return;
@@ -311,11 +468,25 @@ public partial class LoginScene : Control
     private void ShowNewAccountResult(int resultInt)
     {
         var result = (NewAccountResult)resultInt;
+        if (_autoAccountCreationTried && AutoLoginArgs.AutoLogin
+            && (result == NewAccountResult.Success || result == NewAccountResult.AlreadyExists))
+        {
+            GD.Print($"[Login] 单机账号就绪 ({result})，重新发送 Login 包");
+            CallDeferred(nameof(RetryAutoLogin));
+            return;
+        }
         if (result == NewAccountResult.Success || result == NewAccountResult.AlreadyExists)
             SetStatus(string.Format(Lang.LoginLoginLabel3, result));
         else
             SetStatus(string.Format(Lang.LoginRegisterLabel, result));
         if (_registerBtn != null && IsInstanceValid(_registerBtn)) _registerBtn.Disabled = false;
+    }
+
+    private void RetryAutoLogin()
+    {
+        if (_selectTransitionStarted) return;
+        if (_net?.Connection == null) return;
+        _net.Connection.SendLogin(AutoLoginArgs.User, AutoLoginArgs.Password);
     }
 
     private void OnDisconnected()
@@ -643,14 +814,21 @@ public partial class LoginScene : Control
         // EI 原版登录布局（--legacy-ui 时生效）：视频背景 + 原生 640x480 坐标。
         if (AutoLoginArgs.LegacyUi)
         {
+            Trace("legacy layout start");
             ApplyLegacyEiLoginLayout();
+            Trace("legacy layout done");
             PlayLegacyBootLogo();
+            Trace("boot logo done");
         }
         dialog.AddControl(_skinStatus);
+        Trace("status label added");
 
         // 初始隐藏弹出的对话框（排行榜和选项配置）
+        Trace("ranking dialog construct");
         _loginRanking = new RankingDialog(false) { Position = new Vector2((viewport.X - 330) / 2f, (viewport.Y - 456) / 2f), Visible = false };
+        Trace("config dialog construct");
         _loginConfig = new ConfigDialog { Position = new Vector2((viewport.X - 380) / 2f, (viewport.Y - 430) / 2f), Visible = false };
+        Trace("optional dialogs done");
 
         // 保留原生控件树但隐藏它。不能 QueueFree：DXTextInput 的 TextChanged
         // 仍会同步到这些字段，销毁后输入会触发 ObjectDisposedException。
@@ -708,7 +886,12 @@ public partial class LoginScene : Control
 
         // 2) 背景动画：ei_Login.ogv @ (0,60) 640x360，循环播放。
         var videoPath = System.IO.Path.Combine(MirSkin.UiDataPath, "ei_Login.ogv");
-        if (System.IO.File.Exists(videoPath))
+        Trace($"video exists={System.IO.File.Exists(videoPath)} headless={NoVideoBackend}");
+        if (System.IO.File.Exists(videoPath) && NoVideoBackend)
+        {
+            GD.Print($"[LegacyLogin] headless：跳过背景视频 {videoPath}（无帧时钟）");
+        }
+        else if (System.IO.File.Exists(videoPath))
         {
             var stream = new VideoStreamTheora { File = videoPath };
             _loginVideo = new VideoStreamPlayer
@@ -721,6 +904,7 @@ public partial class LoginScene : Control
             };
             _uiLayer.AddChild(_loginVideo);
             _loginVideo.Play();
+            Trace("video playing");
             // **绘制次序**：ei_Login 视频是背景，必须画在登录表单之下。BuildLegacyLoginUi
             // 先 AddChild(dialog) 再走到这里，Godot 后加入的兄弟节点画在上面 —— 表单里
             // 落在视频矩形 (0,60)-(640,420) 内的控件（创建账号/修改密码/结束 三个按钮
@@ -752,10 +936,17 @@ public partial class LoginScene : Control
         SkinLegacyLoginButton(_skinRegister, 12, 13, new Vector2I(139, 379), new Vector2I(96, 26));
         SkinLegacyLoginButton(_skinChange, 14, 15, new Vector2I(279, 379), new Vector2I(96, 26));
         SkinLegacyLoginButton(_skinExit, 16, 17, new Vector2I(439, 379), new Vector2I(48, 26));
+        _focusIndicator = new FocusIndicator();
+        _uiLayer.AddChild(_focusIndicator);
+        if (_skinLogin != null) _skinLogin.MouseEnter += (s, e) => SetFocusedControl(_skinLogin);
+        if (_skinRegister != null) _skinRegister.MouseEnter += (s, e) => SetFocusedControl(_skinRegister);
+        if (_skinChange != null) _skinChange.MouseEnter += (s, e) => SetFocusedControl(_skinChange);
+        if (_skinExit != null) _skinExit.MouseEnter += (s, e) => SetFocusedControl(_skinExit);
 
         // 5) EI 此屏没有的现代入口：隐藏（保留接线，避免影响其它路径）。
         foreach (var extra in new Control[] { _skinRanking, _skinOptions, _skinForgot, _skinRemember, _skinActivation })
             if (extra != null) extra.Visible = false;
+        Trace("apply-layout done");
         // 「请输入邮箱和密码」标题也不存在于原版：SCREEN0001.jpg 解码后
         // EI y=0..59 全黑（该区最大采样 0），没有任何文字；这条 Label 落在
         // (280,38)，正好在黑带里。非 Legacy 路径保留。
@@ -826,6 +1017,11 @@ public partial class LoginScene : Control
     /// </summary>
     private void PlayLegacyBootLogo()
     {
+        if (NoVideoBackend)
+        {
+            GD.Print("[LegacyLogin] headless：跳过开场 logo 视频（无帧时钟）");
+            return;
+        }
         var path = System.IO.Path.Combine(MirSkin.UiDataPath, "wemade.ogv");
         if (!System.IO.File.Exists(path))
         {

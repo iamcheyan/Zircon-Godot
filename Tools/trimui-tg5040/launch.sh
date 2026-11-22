@@ -78,10 +78,11 @@ port_open() {
 
 server_pid=
 start_server() {
-    if port_open; then
-        say "server already listening on 127.0.0.1:$port"
-        return 0
-    fi
+    # Clean up any leftover processes before starting fresh
+    killall -9 Mir2eiClient 2>/dev/null || :
+    killall -9 ServerCore 2>/dev/null || :
+    sleep 1
+
     say "starting ServerCore"
     (
         cd "$server_dir" || exit 1
@@ -105,20 +106,20 @@ start_server() {
 cleanup() {
     status=$?
     trap - EXIT INT TERM
+    say "cleaning up ServerCore and Mir2eiClient"
     if [ -n "$server_pid" ] && kill -0 "$server_pid" 2>/dev/null; then
         say "stopping ServerCore pid=$server_pid"
         kill "$server_pid" 2>/dev/null || :
         wait "$server_pid" 2>/dev/null || :
     fi
+    killall -9 ServerCore 2>/dev/null || :
+    killall -9 Mir2eiClient 2>/dev/null || :
     exit "$status"
 }
 trap cleanup EXIT INT TERM
 
 start_server || say "continuing without the bundled server (client will try port $port)"
 
-# Godot 4.6 Linux templates have no framebuffer/KMS display driver. Use the
-# display server when one exists; otherwise run the client headless so login,
-# character selection and the world simulation still execute on the device.
 mode=${ZIRCON_DISPLAY_MODE:-auto}
 if [ "$mode" = "auto" ]; then
     if [ -n "${WAYLAND_DISPLAY:-}" ]; then
@@ -126,8 +127,6 @@ if [ "$mode" = "auto" ]; then
     elif [ -n "${DISPLAY:-}" ]; then
         mode=x11
     elif [ -w /dev/fb0 ]; then
-        # This package ships the custom Godot template that carries the fbdev
-        # display server (EGL offscreen -> /dev/fb0), see godot-fbdev/.
         mode=fbdev
     else
         mode=headless
@@ -140,13 +139,7 @@ case "$mode" in
         set -- --headless --audio-driver Dummy --log-file "${ZIRCON_CLIENT_LOG:-/tmp/zircon-client.log}"
         ;;
     fbdev)
-        # The frame is read back and blitted into /dev/fb0 by the engine, so cap
-        # the rate where the SoC still has headroom for the server thread.
-        # The fbdev template is built without ALSA, so ask for the null audio
-        # driver explicitly; otherwise the engine aborts on the default name.
-        set -- --display-driver fbdev --rendering-driver opengl3_es \
-            --audio-driver "${ZIRCON_AUDIO_DRIVER:-Dummy}" --max-fps "${ZIRCON_FBDEV_FPS:-30}" \
-            --log-file "${ZIRCON_CLIENT_LOG:-/tmp/zircon-client.log}"
+        set -- --display-driver fbdev --rendering-driver opengl3_es             --audio-driver "${ZIRCON_AUDIO_DRIVER:-Dummy}" --max-fps "${ZIRCON_FBDEV_FPS:-30}"             --log-file "${ZIRCON_CLIENT_LOG:-/tmp/zircon-client.log}"
         ;;
     x11|wayland)
         set -- --display-driver "$mode" --rendering-method gl_compatibility --audio-driver ALSA --fullscreen
@@ -157,12 +150,5 @@ case "$mode" in
 esac
 
 say "starting client $client_exe"
-"$client_exe" "$@" -- \
-    --server 127.0.0.1 \
-    --port "$port" \
-    --auto-login \
-    --user test@test.com \
-    --pass test123 \
-    --stay-select \
-    --lang CHINESE
+"$client_exe" "$@" --     --server 127.0.0.1     --port "$port"     --auto-login     --user test@test.com     --pass test123     --char TestHero     --lang CHINESE
 say "client exited with $?"

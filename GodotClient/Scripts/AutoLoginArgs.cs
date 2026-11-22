@@ -475,6 +475,12 @@ public static class AutoLoginArgs
         }
     }
 
+    /// <summary>
+    /// 已缓存的一次性参数快照。掌机上重复调用 OS.GetCmdlineUserArgs() 会卡住主线程
+    /// （Trace 实测停在取数组这一步），其它代码只读这份缓存。
+    /// </summary>
+    public static IReadOnlyList<string> AllArgs => Args;
+
     public static bool Has(string name)
     {
         foreach (var a in Args)

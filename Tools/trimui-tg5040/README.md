@@ -1,0 +1,130 @@
+# TrimUI Smart Pro（TG5040）运行包
+
+把 Zircon 服务端和客户端打成一个自带资源的包，放在 SD 卡上，并在掌机启动器里
+加一张封面卡；点开即启动本地 ServerCore + Godot 客户端并自动登录。
+
+桌面端不受影响：所有掌机逻辑都在本目录、`System/compat/bin/pocketjs-native-launch`
+和 `trimui/app/MainUI` 里；客户端改动全部走显式开关（见下文“共用代码改动”）。
+
+## 目录与文件
+
+```text
+Tools/trimui-tg5040/
+├── launch.sh                 掌机入口（服务端 + 客户端，自动登录）
+├── deploy.sh                 部署到掌机（备份、推送、重启）
+├── cover/zircon.png          启动器封面（256×256，运行时会缩到 128×128）
+├── device/
+│   ├── pocketjs-native-launch 运行时 LAUNCH 分支的执行脚本（新增 zircon 路由）
+│   └── MainUI                 掌机 supervisor（新增 @zircon 交接分支）
+└── launcher/repack-launcher.ts 给现有启动器包加一张 Zircon 卡（Bun）
+```
+
+包内布局（卡上 `/mnt/SDCARD/Apps/Zircon`）：
+
+```text
+Debug/Client/{Data,Map,Sound,LegacyEI}   ← ~/mir2ei 运行资源
+Debug/ServerCore/                        ← linux-arm64 自包含 ServerCore + Server.ini + Database/System.db
+ClientData/                              ← 仓库 ClientData（帧表/魔法/声音 JSON）
+GodotClient/                             ← Godot 4.6.3 Linux ARM64 导出
+launch.sh
+```
+
+## 启动链路（与内置 GBA 卡同一套机制）
+
+```text
+PocketShell 卡片（Zircon，coverPath=/storage/Apps/zircon.png）
+  └─ 运行时 LAUNCH zircon
+       └─ System/compat/bin/pocketjs-native-launch zircon
+            ├─ 写 System/pocketjs/active = @zircon
+            └─ kill pocket-linux-kms（交出屏幕）
+  └─ trimui/app/MainUI 读到 @zircon
+       └─ Apps/Zircon/launch.sh
+            ├─ ServerCore（127.0.0.1:7000，--singleplayer-dev）
+            └─ Mir2eiClient --server 127.0.0.1 --auto-login --user test@test.com …
+退出客户端 → launch.sh 停服务端 → MainUI 重新拉起启动器
+```
+
+账号与角色：首次运行会在卡上的 `Debug/ServerCore/Database/Users.db` 里自动创建
+`test@test.com`，并按 `--char TestHero` 自动建角（战士男），之后直接进游戏。
+
+## 构建
+
+```bash
+# 1. 服务端（linux-arm64 自包含）
+MIR3_EI_ROOT=~/mir2ei nix shell nixpkgs#dotnet-sdk_10 -c \
+  dotnet publish ServerCore/ServerCore.csproj -c Release -r linux-arm64 --self-contained true \
+  -o .artifacts/trimui-tg5040/server -p:InvariantGlobalization=true
+
+# 2. 客户端（Godot arm64 导出；需要 linux_release.arm64 模板）
+#    导出模板放在 .artifacts/godot-data/godot/export_templates/4.6.3.stable.mono/
+DOTNET_ROOT=<dotnet10> XDG_DATA_HOME=$PWD/.artifacts/godot-data MIR3_EI_ROOT=~/mir2ei \
+  godot-mono --headless --path GodotClient --export-release Linux \
+  .artifacts/trimui-tg5040/client/Mir2eiClient
+
+# 3. 启动器卡（给卡上现有 boot.pocket 加一张卡，其它字节保持不变）
+bun Tools/trimui-tg5040/launcher/repack-launcher.ts \
+  --source .artifacts/trimui-tg5040/device-boot-current.pocket \
+  --out .artifacts/trimui-tg5040/boot-zircon.pocket
+
+# 4. 组装 bundle（Debug/ ClientData/ GodotClient/ launch.sh）后部署
+Tools/trimui-tg5040/deploy.sh
+```
+
+`repack-launcher.ts` 只替换包内 JS 段：identity / plan / pak / profile hash 全部
+逐字节校验不变，因此设备运行时仍按 `trimui-tsp-fbdev`（640×360 逻辑、1280×720
+物理）准入；产物可用
+`bun ~/development/pjs-app-build/tools/pocket-pack.ts verify <pkg>` 复核。
+
+## 部署与回滚
+
+```bash
+ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh              # 推包 + 推卡 + 重启运行时
+ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh --skip-package
+```
+
+`deploy.sh` 会先备份 `boot.pocket` 与 `trimui/app/MainUI`（`*.bak-<时间戳>`）。
+supervisor 脚本改动需要重启掌机才生效（脚本正在被 sh 逐行读取）。
+
+## 已验证（设备实测，2026-11-22）
+
+通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见
+`.artifacts/trimui-tg5040/evidence/`：
+
+```text
+Supervisor: native app requested: zircon
+Starting Zircon at …
+[zircon] server ready on 127.0.0.1:7000
+[zircon] starting client /mnt/SDCARD/Apps/Zircon/GodotClient/Mir2eiClient
+[Login] 账号不存在，自动创建单机账号: test@test.com
+[Login] 登录成功, 角色数 0
+[Select] 建角色成功: TestHero
+[Game] 进入游戏! 玩家: TestHero, 位置: (457,400), 方向: Up, 地图: 1
+```
+
+退出客户端后 MainUI 会重新拉起启动器（日志 `Zircon exited … / Starting pocket-linux-kms`）。
+
+## 未完成 / 已知限制
+
+1. **画面**：Godot 4.6 的 Linux 模板只有 x11 / wayland / headless 显示驱动，这台
+   掌机（TinaLinux 4.9，无 X11/Wayland，只有 `/dev/fb0` + Mali EGL）没有可用后端，
+   所以客户端目前以 `headless` 运行：登录、建角、进图、网络协议都在设备上真实执行，
+   但没有画面。要在掌机屏幕上看到游戏，需要给 Godot 增加 fbdev/KMS 显示后端
+   （自编译引擎），这是后续适配工作的第一步。
+2. **启动器封面的人工点击**：卡片、封面、`LAUNCH zircon` 路由都已就位，并已用
+   运行时 `LAUNCH` 分支实际执行的同一条命令（`pocketjs-native-launch zircon`）
+   验证了完整交接；本机自动化按键注入没能驱动该 PocketJS 构建（自建 uinput 手柄
+   被运行时打开但不产生 UI 动作），因此“用手按键点封面”这一步需要在机器上人工确认。
+   另外这台设备的 `/dev/fb0` 抓帧只返回一页旧帧，不能作为视觉判据。
+3. 服务端目前用 `--singleplayer-dev`（测试账号注入满级数据），正式化前需要改成
+   普通模式。
+
+## 共用代码改动（桌面端默认行为不变）
+
+| 文件 | 改动 |
+|---|---|
+| `GodotClient/Network/SinglePlayerLauncher.cs` | 新增 `ZIRCON_SERVER_EXE`：设置时直接运行随包的自包含 apphost；未设置时仍然是原来的 `dotnet ServerCore.dll` |
+| `GodotClient/Scripts/AutoLoginArgs.cs` | 暴露已缓存的命令行参数快照 `AllArgs`（设备上重复调用 `OS.GetCmdlineUserArgs()` 会卡住） |
+| `GodotClient/Scripts/LoginScene.cs` | `ZIRCON_TRACE=1` 时打印 `_Ready` 进度；headless 下跳过登录视频/开场 logo（`VideoStreamPlayer.Play()` 在 headless 会阻塞）；自动登录遇到 `AccountNotExists` 时创建单机账号后重试 |
+| `GodotClient/Scripts/SelectScene.cs` | headless 下跳过选角/进游戏过场；`--char` 指定的角色不存在且账号无角色时自动建角 |
+
+以上开关都基于环境变量或 headless 检测，桌面端（有窗口、无 `ZIRCON_TRACE`）行为不变。

@@ -39,6 +39,22 @@
 - 重启全套：`cd /home/tetsuya/mir2ei && ./login_game.sh all`
 - 资源软链：`Zircon/Debug/Client` -> `/home/tetsuya/mir2ei`
 
+## 掌机包（TrimUI Smart Pro / TG5040）
+
+掌机版是独立打包，不改桌面启动路径：`Tools/trimui-tg5040/`（详见该目录 `README.md`）。
+
+- 包部署在卡上 `/mnt/SDCARD/Apps/Zircon`；启动器里多一张 Zircon 封面卡。
+- 点卡片 → 运行时 `LAUNCH zircon` → `System/compat/bin/pocketjs-native-launch` 写
+  `System/pocketjs/active=@zircon` 并交出屏幕 → `trimui/app/MainUI` 跑 `Apps/Zircon/launch.sh`
+  （自包含 ARM64 ServerCore + Godot 客户端，自动登录并自动建号建角）。
+- 构建：`dotnet publish ServerCore -r linux-arm64 --self-contained` + Godot arm64 导出 +
+  `bun Tools/trimui-tg5040/launcher/repack-launcher.ts`（给现有 boot.pocket 加卡，
+  identity/plan/pak/profile hash 逐字节不变）。
+- 部署：`ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh`（自动备份 boot.pocket 与 MainUI）。
+- **已知限制**：Godot 4.6 Linux 模板没有 fbdev/KMS 显示后端，掌机无 X11/Wayland，
+  客户端目前 `headless` 跑通登录→建角→进图，但没有画面；要上屏需给 Godot 加
+  fbdev 后端（自编译引擎）。该设备的 `/dev/fb0` 抓帧只返回一页旧帧，不能作为视觉判据。
+
 ## 测试账号
 
 ```bash

@@ -65,12 +65,27 @@ public partial class SinglePlayerLauncher : Node
                 return;
             }
 
+            string configuredExe = System.Environment.GetEnvironmentVariable("ZIRCON_SERVER_EXE");
+            string serverExe = string.IsNullOrWhiteSpace(configuredExe)
+                ? null
+                : Path.IsPathRooted(configuredExe)
+                    ? configuredExe
+                    : Path.GetFullPath(Path.Combine(root, configuredExe));
+            if (serverExe != null && !File.Exists(serverExe))
+            {
+                GD.PrintErr($"[Single] ZIRCON_SERVER_EXE 不存在: {serverExe}");
+                return;
+            }
+
             var psi = new ProcessStartInfo
             {
-                FileName = "dotnet",
+                // 显式设置时运行随掌机包提供的自包含 apphost；未设置时保留桌面端原有的 dotnet 启动方式。
+                FileName = serverExe ?? "dotnet",
                 // --singleplayer-dev: 服务端给测试账号注入满级/全技能/全装备，
                 // 配合客户端自动登录，双击客户端即可单机测试 UI。
-                Arguments = "ServerCore.dll --singleplayer-dev",
+                Arguments = serverExe == null
+                    ? "ServerCore.dll --singleplayer-dev"
+                    : "--singleplayer-dev",
                 WorkingDirectory = root,
                 UseShellExecute = false,
                 CreateNoWindow = true,

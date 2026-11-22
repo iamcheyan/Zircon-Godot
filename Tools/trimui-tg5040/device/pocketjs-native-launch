@@ -1,0 +1,36 @@
+#!/bin/sh
+# BaseOS (PJOS on TrimUI TG5040) native application launcher.
+#
+# The PocketJS runtime's `LAUNCH <id>` arm runs this script detached through the
+# compat `systemd-run` shim. It takes the same route the built-in ROM player uses:
+# write the supervisor's active marker, then stop the runtime so MainUI regains
+# the panel. MainUI resolves `@zircon` to /mnt/SDCARD/Apps/Zircon/launch.sh, which
+# owns the framebuffer until the game exits.
+set -u
+
+app=${1:-}
+marker=${PJOS_ACTIVE_MARKER:-/mnt/SDCARD/System/pocketjs/active}
+log=/tmp/pjs-native-launch.log
+printf '%s invoked app=%s\n' "$(date '+%Y-%m-%dT%H:%M:%S' 2>/dev/null || printf now)" "$app" >> "$log" 2>/dev/null || :
+runtime_pid() {
+    pidof pocket-linux-kms 2>/dev/null || true
+}
+
+case "$app" in
+    zircon)
+        printf '@zircon\n' > "$marker" || {
+            echo "zircon: cannot write active marker $marker" >&2
+            exit 3
+        }
+        printf '0\n' > /tmp/pocketjs-frontend-failures 2>/dev/null || :
+        sleep 0.6
+        pid=$(runtime_pid)
+        [ -n "$pid" ] && kill -9 $pid 2>/dev/null
+        echo "launching:zircon"
+        exit 0
+        ;;
+    *)
+        echo "Unknown PJOS Linux app: $app" >&2
+        exit 2
+        ;;
+esac

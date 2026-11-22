@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+
+File = env.File
+
+source_files = []
+
+if env["opengl3"]:
+    source_files += [
+        File("display_server_fbdev.cpp"),
+        File("gl_manager_fbdev.cpp"),
+    ]
+
+Return("source_files")

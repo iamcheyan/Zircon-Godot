@@ -414,6 +414,9 @@ public static class ClientSettings
     public static void ApplyLegacyWindow(Vector2I size)
     {
         if (DisplayServer.GetName() == "headless") return;
+        // 掌机 fbdev 后端：整块面板就是窗口，尺寸由显示服务器决定（1280×720）。
+        // 这里若按 legacy 的 800×600 改根视口，画面只会占左上角一块。
+        if (DisplayServer.GetName() == "fbdev") return;
         DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
         DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
         // 只调 DisplayServer.WindowSetSize 的话，X11 窗口会改，但 Godot 的

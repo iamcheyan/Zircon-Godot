@@ -1,0 +1,129 @@
+#!/bin/sh
+LOG=/mnt/SDCARD/pjos-boot.log
+echo "==========================================" > $LOG
+echo "PJOS (BaseOS) Booting on TrimUI Smart Pro" >> $LOG
+echo "Timestamp: $(date)" >> $LOG
+echo "==========================================" >> $LOG
+
+# 1. Emergency fallback flag
+if [ -f /mnt/SDCARD/.boot_stock ]; then
+    echo "Fallback flag detected. Booting stock TrimUI..." >> $LOG
+    exec /usr/trimui/bin/MainUI
+fi
+
+# 2. Setup paths and environment
+export SDCARD=/mnt/SDCARD
+export PATH=$SDCARD/System/bin:$SDCARD/System/compat/bin:/usr/trimui/bin:$PATH
+export LD_LIBRARY_PATH=$SDCARD/System/compat/lib:/usr/trimui/lib:$LD_LIBRARY_PATH
+export POCKETJS_HOME=$SDCARD/System/pocketjs
+
+# Ensure storage link and run directory exist
+[ -e /storage ] || ln -s /mnt/SDCARD /storage 2>/dev/null || :
+[ -e /run ] || ln -sf /tmp /run 2>/dev/null || :
+[ -e /usr/bin/timeout ] || ln -sf $SDCARD/System/bin/timeout /usr/bin/timeout 2>/dev/null || :
+[ -e /etc/os-release ] || ln -sf $SDCARD/System/etc/os-release /etc/os-release 2>/dev/null || :
+[ -e /etc/baseos-release ] || ln -sf $SDCARD/System/etc/baseos-release /etc/baseos-release 2>/dev/null || :
+
+# 3. Ensure hardware daemons are alive (singleton)
+if ! pgrep trimui_inputd > /dev/null 2>&1; then
+    echo "Starting trimui_inputd..." >> $LOG
+    /usr/trimui/bin/trimui_inputd &
+    sleep 0.5
+fi
+if ! pgrep trimui_scened > /dev/null 2>&1; then
+    echo "Starting trimui_scened..." >> $LOG
+    /usr/trimui/bin/trimui_scened &
+fi
+
+# 4. Run game library scan in background
+$SDCARD/System/compat/bin/pocketshell-games scan >> $LOG 2>&1 &
+
+# 5. Main Supervisor Loop (Frontend <-> Emulator handoff)
+cd $SDCARD/System/pocketjs
+FAIL_COUNT=0
+
+while true; do
+    # Check if a game was requested
+    ACTIVE_MARKER=$SDCARD/System/pocketjs/active
+    if [ -s "$ACTIVE_MARKER" ]; then
+        ROM_REQ=$(head -n 1 "$ACTIVE_MARKER" | tr -d '\r')
+        # Native applications hand the panel to their own launcher instead of
+        # an emulator: @zircon is written by compat/bin/pocketjs-native-launch.
+        case "$ROM_REQ" in
+            @zircon)
+                echo "Supervisor: native app requested: zircon" >> $LOG
+                if [ -x "$SDCARD/Apps/Zircon/launch.sh" ]; then
+                    echo "Starting Zircon at $(date)..." >> $LOG
+                    "$SDCARD/Apps/Zircon/launch.sh" >> $LOG 2>&1
+                    echo "Zircon exited at $(date)" >> $LOG
+                else
+                    echo "Supervisor: Zircon launch script missing: $SDCARD/Apps/Zircon/launch.sh" >> $LOG
+                fi
+                rm -f "$ACTIVE_MARKER"
+                sleep 1
+                continue ;;
+        esac
+        echo "Supervisor: active game requested: $ROM_REQ" >> $LOG
+        ROM_PATH="$ROM_REQ"
+        if [ ! -f "$ROM_PATH" ]; then
+            for d in /storage/Roms /mnt/SDCARD/Roms /storage/content/games; do
+                found=$(find "$d" -name "$ROM_REQ" 2>/dev/null | head -n 1)
+                if [ -n "$found" ] && [ -f "$found" ]; then
+                    ROM_PATH="$found"
+                    break
+                fi
+            done
+        fi
+        if [ -f "$ROM_PATH" ]; then
+            echo "Starting emulator for $ROM_PATH at $(date)..." >> $LOG
+            $SDCARD/System/compat/bin/pocket-game-play "$ROM_PATH" >> $LOG 2>&1
+            echo "Emulator exited at $(date)" >> $LOG
+        else
+            echo "Supervisor: requested ROM not found: $ROM_REQ" >> $LOG
+        fi
+        rm -f "$ACTIVE_MARKER"
+        sleep 1
+        continue
+    fi
+
+    echo "Starting pocket-linux-kms at $(date)..." >> $LOG
+    START_TIME=$(date +%s)
+    ./bin/pocket-linux-kms --package ./apps/boot.pocket --fb /dev/fb0 >> $LOG 2>&1
+    EXIT_CODE=$?
+    END_TIME=$(date +%s)
+    ELAPSED=$((END_TIME - START_TIME))
+
+    echo "pocket-linux-kms exited with code $EXIT_CODE after ${ELAPSED}s at $(date)" >> $LOG
+
+    # Check for game launch request immediately after exit
+    if [ -s "$ACTIVE_MARKER" ]; then
+        FAIL_COUNT=0
+        continue
+    fi
+
+    # Check for system power actions
+    if [ -f /tmp/pjos_shutdown ]; then
+        echo "Clean shutdown requested." >> $LOG
+        poweroff
+        exit 0
+    elif [ -f /tmp/pjos_reboot ]; then
+        echo "Clean reboot requested." >> $LOG
+        reboot
+        exit 0
+    fi
+
+    # If it ran for more than 10 seconds, reset failure count
+    if [ "$ELAPSED" -ge 10 ]; then
+        FAIL_COUNT=0
+    else
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+
+    # Fallback safety net: 3 fast consecutive crashes without game request
+    if [ "$FAIL_COUNT" -ge 3 ]; then
+        echo "Repeated crashes detected ($FAIL_COUNT). Falling back to stock TrimUI..." >> $LOG
+        exec /usr/trimui/bin/MainUI
+    fi
+
+    sleep 1
+done

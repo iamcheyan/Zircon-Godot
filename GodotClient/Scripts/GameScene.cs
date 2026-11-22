@@ -383,7 +383,7 @@ public partial class GameScene : Control
     public void ReceiveChat(string text, MessageType type = MessageType.System, List<ClientUserItem> linkedItems = null)
     {
         AddChatMessage(text, type, Colors.Yellow, linkedItems);
-        if (type == MessageType.Announcement && AutoLoginArgs.LegacyUi)
+        if (type == MessageType.Announcement && AutoLoginArgs.LegacyUi && !AutoLoginArgs.Handheld)
             ShowLegacyNotice(text);
     }
 
@@ -401,6 +401,7 @@ public partial class GameScene : Control
 
     public void ShowLegacyNotice(string text)
     {
+        if (AutoLoginArgs.Handheld) return;
         if (_noticeDialog == null) return;
         _noticeDialog.SetNotice(text);
         WindowManager.Open(_noticeDialog, _uiLayer);
@@ -448,6 +449,21 @@ public partial class GameScene : Control
         // Open，导致按 N / HUD cap11 打开后**再按无法关闭**（真机复现：
         // after-open 有 ConfigDialog，after-repress 仍为打开）。
         if (_configDialog != null) WindowManager.Toggle(_configDialog, _uiLayer);
+    }
+
+    private bool _hudHidden;
+    public void ToggleHudVisibility()
+    {
+        _hudHidden = !_hudHidden;
+        if (_mainPanel != null) _mainPanel.Visible = !_hudHidden;
+        if (_chatLog != null) _chatLog.Visible = !_hudHidden && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_chatTextBox != null) _chatTextBox.Visible = !_hudHidden && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_miniMap != null) _miniMap.Visible = !_hudHidden;
+        if (_beltDialog != null) _beltDialog.Visible = !_hudHidden;
+        if (_buffDialog != null) _buffDialog.Visible = !_hudHidden;
+        if (_questTracker != null) _questTracker.Visible = !_hudHidden && ClientSettings.QuestTrackerVisible;
+        if (_statusLabel != null) _statusLabel.Visible = !_hudHidden && ClientSettings.DebugLabel;
+        GD.Print($"[Game] HUD 界面: {(_hudHidden ? "已隐藏" : "已恢复显示")}");
     }
 
     public void SetDrawWeather(bool enabled)
@@ -5085,9 +5101,19 @@ public partial class GameScene : Control
             float baseH = AutoLoginArgs.LegacyUi ? LegacyHudLayout.LogicalHeight : UiScaleBaseHeight;
             float byHeight = viewport.Y / baseH;
             float byWidth = viewport.X / baseW;
-            baseScale = Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
+            if (viewport.X < baseW)
+            {
+                // 掌机或降采样渲染（如 640x360 2x upscale）：UI 按屏幕宽度等比缩放以完整容纳 800 宽底栏
+                baseScale = byWidth;
+            }
+            else
+            {
+                baseScale = Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
+            }
         }
-        WorldScale = baseScale;
+        // 当 internal viewport 小于原版基准（例如 640x360，硬件 2x 放大至 1280x720）时：
+        // 世界缩放保持 1.0f 即可自然获得 2x 的大画面像素；UI 则按 baseScale 缩放适应 640 宽。
+        WorldScale = (viewport.X < (AutoLoginArgs.LegacyUi ? LegacyHudLayout.LogicalWidth : 1024f)) ? 1f : baseScale;
         UiScale = baseScale;
         if (_uiLayer != null && IsInstanceValid(_uiLayer))
             _uiLayer.Transform = Transform2D.Identity.Scaled(Vector2.One * UiScale);
@@ -11821,13 +11847,30 @@ public partial class GameScene : Control
             return;
         }
 
-        // Alt 是地面掉落物名称的显示开关。只处理单独按下 Alt，
+        // 掌机快捷键：START 键隐藏/显示整个 HUD 游戏界面
+        if (key.Keycode == Key.F10 && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            ToggleHudVisibility();
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
+        // 掌机快捷键：MENU 键打开/关闭设置窗口
+        if ((key.Keycode == Key.F11 || key.Keycode == Key.Menu) && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            OpenConfigDialog();
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
+        // Alt / SELECT 键是地面掉落物名称的显示开关。只处理单独按下 Alt，
         // 不影响 Alt+左键的采集/钓鱼/驯马操作。
         if (key.Keycode == Key.Alt && !key.CtrlPressed && !key.ShiftPressed)
         {
             ClientSettings.ShowGroundItemNames = !ClientSettings.ShowGroundItemNames;
             RefreshGroundItemLabels(forceRedraw: true);
             GD.Print($"[Game] 地面物品名称: {(ClientSettings.ShowGroundItemNames ? "显示" : "隐藏")}");
+            GetViewport()?.SetInputAsHandled();
             return;
         }
 

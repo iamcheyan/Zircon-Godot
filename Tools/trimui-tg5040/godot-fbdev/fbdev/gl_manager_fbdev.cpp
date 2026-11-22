@@ -291,6 +291,7 @@ Error GLManagerFbdev::initialize(int p_width, int p_height) {
 
 	// Staging buffers: RGBA8 readback and the converted page.
 	readback.resize(render_width * render_height * 4);
+	upscale_scratch.resize(fb_info.width);
 
 	err = _create_context();
 	if (err != OK) {
@@ -329,17 +330,13 @@ void GLManagerFbdev::swap_buffers() {
 	make_current();
 
 	const uint64_t t0 = OS::get_singleton()->get_ticks_usec();
-	glFinish();
 	glReadPixels(0, 0, render_width, render_height, GL_RGBA, GL_UNSIGNED_BYTE, readback.ptrw());
-	glFinish();
 	const uint64_t t1 = OS::get_singleton()->get_ticks_usec();
 
 	// Convert the RGBA readback (bottom-up) into the framebuffer layout, flipping
 	// vertically and honouring the channel offsets the driver reported. When the
 	// panel wants BGRX (the common case on these SoCs) the swizzle is done with
 	// 32-bit arithmetic instead of per-channel byte handling.
-	// Write straight into the page that will be flipped in, so the frame is
-	// swizzled once instead of being converted into a staging buffer and copied.
 	int page = 0;
 	if (fb_info.panning && page_count > 1) {
 		page = (active_page + 1) % page_count;
@@ -350,29 +347,34 @@ void GLManagerFbdev::swap_buffers() {
 			fb_info.b_offset == 0 && fb_info.r_length == 8 && fb_info.g_length == 8 &&
 			fb_info.b_length == 8;
 
-	if (bgrx && render_scale > 1 &&
-			render_width * render_scale == fb_info.width &&
-			render_height * render_scale == fb_info.height) {
-		// Integer upscale: swizzle one source row into a full-width scratch row,
-		// then replicate it vertically/horizontally with memcpy and a fast fill.
-		const int s = render_scale;
-		Vector<uint32_t> scratch;
-		scratch.resize(fb_info.width);
-		uint32_t *row = scratch.ptrw();
+	if (bgrx && render_scale == 2 &&
+			render_width * 2 == fb_info.width &&
+			render_height * 2 == fb_info.height) {
+		// Fast 2x integer upscale: 64-bit pair store + cache-hot line clone.
+		uint32_t *row = upscale_scratch.ptrw();
 		for (int sy = 0; sy < render_height; sy++) {
 			const uint32_t *in = (const uint32_t *)(readback.ptr() + (size_t)(render_height - 1 - sy) * (size_t)render_width * 4);
+			uint64_t *row64 = (uint64_t *)row;
 			for (int x = 0; x < render_width; x++) {
 				const uint32_t px = in[x];
 				const uint32_t out = 0xff000000u | ((px & 0x000000ffu) << 16) | (px & 0x0000ff00u) | ((px >> 16) & 0x000000ffu);
-				row[x * s] = out;
-				for (int k = 1; k < s; k++) {
-					row[x * s + k] = out;
-				}
+				row64[x] = ((uint64_t)out << 32) | (uint64_t)out;
 			}
-			uint8_t *dst = dst_base + (size_t)(sy * s) * (size_t)fb_info.stride;
-			memcpy(dst, row, (size_t)fb_info.width * 4);
-			for (int k = 1; k < s; k++) {
-				memcpy(dst + (size_t)k * (size_t)fb_info.stride, row, (size_t)fb_info.width * 4);
+			uint8_t *dst0 = dst_base + (size_t)(sy * 2) * (size_t)fb_info.stride;
+			uint8_t *dst1 = dst0 + (size_t)fb_info.stride;
+			memcpy(dst0, row, (size_t)fb_info.width * 4);
+			memcpy(dst1, row, (size_t)fb_info.width * 4);
+		}
+	} else if (bgrx && render_scale == 1 &&
+			render_width == fb_info.width &&
+			render_height == fb_info.height) {
+		// Fast 1:1 direct swizzle: no division, no branching.
+		for (int y = 0; y < render_height; y++) {
+			const uint32_t *in = (const uint32_t *)(readback.ptr() + (size_t)(render_height - 1 - y) * (size_t)render_width * 4);
+			uint32_t *out = (uint32_t *)(dst_base + (size_t)y * (size_t)fb_info.stride);
+			for (int x = 0; x < render_width; x++) {
+				const uint32_t px = in[x];
+				out[x] = 0xff000000u | ((px & 0x000000ffu) << 16) | (px & 0x0000ff00u) | ((px >> 16) & 0x000000ffu);
 			}
 		}
 	} else {

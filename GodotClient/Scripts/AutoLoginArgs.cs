@@ -458,6 +458,16 @@ public static class AutoLoginArgs
     /// </summary>
     public static bool Window => Has("--window");
 
+    /// <summary>
+    /// 掌机模式：在掌机 (fbdev 或显式参数/环境变量) 上跳过选角进游戏和进游戏后的公告弹窗，
+    /// 角色选完播放完过场动画后直接进入游戏世界。
+    /// </summary>
+    public static bool Handheld =>
+        Has("--handheld")
+        || DisplayServer.GetName() == "fbdev"
+        || System.Environment.GetEnvironmentVariable("ZIRCON_HANDHELD") == "1"
+        || System.Environment.GetEnvironmentVariable("ZIRCON_FBDEV_RENDER_SCALE") != null;
+
     public static Vector2I WindowSize
     {
         get

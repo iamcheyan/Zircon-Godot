@@ -61,15 +61,22 @@ const DisplayServerFbdev::KeyMap DisplayServerFbdev::key_map[] = {
 	{ KEY_S, Key::S },
 	{ KEY_D, Key::D },
 	{ KEY_F, Key::F },
-	// Gamepad face/shoulder buttons (TRIMUI Player1 is an xbox360-style pad).
-	{ BTN_A, Key::ENTER },
-	{ BTN_B, Key::ESCAPE },
-	{ BTN_X, Key::SPACE },
-	{ BTN_Y, Key::TAB },
+	// Gamepad face/shoulder/system buttons for TrimUI TG5040 (Nintendo physical layout).
+	// Physical A (right, printed A) = BTN_EAST (305) -> ENTER (Confirm) & Left Click
+	// Physical B (bottom, printed B) = BTN_SOUTH (304) -> ESCAPE (Cancel/Back) & Right Click
+	// Physical X (top, printed X) = BTN_WEST (308) -> SPACE (Pickup / Action)
+	// Physical Y (left, printed Y) = BTN_NORTH (307) -> TAB (Big Map / Focus)
+	{ BTN_EAST, Key::ENTER },
+	{ BTN_SOUTH, Key::ESCAPE },
+	{ BTN_WEST, Key::SPACE },
+	{ BTN_NORTH, Key::TAB },
 	{ BTN_TL, Key::Q },
 	{ BTN_TR, Key::E },
-	{ BTN_START, Key::ESCAPE },
-	{ BTN_SELECT, Key::TAB },
+	{ BTN_TL2, Key(0x31) },
+	{ BTN_TR2, Key(0x32) },
+	{ BTN_START, Key::F10 },
+	{ BTN_SELECT, Key::ALT },
+	{ BTN_MODE, Key::F11 },
 	{ BTN_THUMBL, Key::SHIFT },
 	{ BTN_THUMBR, Key::CTRL },
 	{ BTN_DPAD_UP, Key::UP },
@@ -265,16 +272,16 @@ void DisplayServerFbdev::_poll_input() {
 					handled = true;
 					break;
 				}
-				// The A button also clicks left mouse, so mouse-driven UIs stay usable.
-				if ((int)ev.code == BTN_A) {
+				// Physical A (BTN_EAST / 305): Left click (Confirm / Select / Attack)
+				if ((int)ev.code == BTN_EAST) {
 					const bool pressed = ev.value != 0;
 					if (mouse_button_pressed[0] != pressed) {
 						mouse_button_pressed[0] = pressed;
 						_emit_mouse_button(MouseButton::LEFT, pressed, mouse_position);
 					}
 				}
-				// The B button also clicks right mouse (essential for Mir2 movement/run).
-				if ((int)ev.code == BTN_B) {
+				// Physical B (BTN_SOUTH / 304): Right click (Cancel / Run / Move)
+				if ((int)ev.code == BTN_SOUTH) {
 					const bool pressed = ev.value != 0;
 					if (mouse_button_pressed[1] != pressed) {
 						mouse_button_pressed[1] = pressed;

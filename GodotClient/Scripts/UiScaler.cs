@@ -118,6 +118,10 @@ public static class UiScaler
         if (size.X <= 0 || size.Y <= 0) return 2f;
         float byHeight = size.Y / BaseHeight;
         float byWidth = size.X / BaseWidth;
+        if (size.X < BaseWidth)
+        {
+            return byWidth;
+        }
         return Mathf.Clamp(Mathf.Min(byHeight, byWidth), 1f, 2f);
     }
 

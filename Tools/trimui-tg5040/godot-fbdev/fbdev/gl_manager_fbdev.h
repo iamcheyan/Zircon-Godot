@@ -59,6 +59,7 @@ private:
 	// Readback staging (RGBA8) and converted page.
 	Vector<uint8_t> readback;
 	Vector<uint8_t> converted;
+	Vector<uint32_t> upscale_scratch;
 
 	bool vsync_enabled = true;
 	int render_width = 0;

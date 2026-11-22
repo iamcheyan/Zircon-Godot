@@ -2629,6 +2629,12 @@ public partial class SelectScene : Control
     /// </summary>
     private void OnLegacyStartGameCutsceneFinished()
     {
+        if (AutoLoginArgs.Handheld)
+        {
+            GD.Print("[LegacySelect] 掌机模式：跳过进游戏公告框，播放动画后直接进入游戏");
+            EnterGameScene();
+            return;
+        }
         ShowLegacyStartNotice();
     }
 

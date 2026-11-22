@@ -11,7 +11,7 @@
 # own lifetime: if the client cannot draw yet the server still serves, and the
 # supervisor always regains the panel when this script exits.
 set -eu
-export ZIRCON_FBDEV_RENDER_SCALE=1
+export ZIRCON_FBDEV_RENDER_SCALE=${ZIRCON_FBDEV_RENDER_SCALE:-2}
 
 app_root=$(CDPATH= cd "$(dirname "$0")" && pwd)
 server_dir="$app_root/Debug/ServerCore"

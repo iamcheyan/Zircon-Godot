@@ -131,6 +131,12 @@ Tools/trimui-tg5040/deploy.sh
 - 显式开启掌机模式：键盘模拟 F10/方向键验证 HUD 双向切换、技能/腰带面板；确认释放未绑定的火球术并收到服务端 `ObjectMagic`。
 - fbdev 输入源文件已用 Zig 编译为 AArch64 目标文件；未重新导出或部署整包，实体摇杆、扳机、对话框指针与新包上屏仍待实机验证。
 
+### TG5040 启动恢复（2d7ff081）
+
+卡上原 `Mir2eiClient` 连无画面启动都在文本服务初始化期间段错误；其末尾没有嵌入 PCK 的 `GDPC` 标记。用卡上另一个已能启动的客户端所对应的 fbdev 模板，重新导出 `2d7ff081` 的 ARM64 客户端与配套 `data_ZirconClient_linuxbsd_arm64`，并同步更新服务端程序。通过原生启动入口两次进入地图；原有数据库未被覆盖，部署前备份位于卡上 `apps/Zircon/backups/tg5040-pre-2d7ff081/`。
+
+[实机进图截图（1280×720，读取 fbdev 当前显示页）](evidence/tg5040-world.png)。此图只证明默认 HUD 和地图已上屏，不证明掌机快选或新版 fbdev 输入实现已经验收；该轮导出复用了已有模板。
+
 ### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见

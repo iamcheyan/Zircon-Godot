@@ -34,12 +34,12 @@ class DisplayServerFbdev : public DisplayServer {
 	Vector<int> input_fds;
 	Point2i mouse_position;
 	bool mouse_button_pressed[8] = { false };
-	int stick_x = 0;
-	int stick_y = 0;
+	int left_stick_x = 0;
+	int left_stick_y = 0;
+	int right_stick_x = 0;
+	int right_stick_y = 0;
 	int dpad_x = 0;
 	int dpad_y = 0;
-	int stick_dir_x = 0;
-	int stick_dir_y = 0;
 
 	struct KeyMap {
 		int code;

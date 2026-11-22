@@ -1250,6 +1250,7 @@ public partial class GameScene : Control
         AddChild(_combatController);
         _combatController.ZIndex = 200;  // 高亮框画在物体之上
         UpdateViewRange();
+        InitHandheldSystem();
 
         _player = new PlayerRenderer();
         // 本地玩家和其他对象一样按脚底所在行排序，允许同一行的前景树木
@@ -9672,6 +9673,7 @@ public partial class GameScene : Control
 
     public override void _Process(double delta)
     {
+        ProcessHandheldInput(delta);
         // 高 DPI/窗口模式下，Godot 可能在 _Ready 之后才提交最终视口尺寸。
         // 若只在 _Ready/Control.Resized 布局，HUD 会保留旧的 (13,23) 等逻辑坐标，
         // 表现为技能栏跑到左上角、底栏与聊天控件互相错层。尺寸或缩放真正变化时
@@ -12071,6 +12073,15 @@ public partial class GameScene : Control
     // 对齐旧版 ActiveScene 的“UI 优先、地图其次”分发顺序。
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+        {
+            if (HandleHandheldKeyAction(keyEvent.Keycode))
+            {
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+        }
+
         // 原版 MapControl.OnMouseDown 首行直接拒绝观察模式；否则脚下拾取、
         // NPC 调用、观察和拖物品到地图等地图级分支会绕过物品格的 observer guard。
         if (_observer && @event is InputEventMouseButton)

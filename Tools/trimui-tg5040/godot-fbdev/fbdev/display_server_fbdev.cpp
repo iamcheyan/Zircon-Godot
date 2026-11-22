@@ -290,44 +290,18 @@ void DisplayServerFbdev::_poll_input() {
 				}
 				(void)handled;
 			} else if (ev.type == EV_ABS) {
-				if (ev.code == ABS_X || ev.code == ABS_RX) {
-					stick_x = (int)ev.value;
-					if (stick_x > 16000) {
-						if (stick_dir_x != 1) {
-							if (stick_dir_x == -1) _emit_key(Key::LEFT, false);
-							_emit_key(Key::RIGHT, true);
-							stick_dir_x = 1;
-						}
-					} else if (stick_x < -16000) {
-						if (stick_dir_x != -1) {
-							if (stick_dir_x == 1) _emit_key(Key::RIGHT, false);
-							_emit_key(Key::LEFT, true);
-							stick_dir_x = -1;
-						}
-					} else if (abs(stick_x) < 10000) {
-						if (stick_dir_x == 1) _emit_key(Key::RIGHT, false);
-						if (stick_dir_x == -1) _emit_key(Key::LEFT, false);
-						stick_dir_x = 0;
-					}
-				} else if (ev.code == ABS_Y || ev.code == ABS_RY) {
-					stick_y = (int)ev.value;
-					if (stick_y > 16000) {
-						if (stick_dir_y != 1) {
-							if (stick_dir_y == -1) _emit_key(Key::UP, false);
-							_emit_key(Key::DOWN, true);
-							stick_dir_y = 1;
-						}
-					} else if (stick_y < -16000) {
-						if (stick_dir_y != -1) {
-							if (stick_dir_y == 1) _emit_key(Key::DOWN, false);
-							_emit_key(Key::UP, true);
-							stick_dir_y = -1;
-						}
-					} else if (abs(stick_y) < 10000) {
-						if (stick_dir_y == 1) _emit_key(Key::DOWN, false);
-						if (stick_dir_y == -1) _emit_key(Key::UP, false);
-						stick_dir_y = 0;
-					}
+				if (ev.code == ABS_X) {
+					left_stick_x = (int)ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_X, (float)ev.value / 32767.0f);
+				} else if (ev.code == ABS_Y) {
+					left_stick_y = (int)ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_Y, (float)ev.value / 32767.0f);
+				} else if (ev.code == ABS_RX) {
+					right_stick_x = (int)ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_X, (float)ev.value / 32767.0f);
+				} else if (ev.code == ABS_RY) {
+					right_stick_y = (int)ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_Y, (float)ev.value / 32767.0f);
 				} else if (ev.code == ABS_HAT0X) {
 					const int val = (int)ev.value;
 					if (val != dpad_x) {
@@ -350,15 +324,15 @@ void DisplayServerFbdev::_poll_input() {
 			}
 		}
 	}
-	// Update virtual mouse cursor smoothly from analog stick (-32767..32767, deadzone 4000)
-	if (abs(stick_x) > 4000 || abs(stick_y) > 4000) {
+	// Update virtual mouse cursor smoothly from Left Stick (-32767..32767, deadzone 4000)
+	if (abs(left_stick_x) > 4000 || abs(left_stick_y) > 4000) {
 		int move_x = 0;
 		int move_y = 0;
-		if (abs(stick_x) > 4000) {
-			move_x = (stick_x > 0 ? (stick_x - 4000) : (stick_x + 4000)) / 2500;
+		if (abs(left_stick_x) > 4000) {
+			move_x = (left_stick_x > 0 ? (left_stick_x - 4000) : (left_stick_x + 4000)) / 2500;
 		}
-		if (abs(stick_y) > 4000) {
-			move_y = (stick_y > 0 ? (stick_y - 4000) : (stick_y + 4000)) / 2500;
+		if (abs(left_stick_y) > 4000) {
+			move_y = (left_stick_y > 0 ? (left_stick_y - 4000) : (left_stick_y + 4000)) / 2500;
 		}
 		if (move_x != 0 || move_y != 0) {
 			Point2i next = mouse_position + Point2i(move_x, move_y);
@@ -409,6 +383,7 @@ DisplayServerFbdev::DisplayServerFbdev(const String &p_rendering_driver, WindowM
 	window_id = MAIN_WINDOW_ID;
 
 	_open_input_devices();
+	Input::get_singleton()->joy_connection_changed(0, true, "TRIMUI Player1", "TG5040");
 
 	print_line(vformat("fbdev: display server ready, %dx%d.", window_size.width, window_size.height));
 }

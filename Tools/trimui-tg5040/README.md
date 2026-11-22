@@ -121,9 +121,10 @@ Tools/trimui-tg5040/deploy.sh
 但不会自动保全 `Users.db`。覆盖程序前应退出游戏并单独备份 `Users.db` 和 `System.db`，
 不要把干净包中的数据库推到已有存档上。使用 `ADB_SERIAL` 明确指定设备，并在同一设备锁内操作。
 
-暂勿对现有卡直接运行 `godot-fbdev/rebuild-client.sh`：旧版本可能忽略导出失败并推送旧产物，
-且会强制结束服务端。应先分开完成构建、核对本次 ARM64 客户端和配套 .NET 目录，
-再部署程序文件。supervisor 脚本改动需要重启掌机才会生效。
+`godot-fbdev/rebuild-client.sh` 只构建和导出，不连接或修改掌机。每次使用新目录，
+检查嵌入的 PCK 和配套 .NET 程序集后才报告成功。已有经过验证的 ARM64 fbdev 模板时，
+可用 `GODOT_FBDEV_TEMPLATE=/path/to/template` 跳过引擎重建。部署前核对客户端、服务端
+和存档备份；supervisor 脚本改动需要重启掌机才会生效。
 
 ## 验证记录
 

@@ -38,6 +38,7 @@ static bool fbdev_debug_enabled() {
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -62,23 +63,23 @@ const DisplayServerFbdev::KeyMap DisplayServerFbdev::key_map[] = {
 	{ KEY_D, Key::D },
 	{ KEY_F, Key::F },
 	// Gamepad face/shoulder/system buttons for TrimUI TG5040 (Nintendo physical layout).
-	// Physical A (right, printed A) = BTN_EAST (305) -> ENTER (Confirm) & Left Click
-	// Physical B (bottom, printed B) = BTN_SOUTH (304) -> ESCAPE (Cancel/Back) & Right Click
-	// Physical X (top, printed X) = BTN_WEST (308) -> SPACE (Pickup / Action)
-	// Physical Y (left, printed Y) = BTN_NORTH (307) -> TAB (Big Map / Focus)
+	// A/B are Enter/Escape in semantic mode; pointer fallback sends A as click
+	// ONLY. Non-handheld users retain the legacy Enter+click / Escape+click.
+	// Physical X (top, printed X) = BTN_WEST (308) -> SPACE (Pickup)
+	// Physical Y (left, printed Y) = BTN_NORTH (307) -> F16 (Normal attack)
 	{ BTN_EAST, Key::ENTER },
 	{ BTN_SOUTH, Key::ESCAPE },
 	{ BTN_WEST, Key::SPACE },
-	{ BTN_NORTH, Key::TAB },
+	{ BTN_NORTH, Key::F16 },
 	{ BTN_TL, Key::Q },
 	{ BTN_TR, Key::E },
 	{ BTN_TL2, Key(0x31) },
 	{ BTN_TR2, Key(0x32) },
 	{ BTN_START, Key::F10 },
-	{ BTN_SELECT, Key::ALT },
+	{ BTN_SELECT, Key::F15 },
 	{ BTN_MODE, Key::F11 },
-	{ BTN_THUMBL, Key::SHIFT },
-	{ BTN_THUMBR, Key::CTRL },
+	{ BTN_THUMBL, Key::F13 },
+	{ BTN_THUMBR, Key::F14 },
 	{ BTN_DPAD_UP, Key::UP },
 	{ BTN_DPAD_DOWN, Key::DOWN },
 	{ BTN_DPAD_LEFT, Key::LEFT },
@@ -158,13 +159,22 @@ void DisplayServerFbdev::_dispatch_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void DisplayServerFbdev::_emit_key(Key p_key, bool p_pressed) {
+void DisplayServerFbdev::_emit_key(Key p_key, bool p_pressed, bool p_echo) {
 	Ref<InputEventKey> ev;
 	ev.instantiate();
 	ev->set_keycode(p_key);
 	ev->set_physical_keycode(p_key);
 	ev->set_pressed(p_pressed);
+	ev->set_echo(p_echo);
 	_dispatch_input(ev);
+}
+
+float DisplayServerFbdev::_normalize_axis(int p_code, int p_value) const {
+	if (p_code < 0 || p_code >= 6 || axis_max[p_code] <= axis_min[p_code]) {
+		return 0.0f;
+	}
+	const float fraction = (float)(p_value - axis_min[p_code]) / (float)(axis_max[p_code] - axis_min[p_code]);
+	return CLAMP(fraction * 2.0f - 1.0f, -1.0f, 1.0f);
 }
 
 void DisplayServerFbdev::_emit_mouse_button(MouseButton p_button, bool p_pressed, const Point2i &p_position) {
@@ -189,6 +199,8 @@ void DisplayServerFbdev::_emit_mouse_motion(const Point2i &p_position) {
 }
 
 void DisplayServerFbdev::_open_input_devices() {
+	const char *handheld = getenv("ZIRCON_HANDHELD");
+	handheld_input = handheld != nullptr && strcmp(handheld, "1") == 0;
 	// Explicit nodes win, then every event node that reports keys or absolute axes.
 	const char *env = getenv("GODOT_FBDEV_INPUT");
 	if (env != nullptr && env[0] != '\0') {
@@ -224,6 +236,17 @@ void DisplayServerFbdev::_open_input_devices() {
 			print_verbose(vformat("fbdev: listening on %s.", path));
 		}
 	}
+	if (handheld_input) {
+		for (int fd : input_fds) {
+			for (int axis = ABS_X; axis <= ABS_RZ; axis++) {
+				struct input_absinfo info;
+				if (ioctl(fd, EVIOCGABS(axis), &info) == 0 && info.maximum > info.minimum) {
+					axis_min[axis] = info.minimum;
+					axis_max[axis] = info.maximum;
+				}
+			}
+		}
+	}
 	print_line(vformat("fbdev: %d input device(s).", input_fds.size()));
 	mouse_position = Point2i(window_size.width / 2, window_size.height / 2);
 }
@@ -236,6 +259,10 @@ void DisplayServerFbdev::_close_input_devices() {
 }
 
 void DisplayServerFbdev::_poll_input() {
+	// The game changes this at modal boundaries. Legacy dialogs/default HUD keep
+	// a pointer fallback; the compact HUD/quick panels receive semantic keys only.
+	const char *pointer_mode = getenv("ZIRCON_HANDHELD_POINTER");
+	pointer_input = handheld_input && pointer_mode != nullptr && strcmp(pointer_mode, "1") == 0;
 	if (input_fds.is_empty()) {
 		return;
 	}
@@ -247,7 +274,7 @@ void DisplayServerFbdev::_poll_input() {
 		fds[i].revents = 0;
 	}
 	const int ready = poll(fds, count, 0);
-	if (ready <= 0) {
+	if (ready < 0 || (ready == 0 && !handheld_input)) {
 		return;
 	}
 	for (int i = 0; i < count; i++) {
@@ -263,14 +290,41 @@ void DisplayServerFbdev::_poll_input() {
 		for (int e = 0; e < total; e++) {
 			const struct input_event &ev = events[e];
 			if (ev.type == EV_KEY) {
-				bool handled = false;
+				// Use the mode at press time for the matching release, even if the
+				// press changes the current screen or opens a dialog.
+				if (handheld_input && ev.code == BTN_EAST) {
+					const bool pressed = ev.value != 0;
+					if (pressed != confirm_pressed) {
+						confirm_pressed = pressed;
+						if (pressed) {
+							confirm_pointer = pointer_input;
+						}
+						if (confirm_pointer) {
+							_emit_mouse_button(MouseButton::LEFT, pressed, mouse_position);
+						} else {
+							_emit_key(Key::ENTER, pressed);
+						}
+					}
+					continue;
+				}
 				for (int k = 0; k < key_map_size; k++) {
 					if (key_map[k].code != (int)ev.code) {
 						continue;
 					}
-					_emit_key(key_map[k].key, ev.value != 0);
-					handled = true;
+					Key mapped = key_map[k].key;
+					if (!handheld_input) {
+						if (ev.code == BTN_NORTH) mapped = Key::TAB;
+						if (ev.code == BTN_SELECT) mapped = Key::ALT;
+						if (ev.code == BTN_THUMBL) mapped = Key::SHIFT;
+						if (ev.code == BTN_THUMBR) mapped = Key::CTRL;
+					}
+					_emit_key(mapped, ev.value != 0, handheld_input && ev.value == 2);
 					break;
+				}
+				// In Zircon handheld mode face buttons are semantic keyboard actions;
+				// do not also synthesize mouse clicks, otherwise A/B execute two paths.
+				if (handheld_input) {
+					continue;
 				}
 				// Physical A (BTN_EAST / 305): Left click (Confirm / Select / Attack)
 				if ((int)ev.code == BTN_EAST) {
@@ -288,20 +342,29 @@ void DisplayServerFbdev::_poll_input() {
 						_emit_mouse_button(MouseButton::RIGHT, pressed, mouse_position);
 					}
 				}
-				(void)handled;
 			} else if (ev.type == EV_ABS) {
 				if (ev.code == ABS_X) {
-					left_stick_x = (int)ev.value;
-					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_X, (float)ev.value / 32767.0f);
+					left_stick_x = ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_X, handheld_input ? _normalize_axis(ABS_X, ev.value) : ev.value / 32767.0f);
 				} else if (ev.code == ABS_Y) {
-					left_stick_y = (int)ev.value;
-					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_Y, (float)ev.value / 32767.0f);
+					left_stick_y = ev.value;
+					Input::get_singleton()->joy_axis(0, JoyAxis::LEFT_Y, handheld_input ? _normalize_axis(ABS_Y, ev.value) : ev.value / 32767.0f);
 				} else if (ev.code == ABS_RX) {
-					right_stick_x = (int)ev.value;
-					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_X, (float)ev.value / 32767.0f);
+					right_stick_x = handheld_input ? _normalize_axis(ABS_RX, ev.value) : ev.value / 32767.0f;
+					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_X, right_stick_x);
 				} else if (ev.code == ABS_RY) {
-					right_stick_y = (int)ev.value;
-					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_Y, (float)ev.value / 32767.0f);
+					right_stick_y = handheld_input ? _normalize_axis(ABS_RY, ev.value) : ev.value / 32767.0f;
+					Input::get_singleton()->joy_axis(0, JoyAxis::RIGHT_Y, right_stick_y);
+				} else if (handheld_input && (ev.code == ABS_Z || ev.code == ABS_RZ)) {
+					const int axis = ev.code;
+					const float fraction = (float)(ev.value - axis_min[axis]) / MAX(1, axis_max[axis] - axis_min[axis]);
+					bool &down = axis == ABS_Z ? left_trigger_pressed : right_trigger_pressed;
+					const bool pressed = fraction > (down ? 0.35f : 0.60f);
+					if (pressed != down) {
+						down = pressed;
+						// linux/input.h defines KEY_1/KEY_2 as evdev macros, not Godot keycodes.
+						_emit_key(Key(axis == ABS_Z ? '1' : '2'), pressed);
+					}
 				} else if (ev.code == ABS_HAT0X) {
 					const int val = (int)ev.value;
 					if (val != dpad_x) {
@@ -323,6 +386,23 @@ void DisplayServerFbdev::_poll_input() {
 				}
 			}
 		}
+	}
+	// Desktop/fallback mode uses the left stick as a virtual mouse. Zircon's
+	// handheld layer uses both sticks semantically and must not receive cursor
+	// motion or CombatController mouse hover events from the same stick.
+	if (handheld_input && !pointer_input) {
+		return;
+	}
+	if (pointer_input) {
+		const float x = right_stick_x;
+		const float y = right_stick_y;
+		if (std::abs(x) > 0.25f || std::abs(y) > 0.25f) {
+			Point2i next = mouse_position + Point2i((int)(x * 10), (int)(y * 10));
+			next.x = CLAMP(next.x, 0, window_size.width - 1);
+			next.y = CLAMP(next.y, 0, window_size.height - 1);
+			_emit_mouse_motion(next);
+		}
+		return;
 	}
 	// Update virtual mouse cursor smoothly from Left Stick (-32767..32767, deadzone 4000)
 	if (abs(left_stick_x) > 4000 || abs(left_stick_y) > 4000) {

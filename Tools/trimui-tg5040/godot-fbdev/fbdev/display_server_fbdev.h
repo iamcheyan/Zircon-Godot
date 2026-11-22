@@ -32,12 +32,21 @@ class DisplayServerFbdev : public DisplayServer {
 
 	// Input state.
 	Vector<int> input_fds;
+	bool handheld_input = false;
+	bool pointer_input = false;
+	bool confirm_pressed = false;
+	bool confirm_pointer = false;
+	bool left_trigger_pressed = false;
+	bool right_trigger_pressed = false;
+	// Linux input_absinfo {value, minimum, maximum, fuzz, flat, resolution}.
+	int axis_min[6] = { -32768, -32768, 0, -32768, -32768, 0 };
+	int axis_max[6] = { 32767, 32767, 255, 32767, 32767, 255 };
 	Point2i mouse_position;
 	bool mouse_button_pressed[8] = { false };
 	int left_stick_x = 0;
 	int left_stick_y = 0;
-	int right_stick_x = 0;
-	int right_stick_y = 0;
+	float right_stick_x = 0.0f;
+	float right_stick_y = 0.0f;
 	int dpad_x = 0;
 	int dpad_y = 0;
 
@@ -52,7 +61,8 @@ class DisplayServerFbdev : public DisplayServer {
 	void _close_input_devices();
 	void _poll_input();
 	void _dispatch_input(const Ref<InputEvent> &p_event);
-	void _emit_key(Key p_key, bool p_pressed);
+	void _emit_key(Key p_key, bool p_pressed, bool p_echo = false);
+	float _normalize_axis(int p_code, int p_value) const;
 	void _emit_mouse_button(MouseButton p_button, bool p_pressed, const Point2i &p_position);
 	void _emit_mouse_motion(const Point2i &p_position);
 

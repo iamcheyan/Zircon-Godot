@@ -140,6 +140,8 @@ public partial class GameScene : Control
     private readonly System.Collections.Generic.Dictionary<int, ClientBuffInfo> _buffs = new();
     private MagicBar _magicBar;
     private MagicDialog _magicDialog;
+    private HandheldHud _handheldHud;
+    private bool _handheldHudMode;
     private Stats _playerStats = new Stats();
     private int _playerLevel;
     public int PlayerLevel => _playerLevel;
@@ -147,6 +149,16 @@ public partial class GameScene : Control
     private int _currentHP, _currentMP, _currentFP;
     public int CurrentHealth => _currentHP;
     public int CurrentMana => _currentMP;
+    public int CurrentFocus => _currentFP;
+    public string HandheldTargetText
+    {
+        get
+        {
+            var target = _handheldFocusObject ?? _combatController?.TargetObject;
+            return target == null ? string.Empty : $"TARGET  {target.DisplayName ?? target.Name}";
+        }
+    }
+    public bool HandheldHudMode => _handheldHudMode;
     public decimal PlayerExperience => _playerExperience;
     public decimal PlayerMaxExperience => _playerMaxExperience;
 
@@ -455,15 +467,51 @@ public partial class GameScene : Control
     public void ToggleHudVisibility()
     {
         _hudHidden = !_hudHidden;
-        if (_mainPanel != null) _mainPanel.Visible = !_hudHidden;
-        if (_chatLog != null) _chatLog.Visible = !_hudHidden && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
-        if (_chatTextBox != null) _chatTextBox.Visible = !_hudHidden && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
-        if (_miniMap != null) _miniMap.Visible = !_hudHidden;
-        if (_beltDialog != null) _beltDialog.Visible = !_hudHidden;
-        if (_buffDialog != null) _buffDialog.Visible = !_hudHidden;
-        if (_questTracker != null) _questTracker.Visible = !_hudHidden && ClientSettings.QuestTrackerVisible;
-        if (_statusLabel != null) _statusLabel.Visible = !_hudHidden && ClientSettings.DebugLabel;
+        ApplyHudVisibility();
         GD.Print($"[Game] HUD 界面: {(_hudHidden ? "已隐藏" : "已恢复显示")}");
+    }
+
+    /// <summary>
+    /// 掌机专用的两套界面切换：不改变桌面端 F10 语义，也不修改玩家的
+    /// 常规 HUD 设置。默认模式保留现有 Zircon HUD；掌机模式隐藏底部大面板、
+    /// 聊天条、技能条和腰带，只保留小地图与紧凑状态栏。
+    /// </summary>
+    public void ToggleHandheldHudMode()
+    {
+        if (!AutoLoginArgs.Handheld) return;
+        SetHandheldHudMode(!_handheldHudMode);
+    }
+
+    private void SetHandheldHudMode(bool enabled)
+    {
+        if (!AutoLoginArgs.Handheld) return;
+        _handheldHudMode = enabled;
+        _hudHidden = false;
+        if (enabled)
+        {
+            // Start 是模式键，不应把已有窗口留在两个 HUD 之上；返回默认 HUD
+            // 后用户可以用原有键位再次打开它们。
+            while (WindowManager.CloseTop()) { }
+        }
+        ApplyHudVisibility();
+        _handheldHud?.ShowToast(enabled ? "掌机界面" : "默认界面");
+        GD.Print($"[HandheldHud] mode={(enabled ? "handheld" : "default")}");
+    }
+
+    private void ApplyHudVisibility()
+    {
+        bool normal = !_hudHidden && !_handheldHudMode;
+        bool visible = !_hudHidden;
+        if (_mainPanel != null) _mainPanel.Visible = normal;
+        if (_chatLog != null) _chatLog.Visible = normal && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_chatTextBox != null) _chatTextBox.Visible = normal && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_miniMap != null) _miniMap.Visible = visible;
+        if (_beltDialog != null) _beltDialog.Visible = normal;
+        if (_buffDialog != null) _buffDialog.Visible = normal;
+        if (_questTracker != null) _questTracker.Visible = normal && ClientSettings.QuestTrackerVisible;
+        if (_magicBar != null) _magicBar.Visible = normal && !AutoLoginArgs.LegacyHud;
+        if (_handheldHud != null) _handheldHud.Visible = visible && _handheldHudMode;
+        if (_statusLabel != null) _statusLabel.Visible = normal && ClientSettings.DebugLabel;
     }
 
     public void SetDrawWeather(bool enabled)
@@ -478,8 +526,7 @@ public partial class GameScene : Control
     {
         ClientSettings.HideChatBar = hidden;
         ClientSettings.Save();
-        if (_chatLog != null) _chatLog.Visible = AutoLoginArgs.LegacyUi || !hidden;
-        if (_chatTextBox != null) _chatTextBox.Visible = !hidden && !AutoLoginArgs.LegacyUi;
+        ApplyHudVisibility();
     }
 
     public void OpenChatOptionsDialog()
@@ -2205,7 +2252,8 @@ public partial class GameScene : Control
                 else OpenBigMap();
                 break;
             case KeyBindAction.QuestTrackerWindow:
-                _questTracker.Visible = !_questTracker.Visible;
+                if (!_handheldHudMode && _questTracker != null)
+                    _questTracker.Visible = !_questTracker.Visible;
                 break;
             case KeyBindAction.ChangeAttackMode:
                 CycleAttackMode();
@@ -2249,7 +2297,7 @@ public partial class GameScene : Control
                 }
                 break;
             case KeyBindAction.MagicBarWindow:
-                if (_magicBar != null) _magicBar.Visible = !_magicBar.Visible;
+                if (!_handheldHudMode && _magicBar != null) _magicBar.Visible = !_magicBar.Visible;
                 break;
             case KeyBindAction.DungeonFinderWindow:
                 if (DungeonEnabled) WindowManager.Toggle(_dungeonFinderDialog, _uiLayer);
@@ -4726,13 +4774,20 @@ public partial class GameScene : Control
         // 的初始化写点 0x42711D 写的是 0（`xor ebx,ebx` 后 `mov [esi+0x6208],ebx`），
         // 只由 cap2（0x42C241）/ B 键（0x42CE29）翻转。故 legacy 下默认隐藏，
         // 由 cap2 / B 显示；现代模式保持原行为。
-        _magicBar.Visible = !AutoLoginArgs.LegacyHud;
+        _magicBar.Visible = !AutoLoginArgs.LegacyHud && !AutoLoginArgs.Handheld;
         // MagicBar 在 _Draw 内按绑定行数改 Size (1 行 46 -> 2 行 97);
         // 尺寸变化后必须重新锚定, 否则 2 行底边会压进主面板顶缘。
         _magicBar.Resized += OnMagicBarResized;
 
         _magicDialog = new MagicDialog();
         _uiLayer.AddChild(_magicDialog);
+
+        if (AutoLoginArgs.Handheld)
+        {
+            _handheldHud = new HandheldHud(this);
+            _uiLayer.AddChild(_handheldHud);
+            _handheldHud.Visible = false;
+        }
 
         _menuDialog = new MenuDialog();
         _menuDialog.Location = new Vector2I(40, 80);
@@ -4926,7 +4981,7 @@ public partial class GameScene : Control
             // 不再打开技能书（技能书是 cap8 / F100-101 的语义，此前 cap2 与之重复）。
             if (AutoLoginArgs.LegacyHud)
             {
-                if (_magicBar != null) _magicBar.Visible = !_magicBar.Visible;
+                if (!_handheldHudMode && _magicBar != null) _magicBar.Visible = !_magicBar.Visible;
                 return;
             }
             WindowManager.Toggle(_magicDialog, _uiLayer);
@@ -4934,7 +4989,7 @@ public partial class GameScene : Control
         };
         _mainPanel.MiniMapButton.MouseClick += (o, e) =>
         {
-            if (_miniMap != null) _miniMap.Visible = !_miniMap.Visible;
+            if (!_handheldHudMode && _miniMap != null) _miniMap.Visible = !_miniMap.Visible;
         };
         _mainPanel.ExitButton.MouseClick += (o, e) => OpenExitGameDialog();
         _mainPanel.PartyButton.MouseClick += (o, e) => OpenGroupDialog();
@@ -11716,6 +11771,18 @@ public partial class GameScene : Control
             return;
         }
 
+        // 掌机 START/F10 是本地界面模式键，不依赖网络连接；这样连接断开
+        // 或单机诊断阶段也能切换两套 HUD。
+        if (key.Keycode == Key.F10 && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
+        {
+            if (AutoLoginArgs.Handheld)
+                ToggleHandheldHudMode();
+            else
+                ToggleHudVisibility();
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+
         if (_net?.Connection?.Connected != true) return;
 
         // 原版 PageUp / PageDown 翻页聊天记录（ClMain.pas VK_PRIOR / VK_NEXT）
@@ -11849,13 +11916,7 @@ public partial class GameScene : Control
             return;
         }
 
-        // 掌机快捷键：START 键隐藏/显示整个 HUD 游戏界面
-        if (key.Keycode == Key.F10 && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)
-        {
-            ToggleHudVisibility();
-            GetViewport()?.SetInputAsHandled();
-            return;
-        }
+        // 掌机 START/F10 已在网络门控之前处理；桌面端保持原有 F10 HUD 显隐。
 
         // 掌机快捷键：MENU 键打开/关闭设置窗口
         if ((key.Keycode == Key.F11 || key.Keycode == Key.Menu) && !key.CtrlPressed && !key.AltPressed && !key.ShiftPressed)

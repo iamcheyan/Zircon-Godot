@@ -27,8 +27,8 @@ public static class DevSinglePlayer
     public const int DevLevel = 255;
 
     /// <summary>
-    /// 在 PlayerObject 构造完成（SetupMagic 之后）调用。幂等：
-    /// 已注入过的角色（Level >= DevLevel 且标记技能）直接跳过。
+    /// 在 PlayerObject 构造完成（SetupMagic 之后）调用。逐项补齐等级、
+    /// 技能与物品；等级已满不代表初始化完成，失败后再次登录可安全重试。
     /// </summary>
     public static void Apply(PlayerObject player)
     {
@@ -49,44 +49,33 @@ public static class DevSinglePlayer
 
     private static void ApplyCore(PlayerObject player)
     {
-        bool already = player.Level >= DevLevel;
-        if (already)
+        SEnvir.Log($"[SingleDev] 检查测试数据: {player.Name}, 等级 {player.Level}, " +
+            $"技能 {player.Character.Magics.Count}, 物品 {player.Character.Items.Count}");
+
+        // 等级与剩余数据分别补齐；旧版本可能已保存 255 级但在创建技能时中断。
+        bool levelChanged = player.Level < DevLevel;
+        if (levelChanged)
         {
-            SEnvir.Log($"[SingleDev] {TargetEmail} 已注入满级数据，跳过");
-            EnsureVisibleExperience(player);
-            return;
+            player.Level = DevLevel;
+            player.Experience = 0;
         }
 
-        SEnvir.Log($"[SingleDev] 注入满级数据到 {TargetEmail} ...");
-
-        // ---- 1. 等级：拉满（走 Level 属性 + RefreshStats，避免重复升级广播）----
-        player.Level = DevLevel;
-        player.Experience = 0;
-        player.RefreshStats();
-        player.SetHP(player.Stats[Stat.Health]);
-        player.SetMP(player.Stats[Stat.Mana]);
-        player.SetFP(player.CurrentFP);
-
-        // ---- 2. 全技能：把职业可学的魔法全部学会并拉满等级 ----
-        foreach (MagicInfo magic in SEnvir.MagicInfoList.Binding)
+        // 该开发测试账号保留原有“跨职业全技能”口径，便于 UI 测试；
+        // 关闭的修炼系统除外。不改已有快捷键、不重复创建持久化/运行时技能。
+        int learned = EnsureMagics(player);
+        if (levelChanged || learned > 0)
         {
-            if (magic.School == MagicSchool.None) continue;
-
-            UserMagic userMagic = player.Character.Magics.FirstOrDefault(x => x.Info == magic);
-            if (userMagic == null)
-            {
-                userMagic = new UserMagic { Info = magic, Character = player.Character };
-                player.Character.Magics.Add(userMagic);
-                player.SetupMagic(userMagic);
-            }
-
-            if (userMagic.Level < Globals.MagicMaxLevel)
-                userMagic.Level = Globals.MagicMaxLevel;
-            userMagic.Experience = 0;
+            player.RefreshStats();
+            player.SetHP(player.Stats[Stat.Health]);
+            player.SetMP(player.Stats[Stat.Mana]);
+            player.SetFP(player.CurrentFP);
         }
 
-        // ---- 3. 装备：把数据库里的可穿戴物品全部塞进背包（GainItem 自动发
-        // S.ItemsGained 通知客户端，无需手动发包）----
+        // 每个目标定义只补一件：先看背包、已穿戴和账号仓库，避免重新登录
+        // 或初始化中途重试时重复刷物品。保留原有测试物品范围与绑定标记。
+        var owned = player.Character.Items.Concat(player.Character.Account.Items)
+            .Where(item => item?.Info != null && item.Count > 0)
+            .Select(item => item.Info.Index).ToHashSet();
         int given = 0;
         foreach (ItemInfo info in SEnvir.ItemInfoList.Binding)
         {
@@ -95,20 +84,59 @@ public static class DevSinglePlayer
             if (info.ItemType is ItemType.System or ItemType.Currency or ItemType.Bundle
                 or ItemType.LootBox or ItemType.ItemPart or ItemType.Emblem) continue;
 
+            if (owned.Contains(info.Index)) continue;
             UserItem item = SEnvir.CreateFreshItem(new ItemCheck(info, 1, UserItemFlags.Bound, TimeSpan.Zero));
             if (item == null) continue;
 
             player.GainItem(item);
-            given++;
+            // GainItem can reject/consume an item. Only report a granted item
+            // when the character really owns it; do not log a false completion.
+            if (player.Character.Items.Any(x => x?.Info == info && x.Count > 0))
+            {
+                owned.Add(info.Index);
+                given++;
+            }
         }
 
         // ---- 4. 货币：金币给足，方便测试商店 ----
         var gold = player.Character.Account.Currencies?.FirstOrDefault(x => x.Info.Type == CurrencyType.Gold);
-        if (gold != null) gold.Amount = 100_000_000;
+        if (gold != null && gold.Amount < 100_000_000) gold.Amount = 100_000_000;
 
         player.RefreshWeight();
-        SEnvir.Log($"[SingleDev] 注入完成: 等级 {player.Level}, 装备/物品 {given} 件, 魔法 {player.Character.Magics.Count} 个");
+        SEnvir.Log($"[SingleDev] 补齐完成: {player.Name}, 等级 {player.Level}, " +
+            $"新增物品 {given} 件, 新增技能 {learned} 个, " +
+            $"物品合计 {player.Character.Items.Count}, 技能合计 {player.Character.Magics.Count}");
         EnsureVisibleExperience(player);
+    }
+
+    /// <summary>
+    /// Uses the same MirDB factory/association path as @giveSkills. A naked new
+    /// UserMagic has no Collection.Session and throws in the first setter.
+    /// Kept separate so persistence and retry behavior can be checked in isolation.
+    /// </summary>
+    internal static int EnsureMagics(PlayerObject player)
+    {
+        int learned = 0;
+        foreach (MagicInfo magic in SEnvir.MagicInfoList.Binding)
+        {
+            if (magic.School == MagicSchool.None ||
+                (!Config.EnableDiscipline && magic.School == MagicSchool.Discipline)) continue;
+
+            UserMagic userMagic = player.Character.Magics.FirstOrDefault(x => x?.Info == magic);
+            if (userMagic == null)
+            {
+                userMagic = SEnvir.UserMagicList.CreateNewObject();
+                userMagic.Character = player.Character; // association adds to Character.Magics
+                userMagic.Info = magic;
+                learned++;
+            }
+            if (userMagic.Level < Globals.MagicMaxLevel)
+                userMagic.Level = Globals.MagicMaxLevel;
+            // Do not reset existing experience or player-defined shortcut keys.
+            if (!player.MagicObjects.ContainsKey(magic.Magic))
+                player.SetupMagic(userMagic);
+        }
+        return learned;
     }
 
     /// <summary>

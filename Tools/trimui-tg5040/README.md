@@ -142,6 +142,8 @@ Tools/trimui-tg5040/deploy.sh
 
 [技能快选实机截图](evidence/tg5040-skills.png)：在掌机 HUD 中用 evdev 测试手柄触发十字键上，显示九个技能、选中框和详情。面板完整上屏；640×360 内部渲染下的小字仍偏难读。本次未验证释放技能。
 
+[腰带快选实机截图](evidence/tg5040-belt.png)：按 B 退出技能快选，再用 evdev 测试手柄触发十字键下，显示十格腰带及选中框。面板完整上屏，小字辨识度仍有限；本次未验证道具消耗。
+
 ### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见

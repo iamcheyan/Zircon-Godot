@@ -44,6 +44,46 @@ PocketShell 卡片（Zircon，coverPath=/storage/Apps/zircon.png）
 退出客户端 → launch.sh 停服务端 → MainUI 重新拉起启动器
 ```
 
+## 掌机操作（TrimUI Smart Pro / TG5040）
+
+客户端启动时由 `launch.sh` 设置 `ZIRCON_HANDHELD=1`。掌机 HUD 中，A/B 不再同时产生
+按键和鼠标事件；默认 HUD 与传统对话框保留右摇杆移指针、A 单独点击、B 返回。
+Start 在两套 HUD 之间切换：默认 HUD 保留原有布局，掌机 HUD 隐藏底部大面板、
+技能条、腰带和聊天栏，保留小地图与紧凑 HP/MP/Focus/目标状态栏。
+
+下表是掌机 HUD 中的操作；传统对话框打开时，战斗和快选按键不会透传。
+
+| 实体按键 | 游戏中动作 |
+|---|---|
+| 左摇杆 | 八方向移动；短推走，持续推动后跑 |
+| 右摇杆 | 选择附近 NPC/怪物/掉落物目标；打开选择器时移动高亮 |
+| 十字键上 | 打开技能选择器 |
+| 十字键下 | 打开腰带选择器 |
+| 十字键左/右 | 循环选择附近目标 |
+| A | 确认/交互；确认当前目标操作 |
+| B | 返回/取消并清除目标焦点 |
+| X | 拾取当前附近掉落物 |
+| Y | 对当前目标普通攻击 |
+| L1/R1 | 选择器中上一个/下一个；游戏中切换技能栏组 |
+| L2/R2 | 直接使用腰带第 1/第 2 格 |
+| Start | 默认 HUD / 掌机 HUD 切换 |
+| Select | 短按切换大地图，长按切换地面掉落物名称 |
+| Mode | 打开设置 |
+| L3 | 自动跑步开关 |
+| R3 | 锁定/解除当前目标 |
+
+fbdev 内部将 Select/L3/R3/Y 分别转成 `F15/F13/F14/F16`，避免与桌面
+`Alt/Shift/Ctrl/Tab` 语义冲突；这些内部键只在 `AutoLoginArgs.Handheld` 下消费。
+
+技能选择器和腰带选择器均为中央面板：右摇杆、方向键或 L1/R1 逐项选择，A 确认，B 关闭。
+技能选择器直接使用已学技能，不要求绑定桌面 F1–F12；被动技能仅供查看。腰带面板显示
+服务端的全部十个链接，不受默认 HUD 六格布局限制，并复用现有物品使用及冷却校验。
+全屏 Menu 是另一个功能，见 [设计与网页原型](design/zircon-handheld-menu-spec.md)，尚未接入游戏。
+
+桌面端默认行为不变；上述按键和 HUD 分支由 `AutoLoginArgs.Handheld` /
+`ZIRCON_HANDHELD` 门控。实现位于 `GodotClient/Scripts/GameScene.Handheld.cs`
+和 `GodotClient/Controls/HandheldQuickSelect.cs`。
+
 账号与角色：首次运行会在卡上的 `Debug/ServerCore/Database/Users.db` 里自动创建
 `test@test.com`，并按 `--char TestHero` 自动建角（战士男），之后直接进游戏。
 
@@ -77,15 +117,21 @@ Tools/trimui-tg5040/deploy.sh
 
 ## 部署与回滚
 
-```bash
-ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh              # 推包 + 推卡 + 重启运行时
-ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh --skip-package
-```
+`deploy.sh` 接收已组装的包，不负责构建。它会备份 `boot.pocket` 与 `trimui/app/MainUI`，
+但不会自动保全 `Users.db`。覆盖程序前应退出游戏并单独备份 `Users.db` 和 `System.db`，
+不要把干净包中的数据库推到已有存档上。使用 `ADB_SERIAL` 明确指定设备，并在同一设备锁内操作。
 
-`deploy.sh` 会先备份 `boot.pocket` 与 `trimui/app/MainUI`（`*.bak-<时间戳>`）。
-supervisor 脚本改动需要重启掌机才生效（脚本正在被 sh 逐行读取）。
+暂勿对现有卡直接运行 `godot-fbdev/rebuild-client.sh`：旧版本可能忽略导出失败并推送旧产物，
+且会强制结束服务端。应先分开完成构建、核对本次 ARM64 客户端和配套 .NET 目录，
+再部署程序文件。supervisor 脚本改动需要重启掌机才会生效。
 
-## 已验证（设备实测，2026-11-22）
+## 验证记录
+
+- 本机 Godot Mono/X11 接隔离服务端和存档副本：完成 TestHero 登录、地图绘制；测试账号补齐到 61 个技能、431 件物品。
+- 显式开启掌机模式：键盘模拟 F10/方向键验证 HUD 双向切换、技能/腰带面板；确认释放未绑定的火球术并收到服务端 `ObjectMagic`。
+- fbdev 输入源文件已用 Zig 编译为 AArch64 目标文件；未重新导出或部署整包，实体摇杆、扳机、对话框指针与新包上屏仍待实机验证。
+
+### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见
 `.artifacts/trimui-tg5040/evidence/`：
@@ -105,11 +151,10 @@ Starting Zircon at …
 
 ## 未完成 / 已知限制
 
-1. **画面**：Godot 4.6 的 Linux 模板只有 x11 / wayland / headless 显示驱动，这台
-   掌机（TinaLinux 4.9，无 X11/Wayland，只有 `/dev/fb0` + Mali EGL）没有可用后端，
-   所以客户端目前以 `headless` 运行：登录、建角、进图、网络协议都在设备上真实执行，
-   但没有画面。要在掌机屏幕上看到游戏，需要给 Godot 增加 fbdev/KMS 显示后端
-   （自编译引擎），这是后续适配工作的第一步。
+1. **性能**：fbdev 后端已能在掌机屏幕上显示完整游戏画面；当前内部渲染为
+   640×360、2×上采样到 1280×720，实测约 8–11 FPS。瓶颈主要是 EGL pbuffer
+   的 `glReadPixels` 回读，后续可评估 PBO 双缓冲或 DMA-BUF 路径；默认音频仍为
+   `Dummy`，因为设备 ALSA 回报的 period/buffer 参数会阻塞渲染循环。
 2. **启动器封面的人工点击**：卡片、封面、`LAUNCH zircon` 路由都已就位，并已用
    运行时 `LAUNCH` 分支实际执行的同一条命令（`pocketjs-native-launch zircon`）
    验证了完整交接；本机自动化按键注入没能驱动该 PocketJS 构建（自建 uinput 手柄

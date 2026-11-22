@@ -51,9 +51,12 @@
   `bun Tools/trimui-tg5040/launcher/repack-launcher.ts`（给现有 boot.pocket 加卡，
   identity/plan/pak/profile hash 逐字节不变）。
 - 部署：`ADB_SERIAL=<serial> Tools/trimui-tg5040/deploy.sh`（自动备份 boot.pocket 与 MainUI）。
-- **已知限制**：Godot 4.6 Linux 模板没有 fbdev/KMS 显示后端，掌机无 X11/Wayland，
-  客户端目前 `headless` 跑通登录→建角→进图，但没有画面；要上屏需给 Godot 加
-  fbdev 后端（自编译引擎）。该设备的 `/dev/fb0` 抓帧只返回一页旧帧，不能作为视觉判据。
+- **掌机显示后端**：已通过自编译 Godot 4.6.3 `fbdev` DisplayServer 上屏；设备运行
+  `--display-driver fbdev --rendering-driver opengl3_es`，内部 640×360、物理 1280×720。
+  EGL pbuffer 离屏渲染后回读写 `/dev/fb0`，默认 `ZIRCON_FBDEV_RENDER_SCALE=2`。
+- **掌机界面**：`ZIRCON_HANDHELD=1` 启用掌机输入层；Start/F10 在默认 HUD 与紧凑掌机
+  HUD 间切换。方向键上/下打开技能/腰带选择器，左摇杆移动、右摇杆选目标；桌面端
+  不进入这些分支。
 
 ## 测试账号
 

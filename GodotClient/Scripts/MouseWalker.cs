@@ -90,7 +90,7 @@ public partial class MouseWalker : Node2D
 
     public override void _Process(double delta)
     {
-        if (!Enabled || _mapView?.Map == null) return;
+        if (!Enabled || _mapView?.Map == null || AutoLoginArgs.Handheld) return;
 
         // 父节点 (GameScene) 是 Control 且 Scale=WorldScale; 鼠标全局位置已是 GameScene 局部像素。
         // 转回世界坐标: 除以 WorldScale。

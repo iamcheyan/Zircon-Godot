@@ -141,7 +141,9 @@ public partial class GameScene : Control
     private MagicBar _magicBar;
     private MagicDialog _magicDialog;
     private HandheldHud _handheldHud;
+    private HandheldQuickSelect _handheldQuickSelect;
     private bool _handheldHudMode;
+    private readonly Dictionary<Control, bool> _defaultHudVisibility = new();
     private Stats _playerStats = new Stats();
     private int _playerLevel;
     public int PlayerLevel => _playerLevel;
@@ -155,7 +157,8 @@ public partial class GameScene : Control
         get
         {
             var target = _handheldFocusObject ?? _combatController?.TargetObject;
-            return target == null ? string.Empty : $"TARGET  {target.DisplayName ?? target.Name}";
+            return target == null || !IsInstanceValid(target) ? string.Empty
+                : $"{(_handheldTargetLocked ? "锁定" : "目标")}  {target.DisplayName ?? target.Name}";
         }
     }
     public bool HandheldHudMode => _handheldHudMode;
@@ -485,15 +488,21 @@ public partial class GameScene : Control
     private void SetHandheldHudMode(bool enabled)
     {
         if (!AutoLoginArgs.Handheld) return;
-        _handheldHudMode = enabled;
-        _hudHidden = false;
+        if (enabled == _handheldHudMode) return;
         if (enabled)
         {
-            // Start 是模式键，不应把已有窗口留在两个 HUD 之上；返回默认 HUD
-            // 后用户可以用原有键位再次打开它们。
-            while (WindowManager.CloseTop()) { }
+            _defaultHudVisibility.Clear();
+            foreach (var control in new Control[] { _mainPanel, _chatLog, _chatTextBox,
+                _beltDialog, _questTracker, _magicBar, _statusLabel })
+                if (control != null) _defaultHudVisibility[control] = control.Visible;
         }
+        _handheldHudMode = enabled;
+        _hudHidden = false;
+        _handheldQuickSelect?.Close();
+        StopHandheldMovement();
+        ClearHandheldFocus();
         ApplyHudVisibility();
+        UpdateHandheldPointerMode();
         _handheldHud?.ShowToast(enabled ? "掌机界面" : "默认界面");
         GD.Print($"[HandheldHud] mode={(enabled ? "handheld" : "default")}");
     }
@@ -502,16 +511,20 @@ public partial class GameScene : Control
     {
         bool normal = !_hudHidden && !_handheldHudMode;
         bool visible = !_hudHidden;
-        if (_mainPanel != null) _mainPanel.Visible = normal;
-        if (_chatLog != null) _chatLog.Visible = normal && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
-        if (_chatTextBox != null) _chatTextBox.Visible = normal && (AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        bool Saved(Control control, bool fallback) => control != null
+            && (_defaultHudVisibility.TryGetValue(control, out bool saved) ? saved : fallback);
+        if (_mainPanel != null) _mainPanel.Visible = normal && Saved(_mainPanel, true);
+        if (_chatLog != null) _chatLog.Visible = normal && Saved(_chatLog, AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_chatTextBox != null) _chatTextBox.Visible = normal && Saved(_chatTextBox, AutoLoginArgs.LegacyUi || !ClientSettings.HideChatBar);
+        if (_beltDialog != null) _beltDialog.Visible = normal && Saved(_beltDialog, true);
+        if (_questTracker != null) _questTracker.Visible = normal && Saved(_questTracker, ClientSettings.QuestTrackerVisible);
+        if (_magicBar != null) _magicBar.Visible = normal && Saved(_magicBar, !AutoLoginArgs.LegacyHud);
         if (_miniMap != null) _miniMap.Visible = visible;
-        if (_beltDialog != null) _beltDialog.Visible = normal;
-        if (_buffDialog != null) _buffDialog.Visible = normal;
-        if (_questTracker != null) _questTracker.Visible = normal && ClientSettings.QuestTrackerVisible;
-        if (_magicBar != null) _magicBar.Visible = normal && !AutoLoginArgs.LegacyHud;
+        if (_buffDialog != null)
+            _buffDialog.Visible = AutoLoginArgs.Handheld ? visible && _buffs.Count > 0 : normal;
         if (_handheldHud != null) _handheldHud.Visible = visible && _handheldHudMode;
-        if (_statusLabel != null) _statusLabel.Visible = normal && ClientSettings.DebugLabel;
+        if (_statusLabel != null) _statusLabel.Visible = normal && Saved(_statusLabel, ClientSettings.DebugLabel);
+        if (!_handheldHudMode) _defaultHudVisibility.Clear();
     }
 
     public void SetDrawWeather(bool enabled)
@@ -526,6 +539,12 @@ public partial class GameScene : Control
     {
         ClientSettings.HideChatBar = hidden;
         ClientSettings.Save();
+        if (_handheldHudMode)
+        {
+            if (_chatLog != null) _defaultHudVisibility[_chatLog] = AutoLoginArgs.LegacyUi || !hidden;
+            if (_chatTextBox != null) _defaultHudVisibility[_chatTextBox] = AutoLoginArgs.LegacyUi || !hidden;
+            return;
+        }
         ApplyHudVisibility();
     }
 
@@ -1297,7 +1316,7 @@ public partial class GameScene : Control
         AddChild(_combatController);
         _combatController.ZIndex = 200;  // 高亮框画在物体之上
         UpdateViewRange();
-        InitHandheldSystem();
+        if (AutoLoginArgs.Handheld) InitHandheldSystem();
 
         _player = new PlayerRenderer();
         // 本地玩家和其他对象一样按脚底所在行排序，允许同一行的前景树木
@@ -1830,6 +1849,11 @@ public partial class GameScene : Control
 
     public override void _ExitTree()
     {
+        if (AutoLoginArgs.Handheld)
+        {
+            OS.SetEnvironment("ZIRCON_HANDHELD_POINTER", "0");
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+        }
         if (_net?.Connection != null)
         {
             foreach (var unsubscribe in _trackedEventUnsubscribers)
@@ -4774,7 +4798,7 @@ public partial class GameScene : Control
         // 的初始化写点 0x42711D 写的是 0（`xor ebx,ebx` 后 `mov [esi+0x6208],ebx`），
         // 只由 cap2（0x42C241）/ B 键（0x42CE29）翻转。故 legacy 下默认隐藏，
         // 由 cap2 / B 显示；现代模式保持原行为。
-        _magicBar.Visible = !AutoLoginArgs.LegacyHud && !AutoLoginArgs.Handheld;
+        _magicBar.Visible = !AutoLoginArgs.LegacyHud;
         // MagicBar 在 _Draw 内按绑定行数改 Size (1 行 46 -> 2 行 97);
         // 尺寸变化后必须重新锚定, 否则 2 行底边会压进主面板顶缘。
         _magicBar.Resized += OnMagicBarResized;
@@ -4787,6 +4811,9 @@ public partial class GameScene : Control
             _handheldHud = new HandheldHud(this);
             _uiLayer.AddChild(_handheldHud);
             _handheldHud.Visible = false;
+            _handheldQuickSelect = new HandheldQuickSelect(this);
+            _uiLayer.AddChild(_handheldQuickSelect);
+            UpdateHandheldPointerMode();
         }
 
         _menuDialog = new MenuDialog();
@@ -5287,7 +5314,7 @@ public partial class GameScene : Control
                 _selectedCurrency != null,
                 WindowManager.OpenWindows.Any(window => window is ItemAmountDialog && window.Visible)))
             return false;
-        return CanPlayerTurn()
+        return !HandheldGameplayBlocked && CanPlayerTurn()
             && !_player.ElementalHurricane
             && !_playerPoison.HasFlag(PoisonType.WraithGrip)
             && _pendingMagicPacket == null
@@ -5299,6 +5326,7 @@ public partial class GameScene : Control
         // 技能开始时清除自动跑步，并要求鼠标释放后重新按下。
         // 这样技能释放完成不会继承施法前残留的移动意图。
         _autoRun = false;
+        if (AutoLoginArgs.Handheld) StopHandheldMovement();
         if (_mouseWalker != null)
         {
             _mouseWalker.AutoRun = false;
@@ -9383,7 +9411,8 @@ public partial class GameScene : Control
     }
 
     private bool IsRunInputHeld()
-        => _runningTestRightHeld || _autoRun || Input.IsMouseButtonPressed(MouseButton.Right);
+        => _runningTestRightHeld || _autoRun || Input.IsMouseButtonPressed(MouseButton.Right)
+            || (AutoLoginArgs.Handheld && (_handheldAutoRun || _handheldStickMoving));
 
     private MirDirection FindRunningTestDirection(int distance)
     {
@@ -9773,9 +9802,10 @@ public partial class GameScene : Control
                 _pendingMagicPacket = null;
             }
         }
-        TryContinueMining();
+        bool blockHandheldGameplay = HandheldGameplayBlocked;
+        if (!blockHandheldGameplay) TryContinueMining();
         ProcessPendingAutoPathMove();
-        ProcessGroundItemPickup();
+        if (!blockHandheldGameplay) ProcessGroundItemPickup();
         UpdateViewRange();
         // Remote PlayerRenderer advances movement offsets in its own _Process;
         // refresh both the rendered node and its hit proxy in the same frame.
@@ -11474,54 +11504,55 @@ public partial class GameScene : Control
         return target;
     }
 
-    // F1~F12 -> Spell01~12, Shift+F1~F12 -> Spell13~24。
-    // 键盘输入和技能栏点击共用这一条链路。
+    // Desktop keys and quick panels resolve their own selection, then share the
+    // exact same cast validation/targeting/packet path (no temporary F-key bind).
     public void UseMagicSlot(int slot)
     {
-        if (slot < 0 || slot > 23) return;
-        if (_observer || _player == null || IsMounted || _player.Dead || _player.DragonRepulsed ||
-            _playerPoison.HasFlag(PoisonType.Paralysis) || _playerPoison.HasFlag(PoisonType.Silenced))
-            return;
-        if (_net?.Connection?.Connected != true)
+        if (slot < 0 || slot > 23 || !CanRequestMagic()) return;
+        var key = (Library.SpellKey)(slot + 1);
+        var magic = UserMagics.Values.FirstOrDefault(m => m != null && (MagicBarSpellSet switch
         {
-            GD.Print("[Magic] 未释放：网络尚未连接");
-            return;
-        }
-        var key = (Library.SpellKey)(slot + 1);  // Spell01 = 1
-        ClientUserMagic magic = null;
-        foreach (var kv in UserMagics)
-        {
-            var m = kv.Value;
-            if (m == null) continue;
-            if (MagicBarSpellSet == 1 && m.Set1Key == key) magic = m;
-            else if (MagicBarSpellSet == 2 && m.Set2Key == key) magic = m;
-            else if (MagicBarSpellSet == 3 && m.Set3Key == key) magic = m;
-            else if (MagicBarSpellSet == 4 && m.Set4Key == key) magic = m;
-            if (magic != null) break;
-        }
+            1 => m.Set1Key == key, 2 => m.Set2Key == key,
+            3 => m.Set3Key == key, 4 => m.Set4Key == key, _ => false,
+        }));
         if (magic == null)
         {
             GD.Print($"[Magic] 未释放：当前 Set{MagicBarSpellSet} 没有绑定 {key}");
-            ReceiveChat($"当前快捷键未绑定技能，可按 E 打开技能书进行设置", MessageType.Hint);
+            ReceiveChat("当前快捷键未绑定技能，可按 E 打开技能书进行设置", MessageType.Hint);
             return;
         }
+        UseMagic(magic, slot);
+    }
+
+    private bool CanRequestMagic()
+    {
+        if (_observer || _player == null || IsMounted || _player.Dead || _player.DragonRepulsed ||
+            _playerPoison.HasFlag(PoisonType.Paralysis) || _playerPoison.HasFlag(PoisonType.Silenced))
+            return false;
+        if (_net?.Connection?.Connected == true) return true;
+        GD.Print("[Magic] 未释放：网络尚未连接");
+        return false;
+    }
+
+    private bool UseMagic(ClientUserMagic magic, int slot = -1)
+    {
         if (magic.Info == null)
         {
             magic.Complete();
             if (magic.Info == null)
             {
                 GD.PrintErr($"[Magic] 未释放：技能信息未解析 InfoIndex={magic.InfoIndex}");
-                return;
+                return false;
             }
         }
         if (PlayerLevel < magic.Info.NeedLevel1)
         {
             ReceiveChat($"等级不足，无法使用技能 [{magic.Info.Local() ?? magic.Info.Name}]（需要等级 {magic.Info.NeedLevel1}）", MessageType.Hint);
-            return;
+            return false;
         }
         if (magic.ItemRequired && !Equipment.Any(x => x?.Info?.ItemEffect == ItemEffect.MagicRing
                                                        && x.Info.Shape == magic.Info.Index))
-            return;
+            return false;
 
         switch (magic.Info.Magic)
         {
@@ -11529,39 +11560,39 @@ public partial class GameScene : Control
             case MagicType.SpiritSword:
             case MagicType.VineTreeDance:
             case MagicType.WillowDance:
-                return;
+                return false;
             case MagicType.Thrusting:
             case MagicType.HalfMoon:
             case MagicType.DestructiveSurge:
             case MagicType.FlameSplash:
-                if (Library.Time.Now < ToggleTime) return;
+                if (Library.Time.Now < ToggleTime) return false;
                 ToggleTime = Library.Time.Now.AddSeconds(1);
                 bool enabled = !_enabledToggleMagics.Contains(magic.Info.Magic);
                 if (enabled) _enabledToggleMagics.Add(magic.Info.Magic);
                 else _enabledToggleMagics.Remove(magic.Info.Magic);
                 SendMagicToggle(magic.Info.Magic, enabled);
-                return;
+                return true;
             case MagicType.FlamingSword:
             case MagicType.DragonRise:
             case MagicType.BladeStorm:
             case MagicType.DemonicRecovery:
             case MagicType.DefensiveBlow:
             case MagicType.OffensiveBlow:
-                if (Library.Time.Now < magic.NextCast || magic.Cost > _currentMP) return;
+                if (Library.Time.Now < magic.NextCast || magic.Cost > _currentMP) return false;
                 magic.NextCast = Library.Time.Now.AddSeconds(0.5D);
                 SendMagicToggle(magic.Info.Magic, true);
                 GD.Print($"[Magic] 激活技能强化/蓄力状态: {magic.Info.Name}");
-                return;
+                return true;
             case MagicType.FullBloom:
             case MagicType.WhiteLotus:
             case MagicType.RedLotus:
             case MagicType.SweetBrier:
             case MagicType.Karma:
-                if (Library.Time.Now < ToggleTime || Library.Time.Now < magic.NextCast) return;
-                if (!_buffs.Values.Any(x => x?.Type == BuffType.Cloak)) return;
+                if (Library.Time.Now < ToggleTime || Library.Time.Now < magic.NextCast) return false;
+                if (!_buffs.Values.Any(x => x?.Type == BuffType.Cloak)) return false;
                 _attackMagic = magic.Info.Magic;
                 ToggleTime = Library.Time.Now.AddMilliseconds(magic.Info.Magic == MagicType.Karma ? 500 : 200);
-                return;
+                return true;
         }
         var pCell = _playerLocation;
         // 目标解析顺序：用户刚刚左键选中的新目标 > 已锁定目标 > 鼠标悬停目标。
@@ -11585,7 +11616,9 @@ public partial class GameScene : Control
                 : CombatController.CanAttackObject(selected) ? selected : null;
         }
         uint targetID = target?.ObjectID ?? 0;
-        var mouseCell = _combatController?.MouseCell() ?? new System.Drawing.Point(pCell.X, pCell.Y);
+        var mouseCell = AutoLoginArgs.Handheld && _handheldHudMode
+            ? HandheldCastCell()
+            : _combatController?.MouseCell() ?? new System.Drawing.Point(pCell.X, pCell.Y);
         var targetCell = target == null
             ? mouseCell
             : new System.Drawing.Point(target.CellX, target.CellY);
@@ -11595,10 +11628,12 @@ public partial class GameScene : Control
         // 但无伤害)，看起来像打中却没掉血。
         if (target != null && !Functions.InRange(pCell, targetCell, Globals.MagicRange))
         {
-            if (Library.Time.Now < _magicTooFarAt) return;
-            _magicTooFarAt = Library.Time.Now.AddSeconds(1);
-            ReceiveChat(string.Format(Lang.GameNoneLabel2, magic.Info.Local()), MessageType.Hint);
-            return;
+            if (Library.Time.Now >= _magicTooFarAt)
+            {
+                _magicTooFarAt = Library.Time.Now.AddSeconds(1);
+                ReceiveChat(string.Format(Lang.GameNoneLabel2, magic.Info.Local()), MessageType.Hint);
+            }
+            return false;
         }
 
         // 原版的范围/落点技能即使鼠标下有目标，也把 MapLocation 发给服务端；
@@ -11619,19 +11654,18 @@ public partial class GameScene : Control
         var castCell = useMouseLocation || target == null ? mouseCell : targetCell;
         if (magic.Info.School == MagicSchool.Toggle)
         {
-            if (Library.Time.Now < ToggleTime)
-                return;
+            if (Library.Time.Now < ToggleTime) return false;
             ToggleTime = Library.Time.Now.AddSeconds(1);
             bool enabled = !_enabledToggleMagics.Contains(magic.Info.Magic);
             if (enabled) _enabledToggleMagics.Add(magic.Info.Magic); else _enabledToggleMagics.Remove(magic.Info.Magic);
             SendMagicToggle(magic.Info.Magic, enabled);
             RefreshMagicBars();
-            return;
+            return true;
         }
-        if (Library.Time.Now < magic.NextCast || magic.Cost > _currentMP) return;
+        if (Library.Time.Now < magic.NextCast || magic.Cost > _currentMP) return false;
         MirDirection dir = Functions.DirectionFromPoint(
             new System.Drawing.Point(pCell.X, pCell.Y), castCell);
-        GD.Print($"[Magic] 发包 {magic.Info.Name} Magic={magic.Info.Magic} Set={MagicBarSpellSet} Slot={slot + 1} " +
+        GD.Print($"[Magic] 发包 {magic.Info.Name} Magic={magic.Info.Magic} Set={MagicBarSpellSet} Slot={(slot >= 0 ? (slot + 1).ToString() : "handheld")} " +
             string.Format(Lang.GameTargetLabel, targetID, pCell.X, pCell.Y, mouseCell.X, mouseCell.Y, castCell.X, castCell.Y, dir));
         var packet = new C.Magic
         {
@@ -11651,9 +11685,10 @@ public partial class GameScene : Control
             _pendingMagicPacket = packet;
             _pendingMagicCastAtMs = _player.FrameStartMs + _player.MovementDurationMs;
             GD.Print($"[Magic] 排队 {magic.Info.Name}：等待当前移动结束 (castAt={_pendingMagicCastAtMs:0}ms)");
-            return;
+            return true;
         }
         _net.Connection.Enqueue(packet);
+        return true;
     }
 
     private bool IsPlayerWalking()
@@ -11686,6 +11721,13 @@ public partial class GameScene : Control
 
     public override void _Input(InputEvent @event)
     {
+        // Route both press/release before desktop/text shortcuts. Select uses a
+        // real-time short/long-press discriminator; a release must never be lost.
+        if (HandleHandheldInputEvent(@event))
+        {
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
         if (@event is not InputEventKey key || !key.Pressed || key.Echo) return;
 
         // _Input 先于 Control._GuiInput/_UnhandledKeyInput 到达。任何原生
@@ -12134,13 +12176,12 @@ public partial class GameScene : Control
     // 对齐旧版 ActiveScene 的“UI 优先、地图其次”分发顺序。
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventKey keyEvent && keyEvent.Pressed)
+        // Pointer fallback in handheld dialogs/default HUD is UI-only. Map
+        // walking/attacks use semantic actions, never a second synthetic click.
+        if (AutoLoginArgs.Handheld && @event is InputEventMouseButton)
         {
-            if (HandleHandheldKeyAction(keyEvent.Keycode))
-            {
-                GetViewport().SetInputAsHandled();
-                return;
-            }
+            GetViewport()?.SetInputAsHandled();
+            return;
         }
 
         // 原版 MapControl.OnMouseDown 首行直接拒绝观察模式；否则脚下拾取、

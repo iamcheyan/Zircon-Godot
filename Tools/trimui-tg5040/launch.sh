@@ -46,6 +46,9 @@ export ZIRCON_SERVER_EXE="$server_dir/ServerCore"
 export MIR3_EI_ROOT="$client_root"
 export ZIRCON_CLIENT_DATA="$client_data"
 export ZIRCON_MAP_DATA="$client_root/Map"
+# The fbdev backend uses this to suppress synthetic mouse clicks/cursor motion;
+# the game client consumes the physical controls as semantic handheld actions.
+export ZIRCON_HANDHELD=1
 
 # Tina Linux (glibc 2.33) ships no ICU. The client and the server both run the
 # globalization-invariant runtime, which is all these string tables need.

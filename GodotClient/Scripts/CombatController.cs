@@ -214,11 +214,14 @@ public partial class CombatController : Node2D
     {
         if (!Enabled || _mapView?.Map == null) return;
 
-        // 更新鼠标悬停物体
-        MouseObject = PickObjectAtMouse();
+        // 掌机右摇杆直接维护 MouseObject；fbdev 掌机模式不产生虚拟
+        // 鼠标事件，不能让静态鼠标位置每帧把目标焦点覆盖掉。
+        if (!AutoLoginArgs.Handheld || GameScene.Game?.HandheldPointerMode == true)
+            MouseObject = PickObjectAtMouse();
         QueueRedraw();  // 重画悬停/选中高亮
 
-        if (_canUseCombatInput?.Invoke() == false)
+        if (_canUseCombatInput?.Invoke() == false
+            || GameScene.Game?.HandheldCombatBlocked == true)
             return;
         // 原版 MagicAction 入队期间 ProcessInput 整体 return（等待动作
         // 边界），攻击与追击都暂停，由 GameScene._Process 在走完后释放。
@@ -348,7 +351,7 @@ public partial class CombatController : Node2D
     // 选中/攻击用鼠标点击 (不和 GameScene._Input 的键盘处理冲突: 不同输入类型)
     public override void _Input(InputEvent @event)
     {
-        if (!Enabled || _mapView?.Map == null) return;
+        if (!Enabled || _mapView?.Map == null || AutoLoginArgs.Handheld) return;
 
         if (@event is InputEventMouseButton mb && mb.Pressed)
         {
@@ -452,6 +455,14 @@ public partial class CombatController : Node2D
                 }
             }
         }
+    }
+
+    /// <summary>掌机 Y 键请求一次普通攻击，复用原版冷却/坐骑/飓风门控。</summary>
+    public void RequestHandheldAttack(MirDirection direction)
+    {
+        if (!Enabled || _mapView?.Map == null || _canUseCombatInput?.Invoke() == false
+            || _isMagicPending?.Invoke() == true || _isPlayerMoving?.Invoke() == true) return;
+        TryAttack(direction);
     }
 
     private void TryAttack(MirDirection direction)

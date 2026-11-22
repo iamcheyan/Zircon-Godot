@@ -140,6 +140,8 @@ Tools/trimui-tg5040/deploy.sh
 
 [掌机 HUD 实机截图](evidence/tg5040-compact-hud.png)：用重新从 `2d7ff081` 构建的 fbdev 后端在 TG5040 进图，以 evdev 测试手柄触发 Start；日志记录掌机 HUD 和默认 HUD 双向切换。截图可见紧凑状态栏、右上小地图及底部聊天栏隐藏。这个测试不等同于实体按键验收。
 
+[技能快选实机截图](evidence/tg5040-skills.png)：在掌机 HUD 中用 evdev 测试手柄触发十字键上，显示九个技能、选中框和详情。面板完整上屏；640×360 内部渲染下的小字仍偏难读。本次未验证释放技能。
+
 ### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见

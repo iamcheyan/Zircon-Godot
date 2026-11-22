@@ -138,6 +138,8 @@ Tools/trimui-tg5040/deploy.sh
 
 [实机进图截图（1280×720，读取 fbdev 当前显示页）](evidence/tg5040-world.png)。此图只证明默认 HUD 和地图已上屏，不证明掌机快选或新版 fbdev 输入实现已经验收；该轮导出复用了已有模板。
 
+[掌机 HUD 实机截图](evidence/tg5040-compact-hud.png)：用重新从 `2d7ff081` 构建的 fbdev 后端在 TG5040 进图，以 evdev 测试手柄触发 Start；日志记录掌机 HUD 和默认 HUD 双向切换。截图可见紧凑状态栏、右上小地图及底部聊天栏隐藏。这个测试不等同于实体按键验收。
+
 ### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见

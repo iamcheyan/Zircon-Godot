@@ -157,7 +157,7 @@ ZIRCON_HANDHELD=1 MIR3_EI_ROOT=~/mir2ei godot-mono --headless \
 
 当前脚本通过永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、默认 HUD 指针不单独阻止战斗、选择器开启期间两套 HUD 均保留各自的技能落点规则、腰带第八格可选、十格循环和 B 关闭。该脚本不连接服务端，也不覆盖 NPC 对话或服务端技能命中；后两项仍需要实机确认。
 
-当前 TG5040 运行画面：[默认 HUD](evidence/tg5040-default-hud-2026-11-23.png) · [紧凑掌机 HUD](evidence/tg5040-compact-hud-2026-11-23.png)。画面来自 framebuffer mmap 的当前显示页；两种 HUD 均通过 Start 在运行中来回切换。
+当前 TG5040 运行画面：[默认 HUD](evidence/tg5040-default-hud-2026-11-23.png) · [紧凑掌机 HUD](evidence/tg5040-compact-hud-2026-11-23.png) · [腰带选择器](evidence/tg5040-belt-selector-2026-11-23.png)。画面来自 framebuffer mmap 的当前显示页；两种 HUD 均通过 Start 在运行中来回切换。
 
 修复包括把 compact/default HUD 的技能落点选择与选择器临时指针状态解耦，并移除指针/准星绘制循环中的逐帧小数组分配。完整 fbdev 客户端已重新导出并配套使用其 .NET 程序集。
 

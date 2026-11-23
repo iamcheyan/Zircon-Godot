@@ -38,13 +38,18 @@ public partial class GameScene
 
     // Legacy windows do not all register with WindowManager (e.g. big map).
     // Inspect visible window roots too, but exclude permanent HUD widgets.
-    private bool HandheldHasModalWindow() => _uiLayer != null && _uiLayer.GetChildren()
-        .OfType<DXWindow>().Any(window => IsInstanceValid(window) && window.Visible
-            && window != _miniMap && window != _beltDialog && window != _buffDialog
-            && window != _questTracker && window != _monsterDialog && window != _chatTextBox);
+    private bool HandheldHasModalWindow()
+    {
+        if (_uiLayer == null) return false;
+        for (int i = 0, count = _uiLayer.GetChildCount(); i < count; i++)
+            if (_uiLayer.GetChild(i) is DXWindow w && w.Visible && !w.IsQueuedForDeletion()
+                && w != _miniMap && w != _beltDialog && w != _buffDialog && w != _questTracker
+                && w != _monsterDialog && w != _chatTextBox) return true;
+        return false;
+    }
 
     private bool HandheldGameplayBlocked => AutoLoginArgs.Handheld &&
-        (_handheldQuickSelect?.IsOpen == true || HandheldHasModalWindow()
+        (JournalOpen || _handheldQuickSelect?.IsOpen == true || HandheldHasModalWindow()
          || HandheldTextEditing);
 
     private bool HandheldTextEditing => GetViewport()?.GuiGetFocusOwner() is Control control
@@ -64,7 +69,8 @@ public partial class GameScene
     private void UpdateHandheldPointerMode()
     {
         if (!AutoLoginArgs.Handheld) return;
-        bool pointer = _handheldQuickSelect?.IsOpen != true && (!_handheldHudMode || HandheldHasModalWindow());
+        bool pointer = !JournalNativeServiceVisible && _handheldQuickSelect?.IsOpen != true
+            && (HandheldHasModalWindow() || (!_handheldHudMode && !JournalOpen));
         if (pointer == _handheldPointerMode) return;
         _handheldPointerMode = pointer;
         // OS.SetEnvironment updates native getenv, unlike managed-only environment
@@ -98,6 +104,7 @@ public partial class GameScene
     private void ProcessHandheldInput(double delta)
     {
         if (!AutoLoginArgs.Handheld) return;
+        UpdateJournalServiceContext();
         UpdateHandheldPointerMode();
         double now = Godot.Time.GetTicksMsec();
         if (_handheldTrace && now >= _nextHandheldTraceMs)
@@ -110,6 +117,7 @@ public partial class GameScene
             GD.Print(state);
             System.IO.File.WriteAllText("/tmp/zircon-handheld-state", state);
         }
+        if (JournalOpen) { ProcessJournal(now); return; }
         ValidateHandheldFocus();
         if (_handheldSelectDownMs >= 0 && !_handheldSelectLong
             && now - _handheldSelectDownMs >= HandheldLongPressMs)
@@ -304,8 +312,12 @@ public partial class GameScene
     private bool HandleHandheldInputEvent(InputEvent @event)
     {
         if (!AutoLoginArgs.Handheld) return false;
+        if (@event is InputEventMouse && HandleJournalServicePointer(@event)) return true;
+        if (JournalOpen && _journal.Visible && @event is InputEventMouse) return true;
         if (@event is not InputEventKey key) return false;
         double now = Godot.Time.GetTicksMsec();
+        if (!HandheldTextEditing && JournalServiceActive && HandleJournalServiceKey(key)) return true;
+        if (RouteJournalKey(key, now)) return true;
         if (key.Keycode == Key.F10)
         {
             if (key.Pressed && !key.Echo) ToggleHandheldHudMode();
@@ -333,12 +345,7 @@ public partial class GameScene
         if (key.Keycode is Key.F11 or Key.Menu)
         {
             if (key.Pressed && !key.Echo)
-            {
-                _handheldQuickSelect?.Close();
-                StopHandheldMovement();
-                OpenConfigDialog();
-                UpdateHandheldPointerMode();
-            }
+                OpenJournal();
             return true;
         }
         if (!key.Pressed)

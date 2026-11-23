@@ -48,6 +48,7 @@ public partial class GuildDialog : DXWindow
     private DXButton _closeButton;
 
     public bool HasGuild => _guild != null;
+    internal ClientGuildInfo Guild => _guild;
     public long GuildFunds => _guild?.GuildFunds ?? 0;
     public int GuildFlag => _guild?.Flag ?? -1;
     public System.Drawing.Color GuildColour => _guild?.Colour ?? System.Drawing.Color.White;

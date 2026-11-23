@@ -1502,6 +1502,7 @@ public partial class GameScene : Control
             h => _net.Connection.NPCClosedEvent -= h,
             () =>
         {
+            ClearJournalNpcStorageContext();
             CloseNPCSocketDialogs();
             if (_npcQuestListDialog != null) WindowManager.Close(_npcQuestListDialog);
             if (_npcQuestDialog != null) WindowManager.Close(_npcQuestDialog);
@@ -1512,7 +1513,7 @@ public partial class GameScene : Control
             packet => _npcDialog?.RepairResult(packet));
         TrackEvent<S.NPCStorage>(h => _net.Connection.NPCStorageEvent += h,
             h => _net.Connection.NPCStorageEvent -= h,
-            _ => OpenNpcStorage());
+            OnJournalNpcStorageOpened);
         TrackEvent<S.BundleOpen>(h => _net.Connection.BundleOpenEvent += h,
             h => _net.Connection.BundleOpenEvent -= h,
             p => _bundleDialog?.Open(p.Slot, p.Items));
@@ -3063,6 +3064,7 @@ public partial class GameScene : Control
     }
     private void RefreshQuestUi()
     {
+        _journal?.InvalidateProjection();
         var quests = _userQuests.Values.Where(x => x?.Quest != null).ToList();
         _questTracker?.PopulateQuests(quests);
         _questDialog?.SetQuests(quests);
@@ -4950,6 +4952,7 @@ public partial class GameScene : Control
         };
         _mainPanel.MenuButton.MouseClick += (o, e) =>
         {
+            if (AutoLoginArgs.Handheld) { OpenJournal(); return; }
             // 旧版没有当前客户端的通用 MenuDialog；菜单键对应 F750
             // 选项窗口。新版模式继续保留原菜单入口。
             if (AutoLoginArgs.LegacyUi)
@@ -6278,6 +6281,7 @@ public partial class GameScene : Control
     /// </summary>
     public void RefreshInventorySlot(int slot)
     {
+        _journal?.InvalidateProjection();
         var grid = _inventoryDialog?.Grid;
         int index = grid != null ? grid.ResolveSlotCell(slot) : slot;
         if (index >= 0 && index < InventoryCells.Length && InventoryCells[index] != null)
@@ -6287,6 +6291,7 @@ public partial class GameScene : Control
     // 批量变更后刷新所有可见格
     public void RefreshItemGrids()
     {
+        _journal?.InvalidateProjection();
         // 背包数组会因无槽位上限而 Array.Resize 换新引用；网格必须重新指向
         // 新数组，否则仍然只看得到旧的 48 槽。
         if (_inventoryDialog?.Grid != null)
@@ -6677,9 +6682,9 @@ public partial class GameScene : Control
     /// 收尾：把 <see cref="HoverBuilder"/> 累积的逐行颜色挂到悬浮标签上并返回文本。
     /// 必须挂上而不是丢弃——原版每行自带颜色，全刷成单色正是「看不清」的根因。
     /// </summary>
-    private string FinishHover(HoverBuilder sb)
+    private string FinishHover(HoverBuilder sb, bool applyColours)
     {
-        if (_hoverLabel != null)
+        if (applyColours && _hoverLabel != null)
             _hoverLabel.LineColours = sb.TakeColours();
         return sb.ToString();
     }
@@ -6697,7 +6702,7 @@ public partial class GameScene : Control
     /// （元数据/属性/需求/插槽/交易状态/描述/修理/套装等）。
     /// 单色标签，行序与旧版一致；玩家相关判断用当前实例状态。
     /// </summary>
-    private string BuildItemHoverFull(ClientUserItem item)
+    private string BuildItemHoverFull(ClientUserItem item, bool applyColours = true)
     {
         if (item?.Info == null) return string.Empty;
 
@@ -6780,7 +6785,7 @@ public partial class GameScene : Control
         if (IsCurrencyItem(item.Info) || item.Info.ItemEffect == ItemEffect.Experience)
         {
             AppendDescription(sb.Text, displayInfo);
-            return FinishHover(sb);
+            return FinishHover(sb, applyColours);
         }
 
         // ---- 装备属性 ----
@@ -6871,9 +6876,12 @@ public partial class GameScene : Control
             sb.NewLine().Append($"重置可用时间: {Functions.ToString(item.NextReset - Library.Time.Now, true)}");
 
         if ((item.Flags & UserItemFlags.Locked) == UserItemFlags.Locked)
-            sb.NewLine().Append("已锁定: 防止误售或误扔\n[鼠标中键] 或 [Scroll Lock] 解锁ck.");
+        {
+            sb.NewLine().Append("已锁定: 防止误售或误扔");
+            if (applyColours) sb.NewLine().Append("[鼠标中键] 或 [Scroll Lock] 解锁ck.");
+        }
 
-        return FinishHover(sb);
+        return FinishHover(sb, applyColours);
     }
 
     private static string GemTypeName(int shape) => shape switch
@@ -9804,7 +9812,7 @@ public partial class GameScene : Control
         }
         bool blockHandheldGameplay = HandheldGameplayBlocked;
         if (!blockHandheldGameplay) TryContinueMining();
-        ProcessPendingAutoPathMove();
+        if (!JournalOpen) ProcessPendingAutoPathMove();
         if (!blockHandheldGameplay) ProcessGroundItemPickup();
         UpdateViewRange();
         // Remote PlayerRenderer advances movement offsets in its own _Process;

@@ -19,6 +19,8 @@ public partial class GroupDialog : DXWindow
     private DXTextInput _inviteName;
     private DXButton _inviteButton;
     private bool _allowGroup;
+    internal IReadOnlyDictionary<uint, string> Members => _members;
+    internal bool AllowsInvites => _allowGroup;
     private DXButton _allowButton;
     private DXControl _invitePanel;
     private bool _lfgEnabled;

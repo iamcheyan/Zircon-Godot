@@ -30,6 +30,8 @@ public partial class RankingDialog : DXWindow
     private bool _onlineOnly;
     private string _selectedName;
     private readonly List<RankInfo> _ranks = new();
+    internal IReadOnlyList<RankInfo> Ranks => _ranks;
+    internal bool HasRankResponse { get; private set; }
     private int _total;
     private DXTextInput _search;
     private DXButton _classButton;
@@ -39,6 +41,7 @@ public partial class RankingDialog : DXWindow
     public void ApplyRankings(S.Rankings packet)
     {
         if (packet == null) return;
+        HasRankResponse = true;
         _ranks.Clear();
         _ranks.AddRange(packet.Ranks ?? new List<RankInfo>());
         _total = packet.Total;

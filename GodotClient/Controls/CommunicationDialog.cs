@@ -305,6 +305,15 @@ public partial class CommunicationDialog : DXWindow
 
     // 审计访问器: 只读快照, 不触发 UI 重建
     internal List<ClientMailInfo> MailSnapshot() => _mails.Where(x => x != null).ToList();
+    internal IReadOnlyList<ClientFriendInfo> Friends => _friends;
+    internal IReadOnlyList<ClientMailInfo> Mails => _mails;
+    internal void ShowFriendsPage() => ShowPage(0);
+    internal void ShowInboxPage() => ShowPage(1);
+    internal void ShowMail(int index)
+    {
+        ShowInboxPage();
+        OpenMail(index);
+    }
     internal ClientMailInfo FindMail(int index) => _mails.FirstOrDefault(x => x?.Index == index);
 
     public bool AuditMailSendLifecycle(out string details)

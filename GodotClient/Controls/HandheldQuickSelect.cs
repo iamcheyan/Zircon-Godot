@@ -149,12 +149,13 @@ public partial class HandheldQuickSelect : Control
         _magics.Clear();
         if (_game?.UserMagics != null)
             _magics.AddRange(_game.UserMagics.Values
-                .Where(x => x?.Info != null)
-                .OrderBy(x => x.Info.NeedLevel1)
+                .Where(x => x?.Info != null && x.Info.Property != MagicProperty.Passive)
+                .OrderByDescending(x => _game.JournalFavorite(x.Info.Index))
+                .ThenBy(x => x.Info.NeedLevel1)
                 .ThenBy(x => x.Info.Name));
         if (_magics.Count == 0)
         {
-            ShowMessage("没有已学习的技能");
+            ShowMessage("没有可快选的已学技能");
             return;
         }
         _kind = SelectKind.Magic;
@@ -274,7 +275,7 @@ public partial class HandheldQuickSelect : Control
                 var magic = _magics[index];
                 _icons[i].Texture = MirSkin.GetTexture(LibraryFile.MagicIcon, magic.Info.Icon);
                 _slotLabels[i].Text = magic.Info.Local() ?? magic.Info.Name;
-                _slotNumbers[i].Text = magic.Info.Property == MagicProperty.Passive ? "被动" : $"Lv.{magic.Level}";
+                _slotNumbers[i].Text = _game.JournalFavorite(magic.Info.Index) ? $"★ Lv.{magic.Level}" : $"Lv.{magic.Level}";
             }
             else
             {
@@ -303,7 +304,7 @@ public partial class HandheldQuickSelect : Control
         string cooldown = magic.NextCast > now
             ? $"冷却 {Math.Max(0, (int)Math.Ceiling((magic.NextCast - now).TotalSeconds))}秒"
             : "就绪";
-        string property = magic.Info.Property == MagicProperty.Passive ? "被动·仅查看" : "主动";
+        string property = magic.Info.Property == MagicProperty.Toggle ? "开关" : "主动";
         _detail.Text = $"{name}  Lv.{magic.Level}  耗蓝 {magic.Cost}  {cooldown}  {property}  {(_cursor + 1)}/{_magics.Count}";
     }
 

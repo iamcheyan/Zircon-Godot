@@ -406,7 +406,7 @@ public partial class NPCGoodsPanel : DXControl
         }
     }
 
-    private void BuySelected()
+    private void BuySelected(Func<bool> stillCurrent = null)
     {
         if (!CanAttemptPurchase(GameScene.Game?.IsObserver == true, _selected, _goods.Count)) return;
         var game = GameScene.Game;
@@ -457,6 +457,7 @@ public partial class NPCGoodsPanel : DXControl
             long initial = good.IsCurrencyGood ? good.NormaliseCurrencyPurchaseAmount(currency, 1) : 1;
             var amount = new ItemAmountDialog(Lang.NPCGoodsPanelBuyLabel, maxAmount, Math.Min(maxAmount, Math.Max(1, initial)), count =>
             {
+                if (stillCurrent != null && !stillCurrent()) return;
                 game.SendNPCBuy(good.Index, count, _guildFunds.Checked);
                 _guildFunds.Checked = false;
             });

@@ -48,7 +48,7 @@ public partial class HandheldHud : Control
         _focusFill = AddBar(new Vector2(18, 40), new Color(0.95f, 0.70f, 0.18f, 0.95f));
 
         _modeLabel = AddLabel(new Vector2(214, 10), "HANDHELD HUD", 13, Colors.White);
-        _hintLabel = AddLabel(new Vector2(214, 29), "START: DEFAULT HUD", 12, new Color(0.85f, 0.88f, 0.95f));
+        _hintLabel = AddLabel(new Vector2(214, 29), "MENU 手札 · START 界面", 12, new Color(0.85f, 0.88f, 0.95f));
         _targetLabel = AddLabel(new Vector2(10, 62), "", 13, new Color(1f, 0.86f, 0.35f));
     }
 

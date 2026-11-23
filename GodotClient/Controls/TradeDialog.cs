@@ -40,17 +40,7 @@ public partial class TradeDialog : DXWindow
         AddControl(new DXLabel { Text = Lang.TradeDialogUserLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(15, 38), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogPlayerLabel, FontSize = 11, TextColour = new Color(1f, .85f, .3f), Align = HorizontalAlignment.Center, AutoSize = false, Size = new Vector2I(186, 20), Location = new Vector2I(226, 38), IsControl = false });
         _userGrid = new DXItemGrid { GridSize = new Vector2I(5, 2), Location = new Vector2I(15, 73), GridType = GridType.TradeUser, Linked = true, GridPadding = 1, Border = false }; AddControl(_userGrid);
-        foreach (var cell in _userGrid.Cells)
-            cell.LinkChanged += linked =>
-            {
-                if (linked?.LinkedSourceSlot >= 0)
-                {
-                    var source = GetSourceCell(new CellLinkInfo { GridType = linked.LinkedSourceGrid, Slot = linked.LinkedSourceSlot });
-                    if (source?.Item != null)
-                        _pendingSources[(linked.LinkedSourceGrid, linked.LinkedSourceSlot)] = source.Item;
-                    GameScene.Game?.SendTradeItem(new CellLinkInfo { GridType = linked.LinkedSourceGrid, Slot = linked.LinkedSourceSlot, Count = linked.Item?.Count ?? 1 });
-                }
-            };
+        BindTradeSources();
         _playerGrid = new DXItemGrid { GridSize = new Vector2I(5, 2), Location = new Vector2I(226, 73), GridType = GridType.TradePlayer, ItemGrid = _playerItems, ReadOnly = true, GridPadding = 1, Border = false }; AddControl(_playerGrid);
         AddControl(new DXLabel { Text = Lang.TradeDialogGoldLabel, FontSize = 8, TextColour = new Color(1f, .85f, .3f), Location = new Vector2I(11, 168), Size = new Vector2I(58, 16), IsControl = false });
         AddControl(new DXLabel { Text = Lang.TradeDialogGoldLabel, FontSize = 8, TextColour = new Color(1f, .85f, .3f), Location = new Vector2I(222, 168), Size = new Vector2I(58, 16), IsControl = false });
@@ -61,11 +51,16 @@ public partial class TradeDialog : DXWindow
             if (GameScene.Game?.IsObserver == true) return;
             long available = GameScene.Game?.Currencies?.FirstOrDefault(x => x?.Info?.Type == CurrencyType.Gold)?.Amount ?? 0;
             if (!CanOfferGold(available)) return;
+            long revision = JournalRevision;
             var dialog = new ItemAmountDialog(Lang.TradeGoldLabel, available, 1, amount =>
             {
                 long current = GameScene.Game?.Currencies?.FirstOrDefault(x => x?.Info?.Type == CurrencyType.Gold)?.Amount ?? 0;
-                if (CanOfferGold(current) && amount <= current)
-                    GameScene.Game?.SendTradeGold(amount);
+                if (GameScene.Game?.TradePromptCurrent(this, revision) == true && CanOfferGold(current) && amount <= current)
+                {
+                    _awaitingGoldAck = true;
+                    JournalRevision++;
+                    GameScene.Game.SendTradeGold(amount);
+                }
             });
             WindowManager.Open(dialog, GameScene.Game?.UILayer ?? GetParent());
         };
@@ -82,7 +77,7 @@ public partial class TradeDialog : DXWindow
     {
         var label = new DXLabel { Text = text, FontSize = 10, TextColour = Colors.White, DrawOutline = true, OutlineColour = Colors.Black, Align = HorizontalAlignment.Right, AutoSize = false, Size = new Vector2I(130, 16), Location = new Vector2I(x, y), IsControl = false }; AddControl(label); return label;
     }
-    public void OpenTrade(string name) { Text = name; _confirm.Enabled = true; WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent()); }
+    public void OpenTrade(string name) { JournalRevision++; JournalTrading = true; Text = name; _confirm.Enabled = true; WindowManager.Open(this, GameScene.Game?.UILayer ?? GetParent()); }
     /// <summary>
     /// 对方请求交易时的确认面板。同组队/行会邀请一样必须去重：服务端可重复发
     /// S.TradeRequest（对方反复点交易），每次 new 一块面板会让**多个确认框叠在
@@ -110,14 +105,15 @@ public partial class TradeDialog : DXWindow
         if (item == null) return;
         int slot = Array.FindIndex(_playerItems, x => x == null);
         if (slot < 0) return;
+        JournalRevision++;
         _playerItems[slot] = item;
         _playerGrid.RefreshGrid();
     }
     /// <summary>原版 S.TradeAddGold：刷新本地玩家提交的金币。</summary>
-    public void SetPlayerGold(long gold) => _userGold.Text = gold.ToString("#,##0");
+    public void SetPlayerGold(long gold) { JournalRevision++; _awaitingGoldAck = false; _userGold.Text = gold.ToString("#,##0"); }
 
     /// <summary>原版 S.TradeGoldAdded：刷新交易对方的金币。</summary>
-    public void SetOtherGold(long gold) => _playerGold.Text = gold.ToString("#,##0");
+    public void SetOtherGold(long gold) { JournalRevision++; _playerGold.Text = gold.ToString("#,##0"); }
 
     public bool AuditGoldRouting(out string details)
     {
@@ -175,6 +171,7 @@ public partial class TradeDialog : DXWindow
         // 网格原点应为 (20,47) / (252,47)。原值 (14,91)/(246,91) 使首格落在 (15,92)/(247,92)，
         // 相对证据偏 (-6,+44)。
         _userGrid.GridSize = new Vector2I(5, 6);
+        BindTradeSources();
         _userGrid.Location = new Vector2I(20, 47);
         // 证据 stride = 36（不是 37）：见 DXItemGrid.LegacyCellStep 的说明。
         _userGrid.LegacyCellStep = 36;
@@ -248,9 +245,12 @@ public partial class TradeDialog : DXWindow
         details = $"size={Size} frame={_background.Index} bg={_background.Location} userGrid={_userGrid.GridSize}@{_userGrid.Location} playerGrid={_playerGrid.GridSize}@{_playerGrid.Location} close={_closeButton.Location} accept={_legacyAccept?.Location}#{_legacyAccept?.Index} cancel={_legacyCancel?.Location}";
         return ok;
     }
-    public void Unlock() => _confirm.Enabled = true;
+    public void Unlock() { JournalRevision++; _confirm.Enabled = true; }
     public void ClearTrade()
     {
+        JournalRevision++; JournalTrading = false;
+        _awaitingTradeAck.Clear();
+        _awaitingGoldAck = false;
         for (int i = 0; i < _playerItems.Length; i++) _playerItems[i] = null;
         foreach (var cell in _userGrid.Cells ?? System.Array.Empty<DXItemCell>())
         {
@@ -278,6 +278,8 @@ public partial class TradeDialog : DXWindow
     {
         var link = packet?.Cell;
         if (link == null) return;
+        JournalRevision++;
+        _awaitingTradeAck.Remove((link.GridType, link.Slot));
         var source = GetSourceCell(link);
         var key = (link.GridType, link.Slot);
         _pendingSources.TryGetValue(key, out var expectedSource);
@@ -330,6 +332,7 @@ public partial class TradeDialog : DXWindow
             GridType.CompanionEquipment => game.CompanionEquipmentCells,
             _ => System.Array.Empty<DXItemCell>(),
         };
+        if (link.GridType == GridType.Inventory) return cells.FirstOrDefault(c => c?.Slot == link.Slot && !c.IsLegacyFootprintPlaceholder);
         return link.Slot >= 0 && link.Slot < cells.Length ? cells[link.Slot] : null;
     }
 

@@ -33,3 +33,10 @@ The follow-up deployment used `client-fbdev.7yUrIP`, with installed `ZirconClien
 | Controls and services | Start switched HUD in both directions. B returned from the communication window. [Default HUD](tg5040-journal-hud-after-toggle-2026-11-23.png) · [Compact HUD](tg5040-journal-hud-original-2026-11-23.png) | Full input isolation and merchant, storage and trade round trips |
 
 Controller events were replayed through evdev on the device. Long-run native stability remains unverified.
+
+Additional device checks
+
+- [Bracelet slot choices](tg5040-journal-bracelet-slots-2026-11-23.png), [belt binding](tg5040-journal-belt3-verified-2026-11-23.png), and [restored empty belt slot](tg5040-journal-belt3-restored-2026-11-23.png).
+- [Discard cancellation](tg5040-journal-discard-cancelled-2026-11-23.png) and [automatic potion settings return](tg5040-journal-autopotion-return-2026-11-23.png).
+- [Map return](tg5040-journal-journal-map-back-2026-11-23.png) and [stick focus inside the journal](tg5040-journal-journal-stick-held-2026-11-23.png).
+- [Mount request](tg5040-journal-qa-mount-result-2026-11-23.png) left the character unmounted. The [titles category](tg5040-journal-qa-title-action-2026-11-23.png) was empty. The isolated character died before the empty-slot unequip scenario could be exercised.

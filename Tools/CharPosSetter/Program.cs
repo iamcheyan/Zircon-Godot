@@ -55,7 +55,7 @@ Console.WriteLine($"备份: {bak}");
 
 ch.CurrentMap = map;
 ch.CurrentLocation = new Point(px, py);
-session.Save(false);
+session.Save(true);
 
 var check = new Session(SessionMode.Users, root: root, backup: Path.Combine(root, "Backup") + Path.DirectorySeparatorChar);
 check.Initialize(typeof(MapInfo).Assembly, typeof(Server.DBModels.AccountInfo).Assembly);

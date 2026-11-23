@@ -161,7 +161,7 @@ ZIRCON_HANDHELD=1 MIR3_EI_ROOT=~/mir2ei godot-mono --headless \
 
 修复包括把 compact/default HUD 的技能落点选择与选择器临时指针状态解耦，并移除指针/准星绘制循环中的逐帧小数组分配。完整 fbdev 客户端已重新导出并配套使用其 .NET 程序集。
 
-长时间稳定性尚未通过：此前一轮 TG5040 会话约运行 7 小时后以 SIGSEGV 退出；没有 OOM 记录，旧启动禁用了 core，因此该次崩溃没有 native backtrace。新会话早期约 15–20 FPS、RSS 400 MB。一次严重掉帧期间，进程处于内核 `D`（disk sleep）状态，`MemAvailable` 约 19 MB、`/tmp` tmpfs 占用 153 MB；其中有 42 个已完成的 framebuffer `.raw` 诊断帧（每个约 3.5 MB）。清理这些临时帧后，tmpfs 占用降到 16 MB、`MemAvailable` 升至 161 MB，游戏立即从 `D` 状态恢复，FPS 从 0.8–1.3 回到 16–20；fbdev read/convert/blit 合计约 9–13 ms。该复现实验确认诊断帧堆积导致了当前的掉帧和内存回收停顿；它很可能也加重了前一轮的多小时问题，但没有旧 core，不能断定它造成了那次 SIGSEGV。清理后继续监控并为当前进程保留 core 捕获与 fbdev 每秒耗时记录。以后 framebuffer 原始帧 pull 到主机后应立即删除设备端 `.raw` 文件，避免再次占满 `/tmp` tmpfs。
+长时间稳定性尚未通过：此前一轮 TG5040 会话约运行 7 小时后以 SIGSEGV 退出；没有 OOM 记录，旧启动禁用了 core，因此该次崩溃没有 native backtrace。新会话早期约 15–20 FPS、RSS 400 MB。一次严重掉帧期间，进程处于内核 `D`（disk sleep）状态，`MemAvailable` 约 19 MB、`/tmp` tmpfs 占用 153 MB；其中有 42 个已完成的 framebuffer `.raw` 诊断帧（每个约 3.5 MB）。清理这些临时帧后，tmpfs 占用降到 16 MB、`MemAvailable` 升至 161 MB，游戏立即从 `D` 状态恢复，FPS 从 0.8–1.3 回到 16–20；fbdev read/convert/blit 合计约 9–13 ms。随后的 12 分钟内，13 个样本持续在 17–20 FPS、RSS 399–414 MB，read 3.3–5.4 ms、convert 2.0 ms、blit 5.8–11.0 ms。该复现实验确认诊断帧堆积导致了当前的掉帧和内存回收停顿；它很可能也加重了前一轮的多小时问题，但没有旧 core，不能断定它造成了那次 SIGSEGV。清理后继续监控并为当前进程保留 core 捕获与 fbdev 每秒耗时记录。以后 framebuffer 原始帧 pull 到主机后应立即删除设备端 `.raw` 文件，避免再次占满 `/tmp` tmpfs。
 
 ### 旧版设备实测（2026-11-22）
 

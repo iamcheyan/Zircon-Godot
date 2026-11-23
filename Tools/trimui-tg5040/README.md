@@ -155,13 +155,15 @@ ZIRCON_HANDHELD=1 MIR3_EI_ROOT=~/mir2ei godot-mono --headless \
   --path GodotClient --script res://Tests/HandheldInputChecks.cs
 ```
 
-当前脚本通过永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、默认 HUD 指针不单独阻止战斗、选择器开启期间两套 HUD 均保留各自的技能落点规则、腰带第八格可选、十格循环和 B 关闭。该脚本不连接服务端，也不覆盖 NPC 对话或服务端技能命中；后两项仍需要实机确认。
+当前脚本通过永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、默认 HUD 指针不单独阻止战斗、选择器开启期间两套 HUD 均保留各自的技能落点规则、腰带第八格可选、十格循环和 B 关闭。脚本不连接服务端，不验证 NPC 对话或技能命中。
+
+**实机 NPC 对话：**角色在 `(379,442)`，用紧凑 HUD 选中 `(379,444)` 的六面神石（对象 54），按 A 打开[传送对话框](evidence/tg5040-npc-dialog.png)。对话中保持左摇杆向右，再按 B 关闭：两个阶段角色坐标都未改变。摇杆回中后重新向上推，角色才移动到 `(379,440)`。未选择收费传送选项；从远处按 A 自动接近未验证成功。
 
 当前 TG5040 运行画面：[默认 HUD](evidence/tg5040-default-hud-2026-11-23.png) · [紧凑掌机 HUD](evidence/tg5040-compact-hud-2026-11-23.png) · [腰带选择器](evidence/tg5040-belt-selector-2026-11-23.png)。画面来自 framebuffer mmap 的当前显示页；两种 HUD 均通过 Start 在运行中来回切换。
 
 修复包括把 compact/default HUD 的技能落点选择与选择器临时指针状态解耦，并移除指针/准星绘制循环中的逐帧小数组分配。完整 fbdev 客户端已重新导出并配套使用其 .NET 程序集。
 
-长时间稳定性尚未通过：此前一轮 TG5040 会话约运行 7 小时后以 SIGSEGV 退出；没有 OOM 记录，旧启动禁用了 core，因此该次崩溃没有 native backtrace。新会话早期约 15–20 FPS、RSS 400 MB。一次严重掉帧期间，进程处于内核 `D`（disk sleep）状态，`MemAvailable` 约 19 MB、`/tmp` tmpfs 占用 153 MB；其中有 42 个已完成的 framebuffer `.raw` 诊断帧（每个约 3.5 MB）。清理这些临时帧后，tmpfs 占用降到 16 MB、`MemAvailable` 升至 161 MB，游戏立即从 `D` 状态恢复，FPS 从 0.8–1.3 回到 16–20；fbdev read/convert/blit 合计约 9–13 ms。随后的 12 分钟内，13 个样本持续在 17–20 FPS、RSS 399–414 MB，read 3.3–5.4 ms、convert 2.0 ms、blit 5.8–11.0 ms。该复现实验确认诊断帧堆积导致了当前的掉帧和内存回收停顿；它很可能也加重了前一轮的多小时问题，但没有旧 core，不能断定它造成了那次 SIGSEGV。清理后继续监控并为当前进程保留 core 捕获与 fbdev 每秒耗时记录。以后 framebuffer 原始帧 pull 到主机后应立即删除设备端 `.raw` 文件，避免再次占满 `/tmp` tmpfs。
+长时间稳定性尚未通过：此前一轮 TG5040 会话约运行 7 小时后以 SIGSEGV 退出；没有 OOM 记录，旧启动禁用了 core，因此该次崩溃没有 native backtrace。新会话早期约 15–20 FPS、RSS 400 MB。一次严重掉帧期间，进程处于内核 `D`（disk sleep）状态，`MemAvailable` 约 19 MB、`/tmp` tmpfs 占用 153 MB；其中已完成的 framebuffer `.raw` 诊断帧共占约 137 MiB。清理这些临时帧后，tmpfs 占用降到 16 MB、`MemAvailable` 升至 161 MB，游戏立即从 `D` 状态恢复，FPS 从 0.8–1.3 回到 16–20；fbdev read/convert/blit 合计约 9–13 ms。随后的 12 分钟内，13 个样本持续在 17–20 FPS、RSS 399–414 MB，read 3.3–5.4 ms、convert 2.0 ms、blit 5.8–11.0 ms。该复现实验确认诊断帧堆积导致了当前的掉帧和内存回收停顿；它很可能也加重了前一轮的多小时问题，但没有旧 core，不能断定它造成了那次 SIGSEGV。清理后继续监控并为当前进程保留 core 捕获与 fbdev 每秒耗时记录。以后 framebuffer 原始帧 pull 到主机后应立即删除设备端 `.raw` 文件，避免再次占满 `/tmp` tmpfs。
 
 ### 旧版设备实测（2026-11-22）
 

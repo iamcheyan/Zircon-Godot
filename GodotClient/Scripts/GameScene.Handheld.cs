@@ -12,6 +12,7 @@ public partial class GameScene
 {
     private const double HandheldLongPressMs = 600;
     private bool _handheldMoveStarted;
+    private double _nextMoveSkipTraceMs;
     private bool _handheldStickMoving;
     private bool _handheldRequireNeutral;
     private bool _handheldAutoRun;
@@ -188,7 +189,12 @@ public partial class GameScene
         _handheldStickMoving = pushed;
         // Obey the authoritative move/server clocks, not a second fixed 540ms
         // timer. Every intermediate run cell is checked; blocked runs fall back.
-        if (!CanPlayerMove() || _moveFrameCount > 1 || now < _moveVisualLockUntilMs
+        if (_handheldTrace && now >= _nextMoveSkipTraceMs)
+        {
+            _nextMoveSkipTraceMs = now + 1000;
+            GD.Print($"[MoveTiming] WAIT now={now:0} visual={_moveVisualLockUntilMs:0} server={_moveServerLockUntilMs:0} frame={_moveFrameCount} canMove={CanPlayerMove()} pushed={pushed} started={_handheldMoveStarted}");
+        }
+        if (!CanPlayerMove() || now < _moveVisualLockUntilMs
             || now < _moveServerLockUntilMs) return;
         // Walk the first segment, then use the same run gate as PC right-click.
         bool running = _handheldAutoRun || _handheldMoveStarted;

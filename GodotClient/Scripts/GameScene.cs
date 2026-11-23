@@ -9158,6 +9158,7 @@ public partial class GameScene : Control
             // 插值继续。只同步方向(服务端可能纠正朝向)与动画帧。
             _player.Direction = dir;
             UpdateAutoPathProgress();
+            if (_handheldTrace) GD.Print($"[MoveTiming] ACK at={Godot.Time.GetTicksMsec()} elapsed={Godot.Time.GetTicksMsec() - _moveStartMs:0} distance={distance}");
             if (AutoLoginArgs.RunningTest || AutoLoginArgs.RightRunTest)
                 GD.Print($"[{(AutoLoginArgs.RightRunTest ? "RightRunTest" : "RunningTest")}] APPLY(confirmed) distance={distance} animation={_player.Animation} " +
                          $"frameStart={_player.FrameIndex} location=({x},{y})");
@@ -9373,6 +9374,8 @@ public partial class GameScene : Control
         // 重置回起点 → 视觉跳回起点再走 = 回拉/晃动。
         // 现复刻原版: 发包即跳到预测终点 + 设起点反向 Offset + 启动插值,
         // 回包只在服务端位置≠预测时纠正(见 ShowUserLocation)。
+        if (_handheldTrace)
+            GD.Print($"[MoveTiming] SEND at={now:0} gap={Math.Max(0, now - (_moveStartMs + _moveDurationMs)):0} previous={_moveDurationMs:0} distance={distance} running={running} fps={Engine.GetFramesPerSecond()}");
         var predicted = Functions.Move(_playerLocation, direction, distance);
         _moveFrom = _playerLocation;
         _moveStartMs = Godot.Time.GetTicksMsec();
@@ -9387,6 +9390,7 @@ public partial class GameScene : Control
             running && distance >= 2);
         _moveDurationMs = Math.Max(1.0, _player.MovementDurationMs);
         _moveVisualLockUntilMs = now + _moveDurationMs;
+        if (_handheldTrace) GD.Print($"[MoveTiming] BEGIN at={now:0} duration={_moveDurationMs:0} animation={_player.Animation}");
         _mapView.CameraOffset = new Vector2(
             (predicted.X - _moveFrom.X) * 48f,
             (predicted.Y - _moveFrom.Y) * 32f);
@@ -10150,7 +10154,11 @@ public partial class GameScene : Control
                 _player.OffsetX = 0f;
                 _player.OffsetY = 0f;
                 _mapView.CameraOffset = Vector2.Zero;
-                _player.PlayStandingForState();
+                // Keep the run/walk pose while input is still held: the next
+                // segment starts on the next frame, and dropping to Standing
+                // here makes every segment boundary look like a stutter.
+                if (!IsRunInputHeld()) _player.PlayStandingForState();
+                if (_handheldTrace) GD.Print($"[MoveTiming] RETIRE held={IsRunInputHeld()} animation={_player.Animation}");
             }
             UpdatePlayerPosition();
         }

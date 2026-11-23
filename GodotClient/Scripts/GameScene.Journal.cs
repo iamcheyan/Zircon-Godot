@@ -62,12 +62,14 @@ public partial class GameScene
         GetViewport()?.GuiGetFocusOwner()?.ReleaseFocus();
         ResetJournalNavigation();
         _journal.Open();
+        SendMilestoneNotify(true);
         UpdateHandheldPointerMode();
     }
 
     private void CloseJournal()
     {
         _journal.Close();
+        SendMilestoneNotify(false);
         ResetJournalNavigation();
         StopHandheldMovement();
         UpdateHandheldPointerMode();

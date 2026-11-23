@@ -1694,6 +1694,8 @@ public partial class GameScene : Control
         _net.Connection.GuildMemberContributionEvent += OnGuildMemberContribution;
         _net.Connection.GuildFundsChangedEvent += OnGuildFundsChanged;
         _net.Connection.GuildInviteEvent += OnGuildInvite;
+        _net.Connection.UserMilestonesEvent += OnUserMilestones;
+        _net.Connection.MilestoneEarnedEvent += OnMilestoneEarned;
         _net.Connection.QuestChangedEvent += OnQuestChanged;
         _net.Connection.QuestCancelledEvent += OnQuestCancelled;
         _net.Connection.GuildCastleInfoEvent += OnGuildCastleInfo;
@@ -5800,6 +5802,14 @@ public partial class GameScene : Control
         quests = _userQuests.Values;
         _questTracker?.PopulateQuests(quests);
         _questDialog?.SetQuests(quests);
+        _milestones.Clear();
+        foreach (var milestone in info.Milestones ?? new List<ClientUserMilestone>())
+        {
+            if (milestone == null) continue;
+            milestone.Complete();
+            _milestones[milestone.Index] = milestone;
+        }
+        _questDialog?.RefreshAlerts();
         _mainPanel?.SetQuestIndicators(
             quests.Any(q => q != null && !q.IsComplete),
             quests.Any(q => q != null && q.IsComplete));
@@ -7464,11 +7474,16 @@ public partial class GameScene : Control
 
     private void OnUserMilestones(S.UserMilestones packet)
     {
-        _milestones.Clear();
+        // Updated-only delta: retain the unchanged login snapshot.
         foreach (var milestone in packet?.Milestones ?? new List<ClientUserMilestone>())
-            if (milestone != null) _milestones[milestone.Index] = milestone;
+            if (milestone != null)
+            {
+                milestone.Complete();
+                _milestones[milestone.Index] = milestone;
+            }
         // 里程碑数据变化后刷新任务窗口页签提醒。
         _questDialog?.RefreshAlerts();
+        _journal?.InvalidateProjection();
     }
 
     private void OnMilestoneEarned(S.MilestoneEarned packet)

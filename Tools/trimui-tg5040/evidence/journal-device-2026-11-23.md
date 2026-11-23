@@ -4,7 +4,14 @@ Date: 2026-11-23
 
 Device: TinaLinux TG5040, framebuffer 1280x720, logical journal 640x360. Client started through `pocketjs-native-launch zircon`; screenshots used `/tmp/zircon-grabfb` and removed the device-side raw file after pull.
 
-Final first export used for the six-page screenshot set: `client-fbdev.z8180b`. It showed:
+The final deployed export was `client-fbdev.xqz24s`:
+
+- `Mir2eiClient` SHA-256: `7f6062dc0d010604cfa3074bc81a376df90db8dbd6972f972a63482a8f745feb`
+- `ZirconClient.dll` SHA-256: `dc0f9d5a64c708a75633486d240afe119d612fd7f3f1582fe16e47d60b4af646`
+
+The final deployed framebuffer capture is `tg5040-journal-final-2026-11-23.png`.
+
+The first export used for the six-page screenshot set was `client-fbdev.z8180b`; it showed:
 
 - 背包: populated real inventory, item detail, character preview.
 - 人物: equipment and character paper doll.

@@ -20,13 +20,16 @@ public partial class GameScene
     private double _handheldSelectDownMs = -1;
     private bool _handheldSelectLong;
     private bool _handheldTargetLocked;
+    private bool _handheldAttackHeld;
     private double _nextFocusScanMs;
+    private double _nextHandheldTraceMs;
+    private readonly bool _handheldTrace = System.Environment.GetEnvironmentVariable("ZIRCON_HANDHELD_TRACE") == "1";
     private double _nextSelectorRepeatMs;
     private Key _selectorRepeatKey;
     private bool _handheldPointerMode;
     public bool HandheldPointerMode => AutoLoginArgs.Handheld && _handheldPointerMode;
     public bool HandheldCombatBlocked => AutoLoginArgs.Handheld &&
-        (HandheldGameplayBlocked || _handheldPointerMode || _handheldStickMoving || _handheldAutoRun);
+        (HandheldGameplayBlocked || _handheldStickMoving || _handheldAutoRun);
     private uint _handheldNpcApproachId;
     private Point _handheldAimCell;
     private bool _handheldHasAim;
@@ -38,25 +41,30 @@ public partial class GameScene
     private bool HandheldHasModalWindow() => _uiLayer != null && _uiLayer.GetChildren()
         .OfType<DXWindow>().Any(window => IsInstanceValid(window) && window.Visible
             && window != _miniMap && window != _beltDialog && window != _buffDialog
-            && window != _questTracker && window != _monsterDialog);
+            && window != _questTracker && window != _monsterDialog && window != _chatTextBox);
 
     private bool HandheldGameplayBlocked => AutoLoginArgs.Handheld &&
         (_handheldQuickSelect?.IsOpen == true || HandheldHasModalWindow()
-         || GetViewport()?.GuiGetFocusOwner() is LineEdit or TextEdit);
+         || HandheldTextEditing);
+
+    private bool HandheldTextEditing => GetViewport()?.GuiGetFocusOwner() is Control control
+        && control.IsVisibleInTree() && control is LineEdit or TextEdit;
 
     private void InitHandheldSystem()
     {
         if (!AutoLoginArgs.Handheld) return;
         _handheldFocusReticle = new HandheldFocusReticle(this);
         AddChild(_handheldFocusReticle);
+        var pointerLayer = new CanvasLayer { Layer = 100 };
+        pointerLayer.AddChild(new HandheldPointer(this));
+        AddChild(pointerLayer);
         GD.Print("[Handheld] left stick move; right stick focus/pointer; Start switches HUD");
     }
 
     private void UpdateHandheldPointerMode()
     {
         if (!AutoLoginArgs.Handheld) return;
-        bool pointer = _handheldQuickSelect?.IsOpen != true
-            && (!_handheldHudMode || HandheldHasModalWindow());
+        bool pointer = _handheldQuickSelect?.IsOpen != true && (!_handheldHudMode || HandheldHasModalWindow());
         if (pointer == _handheldPointerMode) return;
         _handheldPointerMode = pointer;
         // OS.SetEnvironment updates native getenv, unlike managed-only environment
@@ -64,12 +72,12 @@ public partial class GameScene
         OS.SetEnvironment("ZIRCON_HANDHELD_POINTER", pointer ? "1" : "0");
         Input.MouseMode = pointer ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Hidden;
         StopHandheldMovement();
-        ClearHandheldFocus();
     }
 
     private void StopHandheldMovement()
     {
         _handheldAutoRun = false;
+        _handheldAttackHeld = false;
         _handheldStickMoving = false;
         _handheldPushStartMs = 0;
         _handheldRequireNeutral = true;
@@ -92,6 +100,16 @@ public partial class GameScene
         if (!AutoLoginArgs.Handheld) return;
         UpdateHandheldPointerMode();
         double now = Godot.Time.GetTicksMsec();
+        if (_handheldTrace && now >= _nextHandheldTraceMs)
+        {
+            _nextHandheldTraceMs = now + 500;
+            var left = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), Input.GetJoyAxis(0, JoyAxis.LeftY));
+            var right = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), Input.GetJoyAxis(0, JoyAxis.RightY));
+            var windows = string.Join(",", _uiLayer.GetChildren().OfType<DXWindow>().Where(w => w.Visible).Select(w => w.GetType().Name));
+            string state = $"[HandheldTrace] fps={Engine.GetFramesPerSecond()} mouse={GetViewport().GetMousePosition()} select={_handheldQuickSelect?.Kind}:{_handheldQuickSelect?.SelectedIndex} weight={BagWeight}/{PlayerStats[Stat.BagWeight]} weapon={_player?.LibraryWeaponShape} mp={_currentMP} windows={windows} pos={_playerLocation.X},{_playerLocation.Y} L={left} R={right} blocked={HandheldGameplayBlocked} pointer={_handheldPointerMode} neutral={_handheldRequireNeutral} move={_moveFrameCount} target={_handheldFocusObject?.ObjectID ?? 0} locked={_handheldTargetLocked}";
+            GD.Print(state);
+            System.IO.File.WriteAllText("/tmp/zircon-handheld-state", state);
+        }
         ValidateHandheldFocus();
         if (_handheldSelectDownMs >= 0 && !_handheldSelectLong
             && now - _handheldSelectDownMs >= HandheldLongPressMs)
@@ -121,6 +139,7 @@ public partial class GameScene
         }
         ProcessHandheldMovement(now);
         if (!_handheldPointerMode) ProcessHandheldFocus(now);
+        if (_handheldAttackHeld && !_handheldStickMoving) HandheldAttack(false);
         if (_handheldNpcApproachId != 0 && _objects.TryGetValue(_handheldNpcApproachId, out var npc)
             && Functions.Distance(_playerLocation, new Point(npc.CellX, npc.CellY)) <= 2)
         {
@@ -274,7 +293,7 @@ public partial class GameScene
 
     private void OpenHandheldSelector(bool magic)
     {
-        if (!_handheldHudMode || HandheldHasModalWindow()) return;
+        if (HandheldHasModalWindow()) return;
         StopHandheldMovement();
         _selectorRepeatKey = Key.None;
         if (magic) _handheldQuickSelect?.OpenMagic(); else _handheldQuickSelect?.OpenBelt();
@@ -324,6 +343,7 @@ public partial class GameScene
         }
         if (!key.Pressed)
         {
+            if (key.Keycode == Key.F16) _handheldAttackHeld = false;
             if (_selectorRepeatKey == key.Keycode) _selectorRepeatKey = Key.None;
             return _handheldQuickSelect?.IsOpen == true;
         }
@@ -340,9 +360,10 @@ public partial class GameScene
             }
             return true; // no combat, belt hotkey, or desktop key leaks
         }
-        if (key.Echo) return _handheldHudMode && IsHandheldSemanticKey(key.Keycode);
+        if (key.Echo) return IsHandheldSemanticKey(key.Keycode);
         if (key.Keycode == Key.Escape)
         {
+            GetViewport()?.GuiGetFocusOwner()?.ReleaseFocus();
             if (DXItemCell.SelectedCell != null || _selectedCurrency != null)
             { DXItemCell.SelectedCell = null; _selectedCurrency = null; return true; }
             if (_bigMap?.Visible == true) _bigMap.Visible = false;
@@ -352,13 +373,12 @@ public partial class GameScene
             UpdateHandheldPointerMode();
             return true;
         }
-        if (HandheldHasModalWindow() || GetViewport()?.GuiGetFocusOwner() is LineEdit or TextEdit)
+        if (HandheldHasModalWindow() || HandheldTextEditing)
         {
             // A is a pointer click in fbdev dialogs. Keyboard Enter remains free
             // for native text/confirmation widgets; game hotkeys are swallowed.
             return IsHandheldSemanticKey(key.Keycode) && key.Keycode is not (Key.Enter or Key.KpEnter);
         }
-        if (!_handheldHudMode) return false;
         switch (key.Keycode)
         {
             case Key.Up: OpenHandheldSelector(true); return true;
@@ -374,7 +394,7 @@ public partial class GameScene
             case Key.Key2: TryUseHandheldBelt(1); return true;
             case Key.F13: ToggleHandheldAutoRun(); return true;
             case Key.F14: ToggleHandheldTargetLock(); return true;
-            case Key.F16: HandheldAttack(); return true;
+            case Key.F16: HandheldAttack(); _handheldAttackHeld = true; return true;
             case Key.Space: HandheldPickUp(); return true;
             case Key.Enter:
             case Key.KpEnter: HandheldConfirm(); return true;
@@ -397,12 +417,12 @@ public partial class GameScene
         if (item != null) BeginGroundItemPickup(item); else SendPickUp();
     }
 
-    private void HandheldAttack()
+    private void HandheldAttack(bool stopMovement = true)
     {
         if (_net?.Connection?.Connected != true || _player == null || !CanPlayerTurn()
-            || _moveFrameCount > 1 || _pendingMagicPacket != null || IsFishingActive || IsTamingActive) return;
-        _handheldAutoRun = false;
-        var target = _handheldFocusObject;
+            || _pendingMagicPacket != null || IsFishingActive || IsTamingActive) return;
+        if (stopMovement) StopHandheldMovement();
+        var target = _handheldFocusObject ?? (_handheldPointerMode ? _combatController?.MouseObject : null);
         if (IsHandheldFocusCandidate(target) && CombatController.CanAttackObject(target))
         {
             // Ordinary target selection retains the engine's chase/cooldown rules.
@@ -417,7 +437,7 @@ public partial class GameScene
 
     private void HandheldConfirm()
     {
-        var target = _handheldFocusObject;
+        var target = _handheldFocusObject ?? (_handheldPointerMode ? _combatController?.MouseObject : null);
         if (!IsHandheldFocusCandidate(target) || _observer || _player?.Dead != false) return;
         if (target.Type == ObjectRenderer.Kind.NPC)
         {
@@ -459,7 +479,7 @@ public partial class GameScene
             .Where(item => MatchesHandheldBeltLink(link, item)).Sum(item => item.Count);
     }
 
-    private bool CanUseHandheldQuickAction => AutoLoginArgs.Handheld && _handheldHudMode
+    private bool CanUseHandheldQuickAction => AutoLoginArgs.Handheld
         && _startGameShown && !_observer && _player?.Dead == false
         && _net?.Connection?.Connected == true && !HandheldGameplayBlocked
         && DXItemCell.SelectedCell == null && _selectedCurrency == null;
@@ -481,12 +501,41 @@ public partial class GameScene
            && UserMagics.TryGetValue(magic.Info, out var learned) && ReferenceEquals(learned, magic)
            && UseMagic(magic);
 
+    private Point HandheldMagicCell(Point mouseCell)
+    {
+        if (AutoLoginArgs.Handheld && _handheldHudMode) return HandheldCastCell();
+        return _combatController?.MouseCell() ?? mouseCell;
+    }
+
     private Point HandheldCastCell()
     {
         if (IsHandheldFocusCandidate(_handheldFocusObject))
             return new Point(_handheldFocusObject.CellX, _handheldFocusObject.CellY);
         if (_handheldHasAim) return _handheldAimCell;
         return Functions.Move(_playerLocation, _playerDirection, 3);
+    }
+}
+
+/// <summary>fbdev 没有硬件鼠标光标；直接在视口坐标绘制对话框指针。</summary>
+public partial class HandheldPointer : Control
+{
+    private readonly GameScene _scene;
+    private static readonly Vector2[] Points = { Vector2.Zero, new(0, 15), new(4, 11), new(8, 18), new(11, 16), new(7, 10), new(14, 10) };
+    private static readonly Vector2[] Outline = { Points[0], Points[1], Points[2], Points[3], Points[4], Points[5], Points[6], Points[0] };
+    public HandheldPointer(GameScene scene)
+    {
+        _scene = scene;
+        MouseFilter = MouseFilterEnum.Ignore;
+    }
+    public override void _Process(double delta)
+    {
+        Visible = _scene.HandheldPointerMode;
+        if (Visible) { Position = GetViewport().GetMousePosition(); QueueRedraw(); }
+    }
+    public override void _Draw()
+    {
+        DrawColoredPolygon(Points, Colors.White);
+        DrawPolyline(Outline, Colors.Black, 1);
     }
 }
 
@@ -503,8 +552,8 @@ public partial class HandheldFocusReticle : Node2D
         Vector2 center = target.Position + new Vector2(0, -16);
         Color gold = new(1, 0.84f, 0, 0.95f);
         const float w = 24, h = 32, corner = 8;
-        foreach (int x in new[] { -1, 1 })
-            foreach (int y in new[] { -1, 1 })
+        for (int x = -1; x <= 1; x += 2)
+            for (int y = -1; y <= 1; y += 2)
             {
                 var p = center + new Vector2(x * w, y * h);
                 DrawLine(p, p - new Vector2(x * corner, 0), gold, 2);

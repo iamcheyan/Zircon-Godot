@@ -63,9 +63,11 @@ public static class DevSinglePlayer
         // 该开发测试账号保留原有“跨职业全技能”口径，便于 UI 测试；
         // 关闭的修炼系统除外。不改已有快捷键、不重复创建持久化/运行时技能。
         int learned = EnsureMagics(player);
+        // The constructor has loaded the inventory but starts with empty Stats.
+        // RefreshStats also computes the carried weight, including on retries.
+        player.RefreshStats();
         if (levelChanged || learned > 0)
         {
-            player.RefreshStats();
             player.SetHP(player.Stats[Stat.Health]);
             player.SetMP(player.Stats[Stat.Mana]);
             player.SetFP(player.CurrentFP);
@@ -76,7 +78,7 @@ public static class DevSinglePlayer
         var owned = player.Character.Items.Concat(player.Character.Account.Items)
             .Where(item => item?.Info != null && item.Count > 0)
             .Select(item => item.Info.Index).ToHashSet();
-        int given = 0;
+        int given = 0, deferred = 0;
         foreach (ItemInfo info in SEnvir.ItemInfoList.Binding)
         {
             if (info.ItemType == ItemType.Nothing) continue;
@@ -85,7 +87,13 @@ public static class DevSinglePlayer
                 or ItemType.LootBox or ItemType.ItemPart or ItemType.Emblem) continue;
 
             if (owned.Contains(info.Index)) continue;
-            UserItem item = SEnvir.CreateFreshItem(new ItemCheck(info, 1, UserItemFlags.Bound, TimeSpan.Zero));
+            var check = new ItemCheck(info, 1, UserItemFlags.Bound, TimeSpan.Zero);
+            if (!player.CanGainItems(true, check))
+            {
+                deferred++;
+                continue;
+            }
+            UserItem item = SEnvir.CreateFreshItem(check);
             if (item == null) continue;
 
             player.GainItem(item);
@@ -104,7 +112,7 @@ public static class DevSinglePlayer
 
         player.RefreshWeight();
         SEnvir.Log($"[SingleDev] 补齐完成: {player.Name}, 等级 {player.Level}, " +
-            $"新增物品 {given} 件, 新增技能 {learned} 个, " +
+            $"新增物品 {given} 件, 负重暂缓 {deferred} 件, 新增技能 {learned} 个, " +
             $"物品合计 {player.Character.Items.Count}, 技能合计 {player.Character.Magics.Count}");
         EnsureVisibleExperience(player);
     }

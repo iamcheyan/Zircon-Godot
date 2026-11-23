@@ -48,8 +48,8 @@ public partial class HandheldHud : Control
         _focusFill = AddBar(new Vector2(18, 40), new Color(0.95f, 0.70f, 0.18f, 0.95f));
 
         _modeLabel = AddLabel(new Vector2(214, 10), "HANDHELD HUD", 13, Colors.White);
-        _hintLabel = AddLabel(new Vector2(214, 29), "START: DEFAULT HUD", 9, new Color(0.85f, 0.88f, 0.95f));
-        _targetLabel = AddLabel(new Vector2(10, 62), "", 10, new Color(1f, 0.86f, 0.35f));
+        _hintLabel = AddLabel(new Vector2(214, 29), "START: DEFAULT HUD", 12, new Color(0.85f, 0.88f, 0.95f));
+        _targetLabel = AddLabel(new Vector2(10, 62), "", 13, new Color(1f, 0.86f, 0.35f));
     }
 
     private ColorRect AddBar(Vector2 position, Color color)
@@ -99,11 +99,12 @@ public partial class HandheldHud : Control
     public override void _Process(double delta)
     {
         if (_game == null) return;
-        var viewport = _game.GetViewport().GetVisibleRect().Size / GameScene.UiScale;
+        Scale = Vector2.One / GameScene.UiScale;
+        var viewport = _game.GetViewport().GetVisibleRect().Size;
         if (viewport.X <= 0 || viewport.Y <= 0) return;
         _panel.Position = new Vector2(10, 8);
-        _modeLabel.Position = new Vector2(Mathf.Max(214, viewport.X - 165), 10);
-        _hintLabel.Position = new Vector2(Mathf.Max(214, viewport.X - 165), 29);
+        _modeLabel.Position = new Vector2(214, 10);
+        _hintLabel.Position = new Vector2(214, 29);
         _targetLabel.Position = new Vector2(10, viewport.Y - 27);
         _targetLabel.Text = _game.HandheldTargetText;
 
@@ -120,7 +121,7 @@ public partial class HandheldHud : Control
     {
         if (_toastUntil > Godot.Time.GetTicksMsec() && !string.IsNullOrWhiteSpace(_toast))
         {
-            var viewport = _game.GetViewport().GetVisibleRect().Size / GameScene.UiScale;
+            var viewport = _game.GetViewport().GetVisibleRect().Size;
             var font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
             var size = font.GetStringSize(_toast, HorizontalAlignment.Left, -1, 14);
             var pos = new Vector2((viewport.X - size.X) / 2f, viewport.Y * 0.22f);

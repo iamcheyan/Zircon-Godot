@@ -144,6 +144,25 @@ Tools/trimui-tg5040/deploy.sh
 
 [腰带快选实机截图](evidence/tg5040-belt.png)：按 B 退出技能快选，再用 evdev 测试手柄触发十字键下，显示十格腰带及选中框。面板完整上屏，小字辨识度仍有限；本次未验证道具消耗。
 
+### 掌机输入回归与稳定性（2026-11-23）
+
+在 TG5040 上通过 `PJOS Test Injector` 虚拟 evdev 重放验证移动、目标锁定、普通攻击、火球与反伤技能、背包装备、腰带绑定与消耗、第二页腰带选择，以及模态设置窗口关闭后恢复移动。服务端收到对应 `ObjectAttack`、`ObjectMagic`、`ItemMove`、`StatsUpdate`、`ItemChanged` 消息；随机传送卷轴使用后位置变化。硬件实体按键没有参与这些输入重放。
+
+新增无服务端、无存档的界面回归脚本：
+
+```bash
+ZIRCON_HANDHELD=1 MIR3_EI_ROOT=~/mir2ei godot-mono --headless \
+  --path GodotClient --script res://Tests/HandheldInputChecks.cs
+```
+
+当前脚本通过永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、默认 HUD 指针不单独阻止战斗、选择器开启期间两套 HUD 均保留各自的技能落点规则、腰带第八格可选、十格循环和 B 关闭。该脚本不连接服务端，也不覆盖 NPC 对话或服务端技能命中；后两项仍需要实机确认。
+
+当前 TG5040 运行画面：[默认 HUD](evidence/tg5040-default-hud-2026-11-23.png) · [紧凑掌机 HUD](evidence/tg5040-compact-hud-2026-11-23.png)。画面来自 framebuffer mmap 的当前显示页；两种 HUD 均通过 Start 在运行中来回切换。
+
+修复包括把 compact/default HUD 的技能落点选择与选择器临时指针状态解耦，并移除指针/准星绘制循环中的逐帧小数组分配。完整 fbdev 客户端已重新导出并配套使用其 .NET 程序集。
+
+长时间稳定性尚未通过：此前一轮 TG5040 会话约运行 7 小时后以 SIGSEGV 退出，期间 FPS 在约 12 与 1–2 之间波动；没有 OOM 记录，旧启动禁用了 core。新会话早期短采样约 15–20 FPS、RSS 400 MB；fbdev read 3.4–3.9 ms、convert 2.0–2.3 ms、blit 5.5–12.4 ms。已为当前进程启用 core 文件及 fbdev 每秒耗时记录；这段短采样不能解释先前多小时掉帧。崩溃原因仍未知；缓存资源、渲染开销和队列深度目前只是测量候选。
+
 ### 旧版设备实测（2026-11-22）
 
 通过 supervisor 的真实入口 `pocketjs-native-launch zircon` 触发，日志见

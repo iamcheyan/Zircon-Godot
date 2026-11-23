@@ -43,6 +43,9 @@ try
     var repaired = new PlayerObject(character, Connection());
     Check(character.Magics.Count == 2, "level255 with zero skills is repaired (disabled discipline excluded)");
     Check(character.Items.Count == 2, "missing test equipment is granted");
+    Check(repaired.BagWeight <= repaired.Stats[Stat.BagWeight] &&
+        !session.GetCollection<UserItem>().Binding.Any(x => x.Info.ItemName == "HeavyFixture"),
+        "overweight grant is deferred without a persistent orphan");
     Check(repaired.MagicObjects.Count == 2, "runtime magic objects are registered");
     Check(character.Magics.All(m => m.Index > 0 && m.Character == character && m.Level == Globals.MagicMaxLevel), "skills use real MirDB identity and association");
     Check(character.Magics.All(m => character.Magics.Count(x => x.Info == m.Info) == 1), "no duplicate association insert");
@@ -97,6 +100,19 @@ try
     var freshPlayer = new PlayerObject(fresh, Connection());
     Check(fresh.Level == DevSinglePlayer.DevLevel && fresh.Magics.Count == 2 && fresh.Items.Count == 2,
         "fresh level1 test character still gets full dev initialization");
+    // Model a legacy bag that already exceeded capacity before login. A missing
+    // light definition must not slip through using a constructor-default weight.
+    var existing = character.Items.Select(x => (Item: x, x.Slot, x.Count)).ToArray();
+    existing[0].Item.Info.Weight = 100_000;
+    var light = session.GetCollection<ItemInfo>().CreateNewObject();
+    light.ItemName = "LightFixture";
+    light.ItemType = ItemType.Consumable;
+    light.StackSize = 1;
+    var overweight = new PlayerObject(character, Connection());
+    Check(overweight.BagWeight > overweight.Stats[Stat.BagWeight] && character.Items.Count == existing.Length &&
+        existing.All(x => overweight.Inventory[x.Slot] == x.Item && x.Item.Character == character && x.Item.Count == x.Count),
+        "overweight login preserves the actual weight and all existing bag items and slots");
+    Check(!overweight.Connection.SendList.OfType<S.ItemsGained>().Any(), "no rejected grant announced");
     Check(!SEnvir.DisplayLogs.Any(x => x.Contains("注入异常")), "no swallowed injection exception");
     Console.WriteLine("PASS: SinglePlayerDevChecks (real MirDB roundtrip; no live data)");
 }
@@ -212,4 +228,9 @@ static void CreateDefinitions(Session session)
     potion.ItemName = "TestPotion";
     potion.ItemType = ItemType.Consumable;
     potion.StackSize = 20;
+    var heavy = session.GetCollection<ItemInfo>().CreateNewObject();
+    heavy.ItemName = "HeavyFixture";
+    heavy.ItemType = ItemType.Weapon;
+    heavy.StackSize = 1;
+    heavy.Weight = 100_000;
 }

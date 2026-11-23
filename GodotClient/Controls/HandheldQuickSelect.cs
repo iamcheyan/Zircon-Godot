@@ -15,7 +15,7 @@ public partial class HandheldQuickSelect : Control
 {
     public enum SelectKind { None, Magic, Belt }
 
-    private const int VisibleSlots = Globals.MaxBeltCount;
+    private const int VisibleSlots = 5;
     private const float SlotGap = 4f;
     private const float PanelHeight = 190f;
     private const string NavigationHint = "方向键 / 右摇杆 / L1 R1 选择";
@@ -60,8 +60,8 @@ public partial class HandheldQuickSelect : Control
         };
         AddChild(_panel);
         _title = LabelAt(_panel, new Vector2(16, 10), "", 18, Colors.White);
-        _detail = LabelAt(_panel, new Vector2(16, 151), "", 11, new Color(1f, 0.86f, 0.35f));
-        _hint = LabelAt(_panel, new Vector2(16, 171), "", 10,
+        _detail = LabelAt(_panel, new Vector2(16, 151), "", 14, new Color(1f, 0.86f, 0.35f));
+        _hint = LabelAt(_panel, new Vector2(16, 171), "", 13,
             new Color(0.86f, 0.88f, 0.95f));
 
         for (int i = 0; i < VisibleSlots; i++)
@@ -78,8 +78,8 @@ public partial class HandheldQuickSelect : Control
             };
             cell.AddChild(icon);
             _icons[i] = icon;
-            _slotNumbers[i] = LabelAt(cell, new Vector2(3, 2), "", 9, new Color(1f, 0.83f, 0.3f));
-            _slotLabels[i] = LabelAt(cell, new Vector2(2, 42), "", 8, Colors.White);
+            _slotNumbers[i] = LabelAt(cell, new Vector2(3, 2), "", 12, new Color(1f, 0.83f, 0.3f));
+            _slotLabels[i] = LabelAt(cell, new Vector2(2, 42), "", 13, Colors.White);
             _slotLabels[i].HorizontalAlignment = HorizontalAlignment.Center;
             _slotLabels[i].ClipText = true;
         }
@@ -99,7 +99,10 @@ public partial class HandheldQuickSelect : Control
     public override void _Process(double delta)
     {
         if (_game == null || _panel == null) return;
-        var viewport = _game.GetViewport().GetVisibleRect().Size / GameScene.UiScale;
+        if (!Visible) return;
+        // This handheld layout is measured in viewport pixels, not desktop HUD units.
+        Scale = Vector2.One / GameScene.UiScale;
+        var viewport = _game.GetViewport().GetVisibleRect().Size;
         if (viewport.X <= 0 || viewport.Y <= 0) return;
 
         float panelWidth = Mathf.Max(1f, Mathf.Min(600f, viewport.X - 16f));
@@ -251,9 +254,7 @@ public partial class HandheldQuickSelect : Control
     {
         Visible = true;
         int count = _kind == SelectKind.Magic ? _magics.Count : Globals.MaxBeltCount;
-        int first = _kind == SelectKind.Magic
-            ? Math.Clamp(_cursor - VisibleSlots / 2, 0, Math.Max(0, count - VisibleSlots))
-            : 0;
+        int first = _cursor / VisibleSlots * VisibleSlots;
         for (int i = 0; i < VisibleSlots; i++)
         {
             int index = first + i;
@@ -286,7 +287,11 @@ public partial class HandheldQuickSelect : Control
             }
         }
         if (_kind == SelectKind.Magic) UpdateDetail();
-        else _detail.Text = $"腰带槽位  {(_cursor + 1)}/{Globals.MaxBeltCount}";
+        else
+        {
+            var info = _game.GetHandheldBeltItem(_cursor)?.Info;
+            _detail.Text = $"腰带槽位  {(_cursor + 1)}/{Globals.MaxBeltCount}  {info?.Local() ?? info?.ItemName ?? "空"}";
+        }
     }
 
     private void UpdateDetail()
@@ -305,6 +310,9 @@ public partial class HandheldQuickSelect : Control
     private void ShowMessage(string text)
     {
         _kind = SelectKind.None;
+        foreach (var slot in _slots) slot.Visible = false;
+        _title.Text = "";
+        _detail.Text = "";
         _hint.Text = text;
         Visible = true;
         _messageUntilMs = Godot.Time.GetTicksMsec() + 1800;

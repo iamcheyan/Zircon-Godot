@@ -351,7 +351,9 @@ public partial class CombatController : Node2D
     // 选中/攻击用鼠标点击 (不和 GameScene._Input 的键盘处理冲突: 不同输入类型)
     public override void _Input(InputEvent @event)
     {
-        if (!Enabled || _mapView?.Map == null || AutoLoginArgs.Handheld) return;
+        if (!Enabled || _mapView?.Map == null
+            || (AutoLoginArgs.Handheld && (GameScene.Game?.HandheldPointerMode != true
+                || GameScene.Game.HandheldCombatBlocked))) return;
 
         if (@event is InputEventMouseButton mb && mb.Pressed)
         {

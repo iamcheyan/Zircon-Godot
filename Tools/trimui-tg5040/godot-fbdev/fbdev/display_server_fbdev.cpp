@@ -154,14 +154,20 @@ void DisplayServerFbdev::swap_buffers() {
 }
 
 void DisplayServerFbdev::_dispatch_input(const Ref<InputEvent> &p_event) {
-	if (input_event_callback.is_valid()) {
-		input_event_callback.call(p_event);
+	Input::get_singleton()->parse_input_event(p_event);
+}
+
+void DisplayServerFbdev::_dispatch_input_events(const Ref<InputEvent> &p_event) {
+	auto *server = static_cast<DisplayServerFbdev *>(get_singleton());
+	if (server->input_event_callback.is_valid()) {
+		server->input_event_callback.call(p_event);
 	}
 }
 
 void DisplayServerFbdev::_emit_key(Key p_key, bool p_pressed, bool p_echo) {
 	Ref<InputEventKey> ev;
 	ev.instantiate();
+	ev->set_window_id(MAIN_WINDOW_ID);
 	ev->set_keycode(p_key);
 	ev->set_physical_keycode(p_key);
 	ev->set_pressed(p_pressed);
@@ -181,6 +187,15 @@ void DisplayServerFbdev::_emit_mouse_button(MouseButton p_button, bool p_pressed
 	Ref<InputEventMouseButton> ev;
 	ev.instantiate();
 	ev->set_button_index(p_button);
+	if (p_button == MouseButton::LEFT && p_pressed) {
+		const uint64_t now = OS::get_singleton()->get_ticks_usec();
+		const bool double_click = last_click_usec != 0 && now - last_click_usec <= 400000 &&
+				last_click_position.distance_squared_to(p_position) <= 25;
+		ev->set_double_click(double_click);
+		last_click_usec = double_click ? 0 : now;
+		last_click_position = p_position;
+	}
+	ev->set_window_id(MAIN_WINDOW_ID);
 	ev->set_position(p_position);
 	ev->set_global_position(p_position);
 	ev->set_pressed(p_pressed);
@@ -192,6 +207,7 @@ void DisplayServerFbdev::_emit_mouse_motion(const Point2i &p_position) {
 	mouse_position = p_position;
 	Ref<InputEventMouseMotion> ev;
 	ev.instantiate();
+	ev->set_window_id(MAIN_WINDOW_ID);
 	ev->set_position(p_position);
 	ev->set_global_position(p_position);
 	ev->set_relative(relative);
@@ -462,6 +478,7 @@ DisplayServerFbdev::DisplayServerFbdev(const String &p_rendering_driver, WindowM
 	window_size = Size2i(gl_manager->get_render_width(), gl_manager->get_render_height());
 	window_id = MAIN_WINDOW_ID;
 
+	Input::get_singleton()->set_event_dispatch_function(_dispatch_input_events);
 	_open_input_devices();
 	Input::get_singleton()->joy_connection_changed(0, true, "TRIMUI Player1", "TG5040");
 

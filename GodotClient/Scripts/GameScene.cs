@@ -11616,9 +11616,7 @@ public partial class GameScene : Control
                 : CombatController.CanAttackObject(selected) ? selected : null;
         }
         uint targetID = target?.ObjectID ?? 0;
-        var mouseCell = AutoLoginArgs.Handheld && _handheldHudMode
-            ? HandheldCastCell()
-            : _combatController?.MouseCell() ?? new System.Drawing.Point(pCell.X, pCell.Y);
+        var mouseCell = HandheldMagicCell(new System.Drawing.Point(pCell.X, pCell.Y));
         var targetCell = target == null
             ? mouseCell
             : new System.Drawing.Point(target.CellX, target.CellY);
@@ -12176,9 +12174,10 @@ public partial class GameScene : Control
     // 对齐旧版 ActiveScene 的“UI 优先、地图其次”分发顺序。
     public override void _UnhandledInput(InputEvent @event)
     {
-        // Pointer fallback in handheld dialogs/default HUD is UI-only. Map
-        // walking/attacks use semantic actions, never a second synthetic click.
-        if (AutoLoginArgs.Handheld && @event is InputEventMouseButton)
+        // Compact gameplay has semantic actions only. Default-HUD pointer clicks
+        // retain UI-priority NPC, pickup and item-drop behavior; MouseWalker stays off.
+        if (AutoLoginArgs.Handheld && @event is InputEventMouseButton
+            && (!HandheldPointerMode || HandheldGameplayBlocked))
         {
             GetViewport()?.SetInputAsHandled();
             return;

@@ -36,6 +36,8 @@ class DisplayServerFbdev : public DisplayServer {
 	bool pointer_input = false;
 	bool confirm_pressed = false;
 	bool confirm_pointer = false;
+	uint64_t last_click_usec = 0;
+	Point2i last_click_position;
 	bool left_trigger_pressed = false;
 	bool right_trigger_pressed = false;
 	// Linux input_absinfo {value, minimum, maximum, fuzz, flat, resolution}.
@@ -61,6 +63,7 @@ class DisplayServerFbdev : public DisplayServer {
 	void _close_input_devices();
 	void _poll_input();
 	void _dispatch_input(const Ref<InputEvent> &p_event);
+	static void _dispatch_input_events(const Ref<InputEvent> &p_event);
 	void _emit_key(Key p_key, bool p_pressed, bool p_echo = false);
 	float _normalize_axis(int p_code, int p_value) const;
 	void _emit_mouse_button(MouseButton p_button, bool p_pressed, const Point2i &p_position);

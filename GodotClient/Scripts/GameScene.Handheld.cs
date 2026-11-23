@@ -10,9 +10,8 @@ namespace ZirconClient.Scripts;
 
 public partial class GameScene
 {
-    private const double HandheldWalkBufferMs = 380;
     private const double HandheldLongPressMs = 600;
-    private double _handheldPushStartMs;
+    private bool _handheldMoveStarted;
     private bool _handheldStickMoving;
     private bool _handheldRequireNeutral;
     private bool _handheldAutoRun;
@@ -85,7 +84,7 @@ public partial class GameScene
         _handheldAutoRun = false;
         _handheldAttackHeld = false;
         _handheldStickMoving = false;
-        _handheldPushStartMs = 0;
+        _handheldMoveStarted = false;
         _handheldRequireNeutral = true;
         _autoRun = false;
         if (_mouseWalker != null)
@@ -170,7 +169,7 @@ public partial class GameScene
         if (!pushed && !_handheldAutoRun)
         {
             _handheldStickMoving = false;
-            _handheldPushStartMs = 0;
+            _handheldMoveStarted = false;
             return;
         }
         if (pushed)
@@ -181,7 +180,7 @@ public partial class GameScene
                 _groundItemPickupTargetId = 0;
                 _handheldNpcApproachId = 0;
                 if (_combatController != null) _combatController.TargetObject = null;
-                _handheldPushStartMs = now;
+                _handheldMoveStarted = false;
             }
             double angle = (Math.Atan2(stick.X, -stick.Y) * 180 / Math.PI + 382.5) % 360;
             _handheldMoveDirection = (MirDirection)(int)(angle / 45);
@@ -191,11 +190,15 @@ public partial class GameScene
         // timer. Every intermediate run cell is checked; blocked runs fall back.
         if (!CanPlayerMove() || _moveFrameCount > 1 || now < _moveVisualLockUntilMs
             || now < _moveServerLockUntilMs) return;
-        bool running = _handheldAutoRun || now - _handheldPushStartMs >= HandheldWalkBufferMs;
+        // Walk the first segment, then use the same run gate as PC right-click.
+        bool running = _handheldAutoRun || _handheldMoveStarted;
         int steps = running ? GetRunSteps() : 1;
         if (!CanMoveGroundItemPath(_handheldMoveDirection, steps)) steps = 1;
         if (CanMoveGroundItemPath(_handheldMoveDirection, steps))
+        {
             SendMouseMove(_handheldMoveDirection, steps, running && steps >= 2);
+            _handheldMoveStarted = true;
+        }
         else
         {
             _handheldAutoRun = false;
@@ -293,7 +296,7 @@ public partial class GameScene
         _handheldMoveDirection = _handheldStickMoving ? _handheldMoveDirection : _playerDirection;
         _handheldAutoRun = true;
         _handheldRequireNeutral = false;
-        _handheldPushStartMs = 0;
+        _handheldMoveStarted = false;
         // Do not enable MouseWalker.AutoRun: it runs toward the mouse!
         if (_mouseWalker != null) _mouseWalker.AutoRun = false;
         _handheldHud?.ShowToast("自动跑步：开（B 停止）");

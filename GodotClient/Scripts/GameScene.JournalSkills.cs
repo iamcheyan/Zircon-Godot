@@ -9,6 +9,9 @@ namespace ZirconClient.Scripts;
 
 public partial class GameScene
 {
+    private static bool IsJournalPassive(MagicInfo info) =>
+        info.Property == MagicProperty.Passive || info.School == MagicSchool.Passive;
+
     private IEnumerable<(MagicInfo Info, ClientUserMagic Magic)> JournalSkills(int cat)
     {
         foreach (var info in Globals.MagicInfoList?.Binding ?? Enumerable.Empty<MagicInfo>())
@@ -23,9 +26,9 @@ public partial class GameScene
             if (cat switch
             {
                 0 => magic != null,
-                1 => magic != null && info.School is not (MagicSchool.Toggle or MagicSchool.Passive),
-                2 => magic != null && info.School == MagicSchool.Toggle,
-                3 => magic != null && info.School == MagicSchool.Passive,
+                1 => magic != null && !IsJournalPassive(info) && info.School != MagicSchool.Toggle,
+                2 => magic != null && !IsJournalPassive(info) && info.School == MagicSchool.Toggle,
+                3 => magic != null && IsJournalPassive(info),
                 4 => magic == null,
                 _ => false,
             })
@@ -38,12 +41,7 @@ public partial class GameScene
         foreach (var (info, magic) in JournalSkills(cat).OrderBy(entry => entry.Info.NeedLevel1)
                      .ThenBy(entry => entry.Info.Index))
         {
-            string type = info.School switch
-            {
-                MagicSchool.Toggle => "开关",
-                MagicSchool.Passive => "被动",
-                _ => "主动",
-            };
+            string type = IsJournalPassive(info) ? "被动" : info.School == MagicSchool.Toggle ? "开关" : "主动";
             string name = info.Local() ?? info.Name;
             string detail = $"{type} · 职业 {info.RequiredClass.Local()} · 需要等级 {info.NeedLevel1}";
             string badge = "未学";
@@ -53,7 +51,7 @@ public partial class GameScene
             }
             else
             {
-                badge = $"{(info.School != MagicSchool.Passive && JournalFavorite(info.Index) ? "★ " : "")}Lv.{magic.Level}";
+                badge = $"{(!IsJournalPassive(info) && JournalFavorite(info.Index) ? "★ " : "")}Lv.{magic.Level}";
                 var key = JournalSkillKey(magic, MagicBarSpellSet);
                 string binding = key == SpellKey.None ? "未绑定" : MagicDialog.SpellKeyText(key);
                 detail += $"\n等级 {magic.Level} · 修炼值 {magic.Experience}\n共用快捷栏组 {MagicBarSpellSet} / 4 · {binding}";
@@ -78,14 +76,14 @@ public partial class GameScene
             return Array.Empty<JournalAction>();
 
         var (info, magic) = JournalSkills(cat).FirstOrDefault(entry => entry.Info.Index == skillIndex);
-        if (info == null || magic == null || info.School == MagicSchool.Passive)
+        if (info == null || magic == null || IsJournalPassive(info))
             return Array.Empty<JournalAction>();
 
         if (secondary)
         {
             return new[] { new JournalAction(JournalFavorite(skillIndex) ? "取消收藏" : "收藏技能", () =>
                 JournalSkills(cat).Any(entry => entry.Info.Index == skillIndex && entry.Magic != null &&
-                                                entry.Info.School != MagicSchool.Passive)
+                                                !IsJournalPassive(entry.Info))
                     ? JournalToggleFavorite(skillIndex) : "技能已不可用") };
         }
 
@@ -114,7 +112,7 @@ public partial class GameScene
     {
         if (MagicBarSpellSet != set) return "快捷栏组已更改，请重新选择";
         var (info, magic) = JournalSkills(cat).FirstOrDefault(entry => entry.Info.Index == skillIndex);
-        if (_observer || magic == null || info.School == MagicSchool.Passive || !JournalSkillHasEquipment(info, magic))
+        if (_observer || magic == null || IsJournalPassive(info) || !JournalSkillHasEquipment(info, magic))
             return "技能已不可绑定";
         if (_net?.Connection?.Connected != true) return "尚未连接服务器";
 

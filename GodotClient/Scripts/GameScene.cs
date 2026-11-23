@@ -6265,6 +6265,16 @@ public partial class GameScene : Control
         // （槽号 6 的记录显示在格 0）。直接 `cells[slot]` 会解锁另一格，
         // 真正被锁的格永远保持 Locked，此后无法移动/装备/丢弃该格物品。
         int index = grid != null ? grid.ResolveSlotCell(slot) : slot;
+        // Empty legacy cells have no entry in the occupied-slot reverse map.
+        if (index < 0 && cells != null && grid?.UseLegacyFootprints == true)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i] is not { Locked: true, Item: null } cell || cell.Slot != slot) continue;
+                index = i;
+                break;
+            }
+        }
         if (cells != null && index >= 0 && index < cells.Length && cells[index] != null)
         {
             cells[index].Locked = false;

@@ -3338,6 +3338,7 @@ public partial class GameScene : Control
             _player.PlayStandingForState();
             _playerHorse = p.Horse;
             _horseDialog?.SetMountState(p.Horse == HorseType.None ? 0 : 1);
+            _journal?.InvalidateProjection();
         }
         else if (_otherPlayers.TryGetValue(p.ObjectID, out var player))
         {

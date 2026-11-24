@@ -11,8 +11,8 @@ public partial class HandheldJournalService : Control
 {
     internal sealed record Line(string Key, string Name, string Detail, Texture2D Icon = null, Func<string> Act = null);
     public const int PageSize = 5;
-    private static readonly Color Ink = new("15251e"), Leaf = new("23382c"), Rule = new("50604b"),
-        Seal = new("dfc381"), Paper = new("eee8d6"), Quiet = new("a6b6a3");
+    private static readonly Color Ink = new("101215"), Leaf = new("1c2027"), Rule = new("343943"),
+        Seal = new("e2bf68"), Paper = new("f5f0e1"), Quiet = new("9ca3af");
     private Font font;
     internal readonly List<Line>[] Columns = { new(), new() };
     private readonly int[] cursor = new int[2];
@@ -92,7 +92,7 @@ public partial class HandheldJournalService : Control
             {
                 int y = 76 + (i-first)*34;
                 var row = list[i]; bool selected = c == side && cursor[c] == i;
-                if (selected) DrawRect(new Rect2(x+3,y,296,31),new Color("41523c"));
+                if (selected) DrawRect(new Rect2(x+3,y,296,31),new Color("30291a"));
                 if (row.Icon != null) DrawTextureRect(row.Icon,new Rect2(x+8,y+2,28,28),false);
                 Text(row.Name,x+40,y+21,14,selected ? Paper : Quiet,250);
             }
@@ -100,9 +100,10 @@ public partial class HandheldJournalService : Control
         var focus = review ?? Selected;
         Text(review == null ? focus?.Name : "核对后确认 · " + review.Name,20,277,15,Seal,598);
         DrawMultilineString(font,new Vector2(20,300),string.IsNullOrEmpty(message) ? focus?.Detail ?? "当前没有可操作条目" : message,
-            HorizontalAlignment.Left,601,14,2,Paper);
+            HorizontalAlignment.Left,601,MirSkin.ScaledSize(12),2,Paper);
         DrawLine(new Vector2(14,330),new Vector2(626,330),Rule);
-        Text(review == null ? "方向 浏览    肩键 翻页    A 核对    B 返回    Y 原窗口" : "A 执行已核对的操作      B 取消",20,351,13,Quiet,607);
+        Text(review == null ? "方向 浏览    L1/R1 翻页    A 核对    B 返回" : "A 执行已核对的操作      B 取消",20,351,13,Quiet,607);
     }
-    private void Text(string value,int x,int y,int size,Color color,int width) => DrawString(font,new Vector2(x,y),value ?? "",HorizontalAlignment.Left,width,size,color);
+    private void Text(string value,int x,int y,int size,Color color,int width)
+        => DrawString(font,new Vector2(x,y),value ?? "",HorizontalAlignment.Left,width,MirSkin.ScaledSize(size),color);
 }

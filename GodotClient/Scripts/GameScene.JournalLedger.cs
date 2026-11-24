@@ -26,7 +26,8 @@ public partial class GameScene
             || _net?.Connection?.Connected != true || JournalInputPane() != root
             || (root == _tradeDialog && !JournalExchangeAvailable())
             || DXItemCell.SelectedCell != null || _selectedCurrency != null
-            || (root != _tradeDialog && root != _storageDialog && (root != _npcDialog || !JournalMerchantAvailable())))
+            || (root != _tradeDialog && root != _storageDialog && (root != _npcDialog ||
+                (_npcDialog.CurrentPageDialogType == NPCDialogType.None || _npcDialog.CurrentPageDialogType == NPCDialogType.BuySell && !JournalMerchantAvailable()))))
         {
             if (_serviceBook?.Visible == true) _serviceBook.Hide();
             return;
@@ -42,8 +43,8 @@ public partial class GameScene
         if (opening)
         {
             SetJournalServiceFocus(null, null);
-            _serviceBook.OpenBook(storage ? "仓库 · 存取簿" : trade ? $"交易 · {_tradeDialog.Text}" : "商店 · 货簿",
-                storage ? "我的背包" : trade ? "我的出价" : "商店货品", storage ? "仓库存货" : trade ? "对方出价" : "我的物品");
+            _serviceBook.OpenBook(storage ? "仓库 · 存取簿" : trade ? $"交易 · {_tradeDialog.Text}" : JournalMerchantAvailable() ? "商店 · 货品" : _npcDialog.HandheldNpcTitle + " · 服务",
+                storage ? "我的背包" : trade ? "我的出价" : JournalMerchantAvailable() ? "商店货品" : "服务操作", storage ? "仓库存货" : trade ? "对方出价" : "我的物品");
         }
         ulong now = Godot.Time.GetTicksMsec();
         if (!opening && now < _ledgerNextScan) return;
@@ -54,7 +55,9 @@ public partial class GameScene
         if (storage) { stamp.Add(StorageSize); StampLedgerCells(ref stamp, StorageCells); StampLedgerCells(ref stamp, PartsStorageCells); stamp.Add(_storageDialog.PartGrid.Visible); }
         else foreach (var currency in Currencies) stamp.Add(currency?.Amount);
         int value = stamp.ToHashCode();
-        if (!opening && _ledgerStamp == value && !(trade && TradeLedgerChanged)) return;
+        // NPC panels also change after async roll/refine results and checkbox
+        // toggles without any inventory/currency update. Rescan their controls.
+        if (!opening && root != _npcDialog && _ledgerStamp == value && !(trade && TradeLedgerChanged)) return;
         _ledgerStamp = value;
         RefreshServiceBook();
     }
@@ -83,7 +86,8 @@ public partial class GameScene
             FillStorageColumn(cols[0], _inventoryDialog.Grid, grid, true);
             FillStorageColumn(cols[1], grid, _inventoryDialog.Grid, false);
         }
-        else FillShopLedger(cols[0],cols[1]);
+        else if (JournalMerchantAvailable()) FillShopLedger(cols[0],cols[1]);
+        else FillNpcServiceLedger(cols[0], cols[1]);
         _serviceBook.RestoreSelection(0,left); _serviceBook.RestoreSelection(1,right); _serviceBook.QueueRedraw();
     }
 
@@ -125,7 +129,7 @@ public partial class GameScene
             case Key.Right: _serviceBook.Move(1,0); break;
             case Key.Q: _serviceBook.Move(-1,-HandheldJournalService.PageSize); break;
             case Key.E: _serviceBook.Move(-1,HandheldJournalService.PageSize); break;
-            case Key.F16: _ledgerLegacy = true; _serviceBook.Hide(); break;
+            case Key.F16: break; // No desktop-window fallback in the handheld service UI.
             case Key.Escape:
                 if (!_serviceBook.Back())
                 {

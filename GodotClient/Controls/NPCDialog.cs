@@ -316,7 +316,17 @@ public partial class NPCDialog : DXWindow
     {
         PageShowCount++;
         _page = response?.Page;
-        if (_page == null) return;
+        if (_page == null)
+        {
+            ClearHandheldPage();
+            CancelUnsubmittedLinks();
+            _goods.Hide(); _repair.Hide(); _advanced.HidePanel();
+            GameScene.Game?.EndInventoryNpcSale();
+            GameScene.Game?.CloseNPCSocketDialogs();
+            GameScene.Game?.CloseNPCCompanionStorage();
+            GameScene.Game?.CloseNPCQuestDialogs();
+            return;
+        }
 
         bool selling = _page.DialogType == NPCDialogType.BuySell && _page.Types is { Count: > 0 };
         if (!selling) GameScene.Game?.EndInventoryNpcSale();
@@ -382,6 +392,7 @@ public partial class NPCDialog : DXWindow
         _scrollLine = 0;
         _text.Position = Vector2.Zero;
         _scroll.Value = 0;
+        if (Scripts.AutoLoginArgs.Handheld) PrepareHandheldPage(response, raw);
         _text.SetContent(raw, textWidth, _legacyLayout ? LegacyFontSize : 10, _legacyPitch);
 
         int pageTextHeight = _text.ContentHeight;

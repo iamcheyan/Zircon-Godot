@@ -503,16 +503,29 @@ public sealed partial class NPCAdvancedPanel : DXControl
             GameScene.Game?.ReceiveChat("需要精炼石 x1 才能进行大师精炼", MessageType.System);
             return;
         }
-        if (BeginSubmit(fragment1, fragment2, fragment3, stone, special).Count == 0) return;
         if (evaluate)
         {
-            // 原版 Evaluate 弹确认框后才发包。
-            var confirm = new ConfirmDialog("Are you sure you want to pay for an evaluation?", "Evaluation",
-                () => GameScene.Game?.SendNPCMasterRefineEvaluate(_refineType, fragment1, fragment2, fragment3, stone, special));
+            // Evaluation only returns chat/gold updates, not a consuming result.
+            // Never reserve consuming-submit links for an evaluation request.
+            var refineType = _refineType;
+            var reserved = fragment1.Concat(fragment2).Concat(fragment3).Concat(stone).Concat(special)
+                .Select(link => (Link: link, Source: FindSourceCell(link), Item: FindSourceCell(link)?.Item,
+                    Count: FindSourceCell(link)?.Item?.Count)).ToArray();
+            var confirm = new ConfirmDialog("确定支付费用评估当前精炼材料？", "精炼评估", () =>
+            {
+                if (_refineType != refineType || !IsVisibleInTree()
+                    || reserved.Any(entry => entry.Source == null || !IsInstanceValid(entry.Source)
+                        || !ReferenceEquals(entry.Source.Item, entry.Item) || entry.Source.Item?.Count != entry.Count)) return;
+                if (_pendingLinks.Count != 0) return;
+                GameScene.Game?.SendNPCMasterRefineEvaluate(refineType, fragment1, fragment2, fragment3, stone, special);
+            });
             WindowManager.Open(confirm, GameScene.Game?.UILayer ?? GetParent());
         }
         else
+        {
+            if (BeginSubmit(fragment1, fragment2, fragment3, stone, special).Count == 0) return;
             GameScene.Game?.SendNPCMasterRefine(fragment1, fragment2, fragment3, stone, special);
+        }
     }
 
     private void BuildRetrieve()

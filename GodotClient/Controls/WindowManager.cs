@@ -28,6 +28,7 @@ public static class WindowManager
     public static void Open(DXWindow w, Node parent)
     {
         if (w == null || parent == null || !IsAlive(w)) return;
+        GameScene.Game?.BindHandheldNpcPrompt(w);
         if (!OpenWindows.Contains(w)) OpenWindows.Add(w);
         w.ShowWindow(parent);
         RefreshZOrder();

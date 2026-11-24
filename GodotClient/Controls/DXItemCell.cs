@@ -1011,8 +1011,14 @@ public partial class DXItemCell : DXControl
             if (toCell.GridType == GridType.Repair &&
                 (Item.Info == null || !Item.Info.CanRepair ||
                  Item.CurrentDurability >= Item.MaxDurability)) return;
+            var linkItem = Item;
+            long linkCount = linkItem.Count;
+            var destinationItem = toCell.Item;
             void LinkAmount(long amount)
             {
+                if (!IsInstanceValid(this) || !IsInstanceValid(toCell) || IsQueuedForDeletion() || toCell.IsQueuedForDeletion()
+                    || !ReferenceEquals(Item, linkItem) || Item.Count != linkCount || !ReferenceEquals(toCell.Item, destinationItem)
+                    || Locked || ReadOnly || toCell.ReadOnly || toCell.Locked || !toCell.IsVisibleInTree()) return;
                 SetCellItem(toCell, new ClientUserItem(Item, (int)Math.Clamp(amount, 1L, (long)Item.Count)));
                 toCell.LinkedSourceGrid = GridType;
                 toCell.LinkedSourceSlot = Slot;

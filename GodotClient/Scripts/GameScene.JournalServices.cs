@@ -48,6 +48,7 @@ public partial class GameScene
     private void UpdateJournalServiceContext()
     {
         if (!AutoLoginArgs.Handheld) return;
+        InvalidateHandheldNpcPrompts();
         bool connected = _net?.Connection?.Connected == true;
         bool usable = connected && _player?.Dead == false && !_observer;
         if (_journalStorageNpc != 0 && (!usable || !JournalWindowVisible(_storageDialog)
@@ -71,6 +72,7 @@ public partial class GameScene
         if (!JournalWindowVisible(_tradeDialog)) _journalTradeCancelPending = false;
         else if (!usable) RequestJournalTradeCancellation();
         SyncServiceBook();
+        SyncHandheldNpcDialogue();
         if (_journalServiceFocus == null) return;
         var pane = JournalInputPane();
         if (!usable || !JournalFocusUsable(pane, _journalServiceFocus, out var rect)) SetJournalServiceFocus(null, null);
@@ -251,6 +253,7 @@ public partial class GameScene
             SetJournalServiceFocus(null, null);
         bool hadService = input is InputEventMouseButton && JournalServiceActive;
         if (hadService) UpdateJournalServiceContext();
+        if (HandheldNpcDialogueOpen) return true;
         if (_serviceBook?.Visible == true)
         {
             if (input is InputEventMouseButton { ButtonIndex: MouseButton.Left } a)
@@ -288,6 +291,17 @@ public partial class GameScene
         root = JournalServiceRoot;
         if (root == null) return true; // The invalidated context owns this event, not the world.
         var pane = JournalInputPane();
+        if (RouteHandheldNpcKey(key)) return true;
+        if (pane is ItemAmountDialog amount)
+        {
+            if (key.Pressed && !key.Echo) amount.HandleHandheldKey(key.Keycode);
+            return true;
+        }
+        if (pane is ConfirmDialog confirmation)
+        {
+            if (key.Pressed && !key.Echo) confirmation.HandleHandheldKey(key.Keycode);
+            return true;
+        }
         var code = key.Keycode;
         if (HandleServiceBookKey(code,key.Pressed,key.Echo)) return true;
         bool direction = code is Key.Up or Key.Down or Key.Left or Key.Right;

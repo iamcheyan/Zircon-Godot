@@ -19,10 +19,20 @@ namespace ZirconClient.Controls;
 public sealed partial class ConfirmDialog : DXWindow
 {
     private readonly Action _confirm;
+    private Control _handheldContent;
+    private Button _handheldYes, _handheldNo;
+    private bool _handheldConfirmSelected, _finished;
+    internal Func<bool> ContextValid { get; set; }
 
     public ConfirmDialog(string message, string title, Action confirm)
     {
         _confirm = confirm;
+
+        if (AutoLoginArgs.Handheld)
+        {
+            BuildHandheld(message, title);
+            return;
+        }
 
         if (AutoLoginArgs.LegacyUi)
         {
@@ -70,11 +80,76 @@ public sealed partial class ConfirmDialog : DXWindow
         });
 
         var yes = new DXButton { Text = Lang.LegacyLoginsOkLabel, Type = DXButton.ButtonType.SmallButton, FontSize = 10, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(38, 93), Size = new Vector2I(76, 25) };
-        yes.MouseClick += (o, e) => { _confirm?.Invoke(); WindowManager.Close(this); };
+        yes.MouseClick += (o, e) => Finish(true);
         AddControl(yes);
         var no = new DXButton { Text = Lang.CommonControlCancel, Type = DXButton.ButtonType.SmallButton, FontSize = 10, LibraryFile = LibraryFile.Interface, Index = -1, Location = new Vector2I(138, 93), Size = new Vector2I(76, 25) };
-        no.MouseClick += (o, e) => WindowManager.Close(this);
+        no.MouseClick += (o, e) => Finish(false);
         AddControl(no);
+    }
+
+    public override void _Ready()
+    {
+        base._Ready();
+        if (_handheldContent != null) HandheldPromptStyle.Center(this, _handheldContent);
+    }
+
+    /// <summary>Handle semantic input from the parent: A = Enter, B = Escape.</summary>
+    internal bool HandleHandheldKey(Key key)
+    {
+        if (_handheldYes == null || !IsVisibleInTree()) return false;
+        switch (key)
+        {
+            case Key.Left:
+            case Key.Right:
+                if (!_finished)
+                {
+                    _handheldConfirmSelected = key == Key.Left;
+                    HandheldPromptStyle.StyleButton(_handheldYes, _handheldConfirmSelected);
+                    HandheldPromptStyle.StyleButton(_handheldNo, !_handheldConfirmSelected);
+                }
+                return true;
+            case Key.Enter:
+            case Key.KpEnter:
+                Finish(_handheldConfirmSelected);
+                return true;
+            case Key.Escape:
+                Finish(false);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void BuildHandheld(string message, string title)
+    {
+        Text = title ?? Lang.CommonControlConfirm;
+        _handheldContent = HandheldPromptStyle.BuildFrame(this, 264, Text);
+        var body = HandheldPromptStyle.AddLabel(_handheldContent, message, new Rect2(20, 48, 480, 144), 16, HandheldPromptStyle.Paper);
+        body.VerticalAlignment = VerticalAlignment.Top;
+        body.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        body.ClipText = true;
+        body.MaxLinesVisible = 6;
+        body.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        _handheldYes = HandheldPromptStyle.AddButton(_handheldContent, Lang.LegacyLoginsOkLabel, 20, () => Finish(true));
+        _handheldNo = HandheldPromptStyle.AddButton(_handheldContent, Lang.CommonControlCancel, 266, () => Finish(false));
+        HandheldPromptStyle.StyleButton(_handheldYes, selected: false);
+        HandheldPromptStyle.StyleButton(_handheldNo, selected: true);
+        HandheldPromptStyle.AddLabel(_handheldContent, $"← / →     A  {Lang.CommonControlConfirm}     B  {Lang.CommonControlCancel}",
+            new Rect2(20, 235, 480, 21), 14, HandheldPromptStyle.Muted);
+    }
+
+    public override void Close()
+    {
+        _finished = true;
+        base.Close();
+    }
+
+    private void Finish(bool confirmed)
+    {
+        if (_finished) return;
+        _finished = true;
+        try { if (confirmed && ContextValid?.Invoke() != false) _confirm?.Invoke(); }
+        finally { WindowManager.Close(this); }
     }
 
     /// <summary>
@@ -121,8 +196,8 @@ public sealed partial class ConfirmDialog : DXWindow
         });
 
         AddLegacyButton(new Rect2I(51, 125, 44, 20), 150,
-            () => { _confirm?.Invoke(); WindowManager.Close(this); });
-        AddLegacyButton(new Rect2I(244, 125, 44, 20), 153, () => WindowManager.Close(this));
+            () => Finish(true));
+        AddLegacyButton(new Rect2I(244, 125, 44, 20), 153, () => Finish(false));
     }
 
     private void AddLegacyButton(Rect2I rect, int normalFrame, Action action)
@@ -140,5 +215,85 @@ public sealed partial class ConfirmDialog : DXWindow
         };
         button.MouseClick += (o, e) => action();
         AddControl(button);
+    }
+}
+
+/// <summary>Shared image-free slate and gold styling for the two handheld prompts.</summary>
+internal static class HandheldPromptStyle
+{
+    internal static readonly Color Paper = new("f5f0e1"), Muted = new("aeb4bc"), Tile = new("252d37");
+    private static readonly Color Slate = new("16191e"), Line = new("4b4b49"), Gold = new("e2bf68"),
+        Bright = new("ffea9f"), Selected = new("30291a");
+
+    internal static Control BuildFrame(DXWindow window, int height, string title)
+    {
+        window.DrawChrome = window.HasTitle = window.ShowCloseButton = window.Movable = false;
+        window.Size = new Vector2(520, height);
+        var frame = new Panel { Size = window.Size, MouseFilter = Control.MouseFilterEnum.Ignore, ClipContents = true };
+        var style = Box(Slate, Gold);
+        style.BorderWidthTop = 3;
+        frame.AddThemeStyleboxOverride("panel", style);
+        window.AddChild(frame);
+        AddLabel(frame, title, new Rect2(20, 10, 480, 34), 22, Bright).TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        return frame;
+    }
+
+    internal static void Center(DXWindow window, Control frame)
+    {
+        // Counter the legacy canvas scale on the visual content, not on the window:
+        // GameScene clamps the window using its unscaled Size in HUD coordinates.
+        Vector2 viewport = window.GetViewportRect().Size;
+        float fit = Mathf.Min(1f, Mathf.Min(viewport.X / frame.Size.X, viewport.Y / frame.Size.Y));
+        float canvasScale = window.GetGlobalTransformWithCanvas().X.Length();
+        frame.Scale = Vector2.One * (fit / canvasScale);
+        window.Size = frame.Size * frame.Scale;
+        window.Position = ((viewport - frame.Size * fit) / 2f).Floor() / canvasScale;
+    }
+
+    internal static Label AddLabel(Control parent, string text, Rect2 rect, int size, Color colour)
+    {
+        var label = new Label
+        {
+            Text = text ?? string.Empty, Position = rect.Position, Size = rect.Size,
+            VerticalAlignment = VerticalAlignment.Center, MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        label.AddThemeFontOverride("font", MirSkin.GetFont() ?? ThemeDB.FallbackFont);
+        label.AddThemeFontSizeOverride("font_size", size);
+        label.AddThemeColorOverride("font_color", colour);
+        parent.AddChild(label);
+        return label;
+    }
+
+    internal static Button AddButton(Control parent, string text, int x, Action activate, int bottom = 28)
+    {
+        var button = new Button
+        {
+            Text = text, Position = new Vector2(x, parent.Size.Y - 36 - bottom), Size = new Vector2(234, 36),
+            ClipText = true, FocusMode = Control.FocusModeEnum.None,
+        };
+        button.AddThemeFontOverride("font", MirSkin.GetFont() ?? ThemeDB.FallbackFont);
+        button.AddThemeFontSizeOverride("font_size", 16);
+        button.Pressed += activate;
+        parent.AddChild(button);
+        return button;
+    }
+
+    internal static void StyleButton(Button button, bool selected)
+    {
+        button.AddThemeStyleboxOverride("normal", Box(selected ? Selected : Tile, selected ? Gold : Line));
+        button.AddThemeStyleboxOverride("hover", Box(Selected, Bright));
+        button.AddThemeStyleboxOverride("pressed", Box(Selected, Gold));
+        button.AddThemeStyleboxOverride("disabled", Box(Slate, Line));
+        button.AddThemeColorOverride("font_color", selected ? Bright : Paper);
+        button.AddThemeColorOverride("font_hover_color", Bright);
+        button.AddThemeColorOverride("font_pressed_color", Bright);
+        button.AddThemeColorOverride("font_disabled_color", Muted);
+    }
+
+    internal static StyleBoxFlat Box(Color fill, Color border)
+    {
+        var box = new StyleBoxFlat { BgColor = fill, BorderColor = border };
+        box.SetBorderWidthAll(1);
+        return box;
     }
 }

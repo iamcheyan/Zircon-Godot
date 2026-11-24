@@ -103,6 +103,7 @@ public partial class GameScene
         EnsureHandheldActionConfiguration();
         SyncHandheldActionOwnership(now);
         if (!_handheldActionFocused) return;
+        if (HandheldNpcDialogueOpen) { ProcessHandheldNpcStick(now); return; }
         if (HandheldActionBindingsOpen) { ProcessHandheldBindings(now); return; }
         if (_handheldTrace && now >= _nextHandheldTraceMs)
         {
@@ -402,12 +403,9 @@ public partial class GameScene
         if (target.Type == ObjectRenderer.Kind.NPC)
         {
             StopHandheldMovement();
-            if (Functions.Distance(_playerLocation, new Point(target.CellX, target.CellY)) <= 2) TrySendNpcCall(target.ObjectID);
-            else
-            {
-                _handheldNpcApproachId = target.ObjectID;
-                SendAutoPathWaypoint(_playerMapIndex, target.CellX, target.CellY);
-            }
+            // PC sends NPCCall directly and lets the server decide interaction
+            // range. Pathing to the occupied NPC cell can otherwise stall forever.
+            if (!TrySendNpcCall(target.ObjectID)) _handheldHud?.ShowToast("正在联系 NPC，请稍候");
         }
         else if (target.Type == ObjectRenderer.Kind.Item) HandheldPickUp();
         else if (target.Type == ObjectRenderer.Kind.Monster) HandheldAttack(target);

@@ -9,8 +9,8 @@ namespace ZirconClient.Scripts;
 public partial class GameScene
 {
     private bool JournalMerchantAvailable() => JournalWindowVisible(_npcDialog)
-        && _npcDialog.CurrentPageDialogType == NPCDialogType.BuySell
-        && _npcDialog.JournalGoods.IsVisibleInTree() && _npcDialog.JournalGoods.GoodCount > 0;
+        && _npcDialog.HandheldPageValid && _npcDialog.CurrentPageDialogType == NPCDialogType.BuySell
+        && _npcDialog.JournalGoods.IsVisibleInTree();
 
     private void FillShopLedger(List<ServiceLine> left, List<ServiceLine> right)
     {
@@ -26,6 +26,7 @@ public partial class GameScene
         var currency = goods.JournalCurrency;
         string unit = currency?.Name ?? "金币";
         long balance = Currencies.FirstOrDefault(x => x?.Info?.Type == (currency?.Type ?? CurrencyType.Gold))?.Amount ?? 0;
+        FillHandheldNpcReplies(left, dialog, revision);
         left.Add(new("balance", unit, $"持有 {balance:N0}"));
         for (int i = 0; i < goods.GoodCount; i++)
         {

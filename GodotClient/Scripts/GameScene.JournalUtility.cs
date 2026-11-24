@@ -68,6 +68,8 @@ public partial class GameScene
     }
 
     private static string JournalToggleLabel(bool enabled) => enabled ? "开启" : "关闭";
+    private const string JournalExitName = "退出游戏";
+    private const string JournalExitDetail = "关闭 Zircon 并返回掌机启动器。需确认，不会关机。";
 
     private void JournalSystemEntries(int cat, List<JournalEntry> rows)
     {
@@ -77,6 +79,7 @@ public partial class GameScene
         switch (cat)
         {
             case 0:
+                Add("exit", JournalExitName, JournalExitDetail);
                 Toggle("effects", "显示特效", ClientSettings.DrawEffects);
                 Toggle("particles", "显示粒子", ClientSettings.DrawParticles);
                 Toggle("smooth", "平滑移动", ClientSettings.SmoothMove);
@@ -118,7 +121,7 @@ public partial class GameScene
                 break;
             case 5:
                 Add("logout", "返回角色选择", JournalLogoutUnavailable ?? "需确认。等待服务器响应后返回角色选择。");
-                Add("exit", "退出客户端", "需确认。掌机启动器会在客户端退出后接回屏幕。");
+                Add("exit", JournalExitName, JournalExitDetail);
                 break;
         }
     }
@@ -156,7 +159,7 @@ public partial class GameScene
             (2, "action-bindings") => [new JournalAction("编辑掌机按键", () => { OpenHandheldActionBindings(); return null; })],
             (4, "help") => [new JournalAction("打开帮助", () => JournalOpenUtilityWindow(_helpDialog, OpenHelpDialog))],
             (5, "logout") => [JournalConfirmUtility("返回角色选择？", () => JournalLogoutUnavailable ?? JournalRun(LeaveGame))],
-            (5, "exit") => [JournalConfirmUtility("退出客户端？", () => JournalRun(ExitClient))],
+            (0 or 5, "exit") => [JournalConfirmUtility("退出游戏并返回启动器？", () => JournalRun(ExitClient))],
             _ => Array.Empty<JournalAction>()
         };
     }

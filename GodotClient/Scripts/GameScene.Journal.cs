@@ -78,7 +78,7 @@ public partial class GameScene
     private void SyncJournalVisibility()
     {
         if (!JournalOpen) return;
-        bool show = !HandheldActionBindingsOpen && !HandheldHasModalWindow() && !JournalServiceActive && !HandheldTextEditing;
+        bool show = !HandheldWorldMapOpen && !HandheldActionBindingsOpen && !HandheldHasModalWindow() && !JournalServiceActive && !HandheldTextEditing;
         if (_journal.Visible == show) return;
         _journal.Visible = show;
         ResetJournalNavigation();
@@ -113,9 +113,7 @@ public partial class GameScene
             case Key.F10:
                 if (_journal.HasActionOverlay) _journal.Back(); else ToggleHandheldHudMode();
                 break;
-            case Key.F15:
-                if (!_journal.HasActionOverlay) OpenBigMap();
-                break;
+            case Key.F15: break; // Handheld Select is routed before journal commands.
             case Key.Left: case Key.Right: case Key.Up: case Key.Down:
                 _journalDirection = key.Keycode;
                 _journalKeyAt = now + 380;

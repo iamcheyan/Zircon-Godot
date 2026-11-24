@@ -46,7 +46,7 @@ public partial class GameScene
     }
 
     private bool HandheldGameplayBlocked => AutoLoginArgs.Handheld &&
-        (JournalOpen || HandheldActionBindingsOpen || HandheldHasModalWindow() || HandheldTextEditing);
+        (HandheldWorldMapOpen || JournalOpen || HandheldActionBindingsOpen || HandheldHasModalWindow() || HandheldTextEditing);
 
     private bool HandheldTextEditing => GetViewport()?.GuiGetFocusOwner() is Control control
         && control.IsVisibleInTree() && control is LineEdit or TextEdit;
@@ -120,9 +120,12 @@ public partial class GameScene
             && now - _handheldSelectDownMs >= HandheldLongPressMs)
         {
             _handheldSelectLong = true;
-            ClientSettings.ShowGroundItemNames = !ClientSettings.ShowGroundItemNames;
-            RefreshGroundItemLabels(forceRedraw: true);
-            _handheldHud?.ShowToast(ClientSettings.ShowGroundItemNames ? "掉落物名称：显示" : "掉落物名称：隐藏");
+            if (HandheldActionOwnsWorld)
+            {
+                ClientSettings.ShowGroundItemNames = !ClientSettings.ShowGroundItemNames;
+                RefreshGroundItemLabels(forceRedraw: true);
+                _handheldHud?.ShowToast(ClientSettings.ShowGroundItemNames ? "掉落物名称：显示" : "掉落物名称：隐藏");
+            }
         }
         if (!HandheldActionOwnsWorld || _mapView?.Map == null) return;
         ProcessHandheldFocus(now);
@@ -294,6 +297,7 @@ public partial class GameScene
     private bool HandleHandheldInputEvent(InputEvent @event)
     {
         if (!AutoLoginArgs.Handheld) return false;
+        if (HandheldWorldMapOpen && @event is InputEventMouse) return true;
         if (@event is InputEventMouse && HandleJournalServicePointer(@event)) return true;
         if (JournalOpen && _journal.Visible && @event is InputEventMouse) return true;
         if (@event is not InputEventKey key) return false;
@@ -311,31 +315,23 @@ public partial class GameScene
 
     private bool RouteHandheldInputKey(InputEventKey key, bool mapped, double now)
     {
+        if (HandheldWorldMapOpen)
+        {
+            if (key.Keycode == Key.F15) RouteHandheldSelect(key, now);
+            else if (key is { Keycode: Key.Escape, Pressed: true, Echo: false }) CloseHandheldWorldMap();
+            return true;
+        }
         if (HandheldActionBindingsOpen) { RouteHandheldBindingsKey(key); return true; }
         if (!HandheldTextEditing && JournalServiceActive && HandleJournalServiceKey(key)) return true;
+        if (key.Keycode == Key.F15 && (!JournalOpen || _journal.Visible))
+        {
+            RouteHandheldSelect(key, now);
+            return true;
+        }
         if (RouteJournalKey(key, now)) return true;
         if (key.Keycode == Key.F10)
         {
             if (key.Pressed && !key.Echo && !HandheldGameplayBlocked && !JournalServiceActive) ToggleHandheldHudMode();
-            return true;
-        }
-        if (key.Keycode == Key.F15)
-        {
-            if (key.Pressed)
-            {
-                if (!key.Echo && _handheldSelectDownMs < 0 && (HandheldActionOwnsWorld || _bigMap?.Visible == true))
-                { _handheldSelectDownMs = now; _handheldSelectLong = false; }
-            }
-            else if (_handheldSelectDownMs >= 0)
-            {
-                if (!_handheldSelectLong && now - _handheldSelectDownMs < HandheldLongPressMs)
-                {
-                    StopHandheldMovement();
-                    if (_bigMap?.Visible == true) _bigMap.Visible = false; else OpenBigMap();
-                    UpdateHandheldPointerMode();
-                }
-                _handheldSelectDownMs = -1;
-            }
             return true;
         }
         if (key.Keycode is Key.F11 or Key.Menu)

@@ -160,18 +160,19 @@ public partial class HandheldMiniMap : Control
         _overlay.DrawArc(center, radius - 1f, 0f, Mathf.Tau, 64, RimColor, 1.5f, true);
     }
 
-    private void DrawPlayer(Vector2 center)
+    private void DrawPlayer(Vector2 center) => DrawPlayerArrow(_overlay, _arrow, center, PlayerDirection);
+
+    internal static void DrawPlayerArrow(CanvasItem canvas, Vector2[] triangle, Vector2 center, MirDirection direction, float scale = 1f)
     {
-        var forward = Vector2.Up.Rotated((int)PlayerDirection * (Mathf.Pi / 4f));
+        var forward = Vector2.Up.Rotated((int)direction * (Mathf.Pi / 4f)) * scale;
         var side = forward.Orthogonal();
-        _arrow[0] = center + forward * 8f;
-        _arrow[1] = center - forward * 4f + side * 4.5f;
-        _arrow[2] = center - forward * 4f - side * 4.5f;
-        _overlay.DrawColoredPolygon(_arrow, Colors.Black);
-        // The triangle's centroid is at the player position; inset the fill around it.
-        for (int i = 0; i < _arrow.Length; i++)
-            _arrow[i] = center + (_arrow[i] - center) * 0.75f;
-        _overlay.DrawColoredPolygon(_arrow, Colors.White);
+        triangle[0] = center + forward * 8f;
+        triangle[1] = center - forward * 4f + side * 4.5f;
+        triangle[2] = center - forward * 4f - side * 4.5f;
+        canvas.DrawColoredPolygon(triangle, Colors.Black);
+        for (int i = 0; i < triangle.Length; i++)
+            triangle[i] = center + (triangle[i] - center) * 0.75f;
+        canvas.DrawColoredPolygon(triangle, Colors.White);
     }
 
     private void DrawMarker(DXControl marker, Vector2 origin, Vector2 center, float radius)
@@ -181,6 +182,11 @@ public partial class HandheldMiniMap : Control
         var pos = origin + marker.Position + marker.Size * 0.5f;
         if (pos.DistanceSquaredTo(center) > (radius + 6f) * (radius + 6f)) return;
 
+        DrawMapMarker(_overlay, marker, pos);
+    }
+
+    internal static void DrawMapMarker(CanvasItem canvas, DXControl marker, Vector2 pos)
+    {
         switch (marker)
         {
             case DXImageControl icon when icon.DrawImage:
@@ -189,21 +195,21 @@ public partial class HandheldMiniMap : Control
                 {
                     var size = tex.GetSize();
                     size *= Mathf.Min(1f, 8f / Mathf.Max(size.X, size.Y));
-                    _overlay.DrawTextureRect(tex, new Rect2(pos - size * 0.5f, size), false, icon.ForeColour);
+                    canvas.DrawTextureRect(tex, new Rect2(pos - size * 0.5f, size), false, icon.ForeColour);
                 }
                 else
-                    _overlay.DrawCircle(pos, 2f, icon.ForeColour, antialiased: true);
+                    canvas.DrawCircle(pos, 2f, icon.ForeColour, antialiased: true);
                 break;
             case DXLabel label:
                 const int fontSize = 10;
                 var font = ThemeDB.FallbackFont;
                 var textSize = font.GetStringSize(label.Text, fontSize: fontSize);
                 var baseline = pos + new Vector2(-textSize.X * 0.5f, (font.GetAscent(fontSize) - font.GetDescent(fontSize)) * 0.5f);
-                _overlay.DrawStringOutline(font, baseline, label.Text, fontSize: fontSize, size: 2, modulate: Colors.Black);
-                _overlay.DrawString(font, baseline, label.Text, fontSize: fontSize, modulate: label.TextColour);
+                canvas.DrawStringOutline(font, baseline, label.Text, fontSize: fontSize, size: 2, modulate: Colors.Black);
+                canvas.DrawString(font, baseline, label.Text, fontSize: fontSize, modulate: label.TextColour);
                 break;
             case DXMapInfoControl dot:
-                _overlay.DrawCircle(pos, 1.5f, dot.BackColour, antialiased: true);
+                canvas.DrawCircle(pos, 1.5f, dot.BackColour, antialiased: true);
                 break;
         }
     }

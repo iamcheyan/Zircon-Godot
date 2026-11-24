@@ -43,6 +43,17 @@ public partial class MiniMapDialog : DXWindow
 
     private Action _onBigMapRequest;
 
+    // 掌机 HUD 只读视图：不读取桌面窗口裁剪/拖动后的 Image.Location。
+    internal Texture2D HandheldTexture => Image.DrawImage && Image.Index > 0
+        ? MirSkin.GetTexture(Image.LibraryFile, Image.Index) : null;
+
+    // UpdatePlayerMarker 的坐标始终以格点像素减去 (2, 2) 保存。
+    internal Vector2? HandheldPlayerCenter => _hasPlayer && _objectMarkers.TryGetValue(_playerObjectID, out var player)
+        ? (Vector2)player.Location + new Vector2(2, 2) : null;
+    internal uint HandheldPlayerObjectID => _playerObjectID;
+    internal IReadOnlyDictionary<uint, DXMapInfoControl> HandheldObjectMarkers => _objectMarkers;
+    internal IReadOnlyList<Node> HandheldStaticMarkers => _staticMarkers;
+
     public override void _Ready()
     {
         base._Ready();

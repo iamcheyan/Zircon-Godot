@@ -6,6 +6,9 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Input/HandheldActions/obj/**/*.cs;Input/HandheldActions/bin/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="BCnEncoder.NET" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>

@@ -39,7 +39,6 @@ public partial class GameScene
         _journalScrollDirection = 0;
         _journalStickNeutral = true;
         _handheldSelectDownMs = -1;
-        _selectorRepeatKey = Key.None;
     }
 
     private void OpenJournal()
@@ -52,7 +51,6 @@ public partial class GameScene
             _journal = new HandheldJournal(this);
             layer.AddChild(_journal);
         }
-        _handheldQuickSelect?.Close();
         StopHandheldMovement();
         ClearHandheldFocus();
         _pendingMagicPacket = null;
@@ -80,7 +78,7 @@ public partial class GameScene
     private void SyncJournalVisibility()
     {
         if (!JournalOpen) return;
-        bool show = !HandheldHasModalWindow() && !JournalServiceActive && !HandheldTextEditing;
+        bool show = !HandheldActionBindingsOpen && !HandheldHasModalWindow() && !JournalServiceActive && !HandheldTextEditing;
         if (_journal.Visible == show) return;
         _journal.Visible = show;
         ResetJournalNavigation();

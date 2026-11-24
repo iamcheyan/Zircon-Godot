@@ -141,7 +141,6 @@ public partial class GameScene : Control
     private MagicBar _magicBar;
     private MagicDialog _magicDialog;
     private HandheldHud _handheldHud;
-    private HandheldQuickSelect _handheldQuickSelect;
     private bool _handheldHudMode;
     private readonly Dictionary<Control, bool> _defaultHudVisibility = new();
     private Stats _playerStats = new Stats();
@@ -498,7 +497,6 @@ public partial class GameScene : Control
         }
         _handheldHudMode = enabled;
         _hudHidden = false;
-        _handheldQuickSelect?.Close();
         StopHandheldMovement();
         ClearHandheldFocus();
         ApplyHudVisibility();
@@ -519,9 +517,9 @@ public partial class GameScene : Control
         if (_beltDialog != null) _beltDialog.Visible = normal && Saved(_beltDialog, true);
         if (_questTracker != null) _questTracker.Visible = normal && Saved(_questTracker, ClientSettings.QuestTrackerVisible);
         if (_magicBar != null) _magicBar.Visible = normal && Saved(_magicBar, !AutoLoginArgs.LegacyHud);
-        if (_miniMap != null) _miniMap.Visible = visible;
+        if (_miniMap != null) _miniMap.Visible = visible && !_handheldHudMode;
         if (_buffDialog != null)
-            _buffDialog.Visible = AutoLoginArgs.Handheld ? visible && _buffs.Count > 0 : normal;
+            _buffDialog.Visible = AutoLoginArgs.Handheld ? visible && !_handheldHudMode && _buffs.Count > 0 : normal;
         if (_handheldHud != null) _handheldHud.Visible = visible && _handheldHudMode;
         if (_statusLabel != null) _statusLabel.Visible = normal && Saved(_statusLabel, ClientSettings.DebugLabel);
         if (!_handheldHudMode) _defaultHudVisibility.Clear();
@@ -4816,8 +4814,7 @@ public partial class GameScene : Control
             _handheldHud = new HandheldHud(this);
             _uiLayer.AddChild(_handheldHud);
             _handheldHud.Visible = false;
-            _handheldQuickSelect = new HandheldQuickSelect(this);
-            _uiLayer.AddChild(_handheldQuickSelect);
+            SetHandheldHudMode(true);
             UpdateHandheldPointerMode();
         }
 
@@ -5699,6 +5696,7 @@ public partial class GameScene : Control
     private void LayoutBuffDialog()
     {
         if (_buffDialog == null || !IsInstanceValid(_buffDialog)) return;
+        if (_handheldHudMode) { _buffDialog.Visible = false; return; }
         if (_miniMap == null || !IsInstanceValid(_miniMap)) return;
         Vector2 vp = GetHudViewportSize() / UiScale;
         if (vp.X <= 0 || vp.Y <= 0) return;

@@ -46,43 +46,35 @@ PocketShell 卡片（Zircon，coverPath=/storage/Apps/zircon.png）
 
 ## 掌机操作（TrimUI Smart Pro / TG5040）
 
-客户端启动时由 `launch.sh` 设置 `ZIRCON_HANDHELD=1`。掌机 HUD 中，A/B 不再同时产生
-按键和鼠标事件；默认 HUD 与传统对话框保留右摇杆移指针、A 单独点击、B 返回。
-Start 在两套 HUD 之间切换：默认 HUD 保留原有布局，掌机 HUD 隐藏底部大面板、
-技能条、腰带和聊天栏，保留小地图与紧凑 HP/MP/Focus/目标状态栏。
+客户端启动时由 `launch.sh` 设置 `ZIRCON_HANDHELD=1`。掌机模式始终使用实体按键语义输入，A/B 不会再同时产生按键和鼠标事件，右摇杆只用于目标选择，不移动鼠标。Start 在两套 HUD 之间切换：默认 HUD 保留原有布局，掌机 HUD 隐藏底部大面板、技能条、腰带和聊天栏，保留小地图与紧凑 HP/MP/Focus/目标状态栏及配置动作栏。
 
-下表是掌机 HUD 中的操作；传统对话框打开时，战斗和快选按键不会透传。
+下表是掌机模式的操作；游戏窗口失焦、手札/绑定界面或模态窗口拥有焦点时，战斗动作会取消并等待按键释放后再恢复。
 
 | 实体按键 | 游戏中动作 |
 |---|---|
 | 左摇杆 | 八方向移动；短推走，持续推动后跑 |
-| 右摇杆 | 选择附近 NPC/怪物/掉落物目标；打开选择器时移动高亮 |
-| 十字键上 | 打开技能选择器 |
-| 十字键下 | 打开腰带选择器 |
-| 十字键左/右 | 循环选择附近目标 |
-| A | 确认/交互；确认当前目标操作 |
-| B | 返回/取消并清除目标焦点 |
-| X | 拾取当前附近掉落物 |
-| Y | 对当前目标普通攻击 |
-| L1/R1 | 选择器中上一个/下一个；游戏中切换技能栏组 |
-| L2/R2 | 直接使用腰带第 1/第 2 格 |
+| 右摇杆 | 按方向选择附近有效目标；方向夹角优先，其次距离。选择规则固定 |
+| 十字键上/下/左/右 | 执行当前页对应的绑定；空槽不执行动作 |
+| X / Y | 执行当前页对应的绑定 |
+| A | 对当前目标交互：NPC 对话、拾取掉落物、攻击怪物 |
+| B | 取消/清除当前目标焦点 |
+| L1 / R1 | 松开时切换两页；两键实际重叠按下触发固定组合槽，不翻页 |
+| L2 / R2 | 短按松开执行tap槽；达到配置阈值执行hold槽一次；L2+R2重叠触发组合槽 |
 | Start | 默认 HUD / 掌机 HUD 切换 |
 | Select | 短按切换大地图，长按切换地面掉落物名称 |
-| Menu / Mode | 打开或关闭全屏手札；设置在「系统」页 |
-| L3 | 自动跑步开关 |
+| Menu / Mode | 打开或关闭全屏手札；绑定入口在「系统 → 操作」 |
+| L3 | 自动跑步开关；绑定界面中打开操作时间设置 |
 | R3 | 锁定/解除当前目标 |
+
+F2 掌机 HUD 右下显示当前页六个真实绑定（十字键方向、X、Y），左下显示六个固定槽；空绑定保持空白，不以未绑定技能填充。长按肩键时显示tap、hold、组合动作和进度。「系统 → 操作」中的「操作绑定」界面可编辑两页、固定槽、长按阈值和组合窗口；绑定按角色和服务器保存，确认替换后立即生效。
 
 fbdev 内部将 Select/L3/R3/Y 分别转成 `F15/F13/F14/F16`，避免与桌面
 `Alt/Shift/Ctrl/Tab` 语义冲突；这些内部键只在 `AutoLoginArgs.Handheld` 下消费。
-
-技能选择器和腰带选择器均为中央面板：右摇杆、方向键或 L1/R1 逐项选择，A 确认，B 关闭。
-技能选择器直接使用已学技能，不要求绑定桌面 F1–F12；被动技能仅供查看。腰带面板显示
-服务端的全部十个链接，不受默认 HUD 六格布局限制，并复用现有物品使用及冷却校验。
-进入地图、关闭当前对话框后，在任一 HUD 按右侧 **Menu** 打开全屏手札。L1/R1 切背包、人物、技能、任务、社交、系统，L2/R2 切分类；十字键或左摇杆选中项目，A 操作，B 逐层返回，右摇杆上下滚动详情。手札使用当前角色的数据；技能页用于查看和配置，不会施法。与 NPC 交谈或交易时，服务端开放的服务优先，不可用手札绕过。见[设计与网页原型](design/zircon-handheld-menu-spec.md)。
+进入地图并关闭当前对话框后，按 **Menu** 打开全屏手札。L1/R1 切背包、人物、技能、任务、社交、系统，L2/R2 切分类；十字键或左摇杆选中项目，A 操作，B 逐层返回，右摇杆上下滚动详情。与 NPC 交谈或交易时，服务端开放的服务优先，不可用手札绕过。见[设计与网页原型](design/zircon-handheld-menu-spec.md)。
 
 桌面端默认行为不变；上述按键和 HUD 分支由 `AutoLoginArgs.Handheld` /
-`ZIRCON_HANDHELD` 门控。实现位于 `GodotClient/Scripts/GameScene.Handheld.cs`
-和 `GodotClient/Controls/HandheldQuickSelect.cs`。
+`ZIRCON_HANDHELD` 门控。实现位于 `GodotClient/Input/HandheldActions/`、
+`GodotClient/Scripts/GameScene.Handheld*.cs` 和 `GodotClient/Controls/HandheldHud.cs`。
 
 账号与角色：首次运行会在卡上的 `Debug/ServerCore/Database/Users.db` 里自动创建
 `test@test.com`，并按 `--char TestHero` 自动建角（战士男），之后直接进游戏。
@@ -128,6 +120,15 @@ Tools/trimui-tg5040/deploy.sh
 
 ## 验证记录
 
+### 本地动作绑定集成（2026-11-24）
+
+- `dotnet build GodotClient/ZirconClient.csproj --no-restore` 通过；只有仓库原有 nullable/unused-variable 警告。
+- `Tests/HandheldActionsChecks` 16 项通过，覆盖单键按下只触发一次、长按、释放、组合边界、组合成员重按门控和配置校验/往返。
+- Godot headless `HandheldActionIntegrationChecks`、`HandheldBindingsChecks`、`HandheldHudChecks`、`HandheldInputChecks`、`HandheldQuickLayoutChecks`、`HandheldMiniMapChecks` 与 `RunningContinuityChecks --offline-movement-test` 通过。
+- Xvfb/OpenGL 在 640×360 实际渲染手札绑定页、第二页、固定槽、功能候选、清空候选、保存失败和阈值页；F2 动作页、固定槽、L2 长按及组合提示截图见 `evidence/handheld-actions-ui-2026-11-24-verified/` 与 `evidence/handheld-actions-hud-2026-11-24/`。HUD 截图使用无地图角色夹具，未验证实际地图纹理或真实角色绑定数据。
+- `godot-fbdev/rebuild-client.sh` 使用已有 AArch64 fbdev 模板完成 ARM64 导出，产物 201 个文件，启动器可执行文件含 `GDPC`，配套 `ZirconClient.dll` 已生成并列入 SHA-256 manifest。此为当前工作树构建，不代表已部署。
+- TG5040（PJOS 1.5.3 / A133）已备份并仅更新客户端；197 个部署文件校验通过。经现有 MainUI 原生入口启动，核对运行进程映射的 DLL 哈希并取得[真机进图截图](evidence/tg5040-native-actions-world-2026-11-24.png)。实体输入、绑定保存重登、施法/用药未验收，见[整合报告](../../docs/HANDHELD_ACTIONS_INTEGRATION_REPORT.md)。
+
 - 本机 Godot Mono/X11 接隔离服务端和存档副本：完成 TestHero 登录、地图绘制；测试账号补齐到 61 个技能、431 件物品。
 - 显式开启掌机模式：键盘模拟 F10/方向键验证 HUD 双向切换、技能/腰带面板；确认释放未绑定的火球术并收到服务端 `ObjectMagic`。
 - fbdev 输入源文件已用 Zig 编译为 AArch64 目标文件；未重新导出或部署整包，实体摇杆、扳机、对话框指针与新包上屏仍待实机验证。
@@ -155,7 +156,7 @@ ZIRCON_HANDHELD=1 MIR3_EI_ROOT=~/mir2ei godot-mono --headless \
   --path GodotClient --script res://Tests/HandheldInputChecks.cs
 ```
 
-当前脚本通过永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、默认 HUD 指针不单独阻止战斗、选择器开启期间两套 HUD 均保留各自的技能落点规则、腰带第八格可选、十格循环和 B 关闭。脚本不连接服务端，不验证 NPC 对话或技能命中。
+当前脚本覆盖永久聊天栏不拦截游戏、可见对话框拦截输入、关闭后恢复、两套 HUD 使用统一世界瞄准格等行为。历史 `HandheldQuickSelect` 仅由隔离布局测试实例化，运行时十字键不再打开旧快选面板；现用 `HandheldQuickLayoutChecks` 验证六格绑定动作区。脚本不连接服务端，不验证 NPC 对话或技能命中。
 
 **实机 NPC 对话：**角色在 `(379,442)`，用紧凑 HUD 选中 `(379,444)` 的六面神石（对象 54），按 A 打开[传送对话框](evidence/tg5040-npc-dialog.png)。对话中保持左摇杆向右，再按 B 关闭：两个阶段角色坐标都未改变。摇杆回中后重新向上推，角色才移动到 `(379,440)`。未选择收费传送选项；从远处按 A 自动接近未验证成功。
 

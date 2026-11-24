@@ -100,7 +100,8 @@ public partial class GameScene
                 break;
             case 2:
                 Add("controls-journal", "手札操作", "Menu：打开或关闭手札\nL1 / R1：切换主标签\nL2 / R2：切换子页\n方向键：移动焦点\nA：操作 · B：返回 · X：次要操作");
-                Add("controls-world", "世界操作", "左摇杆：移动 · 右摇杆：选目标\n方向键上 / 下：技能 / 腰带快选\nL1 / R1：切换技能栏组\nL2 / R2：使用前两个腰带槽\nY：攻击 · X：拾取\nStart：切换 HUD · Select：地图");
+                Add("action-bindings", "操作绑定", "配置两页 X/Y 与十字键动作，以及肩键短按、长按和组合键。");
+                Add("controls-world", "世界操作", "左摇杆：移动 · 右摇杆：选目标\nA：攻击、交谈或拾取 · B：取消\nX / Y / 十字键：执行当前页绑定\nL1 / R1：松开切页 · L2 / R2：固定快捷\nStart：切换 HUD · Select：地图");
                 break;
             case 3:
                 Toggle("item-names", "显示物品名称", ClientSettings.ShowItemNames);
@@ -152,6 +153,7 @@ public partial class GameScene
             (3, "damage") => JournalSetting(() => ClientSettings.ShowDamageNumbers = !ClientSettings.ShowDamageNumbers),
             (3, "auto-potion") => [new JournalAction("打开设置", () => JournalSocialUnavailable ?? JournalOpenUtilityWindow(AutoPotionBox, () => WindowManager.Open(AutoPotionBox, _uiLayer)))],
             (3, "config") => [new JournalAction("打开完整设置", () => JournalOpenUtilityWindow(_configDialog, OpenConfigDialog))],
+            (2, "action-bindings") => [new JournalAction("编辑掌机按键", () => { OpenHandheldActionBindings(); return null; })],
             (4, "help") => [new JournalAction("打开帮助", () => JournalOpenUtilityWindow(_helpDialog, OpenHelpDialog))],
             (5, "logout") => [JournalConfirmUtility("返回角色选择？", () => JournalLogoutUnavailable ?? JournalRun(LeaveGame))],
             (5, "exit") => [JournalConfirmUtility("退出客户端？", () => JournalRun(ExitClient))],

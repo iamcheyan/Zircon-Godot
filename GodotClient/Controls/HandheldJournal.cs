@@ -209,6 +209,15 @@ public partial class HandheldJournal : Control
         sheet.QueueRedraw();
     }
     private void RestoreScroll() { if (IsOpen) scroll.ScrollVertical = scrollCap; }
+    public void SelectTab(int selected)
+    {
+        if (!IsOpen || (uint)selected >= (uint)Tabs.Length) return;
+        Save();
+        menus.Clear();
+        tab = selected;
+        Load();
+    }
+
     public void ScrollDetail(int direction)
     {
         if (!IsOpen || menus.Count != 0) return;

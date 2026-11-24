@@ -40,14 +40,16 @@ public partial class HandheldInputChecks : SceneTree
             Field(game, "_handheldPointerMode", true);
             Check(!game.HandheldCombatBlocked, "default HUD pointer alone does not block combat");
             var selector = new HandheldQuickSelect(game);
-            Field(game, "_handheldQuickSelect", selector);
             selector.OpenBelt();
             Call(game, "UpdateHandheldPointerMode");
             Check(!game.HandheldHudMode && !game.HandheldPointerMode,
                 "opening selector preserves default HUD aim mode while suppressing pointer");
             var fallbackCell = new System.Drawing.Point(99, 99);
-            Check((System.Drawing.Point)Call(game, "HandheldMagicCell", fallbackCell) == fallbackCell,
-                "default HUD selector confirmation keeps pointer ground aim");
+            Field(game, "_playerLocation", new System.Drawing.Point(10, 10));
+            Field(game, "_playerDirection", MirDirection.Up);
+            Check((System.Drawing.Point)Call(game, "HandheldMagicCell", fallbackCell)
+                    == Functions.Move(new System.Drawing.Point(10, 10), MirDirection.Up, 3),
+                "default HUD selector confirmation uses handheld world aim");
             selector.HandleKey(Key.Escape);
             Field(game, "_handheldHudMode", true);
             selector.OpenBelt();

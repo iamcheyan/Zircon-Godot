@@ -20,12 +20,9 @@ public partial class GameScene
     private double _handheldSelectDownMs = -1;
     private bool _handheldSelectLong;
     private bool _handheldTargetLocked;
-    private bool _handheldAttackHeld;
     private double _nextFocusScanMs;
     private double _nextHandheldTraceMs;
     private readonly bool _handheldTrace = System.Environment.GetEnvironmentVariable("ZIRCON_HANDHELD_TRACE") == "1";
-    private double _nextSelectorRepeatMs;
-    private Key _selectorRepeatKey;
     private bool _handheldPointerMode;
     public bool HandheldPointerMode => AutoLoginArgs.Handheld && _handheldPointerMode;
     public bool HandheldCombatBlocked => AutoLoginArgs.Handheld &&
@@ -49,8 +46,7 @@ public partial class GameScene
     }
 
     private bool HandheldGameplayBlocked => AutoLoginArgs.Handheld &&
-        (JournalOpen || _handheldQuickSelect?.IsOpen == true || HandheldHasModalWindow()
-         || HandheldTextEditing);
+        (JournalOpen || HandheldActionBindingsOpen || HandheldHasModalWindow() || HandheldTextEditing);
 
     private bool HandheldTextEditing => GetViewport()?.GuiGetFocusOwner() is Control control
         && control.IsVisibleInTree() && control is LineEdit or TextEdit;
@@ -60,30 +56,27 @@ public partial class GameScene
         if (!AutoLoginArgs.Handheld) return;
         _handheldFocusReticle = new HandheldFocusReticle(this);
         AddChild(_handheldFocusReticle);
-        var pointerLayer = new CanvasLayer { Layer = 100 };
-        pointerLayer.AddChild(new HandheldPointer(this));
-        AddChild(pointerLayer);
-        GD.Print("[Handheld] left stick move; right stick focus/pointer; Start switches HUD");
+        UpdateHandheldPointerMode();
+        var window = GetWindow();
+        window.FocusExited += OnHandheldActionFocusLost;
+        window.FocusEntered += OnHandheldActionFocusEntered;
+        GD.Print("[Handheld] left stick moves; right stick selects targets; Start switches HUD");
     }
 
     private void UpdateHandheldPointerMode()
     {
         if (!AutoLoginArgs.Handheld) return;
-        bool pointer = !JournalNativeServiceVisible && _handheldQuickSelect?.IsOpen != true
-            && (HandheldHasModalWindow() || (!_handheldHudMode && !JournalOpen));
-        if (pointer == _handheldPointerMode) return;
-        _handheldPointerMode = pointer;
-        // OS.SetEnvironment updates native getenv, unlike managed-only environment
-        // changes on Unix. The custom fbdev backend reads this each frame.
-        OS.SetEnvironment("ZIRCON_HANDHELD_POINTER", pointer ? "1" : "0");
-        Input.MouseMode = pointer ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Hidden;
-        StopHandheldMovement();
+        // The fbdev backend reads native getenv and emits semantic Enter in this mode.
+        _handheldPointerMode = false;
+        if (OS.GetEnvironment("ZIRCON_HANDHELD_POINTER") != "0")
+            OS.SetEnvironment("ZIRCON_HANDHELD_POINTER", "0");
+        if (Input.MouseMode != Input.MouseModeEnum.Hidden)
+            Input.MouseMode = Input.MouseModeEnum.Hidden;
     }
 
     private void StopHandheldMovement()
     {
         _handheldAutoRun = false;
-        _handheldAttackHeld = false;
         _handheldStickMoving = false;
         _handheldMoveStarted = false;
         _handheldRequireNeutral = true;
@@ -107,13 +100,17 @@ public partial class GameScene
         UpdateJournalServiceContext();
         UpdateHandheldPointerMode();
         double now = Godot.Time.GetTicksMsec();
+        EnsureHandheldActionConfiguration();
+        SyncHandheldActionOwnership(now);
+        if (!_handheldActionFocused) return;
+        if (HandheldActionBindingsOpen) { ProcessHandheldBindings(now); return; }
         if (_handheldTrace && now >= _nextHandheldTraceMs)
         {
             _nextHandheldTraceMs = now + 500;
             var left = new Vector2(Input.GetJoyAxis(0, JoyAxis.LeftX), Input.GetJoyAxis(0, JoyAxis.LeftY));
             var right = new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX), Input.GetJoyAxis(0, JoyAxis.RightY));
             var windows = string.Join(",", _uiLayer.GetChildren().OfType<DXWindow>().Where(w => w.Visible).Select(w => w.GetType().Name));
-            string state = $"[HandheldTrace] fps={Engine.GetFramesPerSecond()} mouse={GetViewport().GetMousePosition()} select={_handheldQuickSelect?.Kind}:{_handheldQuickSelect?.SelectedIndex} weight={BagWeight}/{PlayerStats[Stat.BagWeight]} weapon={_player?.LibraryWeaponShape} mp={_currentMP} windows={windows} pos={_playerLocation.X},{_playerLocation.Y} L={left} R={right} blocked={HandheldGameplayBlocked} pointer={_handheldPointerMode} neutral={_handheldRequireNeutral} move={_moveFrameCount} target={_handheldFocusObject?.ObjectID ?? 0} locked={_handheldTargetLocked}";
+            string state = $"[HandheldTrace] fps={Engine.GetFramesPerSecond()} mouse={GetViewport().GetMousePosition()} weight={BagWeight}/{PlayerStats[Stat.BagWeight]} weapon={_player?.LibraryWeaponShape} mp={_currentMP} windows={windows} pos={_playerLocation.X},{_playerLocation.Y} L={left} R={right} blocked={HandheldGameplayBlocked} pointer={_handheldPointerMode} neutral={_handheldRequireNeutral} move={_moveFrameCount} target={_handheldFocusObject?.ObjectID ?? 0} locked={_handheldTargetLocked}";
             GD.Print(state);
             System.IO.File.WriteAllText("/tmp/zircon-handheld-state", state);
         }
@@ -127,27 +124,12 @@ public partial class GameScene
             RefreshGroundItemLabels(forceRedraw: true);
             _handheldHud?.ShowToast(ClientSettings.ShowGroundItemNames ? "掉落物名称：显示" : "掉落物名称：隐藏");
         }
-        if (_handheldQuickSelect?.IsOpen == true)
-        {
-            _handheldQuickSelect.MoveFromStick(new Vector2(Input.GetJoyAxis(0, JoyAxis.RightX),
-                Input.GetJoyAxis(0, JoyAxis.RightY)), now);
-            if (_selectorRepeatKey != Key.None && now >= _nextSelectorRepeatMs)
-            {
-                _handheldQuickSelect.HandleKey(_selectorRepeatKey);
-                _nextSelectorRepeatMs = now + 150;
-            }
-            return;
-        }
-        _selectorRepeatKey = Key.None;
-        if (HandheldGameplayBlocked || !_startGameShown || _mapView?.Map == null
-            || _player?.Dead != false || _net?.Connection?.Connected != true)
-        {
-            if (_handheldStickMoving || _handheldAutoRun) StopHandheldMovement();
-            return;
-        }
+        if (!HandheldActionOwnsWorld || _mapView?.Map == null) return;
+        ProcessHandheldFocus(now);
+        _handheldActionEngine.Tick(now);
+        RunHandheldActionIntents();
+        if (!HandheldActionOwnsWorld) return;
         ProcessHandheldMovement(now);
-        if (!_handheldPointerMode) ProcessHandheldFocus(now);
-        if (_handheldAttackHeld && !_handheldStickMoving) HandheldAttack(false);
         if (_handheldNpcApproachId != 0 && _objects.TryGetValue(_handheldNpcApproachId, out var npc)
             && Functions.Distance(_playerLocation, new Point(npc.CellX, npc.CellY)) <= 2)
         {
@@ -308,15 +290,6 @@ public partial class GameScene
         _handheldHud?.ShowToast("自动跑步：开（B 停止）");
     }
 
-    private void OpenHandheldSelector(bool magic)
-    {
-        if (HandheldHasModalWindow()) return;
-        StopHandheldMovement();
-        _selectorRepeatKey = Key.None;
-        if (magic) _handheldQuickSelect?.OpenMagic(); else _handheldQuickSelect?.OpenBelt();
-        UpdateHandheldPointerMode();
-    }
-
     // Releases and OS repeats are consumed here too, before desktop shortcuts.
     private bool HandleHandheldInputEvent(InputEvent @event)
     {
@@ -325,24 +298,38 @@ public partial class GameScene
         if (JournalOpen && _journal.Visible && @event is InputEventMouse) return true;
         if (@event is not InputEventKey key) return false;
         double now = Godot.Time.GetTicksMsec();
+        EnsureHandheldActionConfiguration();
+        SyncHandheldActionOwnership(now);
+        var button = HandheldButtonForKey(key.Keycode);
+        // Track physical edges against the owner before routing. A release that
+        // closes a menu still belongs to that menu and can only clear its gate.
+        if (button is { } mapped) TrackHandheldActionKey(key, mapped, now);
+        if (!_handheldActionFocused) return IsHandheldSemanticKey(key.Keycode) || IsHandheldSystemKey(key.Keycode);
+        try { return RouteHandheldInputKey(key, button.HasValue, now); }
+        finally { SyncHandheldActionOwnership(Godot.Time.GetTicksMsec()); }
+    }
+
+    private bool RouteHandheldInputKey(InputEventKey key, bool mapped, double now)
+    {
+        if (HandheldActionBindingsOpen) { RouteHandheldBindingsKey(key); return true; }
         if (!HandheldTextEditing && JournalServiceActive && HandleJournalServiceKey(key)) return true;
         if (RouteJournalKey(key, now)) return true;
         if (key.Keycode == Key.F10)
         {
-            if (key.Pressed && !key.Echo) ToggleHandheldHudMode();
+            if (key.Pressed && !key.Echo && !HandheldGameplayBlocked && !JournalServiceActive) ToggleHandheldHudMode();
             return true;
         }
         if (key.Keycode == Key.F15)
         {
             if (key.Pressed)
             {
-                if (!key.Echo && _handheldSelectDownMs < 0) { _handheldSelectDownMs = now; _handheldSelectLong = false; }
+                if (!key.Echo && _handheldSelectDownMs < 0 && (HandheldActionOwnsWorld || _bigMap?.Visible == true))
+                { _handheldSelectDownMs = now; _handheldSelectLong = false; }
             }
             else if (_handheldSelectDownMs >= 0)
             {
                 if (!_handheldSelectLong && now - _handheldSelectDownMs < HandheldLongPressMs)
                 {
-                    _handheldQuickSelect?.Close();
                     StopHandheldMovement();
                     if (_bigMap?.Visible == true) _bigMap.Visible = false; else OpenBigMap();
                     UpdateHandheldPointerMode();
@@ -353,74 +340,40 @@ public partial class GameScene
         }
         if (key.Keycode is Key.F11 or Key.Menu)
         {
-            if (key.Pressed && !key.Echo)
+            if (key.Pressed && !key.Echo && !HandheldGameplayBlocked && !JournalServiceActive)
                 OpenJournal();
             return true;
         }
-        if (!key.Pressed)
+        if (HandheldGameplayBlocked || JournalServiceActive)
         {
-            if (key.Keycode == Key.F16) _handheldAttackHeld = false;
-            if (_selectorRepeatKey == key.Keycode) _selectorRepeatKey = Key.None;
-            return _handheldQuickSelect?.IsOpen == true;
-        }
-        if (_handheldQuickSelect?.IsOpen == true)
-        {
-            if (!key.Echo)
+            if (key is { Keycode: Key.Escape, Pressed: true, Echo: false })
             {
-                _handheldQuickSelect.HandleKey(key.Keycode);
-                if (key.Keycode is Key.Q or Key.E)
-                {
-                    _selectorRepeatKey = key.Keycode;
-                    _nextSelectorRepeatMs = now + 400;
-                }
+                GetViewport()?.GuiGetFocusOwner()?.ReleaseFocus();
+                if (DXItemCell.SelectedCell != null || _selectedCurrency != null)
+                { DXItemCell.SelectedCell = null; _selectedCurrency = null; }
+                else if (_bigMap?.Visible == true) _bigMap.Visible = false;
+                else WindowManager.CloseTop();
             }
-            return true; // no combat, belt hotkey, or desktop key leaks
-        }
-        if (key.Echo) return IsHandheldSemanticKey(key.Keycode);
-        if (key.Keycode == Key.Escape)
-        {
-            GetViewport()?.GuiGetFocusOwner()?.ReleaseFocus();
-            if (DXItemCell.SelectedCell != null || _selectedCurrency != null)
-            { DXItemCell.SelectedCell = null; _selectedCurrency = null; return true; }
-            if (_bigMap?.Visible == true) _bigMap.Visible = false;
-            else WindowManager.CloseTop();
-            StopHandheldMovement();
-            ClearHandheldFocus();
-            UpdateHandheldPointerMode();
-            return true;
-        }
-        if (HandheldHasModalWindow() || HandheldTextEditing)
-        {
-            // A is a pointer click in fbdev dialogs. Keyboard Enter remains free
-            // for native text/confirmation widgets; game hotkeys are swallowed.
+            // Native text/confirmation widgets retain their Enter action.
             return IsHandheldSemanticKey(key.Keycode) && key.Keycode is not (Key.Enter or Key.KpEnter);
         }
-        switch (key.Keycode)
+        if (mapped)
         {
-            case Key.Up: OpenHandheldSelector(true); return true;
-            case Key.Down: OpenHandheldSelector(false); return true;
-            case Key.Left: CycleHandheldTarget(-1); return true;
-            case Key.Right: CycleHandheldTarget(1); return true;
-            case Key.Q:
-            case Key.E:
-                MagicBarSpellSet = ((MagicBarSpellSet - 1 + (key.Keycode == Key.Q ? 3 : 1)) % 4) + 1;
-                _magicBar?.Refresh();
-                _handheldHud?.ShowToast($"技能栏组 {MagicBarSpellSet}"); return true;
-            case Key.Key1: TryUseHandheldBelt(0); return true;
-            case Key.Key2: TryUseHandheldBelt(1); return true;
-            case Key.F13: ToggleHandheldAutoRun(); return true;
-            case Key.F14: ToggleHandheldTargetLock(); return true;
-            case Key.F16: HandheldAttack(); _handheldAttackHeld = true; return true;
-            case Key.Space: HandheldPickUp(); return true;
-            case Key.Enter:
-            case Key.KpEnter: HandheldConfirm(); return true;
-            default: return false;
+            RunHandheldActionIntents();
+            return true;
         }
+        if (key.Keycode is not (Key.F13 or Key.F14)) return false;
+        if (key.Pressed && !key.Echo && HandheldActionOwnsWorld)
+        {
+            if (key.Keycode == Key.F13) ToggleHandheldAutoRun();
+            else ToggleHandheldTargetLock();
+        }
+        return true;
     }
 
-    private static bool IsHandheldSemanticKey(Key key) => key is Key.Up or Key.Down or Key.Left or Key.Right
-        or Key.Q or Key.E or Key.Key1 or Key.Key2 or Key.F13 or Key.F14 or Key.F16
-        or Key.Space or Key.Enter or Key.KpEnter or Key.Escape;
+    private static bool IsHandheldSystemKey(Key key) => key is Key.F10 or Key.F11 or Key.F15 or Key.Menu;
+
+    private static bool IsHandheldSemanticKey(Key key) => HandheldButtonForKey(key).HasValue || key is Key.F13 or Key.F14;
 
     private void HandheldPickUp()
     {
@@ -433,28 +386,23 @@ public partial class GameScene
         if (item != null) BeginGroundItemPickup(item); else SendPickUp();
     }
 
-    private void HandheldAttack(bool stopMovement = true)
+    private void HandheldAttack(ObjectRenderer target)
     {
-        if (_net?.Connection?.Connected != true || _player == null || !CanPlayerTurn()
-            || _pendingMagicPacket != null || IsFishingActive || IsTamingActive) return;
-        if (stopMovement) StopHandheldMovement();
-        var target = _handheldFocusObject ?? (_handheldPointerMode ? _combatController?.MouseObject : null);
-        if (IsHandheldFocusCandidate(target) && CombatController.CanAttackObject(target))
-        {
-            // Ordinary target selection retains the engine's chase/cooldown rules.
-            // Never start PvP merely by moving focus over a player/pet.
-            if (target.Type == ObjectRenderer.Kind.Monster && string.IsNullOrWhiteSpace(target.PetOwner))
-                _combatController.TargetObject = target;
-            if (Functions.Distance(_playerLocation, new Point(target.CellX, target.CellY)) > 1) return;
-            _combatController.RequestHandheldAttack(Functions.DirectionFromPoint(_playerLocation, new Point(target.CellX, target.CellY)));
-        }
-        else _combatController?.RequestHandheldAttack(_playerDirection);
+        if (!HandheldActionOwnsWorld || !CanPlayerTurn() || _combatController == null
+            || _pendingMagicPacket != null || IsFishingActive || IsTamingActive
+            || target.Type != ObjectRenderer.Kind.Monster || !string.IsNullOrWhiteSpace(target.PetOwner)
+            || !CombatController.CanAttackObject(target)) return;
+        StopHandheldMovement();
+        _combatController.TargetObject = target;
+        var targetCell = new Point(target.CellX, target.CellY);
+        if (Functions.Distance(_playerLocation, targetCell) <= 1)
+            _combatController.RequestHandheldAttack(Functions.DirectionFromPoint(_playerLocation, targetCell));
     }
 
     private void HandheldConfirm()
     {
-        var target = _handheldFocusObject ?? (_handheldPointerMode ? _combatController?.MouseObject : null);
-        if (!IsHandheldFocusCandidate(target) || _observer || _player?.Dead != false) return;
+        var target = _handheldFocusObject;
+        if (!HandheldActionOwnsWorld || !IsHandheldFocusCandidate(target)) return;
         if (target.Type == ObjectRenderer.Kind.NPC)
         {
             StopHandheldMovement();
@@ -466,7 +414,7 @@ public partial class GameScene
             }
         }
         else if (target.Type == ObjectRenderer.Kind.Item) HandheldPickUp();
-        else HandheldAttack();
+        else if (target.Type == ObjectRenderer.Kind.Monster) HandheldAttack(target);
     }
 
     // 服务端保存全部十个链接；旧版 HUD 只画六格，不能依赖可见腰带控件。
@@ -482,8 +430,9 @@ public partial class GameScene
     {
         var link = GetHandheldBeltLink(slot);
         if (link == null) return null;
-        return Inventory.FirstOrDefault(item => MatchesHandheldBeltLink(link, item))
-            ?? CompanionInventory.FirstOrDefault(item => MatchesHandheldBeltLink(link, item));
+        var item = Inventory.FirstOrDefault(candidate => MatchesHandheldBeltLink(link, candidate))
+            ?? CompanionInventory.FirstOrDefault(candidate => MatchesHandheldBeltLink(link, candidate));
+        return IsHandheldBeltItem(item) ? item : null;
     }
 
     internal long GetHandheldBeltCount(int slot)
@@ -492,7 +441,7 @@ public partial class GameScene
         if (link == null) return 0;
         if (link.LinkInfoIndex <= 0) return GetHandheldBeltItem(slot)?.Count ?? 0;
         return Inventory.Concat(CompanionInventory)
-            .Where(item => MatchesHandheldBeltLink(link, item)).Sum(item => item.Count);
+            .Where(item => MatchesHandheldBeltLink(link, item) && IsHandheldBeltItem(item)).Sum(item => item.Count);
     }
 
     private bool CanUseHandheldQuickAction => AutoLoginArgs.Handheld
@@ -506,20 +455,27 @@ public partial class GameScene
         var link = GetHandheldBeltLink(slot);
         if (link == null) return false;
         // 使用真实的背包格，让物品限制、锁定、冷却和发包沿用同一条链路。
-        var cell = InventoryCells.FirstOrDefault(cell => MatchesHandheldBeltLink(link, cell?.Item))
-            ?? CompanionInventoryCells.FirstOrDefault(cell => MatchesHandheldBeltLink(link, cell?.Item));
+        var cell = InventoryCells.FirstOrDefault(cell => MatchesHandheldBeltLink(link, cell?.Item) && IsHandheldBeltItem(cell?.Item))
+            ?? CompanionInventoryCells.FirstOrDefault(cell => MatchesHandheldBeltLink(link, cell?.Item) && IsHandheldBeltItem(cell?.Item));
         return cell?.UseItem() == true;
     }
 
     internal bool TryUseHandheldMagic(ClientUserMagic magic)
         => CanUseHandheldQuickAction && _pendingMagicPacket == null && CanRequestMagic()
-           && magic?.Info != null && magic.Info.Property != MagicProperty.Passive
+           && IsHandheldBindableSkill(magic)
            && UserMagics.TryGetValue(magic.Info, out var learned) && ReferenceEquals(learned, magic)
-           && UseMagic(magic);
+           && UseHandheldFocusedMagic(magic);
+
+    private bool UseHandheldFocusedMagic(ClientUserMagic magic)
+    {
+        ValidateHandheldFocus();
+        if (_combatController != null) _combatController.MouseObject = _handheldFocusObject;
+        return UseMagic(magic);
+    }
 
     private Point HandheldMagicCell(Point mouseCell)
     {
-        if (AutoLoginArgs.Handheld && _handheldHudMode) return HandheldCastCell();
+        if (AutoLoginArgs.Handheld) return HandheldCastCell();
         return _combatController?.MouseCell() ?? mouseCell;
     }
 

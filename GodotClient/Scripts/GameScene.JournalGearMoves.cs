@@ -30,6 +30,13 @@ public partial class GameScene
         JournalReadyCell(cell) && cell.Slot == slot && (uint)slot < (uint)Inventory.Length &&
         Inventory[slot] == null && cell.Item == null);
 
+    internal static bool IsHandheldBeltItem(ClientUserItem item)
+    {
+        var info = item?.Info;
+        return info != null && ((info.ItemType == ItemType.Consumable && info.CanAutoPot) || info.ItemType == ItemType.Scroll ||
+            (info.ItemType == ItemType.Consumable && info.Shape is 2 or 3));
+    }
+
     internal IReadOnlyList<JournalAction> JournalItemActions(bool equipped, int slot, ClientUserItem item, bool secondary)
     {
         if (item?.Info == null) return Array.Empty<JournalAction>();

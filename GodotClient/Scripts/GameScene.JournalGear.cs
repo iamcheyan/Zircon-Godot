@@ -29,12 +29,11 @@ public partial class GameScene
             var row = JournalItemEntry(JournalGearId(slot, item), item.Info.Local(), $"×{item.Count:N0}");
             if (grid?.UseLegacyFootprints == true)
             {
-                int cell = grid.ResolveSlotCell(slot);
-                if (cell >= 0)
-                {
-                    grid.GetLegacyFootprintSize(cell, out int width, out int height);
-                    row = row with { Width = width, Height = height };
-                }
+                // Size belongs to the PC inventory artwork, not to its current
+                // placement. A full or not-yet-rebuilt hidden grid has no anchor
+                // for late records; that must never turn a coat into a 1×1 icon.
+                DXItemGrid.GetLegacyFootprint(item, out int width, out int height);
+                row = row with { Width = width, Height = height };
             }
             rows.Add(row with { Detail = $"原始槽位 {slot + 1} · {row.Width}×{row.Height}" });
         }

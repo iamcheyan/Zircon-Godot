@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Library;
 using ZirconClient.Scripts;
@@ -50,11 +51,10 @@ public partial class HandheldJournal : Control
     private string primaryHint, secondaryHint;
     public void InvalidateProjection() => projectionDirty = true;
     private int CardTop => Preview ? 208 : tab == 2 || questPreview != null ? 180 : 135;
-    private ulong occupied;
     private int Cat => categories[tab];
-    private bool LegacyLayout => tab == 0 && Cat == 0 && mark?.Sorted != true;
-    private int Cols => LegacyLayout ? game.JournalInventoryColumns : tab switch { 0 => Cat == 5 ? 5 : 6, 1 when Cat == 0 => 2, 2 => 6, _ => 1 };
-    private int Lines => tab == 0 && Cat == 5 ? 2 : Cols == 1 ? 6 : 4;
+    private bool BagGrid => tab == 0 && Cat != 5;
+    private int Cols => tab switch { 0 => Cat == 5 ? 5 : Math.Max(6, rows.Count == 0 ? 1 : rows.Max(row => row.Width)), 1 when Cat == 0 => 2, 2 => 6, _ => 1 };
+    private int Lines => BagGrid ? Math.Max(6, rows.Count == 0 ? 1 : rows.Max(row => row.Height)) : tab == 0 && Cat == 5 ? 2 : Cols == 1 ? 7 : 5;
     private int Page => rows.Count == 0 ? 0 : cells[index].Position.Y / Lines;
     private bool Preview => tab == 0 || (tab == 1 && Cat == 0);
     public bool IsOpen { get; private set; }
@@ -153,31 +153,29 @@ public partial class HandheldJournal : Control
     }
     private void Pack()
     {
-        cells.Clear(); occupied = 0;
+        cells.Clear();
         int page = 0, cols = Cols, lines = Lines;
+        var occupied = new bool[cols, lines];
         foreach (var row in rows)
         {
-            int w = tab == 0 && Cat != 5 ? Math.Clamp(row.Width, 1, cols) : 1;
-            int h = tab == 0 && Cat != 5 ? Math.Clamp(row.Height, 1, lines) : 1;
-            int x, y;
-            if (LegacyLayout)
-            {
-                int slot = game.JournalInventoryDisplayCell(row.Id);
-                if (slot < 0) slot = cells.Count;
-                cells.Add(new(slot % cols, slot / cols, w, h));
-                page = Math.Max(page, slot / cols / lines);
-                continue;
-            }
+            int w = BagGrid ? Math.Max(1, row.Width) : 1;
+            int h = BagGrid ? Math.Max(1, row.Height) : 1;
+            // PC occupancy is preserved. Repack complete items at page breaks;
+            // copying a continuous PC row index would cut a tall item in half.
             while (true)
             {
-                for (y = 0; y <= lines-h; y++) for (x = 0; x <= cols-w; x++)
+                for (int y = 0; y <= lines-h; y++) for (int x = 0; x <= cols-w; x++)
                 {
-                    ulong mask = 0;
-                    for (int k = 0; k < h; k++) mask |= ((1UL << w)-1) << ((y+k)*cols+x);
-                    if ((occupied & mask) != 0) continue;
-                    occupied |= mask; cells.Add(new(x,y+page*lines,w,h)); goto placed;
+                    bool free = true;
+                    for (int dy = 0; dy < h && free; dy++)
+                        for (int dx = 0; dx < w; dx++)
+                            if (occupied[x+dx,y+dy]) { free = false; break; }
+                    if (!free) continue;
+                    for (int dy = 0; dy < h; dy++) for (int dx = 0; dx < w; dx++) occupied[x+dx,y+dy] = true;
+                    cells.Add(new(x,y+page*lines,w,h)); goto placed;
                 }
-                page++; occupied = 0;
+                page++;
+                Array.Clear(occupied);
             }
             placed: ;
         }
@@ -356,8 +354,10 @@ public partial class HandheldJournal : Control
             bool list = cols <= 2;
             if (row.Icon != null)
             {
-                Vector2 size=row.Icon.GetSize(); float side=list ? h-6 : Math.Min(w-6,h-5);
-                float scale=Math.Min(side/Math.Max(1,size.X),side/Math.Max(1,size.Y)); size*=scale;
+                Vector2 size=row.Icon.GetSize();
+                float iconWidth = list ? h-6 : w-6;
+                float iconHeight = h-6;
+                float scale=Math.Min(iconWidth/Math.Max(1,size.X),iconHeight/Math.Max(1,size.Y)); size*=scale;
                 sheet.DrawTextureRect(row.Icon,new Rect2(new Vector2(list ? x+4 : x+(w-size.X)/2,y+(h-size.Y)/2),size),false);
             }
             bool hasBadge = !string.IsNullOrEmpty(row.Badge);

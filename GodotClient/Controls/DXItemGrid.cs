@@ -229,12 +229,12 @@ public partial class DXItemGrid : DXControl
                 var item = ItemGrid[slot];
                 if (item?.Info == null) continue;
                 GetLegacyFootprint(item, out int width, out int height);
-                if (!TryPlace(occupied, width, height, out _, out int y))
+                if (!TryPlace(occupied, width, height, out int x, out int y))
                 {
                     placedAll = false;
                     break;
                 }
-                MarkPlacement(occupied, 0, y, width, height);
+                MarkPlacement(occupied, x, y, Math.Min(width, columns), height);
                 maxRow = Math.Max(maxRow, y + height);
             }
             if (placedAll) break;
@@ -392,17 +392,17 @@ public partial class DXItemGrid : DXControl
                 occupied[col, row] = true;
     }
 
-    private static void GetLegacyFootprint(ClientUserItem item, out int width, out int height)
+    internal static void GetLegacyFootprint(ClientUserItem item, out int width, out int height)
     {
         width = height = 1;
         if (item?.Info == null) return;
 
         // 优先从 LegacyEI 原版 Inventory.wil 读取经典多格大图标（衣服 2x3, 武器 1x3/1x4 等）；
         // 缺图或索引超 1440 的后期/杂物道具，平滑回退至 StoreItem。
-        var texture = MirSkin.GetTexture(LibraryFile.Inventory, item.Info.Image);
+        var texture = MirSkin.GetTexture(LibraryFile.Inventory, DXItemCell.GetItemDrawIndex(item));
         if (texture == null)
         {
-            texture = MirSkin.GetTexture(LibraryFile.StoreItem, item.Info.Image);
+            texture = MirSkin.GetTexture(LibraryFile.StoreItem, DXItemCell.GetItemDrawIndex(item));
         }
         if (texture == null) return;
 

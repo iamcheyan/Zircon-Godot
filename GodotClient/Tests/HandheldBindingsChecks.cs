@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Library;
 using System.Reflection;
 using Godot;
 using ZirconClient.Controls;
@@ -16,7 +17,8 @@ public partial class HandheldBindingsChecks : SceneTree
         ("bindings-page-1", new[] { Key.E }),
         ("bindings-page-2", new[] { Key.E }),
         ("bindings-fixed", new[] { Key.Enter }),
-        ("bindings-picker", new[] { Key.E, Key.E }),
+        ("bindings-picker", new[] { Key.Down, Key.Down, Key.Down, Key.Down, Key.Down }),
+        ("bindings-picker-page-2", new[] { Key.E, Key.E }),
         ("bindings-functions-category", new[] { Key.E }),
         ("bindings-clear-category", new[] { Key.Enter }),
         ("bindings-save-error", new[] { Key.Escape, Key.F13 }),
@@ -50,12 +52,20 @@ public partial class HandheldBindingsChecks : SceneTree
             var saved=HandheldActionConfigurationStore.Load(path);
             Check(saved.Pages[0].Bindings[HandheldButton.X].Kind==ActionKind.Empty,
                 "L1/R1 category navigation and A persist the confirmed clear candidate");
+            var intact = File.ReadAllText(path);
             File.WriteAllText(path,"{broken");
-            key.Invoke(ui,new object[]{Key.Space});
+            key.Invoke(ui,new object[]{Key.Enter});
+            key.Invoke(ui,new object[]{Key.E});
+            key.Invoke(ui,new object[]{Key.E});
+            key.Invoke(ui,new object[]{Key.Enter});
             Check(File.ReadAllText(path)=="{broken","failed binding save preserves the damaged original file");
             var retained=(HandheldActionConfiguration)Invoke(game,"CloneHandheldActionConfig");
             Check(retained.Pages[0].Bindings[HandheldButton.X].Kind==ActionKind.Empty,
                 "failed binding save leaves the last effective action configuration intact");
+            File.WriteAllText(path, intact);
+            key.Invoke(ui,new object[]{Key.Enter});
+            Check(HandheldActionConfigurationStore.Load(path).Pages[0].Bindings[HandheldButton.X].MenuAction == MenuAction.Interact,
+                "retry confirms the same candidate after the invalid file is restored");
         }
         finally
         {
@@ -73,16 +83,18 @@ public partial class HandheldBindingsChecks : SceneTree
         bool timing = (bool)typeof(HandheldActionBindings).GetField("_timingSettings", Private).GetValue(_captureUi);
         int category = (int)typeof(HandheldActionBindings).GetField("_category", Private).GetValue(_captureUi);
         string message = (string)typeof(HandheldActionBindings).GetField("_message", Private).GetValue(_captureUi);
+        int PickerChoice() => (int)typeof(HandheldActionBindings).GetField("_choice", Private).GetValue(_captureUi);
         bool valid = index switch
         {
             0 => tab == 0 && !picker && !timing,
             1 => tab == 1 && !picker && !timing,
             2 => tab == 2 && !picker && !timing,
-            3 => tab == 2 && picker && !timing && category == 0,
-            4 => tab == 2 && picker && !timing && category == 2,
-            5 => tab == 2 && picker && !timing && category == 3,
-            6 => tab == 2 && picker && !timing && message.StartsWith("保存失败", StringComparison.Ordinal),
-            7 => tab == 2 && !picker && timing,
+            3 => tab == 2 && picker && !timing && category == 0 && PickerChoice() == 0,
+            4 => tab == 2 && picker && !timing && category == 0 && PickerChoice() == 10,
+            5 => tab == 2 && picker && !timing && category == 2,
+            6 => tab == 2 && picker && !timing && category == 3,
+            7 => tab == 2 && picker && !timing && message.StartsWith("保存失败", StringComparison.Ordinal),
+            8 => tab == 2 && !picker && timing,
             _ => false
         };
         Check(valid, "editor state is correct before capture: " + VisualStates[index].Name);
@@ -94,7 +106,13 @@ public partial class HandheldBindingsChecks : SceneTree
         if (string.IsNullOrWhiteSpace(_visualDirectory)) return;
         Directory.CreateDirectory(_visualDirectory);
         DisplayServer.WindowSetSize(new Vector2I(640, 360));
+        await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         _captureGame = new GameScene();
+        // Read-only client definitions. Treat them as learned for this offline visual fixture.
+        foreach (var info in Globals.MagicInfoList.Binding)
+            _captureGame.UserMagics[info] = new ClientUserMagic { Info = info, InfoIndex = info.Index, Level = 1 };
+        Check(_captureGame.HandheldBindingChoices(ActionKind.Skill).Count > 10,
+            "fixture has enough selectable skills to scroll to page two");
         string path = Path.Combine(Path.GetTempPath(), "zircon-binding-visual-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, "{broken");
         Set(_captureGame, "_handheldActionPath", path);

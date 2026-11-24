@@ -20,11 +20,11 @@
 - `ZIRCON_HANDHELD=1 MIR3_EI_ROOT="$HOME/mir2ei" godot-mono --headless --path GodotClient --script res://Tests/HandheldActionIntegrationChecks.cs`：26 项通过，含真实临时 JSON 保存、另一个角色不继承绑定、新 GameScene 重新加载绑定、失败保留和语义键事件拦截。没有登录服务端，也未发送施法或用药请求。
 - 同环境下 `HandheldBindingsChecks`、`HandheldHudChecks`、`HandheldInputChecks`、`HandheldQuickLayoutChecks`、`HandheldMiniMapChecks`：均通过。
 - `godot-mono --headless --path GodotClient --script res://Tests/RunningContinuityChecks.cs -- --offline-movement-test`：通过短走、持续跑和释放停止场景。
-- 640×360 Xvfb 软件渲染：`HandheldBindingsChecks` 与 `HandheldHudChecks` 实际渲染 Control 并保存 PNG。绑定页包括功能候选、清空、保存失败和计时设置；HUD 有两页、固定槽、肩键长按与组合提示。HUD 截图使用无地图/无角色数据的隔离夹具，不能证明真实小地图纹理或角色技能/物品列表的实机字号。
+- 640×360 Xvfb / OpenGL：`HandheldBindingsChecks` 与 `HandheldHudChecks` 渲染实际 Control。候选测试从只读客户端技能定义构造离线角色，方向键跨过第十个候选进入下一屏；同时验证原配置损坏时保存失败、修复文件后可重试同一候选。HUD 截图使用无地图角色夹具；这些截图不是实体输入或实机字号证据。
 
 ## 渲染证据
 
-绑定界面：[第 1 页](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-page-1.png)、[第 2 页](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-page-2.png)、[固定槽](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-fixed.png)、[功能候选](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-functions-category.png)、[清空候选](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-clear-category.png)、[保存失败保护](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-save-error.png)、[阈值设置](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-timing.png)。
+绑定界面：[第 1 页](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-page-1.png)、[第 2 页](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-page-2.png)、[固定槽](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-fixed.png)、[技能候选首屏](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-picker.png)、[技能候选次屏](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-picker-page-2.png)、[功能候选](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-functions-category.png)、[清空候选](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-clear-category.png)、[保存失败保护](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-save-error.png)、[阈值设置](../Tools/trimui-tg5040/evidence/handheld-actions-ui-2026-11-24-verified/bindings-timing.png)。
 
 F2 HUD：[第 1 页](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-11-24/hud-page-1.png)、[第 2 页](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-11-24/hud-page-2.png)、[L2 长按提示](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-11-24/hud-l2-held.png)、[L2+R2 组合提示](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-11-24/hud-chord-hint.png)。
 
@@ -38,7 +38,7 @@ F2 HUD：[第 1 页](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-1
 - ARM64 可执行文件尾标记为 `GDPC`，配套程序集为 `data_ZirconClient_linuxbsd_arm64/ZirconClient.dll`。
 - `Mir2eiClient` SHA-256：`e23ab122c048eba45e23108418a2306faec6dd628a8317321f700a431ba8ef37`
 - 设备 `ZirconClient.dll` SHA-256：`de81c7fe4a15fa8062dd11b70c5eb0f95664c1b3043d775475c2ea987af43f8d`
-- 本地 Debug 验证 DLL SHA-256：`cb2868292b2a4cac7f73748d9d294d2db613c9acb753922d249cf438f8dff66f`
+- 本地 Debug 回归 DLL SHA-256：`cb2868292b2a4cac7f73748d9d294d2db613c9acb753922d249cf438f8dff66f`；补跑技能候选分页和保存重试的本地 DLL：`625541e85736ee5d592a2c04bb21bf22c4b9706efae52afd43e5086fb65f1da8`（只修改验证脚本，不重新部署）。
 - 部署文件清单：`.artifacts/handheld-actions-final-2026-11-24/client-current-device.sha256`
 
 ## TG5040 部署与回退
@@ -52,6 +52,11 @@ F2 HUD：[第 1 页](../Tools/trimui-tg5040/evidence/handheld-actions-hud-2026-1
 
 ## 尚未验证
 
-实体摇杆、面键、十字键、肩键与扳机；设备上操作绑定/翻页、组合、长短按、保存后重登恢复、不同角色隔离；施法和用药的服务端结果；人工点启动器封面。未使用未获准的输入注入。桌面截图是测试夹具，且未覆盖实际角色的多页技能/物品候选；单机测试最终只证明配置文件和选择流程，不等同于登录服务端后的行为。
+没有获准的设备输入接口，未使用输入注入。以下需在当前 DLL 上用实体键验收：
+
+1. 从封面启动；左摇杆短推走、持续跑、松开停，右摇杆选怪/NPC/掉落物，A 分别攻击、对话、拾取，B 清除目标；Start、Select、Menu、L3/R3 保持各自职责。
+2. 从「手札 → 系统 → 操作 → 操作绑定」改一项技能和一项消耗品；取消一次候选替换，退出后用实体键翻页、施法和用药，以服务器响应和道具数量核实。实际角色的物品候选翻页及实体屏幕可读性仍未验证。
+3. 分别验证肩键单按、扳机短按/长按与两种组合；在打开编辑器时持续按住一键，关闭后确认松开前不触发世界动作。
+4. 退出、重新登录同一角色，核对绑定恢复；切换角色核对不继承。离线临时 JSON 测试已覆盖重新加载和角色隔离，但未验证真实登录过程。
 
 设备运行包从当前工作树导出，包含当时既有的客户端 WIP；不能把工作树 DLL 哈希当成最小 Git 提交的可重建哈希。

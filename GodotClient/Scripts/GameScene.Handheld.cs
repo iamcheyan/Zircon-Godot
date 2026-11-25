@@ -323,6 +323,7 @@ public partial class GameScene
             return true;
         }
         if (HandheldActionBindingsOpen) { RouteHandheldBindingsKey(key); return true; }
+        if (RouteHandheldPromptKey(key)) return true;
         if (!HandheldTextEditing && JournalServiceActive && HandleJournalServiceKey(key)) return true;
         if (key.Keycode == Key.F15 && (!JournalOpen || _journal.Visible))
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Godot;
 using ZirconClient.Controls;
 using ZirconClient.Scripts;
@@ -29,6 +30,7 @@ public partial class HandheldPromptChecks : SceneTree
             viewport.AddChild(layer);
             CheckAmounts(layer);
             CheckConfirmations(layer);
+            CheckGameInputWithoutService(layer);
             GD.Print("PASS: handheld prompt bounds, input, stale context and one-shot cancellation");
         }
         catch (Exception error)
@@ -125,6 +127,37 @@ public partial class HandheldPromptChecks : SceneTree
         WindowManager.Close(cancelled);
         Buttons(cancelled)[0].EmitSignal(Button.SignalName.Pressed);
         Check(calls == 1 && Closed(cancelled), "WindowManager cancellation blocks queued Confirm activation");
+    }
+
+    private void CheckGameInputWithoutService(CanvasLayer layer)
+    {
+        var game = new GameScene();
+        try
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(GameScene).GetField("_uiLayer", flags).SetValue(game, layer);
+            var handleInput = typeof(GameScene).GetMethod("HandleHandheldInputEvent", flags);
+            bool KeyEvent(Key code, bool pressed = true, bool echo = false)
+            {
+                using var input = new InputEventKey { Keycode = code, Pressed = pressed, Echo = echo };
+                return (bool)handleInput.Invoke(game, new object[] { input });
+            }
+
+            long value = 0;
+            var amount = new ItemAmountDialog("Split stack", 25, 1, count => value = count);
+            Open(amount, layer);
+            Check(KeyEvent(Key.Right) && amount.Amount == 2, "GameScene routes Right to a non-NPC quantity prompt");
+            Check(KeyEvent(Key.Right, echo: true) && amount.Amount == 2, "quantity prompt consumes key repeats without another adjustment");
+            Check(KeyEvent(Key.Enter) && Closed(amount) && value == 2, "GameScene A confirms the quantity without a mouse");
+            Check(KeyEvent(Key.Enter, pressed: false), "confirm release cannot become a world action");
+
+            int calls = 0;
+            var confirm = new ConfirmDialog("Drop item?", "Drop", () => calls++);
+            Open(confirm, layer);
+            Check(KeyEvent(Key.Left) && KeyEvent(Key.Escape) && Closed(confirm) && calls == 0,
+                "GameScene B cancels the selected confirmation without executing it");
+        }
+        finally { game.Free(); }
     }
 
     private static Button[] Buttons(DXWindow window) => window.GetChild(0).GetChildren().OfType<Button>().ToArray();

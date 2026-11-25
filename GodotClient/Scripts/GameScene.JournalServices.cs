@@ -288,6 +288,28 @@ public partial class GameScene
         return true;
     }
 
+    // A common prompt can also be opened by a bag or another non-NPC window.
+    private bool RouteHandheldPromptKey(InputEventKey key)
+    {
+        if (_uiLayer == null) return false;
+        var windows = WindowManager.OpenWindows;
+        for (int i = windows.Count - 1; i >= 0; i--)
+        {
+            var top = windows[i];
+            if (!JournalWindowVisible(top) || top.GetParent() != _uiLayer) continue;
+            if (top == _miniMap || top == _beltDialog || top == _buffDialog || top == _questTracker
+                || top == _monsterDialog || top == _chatTextBox) continue;
+            if (top is not (ItemAmountDialog or ConfirmDialog)) return false;
+            if (key.Pressed && !key.Echo)
+            {
+                if (top is ItemAmountDialog amount) amount.HandleHandheldKey(key.Keycode);
+                else ((ConfirmDialog)top).HandleHandheldKey(key.Keycode);
+            }
+            return true;
+        }
+        return false;
+    }
+
     private bool HandleJournalServiceKey(InputEventKey key)
     {
         var root = JournalServiceRoot;

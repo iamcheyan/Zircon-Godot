@@ -94,20 +94,48 @@ public partial class HandheldEquipmentSwitchChecks : SceneTree
             }
             Check(game.JournalActions(1, 0, "empty:" + (int)EquipmentSlot.Shield, false).Count == 1,
                 "empty category produces an explicit no-candidates message");
+            Array.Resize(ref game.Inventory, 12);
+            for (int i = 0; i < 10; i++) game.Inventory[i] = Item(i + 1, ItemType.Helmet, i == 1 ? 30 : 0);
+            bag.Grid.ItemGrid = game.Inventory; bag.Grid.GridSize = new Vector2I(4, 3); bag.Grid.CreateGrid();
+            game.InventoryCells = bag.Grid.Cells;
+            var picker = new HandheldJournal(game);
+            try
+            {
+                picker.Open(); picker.SelectTab(1);
+                picker.Command(Key.Down); picker.Command(Key.Enter);
+                picker.Command(Key.Right); picker.Command(Key.Enter);
+                Check(picker.HasActionOverlay && connection.SendList.IsEmpty, "right focuses the disabled helmet; A leaves the grid open");
+                picker.Command(Key.Down); picker.Command(Key.Down); picker.Command(Key.Up);
+                picker.Command(Key.Enter);
+                Check(connection.SendList.OfType<C.ItemMove>().Single() is { FromSlot: 5, ToSlot: (int)EquipmentSlot.Helmet },
+                    "grid navigates across a page boundary and back to the same column before submitting");
+                connection.SendList.Clear();
+                game.InventoryCells[5].Locked = false; game.EquipmentCells[(int)EquipmentSlot.Helmet].Locked = false;
+            }
+            finally { picker.Free(); }
             string capture = OS.GetEnvironment("ZIRCON_EQUIPMENT_SWITCH_CAPTURE");
             if (!string.IsNullOrEmpty(capture))
             {
                 game.StartInfo.Name = "TestHero";
-                Set(game.Inventory[0].Info, "_ItemName", "布帽");
-                Set(game.Inventory[1].Info, "_ItemName", "高级战盔");
+                var artwork = Globals.ItemInfoList.Binding.Where(info => info.ItemType == ItemType.Helmet)
+                    .DistinctBy(info => info.Image)
+                    .Where(info => MirSkin.GetTexture(LibraryFile.Inventory, info.Image) != null
+                        || MirSkin.GetTexture(DXItemCell.ItemIconLibraryFile, info.Image) != null)
+                    .Take(8).ToArray();
+                Check(artwork.Length == 8, "capture uses eight distinct original helmet sprites");
+                for (int i = 0; i < artwork.Length; i++)
+                {
+                    Set(game.Inventory[i].Info, "_ItemName", artwork[i].Local());
+                    Set(game.Inventory[i].Info, "_Image", artwork[i].Image);
+                }
                 var viewport = new SubViewport { Size = new Vector2I(640,360), RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
                 Root.AddChild(viewport);
                 var journal = new HandheldJournal(game);
                 viewport.AddChild(journal);
                 journal.Open(); journal.SelectTab(1);
                 journal.Command(Key.Down); journal.Command(Key.Enter);
-                Check(journal.HasActionOverlay, "selecting an empty helmet opens a browsable replacement list");
-                journal.Command(Key.Down); journal.Command(Key.Enter);
+                Check(journal.HasActionOverlay, "selecting an empty helmet opens a browsable replacement grid");
+                journal.Command(Key.Right); journal.Command(Key.Enter);
                 Check(connection.SendList.IsEmpty && journal.HasActionOverlay, "A on grey candidate leaves the chooser open without sending");
                 await ToSignal(this,SignalName.ProcessFrame);
                 await ToSignal(this,SignalName.ProcessFrame);

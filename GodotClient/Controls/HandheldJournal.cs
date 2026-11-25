@@ -34,7 +34,14 @@ public partial class HandheldJournal : Control
     private readonly List<Rect2I> cells = new(); // y includes page number; one rectangle per stable entry
     private readonly Dictionary<(string, int, int), Bookmark> memory = new();
     private sealed class Bookmark { public string Id; public int Index, Scroll; public bool Sorted; }
-    private sealed class Menu { public string Title; public IReadOnlyList<JournalAction> Actions; public int Index; }
+    private const int EquipmentColumns = 4, EquipmentPageSize = EquipmentColumns * 2;
+    private sealed class Menu
+    {
+        public string Title;
+        public IReadOnlyList<JournalAction> Actions;
+        public int Index;
+        public bool IsEquipmentPicker => Actions[0].EquipmentIconFrame.HasValue;
+    }
     private readonly Stack<Menu> menus = new();
     private readonly int[] categories = new int[6];
     private readonly Control sheet = new();
@@ -232,7 +239,8 @@ public partial class HandheldJournal : Control
         if (!IsOpen) return;
         if (menus.TryPeek(out var menu))
         {
-            if (key == Key.Up || key == Key.Down) menu.Index = Math.Clamp(menu.Index + (key == Key.Up ? -1 : 1), 0, menu.Actions.Count-1);
+            if (menu.IsEquipmentPicker) MoveEquipmentFocus(menu, key);
+            else if (key == Key.Up || key == Key.Down) menu.Index = Math.Clamp(menu.Index + (key == Key.Up ? -1 : 1), 0, menu.Actions.Count-1);
             if (key == Key.Enter)
             {
                 Save(); Reload(); if (menus.Count == 0) return;
@@ -266,6 +274,19 @@ public partial class HandheldJournal : Control
         else menus.Push(new Menu { Title = title, Actions = actions });
         Present();
     }
+    private static void MoveEquipmentFocus(Menu menu, Key key)
+    {
+        int index = menu.Index, col = index % EquipmentColumns, count = menu.Actions.Count;
+        menu.Index = key switch
+        {
+            Key.Left when col > 0 => index - 1,
+            Key.Right when col < EquipmentColumns - 1 && index + 1 < count => index + 1,
+            Key.Up when index >= EquipmentColumns => index - EquipmentColumns,
+            Key.Down when (index / EquipmentColumns + 1) * EquipmentColumns < count => Math.Min(index + EquipmentColumns, count - 1),
+            _ => index,
+        };
+    }
+
     private void Move(Key key)
     {
         bool horizontal = key is Key.Left or Key.Right;
@@ -324,7 +345,9 @@ public partial class HandheldJournal : Control
         DrawRows(); DrawDetail();
         Box(0,324,640,36,Deep); Box(0,324,640,1,Line);
         bool modal = menus.Count != 0;
-        if (modal || primaryHint != null) Hint(17,"A",modal ? "确认" : primaryHint);
+        if (menus.TryPeek(out var equipmentMenu) && equipmentMenu.IsEquipmentPicker)
+            Hint(17,"A",equipmentMenu.Actions[equipmentMenu.Index].DisabledReason == null ? "更换装备" : "不可穿戴");
+        else if (modal || primaryHint != null) Hint(17,"A",modal ? "确认" : primaryHint);
         Hint(119,"B",modal ? "返回" : "关闭");
         if (!modal)
         {
@@ -333,7 +356,11 @@ public partial class HandheldJournal : Control
             if (scroll.GetVScrollBar().Visible) Text(390,346,"右摇杆 · 滚动详情",11,Muted,129);
         }
         Badge(537,335,"Menu",32); Text(577,347,"关闭",12,Paper,45);
-        if (menus.TryPeek(out var m)) DrawModal(m);
+        if (menus.TryPeek(out var m))
+        {
+            if (m.IsEquipmentPicker) DrawEquipmentPicker(m);
+            else DrawModal(m);
+        }
     }
     private static string ActionHint(IReadOnlyList<JournalAction> actions, string multiple) =>
         actions == null || actions.Count == 0 ? null : actions.Count == 1 ? actions[0].Label : multiple;
@@ -422,6 +449,51 @@ public partial class HandheldJournal : Control
         Box(326,top,298,316-top,Deep); Box(326,top,298,1,Line);
         Text(337,top+26,rows.Count == 0 ? Categories[tab][Cat] : rows[index].Name,16,Paper,275);
     }
+    private void DrawEquipmentPicker(Menu menu)
+    {
+        const int x = 104, y = 30, w = 432, h = 278;
+        const int cellWidth = 96, cellHeight = 76, gap = 8;
+        int page = menu.Index / EquipmentPageSize;
+        int start = page * EquipmentPageSize;
+        int pageCount = (menu.Actions.Count + EquipmentPageSize - 1) / EquipmentPageSize;
+        var selected = menu.Actions[menu.Index];
+        Box(0,0,640,324,new Color(0,0,0,.76f));
+        Box(x,y,w,h,Ink); Edge(x,y,w,h,Gold);
+        Box(x+1,y+1,w-2,33,Deep); Box(x+1,y+34,w-2,1,Line);
+        Text(x+12,y+23,menu.Title,14,Gold,310);
+        Text(x+w-70,y+23,$"{page+1} / {pageCount} 页",11,Muted,64);
+        for (int i = 0; i < EquipmentPageSize; i++)
+        {
+            int tx = x + 12 + (i % EquipmentColumns) * (cellWidth + gap);
+            int ty = y + 44 + (i / EquipmentColumns) * (cellHeight + gap);
+            int at = start + i;
+            bool focused = at == menu.Index;
+            Box(tx,ty,cellWidth,cellHeight,focused ? Selected : Deep);
+            Edge(tx,ty,cellWidth,cellHeight,focused ? Gold : Line);
+            if (at >= menu.Actions.Count) continue;
+            var action = menu.Actions[at];
+            bool blocked = action.DisabledReason != null;
+            if (action.EquipmentIconFrame is int frame)
+            {
+                var icon = MirSkin.GetTexture(LibraryFile.Inventory, frame) ?? MirSkin.GetTexture(DXItemCell.ItemIconLibraryFile, frame);
+                if (icon != null)
+                {
+                    var size = icon.GetSize();
+                    float scale = Math.Min(2f, Math.Min((cellWidth-16)/size.X, (cellHeight-12)/size.Y));
+                    var drawSize = (size*scale).Round();
+                    var position = (new Vector2(tx+cellWidth/2f,ty+cellHeight/2f)-drawSize/2).Round();
+                    sheet.DrawTextureRect(icon,new Rect2(position,drawSize),false,blocked ? new Color(.52f,.52f,.52f) : Colors.White);
+                }
+                else Text(tx+6,ty+42,action.Label,11,blocked ? Muted : Paper,cellWidth-12);
+            }
+            if (blocked) Text(tx+cellWidth-17,ty+15,"×",12,Muted,12);
+            if (focused) Box(tx+1,ty+1,3,8,Gold);
+        }
+        Box(x+12,y+212,w-24,54,Deep); Edge(x+12,y+212,w-24,54,Line);
+        Text(x+21,y+233,selected.Label,14,Paper,w-42);
+        Text(x+21,y+252,selected.DisabledReason ?? "可穿戴 · 按 A 更换装备",12,selected.DisabledReason == null ? Muted : Gold,w-42);
+    }
+
     private void DrawModal(Menu m)
     {
         Box(0,0,640,324,new Color(0,0,0,.70f));

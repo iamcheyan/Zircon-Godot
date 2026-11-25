@@ -28,7 +28,7 @@ public partial class GameScene
                 var target = EquipmentCells[destination];
                 if (!JournalSameItem(target.Item, previous)) return "装备槽已变化，请重新选择。";
                 return target.ToEquipment(source) ? "已请求更换装备，等待服务器确认。" : "当前无法穿戴，请重新核对条件。";
-            }, DisabledReason: reason));
+            }, DisabledReason: reason, EquipmentIconFrame: DXItemCell.GetItemDrawIndex(item)));
         }
         if (choices.Count == 0) choices.Add(new JournalAction("背包里没有适合此部位的装备", Information: true));
         return choices;

@@ -6,7 +6,7 @@ using ZirconClient.Controls;
 namespace ZirconClient.Scripts;
 
 internal sealed record JournalEntry(string Id, string Name, string Detail, string Badge = "", Texture2D Icon = null, int Width = 1, int Height = 1);
-internal sealed record JournalAction(string Label, Func<string> Execute = null, Func<IReadOnlyList<JournalAction>> Children = null, bool Information = false, string DisabledReason = null);
+internal sealed record JournalAction(string Label, Func<string> Execute = null, Func<IReadOnlyList<JournalAction>> Children = null, bool Information = false, string DisabledReason = null, int? EquipmentIconFrame = null);
 
 public partial class GameScene
 {

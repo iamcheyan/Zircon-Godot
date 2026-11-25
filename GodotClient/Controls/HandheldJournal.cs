@@ -338,8 +338,21 @@ public partial class HandheldJournal : Control
         actions == null || actions.Count == 0 ? null : actions.Count == 1 ? actions[0].Label : multiple;
     private void Hint(int x,string key,string label)
     {
-        sheet.DrawCircle(new(x+7,342),7,Paper); Text(x+3,346,key,10,Deep,10); Text(x+19,347,label,12,Paper,80);
+        sheet.DrawCircle(new(x+7,342),7,Paper); Text(x+3,346,key,10,Deep,10);
+        const int width = 76;
+        Text(x+19,347,FitFooterHint(label, width),12,Paper,width);
     }
+
+    private string FitFooterHint(string label, int width)
+    {
+        int size = MirSkin.ScaledSize(12);
+        if (font.GetStringSize(label, fontSize: size).X <= width) return label;
+        int length = label.Length;
+        while (length > 0 && font.GetStringSize(label[..length] + "…", fontSize: size).X > width)
+            length--;
+        return label[..length] + "…";
+    }
+
     private void DrawRows()
     {
         int cols = Cols, lines = Lines, page = Page;

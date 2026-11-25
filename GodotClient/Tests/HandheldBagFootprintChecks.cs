@@ -101,6 +101,15 @@ public partial class HandheldBagFootprintChecks : SceneTree
             var journal = new HandheldJournal(game);
             try
             {
+                var fitHint = typeof(HandheldJournal).GetMethod("FitFooterHint", Private);
+                const string longHint = "物品已变化、已锁定或当前无法操作";
+                string fitted = (string)fitHint.Invoke(journal, new object[] { longHint, 76 });
+                var font = MirSkin.GetFont() ?? ThemeDB.FallbackFont;
+                Check(fitted.EndsWith("…", StringComparison.Ordinal) &&
+                    font.GetStringSize(fitted, fontSize: MirSkin.ScaledSize(12)).X <= 76,
+                    "long action hints fit before the next footer button");
+                Check((string)fitHint.Invoke(journal, new object[] { "关闭", 76 }) == "关闭",
+                    "short footer hints remain intact");
                 var projected = (List<JournalEntry>)typeof(HandheldJournal).GetField("rows", Private).GetValue(journal);
                 projected.Add(new JournalEntry("sword", "Tall weapon", "", Width: 2, Height: 6));
                 projected.Add(new JournalEntry("coat", "Coat", "", Width: 2, Height: 4));

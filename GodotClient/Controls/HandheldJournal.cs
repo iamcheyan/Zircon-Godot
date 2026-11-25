@@ -194,7 +194,7 @@ public partial class HandheldJournal : Control
         if (rows.Count > 0)
         {
             var id = rows[index].Id;
-            primaryHint = ActionHint(game.JournalActions(tab, Cat, id, false), "操作");
+            primaryHint = tab == 1 && Cat == 0 ? "更换装备" : ActionHint(game.JournalActions(tab, Cat, id, false), "操作");
             secondaryHint = ActionHint(game.JournalActions(tab, Cat, id, true), "更多操作");
         }
         int y = CardTop + 40;
@@ -237,6 +237,7 @@ public partial class HandheldJournal : Control
             {
                 Save(); Reload(); if (menus.Count == 0) return;
                 var action = menu.Actions[menu.Index];
+                if (action.DisabledReason != null) { feedback = action.DisabledReason; sheet.QueueRedraw(); return; }
                 if (action.Children != null) Push(action.Label, action.Children());
                 else if (action.Execute != null) { menus.Clear(); feedback = action.Execute() ?? ""; if (IsOpen) Reload(); }
             }
@@ -425,7 +426,10 @@ public partial class HandheldJournal : Control
         {
             int n=start+k,ay=y+34+k*step; Box(157,ay,326,step-4,n==m.Index ? Selected : Deep);
             if(n==m.Index) Edge(157,ay,326,step-4,Gold);
-            sheet.DrawMultilineString(font,new(165,ay+16),m.Actions[n].Label,HorizontalAlignment.Left,308,12,3,n==m.Index ? Gold : Paper);
+            var action = m.Actions[n];
+            bool disabled = action.DisabledReason != null;
+            sheet.DrawMultilineString(font,new(165,ay+16),action.Label,HorizontalAlignment.Left,308,12,disabled ? 1 : 3,disabled ? Muted : n==m.Index ? Gold : Paper);
+            if (disabled) sheet.DrawMultilineString(font,new(165,ay+33),action.DisabledReason,HorizontalAlignment.Left,308,12,1,Muted);
         }
     }
 }

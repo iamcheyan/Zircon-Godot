@@ -33,7 +33,7 @@ public partial class GameScene
                     if (item?.Info != null)
                         rows.Add(JournalItemEntry(JournalGearId(slot, item), $"{name} · {item.Info.Local()}", "已装备"));
                     else
-                        rows.Add(new($"empty:{slot}", name, item == null ? "此装备位为空。" : "装备资料不可用。", item == null ? "空" : "未知"));
+                        rows.Add(new($"empty:{slot}", name, item == null ? "此装备位为空。按 A 从背包选择对应部位的装备。不可穿戴的候选会标明原因。" : "装备资料不可用。", item == null ? "空" : "未知"));
                 }
                 break;
             case 1 when stats != null:
@@ -85,7 +85,11 @@ public partial class GameScene
             int colon = id?.IndexOf(':') ?? -1;
             if (colon > 0 && int.TryParse(id.AsSpan(0, colon), out int slot) && (uint)slot < Equipment.Length &&
                 Equipment[slot] is { Info: not null } item && int.TryParse(id.AsSpan(colon + 1), out int index) && item.Index == index)
-                return JournalItemActions(true, slot, item, secondary);
+                return secondary ? JournalItemActions(true, slot, item, false) : JournalEquipmentCandidates(slot);
+            if (id != null && id.StartsWith("empty:", StringComparison.Ordinal)
+                && int.TryParse(id.AsSpan(6), out int emptySlot) && (uint)emptySlot < Equipment.Length
+                && Equipment[emptySlot] == null && !secondary)
+                return JournalEquipmentCandidates(emptySlot);
         }
         if (IsObserver || secondary) return Array.Empty<JournalAction>();
         if (cat == 3 && int.TryParse(id, out int key) && _milestones.TryGetValue(key, out var title) && title.IsComplete)

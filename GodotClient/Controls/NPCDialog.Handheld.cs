@@ -36,22 +36,32 @@ public partial class NPCDialog
             if (int.TryParse(match.Groups["id"].Value, out int id) && id >= 0)
             {
                 if (!HandheldOptions.Exists(option => option.id == id))
-                    HandheldOptions.Add((id, StripHandheldMarkup(match.Groups["text"].Value)));
+                    HandheldOptions.Add((id, FormatHandheldText(match.Groups["text"].Value, useColor: false)));
                 return "";
             }
             return match.Value;
         });
-        // Plain text is intentionally used; do not execute script markup as BBCode.
-        HandheldBody = StripHandheldMarkup(body);
+        HandheldBody = FormatHandheldText(body, useColor: true);
         HandheldPortrait = _legacyNpcFaceFrame >= 0 ? MirSkin.GetTexture(LibraryFile.NPCImage, _legacyNpcFaceFrame) : null;
         if (HandheldOptions.Count == 0 && _page.Buttons != null)
             foreach (var option in _page.Buttons)
                 HandheldOptions.Add((option.ButtonID, $"选项 {option.ButtonID}"));
     }
 
-    private static string StripHandheldMarkup(string value)
+    private static string FormatHandheldText(string value, bool useColor)
     {
-        string result = Regex.Replace(value ?? "", @"\{([^{}]*):(?:#[0-9a-fA-F]+|[A-Za-z]+)\}", "$1");
-        return result.Replace("\r", "").Trim();
+        string text = Regex.Replace(value ?? "", @"\{([^{}]*):(?:#[0-9a-fA-F]+|[A-Za-z]+)\}", "$1");
+        // FCOLOR sets (not nests) the current color. 12 restores normal prose;
+        // close the last span even if the script omits its reset.
+        bool colored = false;
+        text = Regex.Replace(text, @"\{FCOLOR/(\d+)\}", match =>
+        {
+            if (!useColor || !int.TryParse(match.Groups[1].Value, out int index)
+                || (uint)index >= LegacyFColorPalette.Length) return "";
+            string close = colored ? "[/color]" : "";
+            colored = index != 12;
+            return colored ? $"{close}[color=#{LegacyFColorPalette[index].ToHtml(false)}]" : close;
+        }, RegexOptions.IgnoreCase);
+        return text.Replace("\r", "").Trim() + (colored ? "[/color]" : "");
     }
 }

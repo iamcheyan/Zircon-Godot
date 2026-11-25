@@ -57,6 +57,10 @@ public partial class HandheldNpcInteractionChecks : SceneTree
             Check(view.OptionCount == 0 && !dialog.HandheldPageValid, "unresolved response clears old replies instead of relabeling them as a new page");
             Call(game,"RouteHandheldNpcKey",new InputEventKey { Keycode = Key.Enter, Pressed = true });
             Check(connection.SendList.OfType<C.NPCButton>().Count()==1, "unresolved page never sends an old button");
+            Set(page, "_Say", "等级为7时可以修炼{FCOLOR/10}基本剑术{FCOLOR/12}的第一阶段。\n[前一步:1]");
+            dialog.ShowPage(response);
+            Check(!dialog.HandheldBody.Contains("FCOLOR") && dialog.HandheldBody.Contains("[color=#00ff00]基本剑术[/color]", StringComparison.OrdinalIgnoreCase), "real catalog color tags become visible color, not script text");
+            Set(page, "_Say", "你好，旅人。\n[离开:0]");
             // A modal callback also belongs to one exact NPC page, even when
             // the next page happens to reuse the same controls and button IDs.
             var objects = (System.Collections.Generic.Dictionary<uint,ObjectRenderer>)typeof(GameScene).GetField("_objects",Fields).GetValue(game);

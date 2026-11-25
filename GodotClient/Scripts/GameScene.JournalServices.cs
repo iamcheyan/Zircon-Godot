@@ -93,6 +93,11 @@ public partial class GameScene
         {
             var top = windows[i];
             if (!JournalWindowVisible(top) || top.GetParent() != _uiLayer) continue;
+            // ShowPage can open the sale bag above an already open NPC window.
+            // In handheld mode the book owns both; the bag is a data source,
+            // not a new input owner. Real prompts above it still take priority.
+            if (AutoLoginArgs.Handheld && root == _npcDialog && top == _inventoryDialog
+                && _inventoryDialog.IsSellMode && JournalMerchantAvailable()) continue;
             if (top is ItemAmountDialog or ConfirmDialog || IsJournalServicePane(root, top)) return top;
             return null;
         }

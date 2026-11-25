@@ -22,10 +22,28 @@ public partial class GameScene
         }
 
         var grid = _inventoryDialog?.Grid;
+        if (cat is 0 or 1)
+        {
+            for (int slot = 0; slot < Equipment.Length; slot++)
+            {
+                var worn = Equipment[slot];
+                if (worn?.Info == null) continue;
+                string position = slot < JournalSlotNames.Length ? JournalSlotNames[slot] : $"装备位 {slot + 1}";
+                var equipped = JournalItemEntry($"equipped:{slot}:{worn.Index}", worn.Info.Local(), "已穿");
+                if (grid?.UseLegacyFootprints == true)
+                {
+                    DXItemGrid.GetLegacyFootprint(worn, out int width, out int height);
+                    equipped = equipped with { Width = width, Height = height };
+                }
+                rows.Add(equipped with { Detail = $"已穿戴 · {position}。A 更换装备，X 卸下；此物品不占背包容量。" });
+            }
+        }
         for (int slot = 0; slot < Inventory.Length; slot++)
         {
             var item = Inventory[slot];
-            if (item?.Info == null || (cat != 0 && JournalInventoryCategory(item) != cat)) continue;
+            if (item?.Info == null || Array.Exists(Equipment, worn => worn != null &&
+                    (ReferenceEquals(worn, item) || worn.Index > 0 && worn.Index == item.Index))
+                || (cat != 0 && JournalInventoryCategory(item) != cat)) continue;
             var row = JournalItemEntry(JournalGearId(slot, item), item.Info.Local(), $"×{item.Count:N0}");
             if (grid?.UseLegacyFootprints == true)
             {
@@ -44,6 +62,8 @@ public partial class GameScene
         if (tab == 1) return JournalCharacterActions(cat, id, secondary);
         if (tab != 0) return Array.Empty<JournalAction>();
         if (cat == 5) return JournalBeltActions(id, secondary);
+        if (TryJournalEquippedItem(id, out int equippedSlot, out var equipped))
+            return secondary ? JournalItemActions(true, equippedSlot, equipped, false) : JournalEquipmentCandidates(equippedSlot);
         return TryJournalInventoryItem(id, out int slot, out var item)
             ? JournalItemActions(false, slot, item, secondary)
             : Array.Empty<JournalAction>();
@@ -65,6 +85,17 @@ public partial class GameScene
         return item?.Info != null && int.TryParse(id.AsSpan(separator + 1), out int index) && item.Index == index;
     }
 
+    private bool TryJournalEquippedItem(string id, out int slot, out ClientUserItem item)
+    {
+        slot = -1; item = null;
+        if (id == null || !id.StartsWith("equipped:", StringComparison.Ordinal)) return false;
+        string[] fields = id.Split(':');
+        if (fields.Length != 3 || !int.TryParse(fields[1], out slot) || (uint)slot >= Equipment.Length
+            || !int.TryParse(fields[2], out int index)) return false;
+        item = Equipment[slot];
+        return item?.Info != null && item.Index == index;
+    }
+
     private static string JournalGearId(int slot, ClientUserItem item) => $"{slot}:{item.Index}";
 
     private static JournalEntry JournalItemEntry(string id, string name, string badge) =>
@@ -76,7 +107,7 @@ public partial class GameScene
         bool inInventory = tab == 0 && cat != 5;
         if (inInventory)
         {
-            if (!TryJournalInventoryItem(row.Id, out _, out item)) return row;
+            if (!TryJournalEquippedItem(row.Id, out _, out item) && !TryJournalInventoryItem(row.Id, out _, out item)) return row;
         }
         else if (tab == 0 && cat == 5 && row.Id.StartsWith("belt:", StringComparison.Ordinal)
                  && int.TryParse(row.Id.AsSpan(5), out int beltSlot))

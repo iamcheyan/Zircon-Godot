@@ -194,7 +194,7 @@ public partial class HandheldJournal : Control
         if (rows.Count > 0)
         {
             var id = rows[index].Id;
-            primaryHint = tab == 1 && Cat == 0 ? "更换装备" : ActionHint(game.JournalActions(tab, Cat, id, false), "操作");
+            primaryHint = (tab == 1 && Cat == 0) || (tab == 0 && id.StartsWith("equipped:", StringComparison.Ordinal)) ? "更换装备" : ActionHint(game.JournalActions(tab, Cat, id, false), "操作");
             secondaryHint = ActionHint(game.JournalActions(tab, Cat, id, true), "更多操作");
         }
         int y = CardTop + 40;
@@ -381,11 +381,18 @@ public partial class HandheldJournal : Control
                 float inset=list && row.Icon != null ? h+1 : 5;
                 Text(x+inset,y+h*.5f+4,row.Name,cols==1 ? 13 : 11,Paper,Math.Max(1,w-inset-badgeW-3));
             }
-            if (hasBadge) Text(list ? x+w-badgeW : x+4,list ? y+h*.5f+4 : y+h-2,row.Badge,10,Gold,list ? badgeW-2 : w-7);
+            if (row.Id.StartsWith("equipped:", StringComparison.Ordinal))
+            {
+                Box(x+2,y+2,28,15,Gold);
+                Text(x+4,y+14,"已穿",12,Ink,26);
+            }
+            else if (hasBadge) Text(list ? x+w-badgeW : x+4,list ? y+h*.5f+4 : y+h-2,row.Badge,10,Gold,list ? badgeW-2 : w-7);
             if (focus) Box(x,y,3,8,Gold);
         }
         if (rows.Count == 0) Text(24,171,"此分类暂无记录",13,Muted,255);
-        Text(16,313,string.IsNullOrEmpty(feedback) ? $"{rows.Count} 项　·　{Categories[tab][Cat]}" : feedback,11,string.IsNullOrEmpty(feedback) ? Muted : Gold,295);
+        int wornCount = rows.Count(row => row.Id.StartsWith("equipped:", StringComparison.Ordinal));
+        string countText = wornCount == 0 ? $"{rows.Count} 项 · {Categories[tab][Cat]}" : $"背包 {rows.Count-wornCount} 件 · 已穿 {wornCount} 件";
+        Text(16,313,string.IsNullOrEmpty(feedback) ? countText : feedback,11,string.IsNullOrEmpty(feedback) ? Muted : Gold,295);
     }
     private void DrawDetail()
     {

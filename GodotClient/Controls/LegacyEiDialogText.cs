@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,7 +11,10 @@ namespace ZirconClient.Controls;
 /// </summary>
 public static class LegacyEiDialogText
 {
-    public static List<string> Wrap(string text, int maxWidth, int fontSize)
+    public static List<string> Wrap(string text, int maxWidth, int fontSize) =>
+        Wrap(text, maxWidth, line => MirSkin.MeasureText(line, fontSize).X);
+
+    internal static List<string> Wrap(string text, float maxWidth, Func<string, float> measureWidth)
     {
         var result = new List<string>();
         if (string.IsNullOrEmpty(text)) { result.Add(string.Empty); return result; }
@@ -22,7 +26,7 @@ public static class LegacyEiDialogText
             foreach (char ch in paragraph)
             {
                 if (line.Length > 0
-                    && MirSkin.MeasureText(line.ToString() + ch, fontSize).X > maxWidth)
+                    && measureWidth(line.ToString() + ch) > maxWidth)
                 {
                     result.Add(line.ToString());
                     line.Clear();

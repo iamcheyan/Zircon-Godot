@@ -1373,7 +1373,10 @@ public partial class SelectScene : Control
     {
         if (_uiLayer == null || !IsInstanceValid(_uiLayer)) return;
         if (AutoLoginArgs.LegacyUi)
+        {
             UiScaler.ApplyPregameScale(_uiLayer, GetViewport());
+            if (AutoLoginArgs.Handheld) UpdateLegacyCreateExplain();
+        }
         else
             UiScaler.UpdateScale(_uiLayer, GetViewport());
     }
@@ -2071,7 +2074,13 @@ public partial class SelectScene : Control
             _ => new Color(150 / 255f, 220 / 255f, 150 / 255f),
         };
 
-        var lines = LegacyEiDialogText.Wrap(LegacyEiText.JobDescription(cls), 430, 11);
+        const int textWidth = 430, fontSize = 11;
+        string description = LegacyEiText.JobDescription(cls);
+        // DXLabel draws in physical pixels even when the creation canvas shrinks.
+        var lines = AutoLoginArgs.Handheld
+            ? LegacyEiDialogText.Wrap(description, textWidth * _uiLayer.Transform.X.Length(),
+                line => MirSkin.MeasureTextPhysical(line, fontSize).X)
+            : LegacyEiDialogText.Wrap(description, textWidth, fontSize);
         while (_legacyCreateExplainLines.Count < lines.Count)
         {
             var label = new DXLabel { FontSize = 11, TextColour = new Color(250 / 255f, 250 / 255f, 255 / 255f), IsControl = false };

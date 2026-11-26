@@ -1,0 +1,628 @@
+map,name,map_index,rendered,walk_confirmed,map_width,map_height,start_x,start_y,end_x,end_y,nearby_monster_objects,configured_rules,configured_target,strict_audit_spawned,note,screenshot
+0,Bichon Town,1,True,True,800,800,169,155,169,154,0,151,592,592,,screenshots/0.webp
+01,边境城市,610,True,True,600,600,562,213,562,212,2,49,406,406,,screenshots/01.webp
+0150,沙巴克城堡,611,True,True,24,28,14,16,14,15,0,0,0,0,,screenshots/0150.webp
+0157,祖玛神殿大厅,612,True,True,30,32,18,13,18,12,0,0,0,0,,screenshots/0157.webp
+01_001,志善屋,613,True,True,30,30,13,19,14,18,0,0,0,0,,screenshots/01_001.webp
+01_002,EI 01_002,614,True,True,50,50,26,28,26,27,0,0,0,0,,screenshots/01_002.webp
+01_003,试练场,615,True,True,18,22,3,10,4,9,0,0,0,0,,screenshots/01_003.webp
+02,银杏山谷,616,True,True,600,600,283,278,283,277,4,123,485,485,,screenshots/02.webp
+02_001,试练场,617,True,True,18,22,7,15,7,14,0,0,0,0,,screenshots/02_001.webp
+02_0011,法师职业PK场,1097,True,True,18,22,9,13,9,12,0,0,0,0,,screenshots/02_0011.webp
+02_002,试练场,618,True,True,100,100,67,45,68,44,0,0,0,0,,screenshots/02_002.webp
+02_003,试练场,619,True,True,100,100,65,49,65,48,0,0,0,0,,screenshots/02_003.webp
+02_004,试练场,620,True,True,50,50,26,20,26,19,0,0,0,0,,screenshots/02_004.webp
+02_005,试练场,621,True,True,30,30,16,10,16,9,0,0,0,0,,screenshots/02_005.webp
+02_006,试练场,622,True,True,50,50,37,23,37,22,0,0,0,0,,screenshots/02_006.webp
+02_0061,竞技骑兵,1165,True,True,50,50,43,26,43,25,0,0,0,0,,screenshots/02_0061.webp
+02_0062,唯我独尊,1166,True,True,50,50,21,27,21,26,0,0,0,0,,screenshots/02_0062.webp
+02_010,试练场,623,True,True,100,100,41,29,41,28,0,0,0,0,,screenshots/02_010.webp
+02_011,试练场,624,True,True,100,100,80,32,80,31,0,0,0,0,,screenshots/02_011.webp
+02_012,试练场,625,True,True,100,100,70,22,70,21,0,0,0,0,,screenshots/02_012.webp
+02_013,试练场,626,True,True,100,100,70,19,71,20,0,0,0,0,,screenshots/02_013.webp
+02_014,试练场,627,True,True,100,100,34,69,35,70,0,0,0,0,,screenshots/02_014.webp
+0_000,Town Hall,2,True,True,70,70,27,52,27,51,0,0,0,0,,screenshots/0_000.webp
+0_001,Left Wing,3,True,True,30,30,8,22,8,21,0,0,0,0,,screenshots/0_001.webp
+0_0011,EI 0_0011,628,True,True,30,30,19,17,20,18,0,0,0,0,,screenshots/0_0011.webp
+0_002,Right Wing,4,True,True,20,20,19,8,19,7,0,0,0,0,,screenshots/0_002.webp
+0_0021,EI 0_0021,629,True,True,20,20,19,11,19,10,0,0,0,0,,screenshots/0_0021.webp
+0_003,比奇县,630,True,False,60,100,25,32,25,32,0,0,0,0,step_triggered_portal_returned_for_capture,screenshots/0_003.webp
+0_0031,EI 0_0031,631,True,True,18,22,4,13,5,12,0,0,0,0,,screenshots/0_0031.webp
+0_0032,EI 0_0032,632,True,True,18,22,6,16,6,15,0,0,0,0,,screenshots/0_0032.webp
+0_0033,EI 0_0033,633,True,True,18,22,11,11,11,10,0,0,0,0,,screenshots/0_0033.webp
+1,Lost Paradise,5,True,True,600,600,210,194,210,193,12,250,1390,1390,,screenshots/1.webp
+12,Banya Island,292,True,True,400,500,205,81,205,80,2,9,260,260,,screenshots/12.webp
+121,EI 121,634,True,True,400,400,246,90,246,89,0,0,0,0,,screenshots/121.webp
+122,灌木林,635,True,True,400,400,49,274,49,273,15,10,1280,1280,,screenshots/122.webp
+123,EI 123,636,True,True,400,400,252,275,252,274,0,0,0,0,,screenshots/123.webp
+124,EI 124,637,True,True,400,400,251,118,251,117,0,0,0,0,,screenshots/124.webp
+125,灌木林,638,True,True,400,400,97,159,97,158,22,9,1200,1200,,screenshots/125.webp
+14,月河城,1149,True,True,200,200,86,163,86,162,0,0,0,0,,screenshots/14.webp
+1_001,武器仓库,639,True,True,22,22,11,13,11,12,0,0,0,0,,screenshots/1_001.webp
+1_002,本馆,640,True,True,24,24,17,15,17,14,0,0,0,0,,screenshots/1_002.webp
+1_003,洗衣住居,641,True,True,20,26,8,23,8,22,0,0,0,0,,screenshots/1_003.webp
+1_004,书房,642,True,True,20,26,10,17,10,16,0,0,0,0,,screenshots/1_004.webp
+1_005,物品研究所,643,True,True,20,26,14,11,14,10,0,0,0,0,,screenshots/1_005.webp
+1_006,药剂师住居,644,True,True,28,20,14,12,14,11,0,0,0,0,,screenshots/1_006.webp
+1_007,仓库,645,True,True,20,24,12,12,12,11,0,0,0,0,,screenshots/1_007.webp
+1_008,试练场,646,True,True,18,22,13,10,13,9,0,0,0,0,,screenshots/1_008.webp
+1_009,无名老人隐居地,647,True,True,160,160,78,75,78,74,0,0,0,0,,screenshots/1_009.webp
+1_010,试练场,648,True,True,100,100,71,39,71,38,0,0,0,0,,screenshots/1_010.webp
+1_011,试练场,649,True,True,100,100,55,50,55,49,0,0,0,0,,screenshots/1_011.webp
+1_012,试练场,650,True,True,18,22,8,14,8,13,0,0,0,0,,screenshots/1_012.webp
+1_013,试练场,651,True,True,50,50,24,11,24,10,0,0,0,0,,screenshots/1_013.webp
+1_014,试练场,652,True,True,50,50,30,23,30,22,0,0,0,0,,screenshots/1_014.webp
+1_0141,双倍经验,1167,True,True,50,50,37,33,37,32,0,0,0,0,,screenshots/1_0141.webp
+1_0142,双倍暴率,1168,True,True,50,50,31,17,31,16,0,0,0,0,,screenshots/1_0142.webp
+1_015,困魔咒空间,653,True,True,50,50,14,17,14,16,0,0,0,0,,screenshots/1_015.webp
+1_016,困魔咒空间,654,True,True,50,50,14,25,14,24,0,0,0,0,,screenshots/1_016.webp
+1_017,困魔咒空间,655,True,True,50,50,24,32,24,31,0,0,0,0,,screenshots/1_017.webp
+1_018,困魔咒空间,656,True,True,50,50,15,18,15,17,0,0,0,0,,screenshots/1_018.webp
+1_019,困魔咒空间,657,True,True,60,60,36,23,36,22,0,0,0,0,,screenshots/1_019.webp
+1_020,蜈蚣洞穴,658,True,True,200,200,183,111,184,112,0,0,0,0,,screenshots/1_020.webp
+1_021,蜈蚣洞穴,659,True,True,50,50,21,21,21,20,0,0,0,0,,screenshots/1_021.webp
+1_022,蜈蚣洞穴,660,True,True,172,150,127,15,127,14,0,0,0,0,,screenshots/1_022.webp
+1_023,蜈蚣洞穴,661,True,True,50,50,29,36,30,35,0,0,0,0,,screenshots/1_023.webp
+2,Banya Village,6,True,True,400,400,212,292,213,291,13,48,725,725,,screenshots/2.webp
+3,Sabuk Keep,7,True,True,350,350,145,261,145,260,0,0,0,0,,screenshots/3.webp
+31,祖玛神殿,662,True,True,300,300,90,155,90,154,79,13,1950,1950,,screenshots/31.webp
+4,Numa Village,8,True,True,800,800,380,179,380,178,0,7,26,26,,screenshots/4.webp
+41,诺玛沙漠,663,True,True,400,400,157,269,157,268,12,10,945,945,,screenshots/41.webp
+42,沙漠,664,True,True,400,400,371,325,371,324,2,4,780,780,,screenshots/42.webp
+43,沙漠,665,True,True,400,400,281,209,281,208,18,4,780,780,,screenshots/43.webp
+44,沙漠,666,True,True,400,400,64,172,64,171,14,4,780,780,,screenshots/44.webp
+4_001,武器店,667,True,True,20,20,10,14,10,13,0,0,0,0,,screenshots/4_001.webp
+4_002,民家,668,True,True,30,30,11,12,10,13,0,0,0,0,,screenshots/4_002.webp
+4_003,中药商,669,True,True,20,20,14,13,14,12,0,0,0,0,,screenshots/4_003.webp
+4_004,布匹店,670,True,True,20,20,14,13,14,12,0,0,0,0,,screenshots/4_004.webp
+4_005,占卜屋,671,True,True,24,30,13,26,13,25,0,0,0,0,,screenshots/4_005.webp
+5,Desert Mud Fortress,9,True,True,350,350,72,214,72,213,0,6,6,6,,screenshots/5.webp
+50,EI 50,672,True,True,120,150,34,134,34,133,0,0,0,0,,screenshots/50.webp
+50_001,EI 50_001,673,True,True,70,70,15,33,15,32,0,0,0,0,,screenshots/50_001.webp
+5_0011,贵族屋,674,True,True,60,70,10,38,11,37,0,0,0,0,,screenshots/5_0011.webp
+5_0012,贵族屋,675,True,True,40,50,28,31,29,30,0,0,0,0,,screenshots/5_0012.webp
+5_0013,贵族屋,676,True,True,68,68,23,38,24,38,0,0,0,0,,screenshots/5_0013.webp
+5_002,武器商,677,True,True,20,30,9,16,9,15,0,0,0,0,,screenshots/5_002.webp
+5_003,药房,678,True,True,30,30,14,22,14,21,0,0,0,0,,screenshots/5_003.webp
+5_004,服饰店,679,True,True,30,30,11,20,11,19,0,0,0,0,,screenshots/5_004.webp
+5_005,饰品店,680,True,True,30,30,7,13,7,12,0,0,0,0,,screenshots/5_005.webp
+5_006,仓库,681,True,True,40,40,7,21,8,20,0,0,0,0,,screenshots/5_006.webp
+6,沙漠,682,True,True,800,800,501,523,501,522,4,2,760,760,,screenshots/6.webp
+71,沙漠,683,True,True,400,200,132,146,132,145,16,4,400,400,,screenshots/71.webp
+72,沙漠,684,True,True,400,200,320,105,320,104,14,4,400,400,,screenshots/72.webp
+73,沙漠,685,True,True,400,200,207,90,207,89,21,4,400,400,,screenshots/73.webp
+74,盟重县,686,True,True,600,600,211,40,211,39,0,3,9,9,,screenshots/74.webp
+75,石阁庙,687,True,True,400,400,95,166,95,165,0,3,12,12,,screenshots/75.webp
+76,沙漠,688,True,True,400,200,147,155,147,154,15,4,400,400,,screenshots/76.webp
+77,沙漠,689,True,True,400,200,289,51,289,50,8,4,400,400,,screenshots/77.webp
+78,沙漠,690,True,True,400,200,204,72,204,71,21,4,400,400,,screenshots/78.webp
+8,Frost Village,241,True,True,800,800,480,676,480,675,9,16,1016,1016,,screenshots/8.webp
+81,流放岛,691,True,True,300,350,157,142,157,141,0,0,0,0,,screenshots/81.webp
+82,冰原雪城,1115,True,True,400,500,79,380,79,379,0,0,0,0,,screenshots/82.webp
+8_002,绝情塔口,1122,True,True,200,200,54,81,54,80,0,0,0,0,,screenshots/8_002.webp
+B010,EI B010,692,True,True,100,100,26,90,27,91,0,0,0,0,,screenshots/B010.webp
+B011,EI B011,693,True,True,18,18,9,7,9,6,0,0,0,0,,screenshots/B011.webp
+B101,EI B101,694,True,True,22,22,10,12,10,11,0,0,0,0,,screenshots/B101.webp
+B102,EI B102,695,True,True,22,22,12,14,12,13,0,0,0,0,,screenshots/B102.webp
+B103,EI B103,696,True,True,22,22,5,12,5,11,0,0,0,0,,screenshots/B103.webp
+B103_001,NPC休息室,697,True,True,40,40,20,15,20,14,0,0,0,0,,screenshots/B103_001.webp
+B104,EI B104,698,True,True,22,22,7,10,7,9,0,0,0,0,,screenshots/B104.webp
+B105,EI B105,699,True,True,22,22,9,9,9,8,0,0,0,0,,screenshots/B105.webp
+B105_001,EI B105_001,700,True,True,40,40,19,26,19,25,0,0,0,0,,screenshots/B105_001.webp
+B106,EI B106,701,True,True,22,22,11,13,11,12,0,0,0,0,,screenshots/B106.webp
+B106_001,EI B106_001,702,True,True,40,40,23,20,23,19,0,0,0,0,,screenshots/B106_001.webp
+B106_002,EI B106_002,703,True,True,40,40,19,22,19,21,0,0,0,0,,screenshots/B106_002.webp
+B106_003,EI B106_003,704,True,True,40,40,25,15,26,14,0,0,0,0,,screenshots/B106_003.webp
+B107,EI B107,705,True,True,22,22,9,15,9,14,0,0,0,0,,screenshots/B107.webp
+B108,EI B108,706,True,True,22,22,7,9,7,8,0,0,0,0,,screenshots/B108.webp
+B109,EI B109,707,True,True,22,22,8,10,8,9,0,0,0,0,,screenshots/B109.webp
+B109_001,EI B109_001,708,True,True,100,100,80,40,80,39,0,0,0,0,,screenshots/B109_001.webp
+B110,EI B110,709,True,True,22,22,5,11,5,10,0,0,0,0,,screenshots/B110.webp
+B111,EI B111,710,True,True,22,22,6,13,6,12,0,0,0,0,,screenshots/B111.webp
+B112,EI B112,711,True,True,22,22,9,9,9,8,0,0,0,0,,screenshots/B112.webp
+B113,EI B113,712,True,True,22,22,10,16,10,15,0,0,0,0,,screenshots/B113.webp
+B114,EI B114,713,True,True,22,22,10,7,10,6,0,0,0,0,,screenshots/B114.webp
+B115,EI B115,714,True,True,22,22,10,13,10,12,0,0,0,0,,screenshots/B115.webp
+B115_001,矿石空间,715,True,True,200,200,55,134,55,133,9,5,100,100,,screenshots/B115_001.webp
+B116,EI B116,716,True,True,22,22,8,13,8,12,0,0,0,0,,screenshots/B116.webp
+B117,EI B117,717,True,True,22,22,8,10,8,9,0,0,0,0,,screenshots/B117.webp
+B118,EI B118,718,True,True,22,22,7,9,7,8,0,0,0,0,,screenshots/B118.webp
+B118_001,EI B118_001,719,True,True,30,36,12,12,12,11,0,0,0,0,,screenshots/B118_001.webp
+B119,EI B119,720,True,True,22,22,10,13,10,12,0,0,0,0,,screenshots/B119.webp
+B119_001,EI B119_001,721,True,True,100,100,78,30,78,29,0,0,0,0,,screenshots/B119_001.webp
+B120,EI B120,722,True,True,22,22,14,12,14,11,0,0,0,0,,screenshots/B120.webp
+B121,EI B121,723,True,True,22,22,12,14,12,13,0,0,0,0,,screenshots/B121.webp
+B122,EI B122,724,True,True,22,22,9,12,9,11,0,0,0,0,,screenshots/B122.webp
+B123,EI B123,725,True,True,22,22,8,10,8,9,0,0,0,0,,screenshots/B123.webp
+B124,EI B124,726,True,True,22,22,11,10,11,9,0,0,0,0,,screenshots/B124.webp
+B125,EI B125,727,True,True,22,22,11,15,11,14,0,0,0,0,,screenshots/B125.webp
+B125_001,EI B125_001,728,True,True,16,18,11,9,11,8,0,0,0,0,,screenshots/B125_001.webp
+B126,EI B126,729,True,True,22,22,10,12,10,11,0,0,0,0,,screenshots/B126.webp
+B127,EI B127,730,True,True,22,22,11,7,12,8,0,0,0,0,,screenshots/B127.webp
+B128,EI B128,731,True,True,22,22,6,11,6,10,0,0,0,0,,screenshots/B128.webp
+B129,EI B129,732,True,True,22,22,9,10,9,9,0,0,0,0,,screenshots/B129.webp
+B130,EI B130,733,True,True,22,22,8,8,8,7,0,0,0,0,,screenshots/B130.webp
+B131,EI B131,734,True,True,22,22,6,11,6,10,0,0,0,0,,screenshots/B131.webp
+B131_001,EI B131_001,735,True,True,22,22,11,14,11,13,0,0,0,0,,screenshots/B131_001.webp
+B132,EI B132,736,True,True,22,22,10,7,10,6,0,0,0,0,,screenshots/B132.webp
+B132_001,GM活动室,737,True,True,50,50,22,14,22,13,2,1,2,2,,screenshots/B132_001.webp
+B133,EI B133,738,True,True,22,22,6,11,6,10,0,0,0,0,,screenshots/B133.webp
+B134,EI B134,739,True,True,22,22,10,10,10,9,0,0,0,0,,screenshots/B134.webp
+B134_001,EI B134_001,740,True,True,50,50,12,26,13,25,0,0,0,0,,screenshots/B134_001.webp
+B135,EI B135,741,True,True,22,22,7,11,7,10,0,0,0,0,,screenshots/B135.webp
+B136,EI B136,742,True,True,22,22,14,10,15,11,0,0,0,0,,screenshots/B136.webp
+B136_001,EI B136_001,743,True,True,20,20,18,3,18,2,0,0,0,0,,screenshots/B136_001.webp
+B136_002,EI B136_002,744,True,True,20,20,18,15,18,14,0,0,0,0,,screenshots/B136_002.webp
+B136_003,EI B136_003,745,True,True,22,22,10,8,10,7,0,0,0,0,,screenshots/B136_003.webp
+B137,EI B137,746,True,True,22,22,7,12,7,11,0,0,0,0,,screenshots/B137.webp
+B138,EI B138,747,True,True,22,22,10,16,10,15,0,0,0,0,,screenshots/B138.webp
+B138_001,EI B138_001,748,True,True,22,22,6,11,6,10,0,0,0,0,,screenshots/B138_001.webp
+B139,EI B139,749,True,True,22,22,7,13,7,12,0,0,0,0,,screenshots/B139.webp
+B139_001,暗黑封印,750,True,True,40,40,13,24,13,23,1,1,1,1,,screenshots/B139_001.webp
+B140,EI B140,751,True,True,22,22,8,8,8,7,0,0,0,0,,screenshots/B140.webp
+B140_001,EI B140_001,752,True,True,30,30,10,13,10,12,0,0,0,0,,screenshots/B140_001.webp
+D0002_001,飞天武术馆,1126,True,True,18,22,7,12,7,11,0,0,0,0,,screenshots/D0002_001.webp
+D0002_002,魔界·虚幻,1127,True,True,100,100,57,48,57,47,0,0,0,0,,screenshots/D0002_002.webp
+D0002_003,魔界·暗影,1128,True,True,100,100,62,43,62,42,0,0,0,0,,screenshots/D0002_003.webp
+D0002_004,魔界·终极决斗,1129,True,True,50,50,11,21,11,20,0,0,0,0,,screenshots/D0002_004.webp
+D001,Phantom Forest,12,True,True,400,400,383,85,383,84,2,7,85,85,,screenshots/D001.webp
+D001_001,半兽勇士洞,753,True,True,30,30,17,16,17,15,0,0,0,0,,screenshots/D001_001.webp
+D002,Desert,13,True,True,400,400,93,143,93,142,6,8,86,86,,screenshots/D002.webp
+D002_001,骷髅精灵洞,754,True,True,30,30,24,10,23,10,0,0,0,0,,screenshots/D002_001.webp
+D003,Lost Paradise Forest,14,True,True,400,400,312,135,312,134,2,10,107,107,,screenshots/D003.webp
+d005,冰天雪地,1116,True,True,300,300,50,186,51,186,0,0,0,0,,screenshots/d005.webp
+D006,邪恶之地①,1138,True,True,300,300,77,88,77,87,0,0,0,0,,screenshots/D006.webp
+D007,邪恶之地②,1139,True,True,300,300,15,48,15,47,0,0,0,0,,screenshots/D007.webp
+D008,深度雪原,1145,True,True,200,200,71,143,71,142,0,0,0,0,,screenshots/D008.webp
+D009,月河渊,1150,True,True,800,800,680,595,680,594,0,0,0,0,,screenshots/D009.webp
+D010,鬼域林,1153,True,True,800,800,449,621,449,620,0,0,0,0,,screenshots/D010.webp
+D011,天然洞穴1层,755,True,True,400,400,303,277,304,278,0,7,85,85,,screenshots/D011.webp
+D012,天然洞穴2层,756,True,True,400,400,105,311,105,310,1,9,105,105,,screenshots/D012.webp
+D012_001,天然洞穴2层,757,True,True,20,20,7,10,8,9,0,0,0,0,,screenshots/D012_001.webp
+D021,沃玛神殿入口,758,True,True,100,100,30,33,30,32,4,2,10,10,,screenshots/D021.webp
+D022,沃玛神殿1层,759,True,True,500,500,253,326,253,325,4,11,182,182,,screenshots/D022.webp
+D022_001,沃玛神殿1层,760,True,True,80,80,33,24,33,23,1,4,8,8,,screenshots/D022_001.webp
+D023,沃玛神殿2层,761,True,True,400,400,269,152,269,151,4,11,186,186,,screenshots/D023.webp
+D023_001,沃玛神殿师徒关,762,True,True,40,40,15,28,15,27,0,0,0,0,,screenshots/D023_001.webp
+D023_002,沃玛神殿师徒关,763,True,True,40,40,23,18,23,17,0,0,0,0,,screenshots/D023_002.webp
+D024,沃玛神殿,764,True,True,100,100,45,86,45,85,15,9,81,81,,screenshots/D024.webp
+D032,沃玛神殿1层,765,True,True,500,500,252,101,252,100,3,12,183,183,,screenshots/D032.webp
+D033,沃玛神殿2层,766,True,True,400,400,86,282,86,281,2,12,187,187,,screenshots/D033.webp
+D042,沃玛神殿1层,767,True,True,500,500,372,292,372,291,3,11,182,182,,screenshots/D042.webp
+D043,沃玛神殿2层,768,True,True,400,400,55,358,55,357,5,11,186,186,,screenshots/D043.webp
+D052,沃玛神殿1层,769,True,True,500,500,261,202,261,201,0,1,1,1,,screenshots/D052.webp
+D053,沃玛神殿2层,770,True,True,400,400,184,34,184,33,0,1,1,1,,screenshots/D053.webp
+D1001,Banya Temple Lv 1,16,True,True,400,400,34,220,34,219,1,4,87,87,,screenshots/D1001.webp
+D10011,EI D10011,771,True,True,400,400,284,157,284,156,0,0,0,0,,screenshots/D10011.webp
+D10012,EI D10012,772,True,True,300,300,171,80,171,79,0,0,0,0,,screenshots/D10012.webp
+D10013,EI D10013,773,True,True,300,300,123,271,123,270,0,0,0,0,,screenshots/D10013.webp
+D1002,Banya Temple Lv 2,17,True,True,300,300,215,113,215,112,1,1,30,30,,screenshots/D1002.webp
+D10031,Banya Temple Lv 3-W,18,True,True,300,300,38,133,38,132,23,7,719,719,,screenshots/D10031.webp
+D10032,Banya Temple Lv 3-E,19,True,True,300,300,260,70,260,69,1,3,45,45,,screenshots/D10032.webp
+D1004,Banya Temple Lv 4,20,True,True,300,300,93,203,93,202,6,9,150,150,,screenshots/D1004.webp
+D10051,赤月山谷5层,774,True,True,200,200,164,63,164,62,33,4,600,600,,screenshots/D10051.webp
+D10052,赤月山谷5层,775,True,True,200,200,65,154,65,153,40,4,600,600,,screenshots/D10052.webp
+D10053,EI D10053,776,True,True,100,100,53,26,53,25,0,0,0,0,,screenshots/D10053.webp
+D10054,EI D10054,777,True,True,100,100,52,63,52,62,0,0,0,0,,screenshots/D10054.webp
+D10061,EI D10061,778,True,True,30,30,14,21,14,20,0,0,0,0,,screenshots/D10061.webp
+D10062,EI D10062,779,True,True,40,40,20,26,21,25,0,0,0,0,,screenshots/D10062.webp
+D10071,EI D10071,780,True,True,40,40,19,22,20,22,0,0,0,0,,screenshots/D10071.webp
+D1011,Banya Temple Lv 10,29,True,True,300,300,267,102,267,101,1,5,75,75,,screenshots/D1011.webp
+D1012,Banya Temple,30,True,True,300,300,126,34,127,33,3,5,75,75,,screenshots/D1012.webp
+D10131,赤月山谷3层,781,True,True,300,300,199,266,199,265,4,5,75,75,,screenshots/D10131.webp
+D10132,赤月山谷3层,782,True,True,300,300,116,37,116,36,3,5,75,75,,screenshots/D10132.webp
+D1014,赤月山谷4层,783,True,True,300,300,212,95,212,94,2,5,75,75,,screenshots/D1014.webp
+D10151,赤月山谷5层,784,True,True,200,200,71,96,71,95,5,4,73,73,,screenshots/D10151.webp
+D10152,赤月山谷5层,785,True,True,200,200,166,164,166,163,2,4,63,63,,screenshots/D10152.webp
+D10162,赤月恶魔洞穴,786,True,True,40,40,12,20,12,19,11,3,11,11,,screenshots/D10162.webp
+D1021,赤月山谷1层,787,True,True,300,300,264,213,264,212,6,3,450,450,,screenshots/D1021.webp
+D1022,赤月山谷2层,788,True,True,300,300,219,148,219,147,10,3,450,450,,screenshots/D1022.webp
+D10231,赤月山谷3层,789,True,True,300,300,249,270,249,269,13,4,600,600,,screenshots/D10231.webp
+D10232,赤月山谷3层,790,True,True,300,300,78,252,78,251,11,4,600,600,,screenshots/D10232.webp
+D1024,赤月山谷4层,791,True,True,300,300,146,190,146,189,19,4,600,600,,screenshots/D1024.webp
+D10251,赤月山谷5层,792,True,True,200,200,148,162,148,161,30,3,450,450,,screenshots/D10251.webp
+D10252,赤月山谷5层,793,True,True,200,200,171,26,172,25,11,2,300,300,,screenshots/D10252.webp
+D10261,EI D10261,794,True,True,30,30,21,25,21,24,0,0,0,0,,screenshots/D10261.webp
+D10262,EI D10262,795,True,True,40,40,28,16,28,15,0,0,0,0,,screenshots/D10262.webp
+D10271,EI D10271,796,True,True,40,40,13,17,13,16,0,0,0,0,,screenshots/D10271.webp
+D1101,Zuma Temple Lv 1,33,True,True,300,300,245,158,246,157,11,8,482,482,,screenshots/D1101.webp
+D1102,Zuma Temple Lv 2,34,True,True,300,300,241,236,241,235,20,8,482,482,,screenshots/D1102.webp
+D11031,潘夜神殿3层西部,797,True,True,400,400,248,366,248,365,4,8,502,502,,screenshots/D11031.webp
+D11032,潘夜神殿3层东部,798,True,True,100,100,83,52,83,51,66,5,400,400,,screenshots/D11032.webp
+D1104,Zuma Temple Lv 4,36,True,True,200,200,90,93,90,92,21,10,462,462,,screenshots/D1104.webp
+D1105,Zuma Temple Lv 5,37,True,True,300,300,73,265,73,264,9,10,462,462,,screenshots/D1105.webp
+D1110,潘夜神殿大厅,799,True,True,50,50,27,38,27,37,0,0,0,0,,screenshots/D1110.webp
+D1111,潘夜神殿4层,800,True,True,300,300,285,55,285,54,7,10,452,452,,screenshots/D1111.webp
+D1112,潘夜神殿5层,801,True,True,400,400,179,183,179,182,10,10,447,447,,screenshots/D1112.webp
+D1113,潘夜神殿6层,802,True,True,400,400,155,270,155,269,6,10,497,497,,screenshots/D1113.webp
+D11141,潘夜神殿7层西部,803,True,True,200,200,158,113,159,112,34,10,522,522,,screenshots/D11141.webp
+D11142,潘夜神殿7层东部,804,True,True,200,200,180,168,180,167,13,10,452,452,,screenshots/D11142.webp
+D1115,潘夜神殿8层,805,True,True,400,400,288,115,288,114,3,10,432,432,,screenshots/D1115.webp
+D1116,潘夜神殿,806,True,True,100,100,23,58,23,57,9,5,51,51,,screenshots/D1116.webp
+D1201,罪孽洞穴1层,807,True,True,200,200,162,123,162,122,1,2,4,4,,screenshots/D1201.webp
+D1202,罪孽洞穴2层,808,True,True,200,200,157,38,157,37,1,2,4,4,,screenshots/D1202.webp
+D12031,Jinchon Palace Lv 4-S,52,True,True,200,200,33,154,33,153,3,2,10,10,,screenshots/D12031.webp
+D12032,Jinchon Palace Lv 4-E,53,True,True,200,200,75,113,75,112,0,2,10,10,,screenshots/D12032.webp
+D1204,罪孽洞穴4层,809,True,True,300,300,174,223,174,222,0,2,10,10,,screenshots/D1204.webp
+D1205,Jinchon Palace Lv 6,57,True,True,300,300,203,57,203,56,0,2,10,10,,screenshots/D1205.webp
+D1211,潘夜石窟1层,810,True,True,200,200,126,58,126,59,4,6,83,83,,screenshots/D1211.webp
+D12121,潘夜石窟2层西部,811,True,True,300,300,107,105,107,104,1,5,92,92,,screenshots/D12121.webp
+D12122,EI D12122,812,True,True,100,100,49,68,49,67,0,0,0,0,,screenshots/D12122.webp
+D1213,潘夜石窟3层,813,True,True,300,300,192,128,192,127,1,5,92,92,,screenshots/D1213.webp
+D1214,潘夜石窟4层,814,True,True,300,300,39,81,39,80,2,5,92,92,,screenshots/D1214.webp
+D1215,潘夜石窟5层,815,True,True,400,400,344,81,344,80,4,6,113,113,,screenshots/D1215.webp
+D1301,Black Palace Lv 1,62,True,True,400,400,230,301,230,300,2,5,36,36,,screenshots/D1301.webp
+D1302,东部银杏废矿2层,816,True,True,400,400,296,282,296,281,0,5,36,36,,screenshots/D1302.webp
+D1303,Black Palace Lv 3,65,True,True,400,400,304,54,304,53,0,4,31,31,,screenshots/D1303.webp
+D1304,Black Palace Lv 4,66,True,True,400,400,300,288,300,287,1,5,36,36,,screenshots/D1304.webp
+D1305,Black Palace,67,True,True,400,400,224,317,224,316,0,4,31,31,,screenshots/D1305.webp
+D1311,北部银杏废矿1层,817,True,True,400,400,101,207,101,206,0,1,1,1,,screenshots/D1311.webp
+D1312,北部银杏废矿2层,818,True,True,400,400,257,293,257,292,0,1,1,1,,screenshots/D1312.webp
+D1313,北部银杏废矿3层,819,True,True,400,400,265,171,265,172,0,1,1,1,,screenshots/D1313.webp
+D1314,北部银杏废矿4层,820,True,True,400,400,141,177,141,176,0,1,1,1,,screenshots/D1314.webp
+D1315,北部银杏废矿5层,821,True,True,400,400,197,173,197,172,0,1,1,1,,screenshots/D1315.webp
+D1321,西部银杏废矿1层,822,True,True,400,400,278,80,279,81,0,1,1,1,,screenshots/D1321.webp
+D1322,西部银杏废矿2层,823,True,True,400,400,369,314,370,315,0,1,1,1,,screenshots/D1322.webp
+D1323,西部银杏废矿3层,824,True,True,400,400,306,170,306,169,0,1,1,1,,screenshots/D1323.webp
+D1324,西部银杏废矿4层,825,True,True,400,400,51,249,51,248,0,1,1,1,,screenshots/D1324.webp
+D1325,西部银杏废矿5层,826,True,True,400,400,79,105,79,104,0,1,1,1,,screenshots/D1325.webp
+D1401,Phantom Ship Ent,68,True,True,400,400,54,266,54,265,5,9,167,167,,screenshots/D1401.webp
+D1402,Phantom Ship Lv 4,69,True,True,400,400,304,230,304,229,3,9,167,167,,screenshots/D1402.webp
+D1403,Phantom Ship Lv 3,70,True,True,400,400,321,332,321,331,2,8,122,122,,screenshots/D1403.webp
+D1404,Phantom Ship Lv 2,71,True,True,400,400,120,47,120,46,4,8,137,137,,screenshots/D1404.webp
+D1405,Phantom Ship Lv 1,72,True,True,400,400,285,221,285,220,4,8,137,137,,screenshots/D1405.webp
+D1411,北部石矿1层,827,True,True,400,400,65,175,66,174,0,1,10,10,,screenshots/D1411.webp
+D1412,北部石矿2层,828,True,True,400,400,30,274,30,273,0,1,10,10,,screenshots/D1412.webp
+D1413,北部石矿3层,829,True,True,400,400,57,87,57,86,0,1,10,10,,screenshots/D1413.webp
+D1414,北部石矿4层,830,True,True,400,400,262,271,263,271,0,1,10,10,,screenshots/D1414.webp
+D1415,北部石矿5层,831,True,True,400,400,155,325,155,324,0,1,10,10,,screenshots/D1415.webp
+D1421,西部石矿1层,832,True,True,400,400,98,223,98,222,0,1,10,10,,screenshots/D1421.webp
+D1422,西部石矿2层,833,True,True,400,400,298,180,298,179,0,1,10,10,,screenshots/D1422.webp
+D1423,西部石矿3层,834,True,True,400,400,204,375,204,374,0,1,10,10,,screenshots/D1423.webp
+D1424,西部石矿4层,835,True,True,400,400,68,351,68,350,0,1,10,10,,screenshots/D1424.webp
+D1425,西部石矿5层,836,True,True,400,400,365,103,365,102,0,1,10,10,,screenshots/D1425.webp
+d15023,真天宫1层,1099,True,True,300,300,25,250,25,249,10,7,432,432,,screenshots/d15023.webp
+d15033,真天宫2层,1100,True,True,300,300,118,26,118,25,6,7,269,269,,screenshots/d15033.webp
+d15054,真天宫3层,1101,True,True,400,400,218,339,218,338,4,8,404,404,,screenshots/d15054.webp
+d1506,真天宫,1102,True,True,100,100,35,61,35,60,44,10,56,56,,screenshots/d1506.webp
+d1510,黑度宫1层,1103,True,True,200,200,91,103,91,102,12,5,302,302,,screenshots/d1510.webp
+d15111,黑度宫2层,1104,True,True,200,200,52,182,52,181,10,4,192,192,,screenshots/d15111.webp
+d1512,黑度宫3层,1105,True,True,200,200,124,70,124,69,35,7,632,632,,screenshots/d1512.webp
+d1513,黑度宫4层,1106,True,True,200,200,21,55,21,54,16,8,407,407,,screenshots/d1513.webp
+d1602,诺玛遗址,1109,True,True,300,300,183,176,183,175,0,0,0,0,differs_from_offline_map_copy,screenshots/d1602.webp
+d1606,诺玛墓穴,1110,True,True,60,80,24,44,24,43,0,0,0,0,,screenshots/d1606.webp
+d2001,西沙漠1层,1111,True,True,300,300,201,95,201,94,11,4,670,670,,screenshots/d2001.webp
+d20023,西沙漠2层,1112,True,True,400,400,369,365,369,364,3,4,670,670,,screenshots/d20023.webp
+d2004,地底宫殿,1114,True,True,50,50,22,29,22,28,20,2,40,40,,screenshots/d2004.webp
+d2005,地下魔宫,1113,True,True,80,80,15,46,16,46,50,4,370,370,,screenshots/d2005.webp
+D2011,EI D2011,837,True,True,100,100,21,56,21,55,0,0,0,0,,screenshots/D2011.webp
+D2012,EI D2012,838,True,True,200,200,118,89,118,88,0,0,0,0,,screenshots/D2012.webp
+D202,Deserted Mine Lv 2,137,True,True,200,200,118,69,118,68,37,6,765,765,,screenshots/D202.webp
+D203,Deserted Mine Lv 3,138,True,True,300,300,234,63,234,62,24,7,962,962,,screenshots/D203.webp
+d2101,冰原地下1层,1117,True,True,300,300,132,126,132,125,0,0,0,0,,screenshots/d2101.webp
+d2104,冰原地下2层,1118,True,True,300,300,37,120,37,119,0,0,0,0,,screenshots/d2104.webp
+d21051,冰原通道,1119,True,True,100,100,69,63,69,62,0,0,0,0,,screenshots/d21051.webp
+d2106,冰宫之颠,1120,True,True,60,60,29,40,29,39,0,0,0,0,,screenshots/d2106.webp
+d2107,天空之城,1121,True,True,60,60,44,40,43,41,0,0,0,0,,screenshots/d2107.webp
+D2201,绝情塔1层,1123,True,True,400,400,238,72,238,71,0,0,0,0,,screenshots/D2201.webp
+D2204,绝情塔2层,1124,True,True,400,400,127,351,127,350,0,0,0,0,,screenshots/D2204.webp
+D2205,绝情宫殿,1125,True,True,70,70,47,38,47,37,0,0,0,0,,screenshots/D2205.webp
+D2701,群魔终结路①,1130,True,True,200,200,71,123,71,122,21,2,400,400,,screenshots/D2701.webp
+D2702,群魔终结路②,1131,True,True,200,200,24,146,24,145,0,0,0,0,,screenshots/D2702.webp
+D2900,邪恶之地,1140,True,True,100,150,35,64,35,63,0,0,0,0,,screenshots/D2900.webp
+D2901,会员练级,1158,True,True,300,300,73,200,73,199,41,33,1740,1740,,screenshots/D2901.webp
+D2902,BOSS集中营,1141,True,True,300,300,20,63,20,62,0,24,4800,4800,,screenshots/D2902.webp
+D29031,经验.之地,1143,True,True,300,300,228,75,228,74,0,12,120,120,,screenshots/D29031.webp
+D29032,玛法.之地,1144,True,True,300,300,25,29,25,28,0,0,0,0,,screenshots/D29032.webp
+D29051,玛法.四象,1142,True,True,300,300,90,26,90,25,0,0,0,0,,screenshots/D29051.webp
+D30011,龙穴溪谷①,1146,True,True,300,300,246,209,246,208,9,2,400,400,,screenshots/D30011.webp
+D30013,龙穴溪谷②,1147,True,True,300,300,209,235,209,234,8,2,400,400,,screenshots/D30013.webp
+D3005,龙穴生死堂,1148,True,True,400,400,89,169,89,168,3,2,200,200,,screenshots/D3005.webp
+D3101,卧龙寺,1151,True,True,300,300,266,43,266,42,0,0,0,0,,screenshots/D3101.webp
+D3102,卧龙宫,1152,True,True,100,100,40,35,40,34,0,0,0,0,,screenshots/D3102.webp
+D35041,修罗密道1,1169,True,True,300,300,85,137,85,136,0,0,0,0,,screenshots/D35041.webp
+D35042,修罗密道2,1170,True,True,300,300,70,154,70,153,0,0,0,0,,screenshots/D35042.webp
+D35043,修罗密道3,1171,True,True,300,300,64,261,64,260,0,0,0,0,,screenshots/D35043.webp
+D35044,修罗密道4,1172,True,True,300,300,95,146,95,145,0,0,0,0,,screenshots/D35044.webp
+D3505,修罗禁地,1173,True,True,80,80,65,35,65,34,0,0,0,0,,screenshots/D3505.webp
+D3701,兵马佣通道,1174,True,True,400,400,312,61,312,60,0,0,0,0,,screenshots/D3701.webp
+D3702,兵马佣广场,1175,True,True,400,400,259,304,259,303,0,0,0,0,,screenshots/D3702.webp
+D3703,兵马佣兵场,1176,True,True,400,400,219,39,219,38,0,0,0,0,,screenshots/D3703.webp
+D3704,兵马佣禁地,1177,True,True,160,160,89,92,89,91,0,0,0,0,,screenshots/D3704.webp
+D400_001,神圣战甲术空间,839,True,True,50,50,40,16,40,15,4,1,10,10,,screenshots/D400_001.webp
+D401,Ant Cave North,142,True,True,200,200,152,143,152,142,13,10,123,123,,screenshots/D401.webp
+D401_001,尸王房,840,True,True,30,30,8,12,9,11,20,2,20,20,,screenshots/D401_001.webp
+D402,Ant Cave South,143,True,True,200,200,169,74,169,73,8,10,123,123,,screenshots/D402.webp
+D402_001,尸王房,841,True,True,30,30,13,22,13,21,20,2,20,20,,screenshots/D402_001.webp
+D403,Ant Cave West,144,True,True,200,200,62,152,62,151,9,10,123,123,,screenshots/D403.webp
+D403_001,尸王房,842,True,True,30,30,11,10,11,9,20,2,20,20,,screenshots/D403_001.webp
+D404,Ant Cave East,145,True,True,200,200,83,46,83,45,12,9,103,103,,screenshots/D404.webp
+D404_001,尸王房,843,True,True,30,30,11,17,11,16,20,2,20,20,,screenshots/D404_001.webp
+D404_002,废矿矿山地下2层,844,True,True,30,30,13,18,13,17,0,0,0,0,,screenshots/D404_002.webp
+D405,矿石储藏所,845,True,True,200,200,76,166,76,165,8,9,103,103,,screenshots/D405.webp
+D405_001,尸王房,846,True,True,30,30,8,15,8,14,20,2,20,20,,screenshots/D405_001.webp
+D406,废矿南部洞穴,847,True,True,200,200,50,149,50,148,9,9,103,103,,screenshots/D406.webp
+D406_001,尸王房,848,True,True,30,30,19,17,19,16,20,2,20,20,,screenshots/D406_001.webp
+D411,地下1层第一间房,849,True,True,100,100,36,37,36,36,27,5,90,90,,screenshots/D411.webp
+D412,天桥2,850,True,True,100,100,90,45,90,44,14,5,90,90,,screenshots/D412.webp
+D413,地下1层第二间房,851,True,True,100,100,76,27,76,26,14,5,90,90,,screenshots/D413.webp
+D414,地下1层第三间房,852,True,True,100,100,73,23,73,22,0,0,0,0,,screenshots/D414.webp
+D415,天桥1,853,True,True,100,100,79,42,79,41,25,5,95,95,,screenshots/D415.webp
+D416,天桥3,854,True,True,100,100,88,25,88,24,19,5,90,90,,screenshots/D416.webp
+D420_001,神圣战甲术空间,855,True,True,50,50,28,11,28,10,4,1,10,10,,screenshots/D420_001.webp
+D421,矿山1层,856,True,True,400,400,172,153,172,152,1,9,116,116,,screenshots/D421.webp
+D421_001,EI D421_001,857,True,True,30,30,10,13,11,12,20,2,20,20,,screenshots/D421_001.webp
+D422,矿山2层,858,True,True,400,400,130,345,130,344,2,9,116,116,,screenshots/D422.webp
+D422_001,EI D422_001,859,True,True,30,30,13,18,13,17,20,2,20,20,,screenshots/D422_001.webp
+D422_002,矿山2层,860,True,True,36,36,5,10,6,10,0,0,0,0,,screenshots/D422_002.webp
+D423,EI D423,861,True,True,100,100,68,79,68,78,0,0,0,0,,screenshots/D423.webp
+D431,北部矿山入口,862,True,True,200,200,172,40,172,39,4,10,103,103,,screenshots/D431.webp
+D431_001,尸王房,863,True,True,30,30,22,13,23,14,20,2,20,20,,screenshots/D431_001.webp
+D432,北部矿山东面洞穴,864,True,True,200,200,101,33,101,32,2,10,103,103,,screenshots/D432.webp
+D432_001,尸王房,865,True,True,30,30,11,10,11,9,20,2,20,20,,screenshots/D432_001.webp
+D433,北部地下1层采矿所,866,True,True,200,200,40,89,40,88,7,10,103,103,,screenshots/D433.webp
+D433_001,尸王房,867,True,True,30,30,13,9,13,8,20,2,20,20,,screenshots/D433_001.webp
+D434,北部地下2层采矿所,868,True,True,200,200,162,105,162,104,5,10,94,94,,screenshots/D434.webp
+D434_001,尸王房,869,True,True,30,30,19,11,19,10,20,2,20,20,,screenshots/D434_001.webp
+D434_002,EI D434_002,870,True,True,30,30,20,18,20,17,0,0,0,0,,screenshots/D434_002.webp
+D435,北部矿石储藏所,871,True,True,200,200,65,107,65,106,14,10,94,94,,screenshots/D435.webp
+D435_001,尸王房,872,True,True,30,30,6,14,7,13,20,2,20,20,,screenshots/D435_001.webp
+D436,北部废矿南面洞穴,873,True,True,200,200,134,46,134,45,9,9,93,93,,screenshots/D436.webp
+D436_001,尸王房,874,True,True,30,30,12,14,12,13,20,2,20,20,,screenshots/D436_001.webp
+D441,北部地下1层第一间房,875,True,True,100,100,40,62,40,61,28,5,80,80,,screenshots/D441.webp
+D442,北部天桥2,876,True,True,100,100,69,35,69,34,27,5,80,80,,screenshots/D442.webp
+D443,北部地下1层第二间房,877,True,True,100,100,39,61,39,60,23,5,80,80,,screenshots/D443.webp
+D444,北部地下1层第三间房,878,True,True,100,100,23,71,23,70,0,0,0,0,,screenshots/D444.webp
+D445,北部天桥1,879,True,True,100,100,62,13,62,12,18,5,70,70,,screenshots/D445.webp
+D446,北部天桥3,880,True,True,100,100,24,79,24,78,23,5,80,80,,screenshots/D446.webp
+D451,南部矿山1层,881,True,True,400,400,191,142,191,141,2,9,116,116,,screenshots/D451.webp
+D451_001,尸王房,882,True,True,30,30,12,15,12,14,20,2,20,20,,screenshots/D451_001.webp
+D452,南部矿山2层,883,True,True,400,400,361,353,361,352,2,9,116,116,,screenshots/D452.webp
+D452_001,尸王房,884,True,True,30,30,11,13,11,12,20,2,20,20,,screenshots/D452_001.webp
+D501,Uma Temple Lv 1,146,True,True,400,400,117,228,117,227,2,5,126,126,,screenshots/D501.webp
+D502,Uma Temple Lv 2,147,True,True,400,400,281,108,281,107,4,6,182,182,,screenshots/D502.webp
+D503,Uma Temple Lv 3,148,True,True,400,400,283,96,283,95,3,11,263,263,,screenshots/D503.webp
+D504,Uma Temple,149,True,True,400,400,310,184,310,183,6,10,274,274,,screenshots/D504.webp
+D505,祖玛神殿5层,885,True,True,200,200,172,158,172,157,12,13,222,222,,screenshots/D505.webp
+D5061,祖玛阁,886,True,True,100,100,85,71,85,70,2,13,13,13,,screenshots/D5061.webp
+D5062,EI D5062,887,True,True,100,100,84,74,84,73,1,13,13,13,,screenshots/D5062.webp
+D5063,EI D5063,888,True,True,100,100,59,42,59,41,1,13,13,13,,screenshots/D5063.webp
+D5064,EI D5064,889,True,True,100,100,37,77,37,76,1,13,13,13,,screenshots/D5064.webp
+D5065,EI D5065,890,True,True,100,100,64,43,64,42,1,13,13,13,,screenshots/D5065.webp
+D5066,EI D5066,891,True,True,100,100,14,75,14,74,0,0,0,0,,screenshots/D5066.webp
+D5067,EI D5067,892,True,True,100,100,89,14,89,13,0,0,0,0,,screenshots/D5067.webp
+D5068,EI D5068,893,True,True,100,100,86,42,86,41,0,0,0,0,,screenshots/D5068.webp
+D5069,EI D5069,894,True,True,100,100,90,12,90,11,0,0,0,0,,screenshots/D5069.webp
+D5071,祖玛神殿7层大厅,895,True,True,50,50,21,39,21,38,0,0,0,0,,screenshots/D5071.webp
+D5072,祖玛神殿7层,896,True,True,100,100,70,40,70,39,32,8,157,157,,screenshots/D5072.webp
+D5073,祖玛神殿7层,897,True,True,100,100,19,44,19,43,37,8,157,157,,screenshots/D5073.webp
+D5074,祖玛神殿7层,898,True,True,100,100,81,40,81,39,25,8,157,157,,screenshots/D5074.webp
+d511,祖玛神殿,899,True,True,40,40,20,17,20,16,0,0,0,0,,screenshots/d511.webp
+d512,祖玛神殿,900,True,True,40,40,14,31,14,30,0,0,0,0,,screenshots/d512.webp
+d513,祖玛神殿,901,True,True,40,40,21,10,22,9,0,0,0,0,,screenshots/d513.webp
+d514,祖玛神殿,902,True,True,40,40,25,23,25,22,0,0,0,0,,screenshots/d514.webp
+d515,祖玛教主宫廷,903,True,True,40,40,15,26,15,25,28,9,29,29,,screenshots/d515.webp
+d60011,绝命谷1层南部,904,True,True,250,250,34,68,34,67,20,5,605,605,,screenshots/d60011.webp
+d60012,绝命谷1层西部,905,True,True,250,250,168,102,168,101,31,5,575,575,,screenshots/d60012.webp
+d60013,绝命谷1层北部,906,True,True,250,250,32,174,32,173,21,4,460,460,,screenshots/d60013.webp
+d60021,绝命谷2层西部,907,True,True,200,200,123,62,123,61,23,4,390,390,,screenshots/d60021.webp
+d60022,绝命谷2层北部,908,True,True,200,200,69,124,69,123,41,5,480,480,,screenshots/d60022.webp
+d6003,EI d6003,909,True,True,100,100,45,38,45,37,0,0,0,0,,screenshots/d6003.webp
+d6004,绝命谷3层,910,True,True,300,300,190,144,190,143,20,5,730,730,,screenshots/d6004.webp
+D601,Banya Stone Cave Lv 1,150,True,True,250,250,59,137,59,136,15,2,200,200,,screenshots/D601.webp
+d6011,万年谷,911,True,True,200,200,71,83,71,82,3,8,78,78,,screenshots/d6011.webp
+D6012,万年原谷,912,True,True,300,300,123,223,123,222,1,8,88,88,,screenshots/D6012.webp
+D60131,万年谷中部,913,True,True,100,100,46,38,46,37,16,5,85,85,,screenshots/D60131.webp
+D60132,万年谷南部,914,True,True,100,100,20,59,20,58,17,5,85,85,,screenshots/D60132.webp
+D60133,万年谷西部,915,True,True,100,100,83,57,83,56,11,5,85,85,,screenshots/D60133.webp
+D60134,万年谷北部,916,True,True,100,100,31,68,31,67,18,5,75,75,,screenshots/D60134.webp
+D60135,万年谷东部,917,True,True,100,100,48,78,48,77,10,5,70,70,,screenshots/D60135.webp
+D6014,万年独孤关,918,True,True,200,200,127,24,127,23,3,9,104,104,,screenshots/D6014.webp
+d6015,生死关,919,True,True,200,200,189,108,189,107,12,10,105,105,,screenshots/d6015.webp
+D602,Banya Stone Cave Lv 2,151,True,True,250,250,90,116,90,115,55,4,370,370,,screenshots/D602.webp
+d6021,虫峡谷1层,920,True,True,200,200,133,94,133,93,36,6,600,600,,screenshots/d6021.webp
+d6022,虫峡谷2层,921,True,True,200,200,48,88,48,87,39,6,600,600,,screenshots/d6022.webp
+D6023,虫峡谷3层,922,True,True,200,200,143,40,143,39,37,6,600,600,,screenshots/D6023.webp
+d6024,虫峡谷4层,923,True,True,300,300,155,133,155,132,36,6,900,900,,screenshots/d6024.webp
+D6025,虫峡谷5层,924,True,True,400,400,280,208,280,207,15,6,900,900,,screenshots/D6025.webp
+D603,Banya Stone Cave Lv 3,152,True,True,50,50,25,11,25,10,341,2,350,350,,screenshots/D603.webp
+D604,Banya Stone Cave Lv 4,153,True,True,50,50,29,21,29,20,152,3,153,153,,screenshots/D604.webp
+D605,Banya Stone Cave Lv 5,154,True,True,50,50,30,27,30,26,179,3,180,180,,screenshots/D605.webp
+d606,奇岩石屋,925,True,True,50,50,28,21,28,20,0,0,0,0,,screenshots/d606.webp
+d607,奇岩通路,926,True,True,100,100,37,73,37,72,0,0,0,0,,screenshots/d607.webp
+d608,EI d608,927,True,True,50,50,23,20,23,19,0,0,0,0,,screenshots/d608.webp
+d609,EI d609,928,True,True,50,50,28,28,28,27,0,0,0,0,,screenshots/d609.webp
+d610,EI d610,929,True,True,50,50,20,22,20,21,0,0,0,0,,screenshots/d610.webp
+d611,EI d611,930,True,True,100,100,54,65,54,64,0,0,0,0,,screenshots/d611.webp
+D612,EI D612,931,True,True,300,300,81,247,81,246,0,0,0,0,,screenshots/D612.webp
+D613,EI D613,932,True,True,100,100,73,79,73,78,0,0,0,0,,screenshots/D613.webp
+D614,EI D614,933,True,True,100,100,32,73,32,72,0,0,0,0,,screenshots/D614.webp
+D615,EI D615,934,True,True,100,100,51,14,51,13,0,0,0,0,,screenshots/D615.webp
+D616,EI D616,935,True,True,100,100,19,46,19,45,0,0,0,0,,screenshots/D616.webp
+D617,EI D617,936,True,True,100,100,7,44,7,43,0,0,0,0,,screenshots/D617.webp
+D618,EI D618,937,True,True,200,200,133,89,133,88,0,0,0,0,,screenshots/D618.webp
+D619,EI D619,938,True,True,100,100,31,33,31,32,0,0,0,0,,screenshots/D619.webp
+D701,Carved Stone Tomb Lv 1,155,True,True,200,200,131,64,131,63,51,3,450,450,,screenshots/D701.webp
+d7101,石阁入口,939,True,True,50,50,23,17,23,16,0,0,0,0,,screenshots/d7101.webp
+d7102,石阁入口,940,True,True,50,50,29,35,29,34,0,0,0,0,,screenshots/d7102.webp
+d711,石阁1层,941,True,True,400,400,237,194,237,193,10,5,501,501,,screenshots/d711.webp
+d712,石阁2层,942,True,True,400,400,99,312,99,311,6,6,601,601,,screenshots/d712.webp
+d713,石阁3层,943,True,True,400,400,265,41,265,40,12,8,851,851,,screenshots/d713.webp
+d714,石阁4层,944,True,True,400,400,335,259,335,258,21,8,811,811,,screenshots/d714.webp
+D715,石阁5层,945,True,True,400,400,283,312,283,311,28,8,811,811,,screenshots/D715.webp
+D716,石阁6层,946,True,True,50,50,20,12,21,11,129,10,200,200,,screenshots/D716.webp
+D71601,EI D71601,947,True,True,50,50,15,25,15,24,0,0,0,0,,screenshots/D71601.webp
+D71602,EI D71602,948,True,True,50,50,18,24,18,23,0,0,0,0,,screenshots/D71602.webp
+D71603,EI D71603,949,True,True,50,50,26,37,26,36,0,0,0,0,,screenshots/D71603.webp
+D71604,EI D71604,950,True,True,50,50,27,11,27,10,0,0,0,0,,screenshots/D71604.webp
+D71605,EI D71605,951,True,True,50,50,25,12,25,11,0,0,0,0,,screenshots/D71605.webp
+D71606,EI D71606,952,True,True,50,50,16,17,16,16,0,0,0,0,,screenshots/D71606.webp
+D71607,EI D71607,953,True,True,50,50,7,29,7,28,0,0,0,0,,screenshots/D71607.webp
+D71608,EI D71608,954,True,True,50,50,15,28,15,27,0,0,0,0,,screenshots/D71608.webp
+D71609,EI D71609,955,True,True,50,50,21,28,22,27,0,0,0,0,,screenshots/D71609.webp
+D71610,EI D71610,956,True,True,50,50,27,17,27,16,0,0,0,0,,screenshots/D71610.webp
+D71611,EI D71611,957,True,True,50,50,45,26,45,25,0,0,0,0,,screenshots/D71611.webp
+D71612,EI D71612,958,True,True,50,50,28,39,28,38,0,0,0,0,,screenshots/D71612.webp
+D71613,EI D71613,959,True,True,50,50,20,11,21,10,0,0,0,0,,screenshots/D71613.webp
+D71614,EI D71614,960,True,True,50,50,24,31,25,31,0,0,0,0,,screenshots/D71614.webp
+D71615,EI D71615,961,True,True,50,50,12,26,12,25,0,0,0,0,,screenshots/D71615.webp
+D71616,EI D71616,962,True,True,50,50,30,37,30,36,0,0,0,0,,screenshots/D71616.webp
+D71617,EI D71617,963,True,True,50,50,17,18,17,17,0,0,0,0,,screenshots/D71617.webp
+D71618,EI D71618,964,True,True,50,50,20,37,20,36,0,0,0,0,,screenshots/D71618.webp
+D71619,EI D71619,965,True,True,50,50,38,19,39,20,0,0,0,0,,screenshots/D71619.webp
+D71620,EI D71620,966,True,True,50,50,21,19,21,18,0,0,0,0,,screenshots/D71620.webp
+D71621,EI D71621,967,True,True,50,50,15,33,15,32,0,0,0,0,,screenshots/D71621.webp
+D71622,EI D71622,968,True,True,50,50,39,30,39,29,0,0,0,0,,screenshots/D71622.webp
+D71623,EI D71623,969,True,True,50,50,31,36,31,35,0,0,0,0,,screenshots/D71623.webp
+D71624,EI D71624,970,True,True,50,50,11,32,11,31,0,0,0,0,,screenshots/D71624.webp
+D71625,EI D71625,971,True,True,50,50,32,16,32,15,0,0,0,0,,screenshots/D71625.webp
+D71650,EI D71650,972,True,True,50,50,16,30,16,29,0,0,0,0,,screenshots/D71650.webp
+D71651,EI D71651,973,True,True,50,50,17,35,17,34,0,0,0,0,,screenshots/D71651.webp
+D71652,EI D71652,974,True,True,50,50,28,10,28,9,0,0,0,0,,screenshots/D71652.webp
+D71653,EI D71653,975,True,True,50,50,29,40,29,39,0,0,0,0,,screenshots/D71653.webp
+D717,石阁7层,976,True,True,100,100,50,19,50,18,37,8,326,326,,screenshots/D717.webp
+D8001,南部蚂蚁洞4层,977,True,True,200,200,9,33,9,32,1,2,17,17,,screenshots/D8001.webp
+D8002,南部蚂蚁洞1层,978,True,True,200,200,122,177,122,176,1,3,18,18,,screenshots/D8002.webp
+D8003,南部蚂蚁洞2层,979,True,True,200,200,154,167,154,166,1,3,22,22,,screenshots/D8003.webp
+D8004,南部蚂蚁洞3层,980,True,True,200,200,126,185,126,184,0,3,18,18,,screenshots/D8004.webp
+D801,Despair Valley Lv 1,160,True,True,100,100,18,76,18,75,5,3,32,32,,screenshots/D801.webp
+D802,Despair Valley Lv 2,161,True,True,100,100,20,46,21,45,10,4,37,37,,screenshots/D802.webp
+D8021,南部蚂蚁洞穴,981,True,True,36,36,13,19,13,18,15,2,15,15,,screenshots/D8021.webp
+d8022,南部蚂蚁洞穴,982,True,True,36,36,23,18,23,17,15,2,15,15,,screenshots/d8022.webp
+D803,Despair Valley Lv 3,162,True,True,100,100,71,91,71,90,2,3,27,27,,screenshots/D803.webp
+D8031,南部蚂蚁洞穴,983,True,True,36,36,13,15,13,14,16,2,16,16,,screenshots/D8031.webp
+D8032,南部蚂蚁洞穴,984,True,True,36,36,17,16,17,15,16,2,16,16,,screenshots/D8032.webp
+d8033,南部蚂蚁洞穴,985,True,True,36,36,18,26,19,25,16,2,16,16,,screenshots/d8033.webp
+D804,Despair Valley Lv 4,163,True,True,100,100,20,65,20,64,9,4,29,29,,screenshots/D804.webp
+D8041,南部蚂蚁洞穴,986,True,True,50,70,13,20,13,19,6,2,22,22,,screenshots/D8041.webp
+D805,Life Death Hall,164,True,True,100,100,17,76,17,75,9,4,51,51,,screenshots/D805.webp
+d8051,EI d8051,987,True,True,36,36,22,11,22,10,20,3,20,20,,screenshots/d8051.webp
+D806,南部蚂蚁洞穴3层2,988,True,True,100,100,74,69,74,68,8,4,56,56,,screenshots/D806.webp
+D8061,南部蚂蚁洞穴,989,True,True,50,70,19,26,19,25,15,3,30,30,,screenshots/D8061.webp
+d8062,南部蚂蚁洞穴,990,True,True,36,36,16,24,17,23,30,3,30,30,,screenshots/d8062.webp
+d807,南部蚂蚁洞穴3层3,991,True,True,100,100,40,41,40,40,17,5,58,58,,screenshots/d807.webp
+d8071,南部蚂蚁洞穴,992,True,True,36,36,6,11,7,10,24,3,24,24,,screenshots/d8071.webp
+d8072,南部蚂蚁洞穴,993,True,True,36,36,21,16,21,15,0,0,0,0,,screenshots/d8072.webp
+d808,南部蚂蚁洞穴3层4,994,True,True,100,100,67,83,67,82,10,4,59,59,,screenshots/d808.webp
+D8101,北部蚂蚁洞穴1层4,995,True,True,200,200,95,164,95,163,30,7,451,451,,screenshots/D8101.webp
+D8102,北部蚂蚁洞穴1层1,996,True,True,200,200,91,57,91,56,36,7,501,501,,screenshots/D8102.webp
+D8103,北部蚂蚁洞穴1层2,997,True,True,200,200,148,72,148,71,40,7,451,451,,screenshots/D8103.webp
+D8104,北部蚂蚁洞穴1层3,998,True,True,200,200,66,98,66,97,17,7,451,451,,screenshots/D8104.webp
+D811,EI D811,999,True,True,100,100,45,74,46,75,0,0,0,0,,screenshots/D811.webp
+d812,EI d812,1000,True,True,100,100,61,92,61,91,0,0,0,0,,screenshots/d812.webp
+D8121,EI D8121,1001,True,True,36,36,6,19,6,18,0,0,0,0,,screenshots/D8121.webp
+d8122,EI d8122,1002,True,True,36,36,18,20,18,19,0,0,0,0,,screenshots/d8122.webp
+d813,EI d813,1003,True,True,100,100,57,69,58,69,0,0,0,0,,screenshots/d813.webp
+D8131,EI D8131,1004,True,True,36,36,17,14,17,13,0,0,0,0,,screenshots/D8131.webp
+D8132,EI D8132,1005,True,True,36,36,23,10,24,10,0,0,0,0,,screenshots/D8132.webp
+d8133,EI d8133,1006,True,True,36,36,21,14,21,13,0,0,0,0,,screenshots/d8133.webp
+D814,EI D814,1007,True,True,100,100,75,33,75,32,0,0,0,0,,screenshots/D814.webp
+D8141,EI D8141,1008,True,True,50,70,33,53,33,52,0,0,0,0,,screenshots/D8141.webp
+D815,EI D815,1009,True,True,100,100,32,13,32,12,0,0,0,0,,screenshots/D815.webp
+d8151,EI d8151,1010,True,True,36,36,18,17,18,16,0,0,0,0,,screenshots/d8151.webp
+D816,EI D816,1011,True,True,100,100,16,33,16,32,0,0,0,0,,screenshots/D816.webp
+D8161,EI D8161,1012,True,True,50,70,34,39,34,38,0,0,0,0,,screenshots/D8161.webp
+d8162,EI d8162,1013,True,True,36,36,18,16,18,15,0,0,0,0,,screenshots/d8162.webp
+d817,EI d817,1014,True,True,100,100,50,42,50,41,0,0,0,0,,screenshots/d817.webp
+d8171,EI d8171,1015,True,True,36,36,18,24,18,23,0,0,0,0,,screenshots/d8171.webp
+d8172,EI d8172,1016,True,True,36,36,24,13,24,12,0,0,0,0,,screenshots/d8172.webp
+d818,EI d818,1017,True,True,100,100,64,78,64,77,0,0,0,0,,screenshots/d818.webp
+D8201,东部蚂蚁洞穴1层4,1018,True,True,200,200,74,24,74,23,23,7,501,501,,screenshots/D8201.webp
+D8202,东部蚂蚁洞穴1层1,1019,True,True,200,200,54,126,54,125,24,7,451,451,,screenshots/D8202.webp
+D8203,东部蚂蚁洞穴1层2,1020,True,True,200,200,33,80,33,79,26,7,501,501,,screenshots/D8203.webp
+D8204,东部蚂蚁洞穴1层3,1021,True,True,200,200,154,64,154,63,16,7,451,451,,screenshots/D8204.webp
+D821,EI D821,1022,True,True,100,100,8,99,9,99,0,0,0,0,,screenshots/D821.webp
+d822,EI d822,1023,True,True,100,100,50,57,51,57,0,0,0,0,,screenshots/d822.webp
+D8221,EI D8221,1024,True,True,36,36,22,18,22,17,0,0,0,0,,screenshots/D8221.webp
+d8222,EI d8222,1025,True,True,36,36,14,22,14,21,0,0,0,0,,screenshots/d8222.webp
+d823,EI d823,1026,True,True,100,100,79,68,79,67,0,0,0,0,,screenshots/d823.webp
+D8231,EI D8231,1027,True,True,36,36,13,20,13,19,0,0,0,0,,screenshots/D8231.webp
+D8232,EI D8232,1028,True,True,36,36,19,17,19,16,0,0,0,0,,screenshots/D8232.webp
+d8233,EI d8233,1029,True,True,36,36,19,18,19,17,0,0,0,0,,screenshots/d8233.webp
+D824,EI D824,1030,True,True,100,100,45,66,45,65,0,0,0,0,,screenshots/D824.webp
+D8241,EI D8241,1031,True,True,50,70,25,35,26,34,0,0,0,0,,screenshots/D8241.webp
+D825,EI D825,1032,True,True,100,100,84,60,84,59,0,0,0,0,,screenshots/D825.webp
+d8251,EI d8251,1033,True,True,36,36,28,10,28,9,0,0,0,0,,screenshots/d8251.webp
+D826,EI D826,1034,True,True,100,100,46,53,46,54,0,0,0,0,,screenshots/D826.webp
+D8261,EI D8261,1035,True,True,50,70,41,59,41,58,0,0,0,0,,screenshots/D8261.webp
+d8262,EI d8262,1036,True,True,36,36,20,22,20,21,0,0,0,0,,screenshots/d8262.webp
+d827,EI d827,1037,True,True,100,100,51,43,52,44,0,0,0,0,,screenshots/d827.webp
+d8271,EI d8271,1038,True,True,36,36,27,24,27,23,0,0,0,0,,screenshots/d8271.webp
+d8272,EI d8272,1039,True,True,36,36,17,24,17,23,0,0,0,0,,screenshots/d8272.webp
+d828,EI d828,1040,True,True,100,100,50,55,50,54,0,0,0,0,,screenshots/d828.webp
+D900,神舰入口,1041,True,True,100,100,39,58,40,57,0,0,0,0,,screenshots/D900.webp
+D901,Red Moon Valley Lv 1,165,True,True,200,200,104,153,104,152,6,16,91,91,,screenshots/D901.webp
+D9021,神舰地下2层,1042,True,True,200,200,81,41,81,40,4,5,51,51,,screenshots/D9021.webp
+D90211,医务室,1043,True,True,26,26,15,17,15,16,0,0,0,0,,screenshots/D90211.webp
+D90212,机械室,1044,True,True,26,26,18,9,18,8,13,1,13,13,,screenshots/D90212.webp
+D90213,EI D90213,1045,True,True,50,50,23,24,23,23,0,0,0,0,,screenshots/D90213.webp
+D90214,EI D90214,1046,True,True,26,26,13,9,14,9,0,0,0,0,,screenshots/D90214.webp
+D90216,EI D90216,1047,True,True,26,26,13,17,14,17,0,0,0,0,,screenshots/D90216.webp
+D9022,神舰地下2层,1048,True,True,200,200,73,34,73,33,6,8,91,91,,screenshots/D9022.webp
+D90221,医务室,1049,True,True,50,50,17,30,17,29,0,0,0,0,,screenshots/D90221.webp
+D90222,厨房,1050,True,True,26,26,13,13,13,12,1,1,1,1,,screenshots/D90222.webp
+D90223,士兵食堂,1051,True,True,26,26,17,9,17,8,1,1,1,1,,screenshots/D90223.webp
+D90224,EI D90224,1052,True,True,30,30,8,21,8,20,0,0,0,0,,screenshots/D90224.webp
+d903,神舰地下1层,1107,True,True,200,200,113,125,113,124,10,7,111,111,,screenshots/d903.webp
+D9031,参谋室,1053,True,True,140,140,55,25,55,24,0,1,1,1,,screenshots/D9031.webp
+D9032,长官食堂,1054,True,True,140,140,76,61,76,60,0,1,1,1,,screenshots/D9032.webp
+D90321,EI D90321,1055,True,True,32,32,17,13,17,12,0,0,0,0,,screenshots/D90321.webp
+D90322,EI D90322,1056,True,True,30,30,11,16,11,15,0,0,0,0,,screenshots/D90322.webp
+D90323,海图室,1057,True,True,26,26,12,15,11,16,0,0,0,0,,screenshots/D90323.webp
+d904,调控室,1108,True,True,100,100,31,63,31,62,15,5,61,61,,screenshots/d904.webp
+d9091,异界地下3层,1133,True,True,200,200,84,119,84,118,19,2,200,200,,screenshots/d9091.webp
+d90921,异界地下2层,1134,True,True,200,200,62,98,62,97,18,2,200,200,,screenshots/d90921.webp
+d90922,异界地下1层,1135,True,True,200,200,118,94,118,93,23,3,300,300,,screenshots/d90922.webp
+d9093,异界神灵之地,1136,True,True,200,200,30,78,30,77,15,3,300,300,,screenshots/d9093.webp
+d9094,异界神灵,1137,True,True,100,100,29,57,29,56,24,2,100,100,,screenshots/d9094.webp
+DM001,奸商,1058,True,True,10,14,2,9,2,8,0,0,0,0,,screenshots/DM001.webp
+DM002,王陵,1059,True,True,32,38,26,16,27,17,0,0,0,0,,screenshots/DM002.webp
+DM011,洞穴奸商,1060,True,True,10,14,5,9,5,8,0,0,0,0,,screenshots/DM011.webp
+E001,行会大战,1061,True,True,100,100,86,36,86,35,5,6,30,30,,screenshots/E001.webp
+E002,半兽天然洞穴,1062,True,True,100,100,89,66,89,65,4,6,30,30,,screenshots/E002.webp
+E002_001,半兽天然洞穴,1063,True,True,20,20,10,9,10,8,0,0,0,0,,screenshots/E002_001.webp
+E003,青青草原,1155,True,True,80,80,24,59,24,58,0,0,0,0,,screenshots/E003.webp
+E004,钓鱼岛,1157,True,True,80,80,44,19,44,18,0,0,0,0,,screenshots/E004.webp
+E007,PK赛场,1098,True,True,80,80,21,26,21,25,0,0,0,0,,screenshots/E007.webp
+E401,连接通路,1064,True,True,110,110,33,44,34,43,5,6,30,30,,screenshots/E401.webp
+E402,连接通路,1065,True,True,100,100,20,51,20,50,7,11,55,55,,screenshots/E402.webp
+E402_001,连接通路,1066,True,True,30,30,15,14,15,13,0,0,0,0,,screenshots/E402_001.webp
+E403,连接通路,1067,True,True,100,100,50,83,49,84,2,8,36,36,,screenshots/E403.webp
+E404,连接通路,1068,True,True,100,100,37,21,37,20,6,5,25,25,,screenshots/E404.webp
+E601,竞技场,1069,True,True,150,150,97,139,97,138,0,0,0,0,,screenshots/E601.webp
+E602,竞技场,1070,True,True,150,150,13,36,13,35,0,0,0,0,,screenshots/E602.webp
+E603,废矿秘密通路,1071,True,True,210,210,150,175,150,174,0,0,0,0,,screenshots/E603.webp
+E604,废矿秘密通路,1072,True,True,150,150,45,129,45,128,0,0,0,0,,screenshots/E604.webp
+E605,废矿秘密通路,1073,True,True,100,100,87,24,87,23,0,0,0,0,,screenshots/E605.webp
+EV002,黑暗巢穴,1154,True,True,80,80,19,47,19,46,0,0,0,0,,screenshots/EV002.webp
+ID1_001,桃园小路,1159,True,True,200,200,160,37,160,36,0,0,0,0,,screenshots/ID1_001.webp
+ID1_002,桃园歧路,1160,True,True,400,400,30,330,30,329,0,0,0,0,,screenshots/ID1_002.webp
+ID1_003,桃园广场,1161,True,True,200,200,97,57,97,56,0,0,0,0,,screenshots/ID1_003.webp
+ID2_001,桃园仙境1层,1162,True,True,200,200,150,143,150,142,0,0,0,0,,screenshots/ID2_001.webp
+ID2_002,桃园仙境2层,1163,True,True,400,400,45,249,45,248,0,0,0,0,,screenshots/ID2_002.webp
+ID2_003,桃园大厅,1164,True,True,100,100,44,40,44,39,0,0,0,0,,screenshots/ID2_003.webp
+kt0000,EI kt0000,1074,True,True,20,20,10,9,11,10,0,0,0,0,,screenshots/kt0000.webp
+kt0001,混乱PK赛场,1075,True,True,50,50,34,24,34,23,0,0,0,0,,screenshots/kt0001.webp
+kt0002,EI kt0002,1076,True,True,20,20,5,11,5,10,0,0,0,0,,screenshots/kt0002.webp
+kt0003,EI kt0003,1077,True,True,20,20,9,13,9,12,0,0,0,0,,screenshots/kt0003.webp
+kt0004,EI kt0004,1078,True,True,20,20,8,14,8,13,0,0,0,0,,screenshots/kt0004.webp
+kt0005,EI kt0005,1079,True,True,20,20,6,11,6,10,0,0,0,0,,screenshots/kt0005.webp
+kt0006,EI kt0006,1080,True,True,20,20,10,10,10,9,0,0,0,0,,screenshots/kt0006.webp
+kt0007,EI kt0007,1081,True,True,20,20,9,13,9,12,0,0,0,0,,screenshots/kt0007.webp
+kt0008,EI kt0008,1082,True,True,20,20,7,10,7,9,0,0,0,0,,screenshots/kt0008.webp
+kt0009,EI kt0009,1083,True,True,20,20,5,7,6,6,0,0,0,0,,screenshots/kt0009.webp
+kt0010,EI kt0010,1084,True,True,20,20,6,6,7,6,0,0,0,0,,screenshots/kt0010.webp
+kt0011,EI kt0011,1085,True,True,20,20,8,13,8,12,0,0,0,0,,screenshots/kt0011.webp
+kt0012,EI kt0012,1086,True,True,20,20,10,9,10,8,0,0,0,0,,screenshots/kt0012.webp
+kt0013,EI kt0013,1087,True,True,20,20,10,9,10,8,0,0,0,0,,screenshots/kt0013.webp
+kt0014,EI kt0014,1088,True,True,30,30,8,9,9,8,0,0,0,0,,screenshots/kt0014.webp
+kt0015,EI kt0015,1089,True,True,30,30,9,12,9,11,0,0,0,0,,screenshots/kt0015.webp
+kt0016,EI kt0016,1090,True,True,30,30,18,11,19,10,0,0,0,0,,screenshots/kt0016.webp
+kt00161,EI kt00161,1091,True,True,30,30,12,12,12,11,0,0,0,0,,screenshots/kt00161.webp
+kt0017,EI kt0017,1092,True,True,30,30,18,13,18,12,0,0,0,0,,screenshots/kt0017.webp
+kt0018,EI kt0018,1093,True,True,36,36,10,13,10,14,0,0,0,0,,screenshots/kt0018.webp
+kt00181,EI kt00181,1094,True,True,36,36,15,20,16,20,0,0,0,0,,screenshots/kt00181.webp
+TNakwon_001,幽暗森林,1156,True,True,150,150,52,77,52,76,0,0,0,0,,screenshots/TNakwon_001.webp
+Yanmums,群魔王陵,1132,True,True,32,38,17,21,17,20,40,2,40,40,,screenshots/Yanmums.webp
+z010,销售房间,1095,True,True,22,22,8,14,8,13,0,0,0,0,,screenshots/z010.webp
+z014,监狱,1096,True,True,22,22,10,13,10,12,0,0,0,0,,screenshots/z014.webp

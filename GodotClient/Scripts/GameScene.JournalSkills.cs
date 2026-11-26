@@ -4,6 +4,7 @@ using System.Linq;
 using Library;
 using Library.SystemModels;
 using ZirconClient.Controls;
+using ZirconClient.HandheldActions;
 
 namespace ZirconClient.Scripts;
 
@@ -54,7 +55,10 @@ public partial class GameScene
                 badge = $"{(!IsJournalPassive(info) && JournalFavorite(info.Index) ? "★ " : "")}Lv.{magic.Level}";
                 var key = JournalSkillKey(magic, MagicBarSpellSet);
                 string binding = key == SpellKey.None ? "未绑定" : MagicDialog.SpellKeyText(key);
-                detail += $"\n等级 {magic.Level} · 修炼值 {magic.Experience}\n共用快捷栏组 {MagicBarSpellSet} / 4 · {binding}";
+                if (AutoLoginArgs.Handheld)
+                    detail += $"\n等级 {magic.Level} · 修炼值 {magic.Experience}\n掌机动作栏：{JournalHandheldSlotsFor(magic)}";
+                else
+                    detail += $"\n等级 {magic.Level} · 修炼值 {magic.Experience}\n共用快捷栏组 {MagicBarSpellSet} / 4 · {binding}";
                 double remaining = Math.Max(0, (magic.NextCast - Library.Time.Now).TotalSeconds);
                 detail += $"\n剩余冷却 {remaining:0.0} 秒";
                 if (magic.ItemRequired)
@@ -91,8 +95,93 @@ public partial class GameScene
         if (_observer || !JournalSkillHasEquipment(info, magic) || set is < 1 or > 4)
             return Array.Empty<JournalAction>();
 
+        // Handheld quick slots are a separate system from the PC F1-F8 spell sets.
+        // Offering the PC group list here would change nothing the handheld HUD reads.
+        if (AutoLoginArgs.Handheld)
+            return IsHandheldBindableSkill(magic)
+                ? new[] { new JournalAction("绑定到掌机动作栏", Children: () => JournalSkillHandheldChoices(info, magic)) }
+                : Array.Empty<JournalAction>();
+
         return new[] { new JournalAction($"更改该角色共用快捷栏 · 第 {set} 组", Children: () =>
             JournalSkillBindingChoices(cat, skillIndex, set)) };
+    }
+
+    private static readonly string[] HandheldSlotLabels = { "X", "Y", "↑", "↓", "←", "→" };
+    private static readonly string[] HandheldFixedLabels = { "L2 短按", "L2 长按", "R2 短按", "R2 长按", "L1+R1", "L2+R2" };
+    private static readonly string[] HandheldFixedKeys = { "L2tap", "L2hold", "R2tap", "R2hold", "L1+R1", "L2+R2" };
+
+    private string JournalHandheldSlotsFor(ClientUserMagic magic)
+    {
+        if (!IsHandheldBindableSkill(magic)) return "不可绑定";
+        var draft = CloneHandheldActionConfig();
+        string id = HandheldStableId(magic.Info.Index);
+        var found = new List<string>();
+        var buttons = HandheldActionPage.DirectButtons();
+        for (int page = 0; page < 2; page++)
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var binding = draft.Pages[page].Bindings[buttons[i]];
+                if (binding?.Kind == ActionKind.Skill && binding.StableId == id)
+                    found.Add($"第 {page + 1} 页 {HandheldSlotLabels[i]}");
+            }
+        for (int i = 0; i < HandheldFixedKeys.Length; i++)
+        {
+            var binding = draft.FixedSlots[HandheldFixedKeys[i]];
+            if (binding?.Kind == ActionKind.Skill && binding.StableId == id)
+                found.Add($"固定 {HandheldFixedLabels[i]}");
+        }
+        return found.Count == 0 ? "未绑定" : string.Join("、", found);
+    }
+
+    private IReadOnlyList<JournalAction> JournalSkillHandheldChoices(MagicInfo info, ClientUserMagic magic)
+    {
+        var draft = CloneHandheldActionConfig();
+        var target = HandheldSkillBinding(magic);
+        var choices = new List<JournalAction>(18);
+        var buttons = HandheldActionPage.DirectButtons();
+        for (int page = 0; page < 2; page++)
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                int slotPage = page, slotIndex = i;
+                var current = draft.Pages[slotPage].Bindings[buttons[slotIndex]];
+                choices.Add(new JournalAction($"第 {slotPage + 1} 页 · {HandheldSlotLabels[i]}\n{JournalHandheldOccupant(current, target)}",
+                    () => JournalBindHandheldSkill(info, magic, slotPage, slotIndex, null)));
+            }
+        for (int i = 0; i < HandheldFixedKeys.Length; i++)
+        {
+            int slotIndex = i;
+            var current = draft.FixedSlots[HandheldFixedKeys[slotIndex]];
+            choices.Add(new JournalAction($"固定 · {HandheldFixedLabels[i]}\n{JournalHandheldOccupant(current, target)}",
+                () => JournalBindHandheldSkill(info, magic, -1, slotIndex, HandheldFixedKeys[slotIndex])));
+        }
+        return choices;
+    }
+
+    private string JournalHandheldOccupant(ActionBinding current, ActionBinding target)
+    {
+        if (current != null && current.Kind == ActionKind.Skill && current.StableId == target.StableId) return "当前已绑定此技能";
+        if (current == null || current.Kind == ActionKind.Empty) return "空位";
+        return "现在是：" + DescribeHandheldBinding(current).Name;
+    }
+
+    private string JournalBindHandheldSkill(MagicInfo info, ClientUserMagic magic, int page, int index, string fixedKey)
+    {
+        if (magic == null || magic.Info?.Index != info.Index || !IsHandheldBindableSkill(magic)) return "技能已不可绑定";
+        if (_observer) return "观察模式不能修改按键";
+        if (_net?.Connection?.Connected != true) return "尚未连接服务器";
+        var draft = CloneHandheldActionConfig();
+        string label = fixedKey == null ? $"第 {page + 1} 页 · {HandheldSlotLabels[index]}" : $"固定 · {HandheldFixedLabels[index]}";
+        if (fixedKey == null) draft.Pages[page].Bindings[HandheldActionPage.DirectButtons()[index]] = HandheldSkillBinding(magic);
+        else draft.FixedSlots[fixedKey] = HandheldSkillBinding(magic);
+        string error = SaveHandheldActionBindings(draft);
+        if (error != null) return "保存失败，原绑定保留：" + error;
+        HandheldBindingsDirtyHint();
+        return $"已绑定 {label}，立即生效";
+    }
+
+    private void HandheldBindingsDirtyHint()
+    {
+        if (_handheldActionBindings is { Visible: true }) _handheldActionBindings.RefreshDraft();
     }
 
     private IReadOnlyList<JournalAction> JournalSkillBindingChoices(int cat, int skillIndex, int set)

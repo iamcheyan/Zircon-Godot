@@ -59,6 +59,14 @@ internal partial class HandheldActionBindings : Control
         SetProcess(false);
     }
 
+    /// <summary>Rebuild the unsaved draft after another surface (the journal) saved the live config.</summary>
+    internal void RefreshDraft()
+    {
+        if (!Visible || _picker || _timingSettings) return;
+        _draft = _game.CloneHandheldActionConfig();
+        QueueRedraw();
+    }
+
     public void HandleKey(Key key)
     {
         if (!Visible || _draft == null) return;

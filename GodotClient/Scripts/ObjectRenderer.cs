@@ -24,6 +24,7 @@ public partial class ObjectRenderer : MapObjectNode
     public int BodyShape;   // 怪物: MonsterLookup 形状; NPC: NPCInfo.Image; 物品: 0
     public int BodyOffSet;  // 怪物: 1000; NPC: 100; 物品: 0
     public int DrawImage;   // 物品专用: Ground 图库帧号 (无方向/形状)
+    internal ClientUserItem Item;
     public string DisplayName;
     public string GuildName;
     public string PetOwner;
@@ -163,6 +164,7 @@ public partial class ObjectRenderer : MapObjectNode
         var r = new ObjectRenderer
         {
             Type = Kind.Item,
+            Item = p.Item,
             DisplayName = info.Local() ?? "Item",
             NameColour = Colors.White,
             BodyLibrary = LibraryCache.Get(LibraryFile.Ground),
@@ -299,14 +301,16 @@ public partial class ObjectRenderer : MapObjectNode
         }
     }
 
+    internal MirAnimation IdleAnimation => !MonsterExtra && MonsterImage is
+        (MonsterImage.ZumaGuardian or MonsterImage.ZumaFanatic or MonsterImage.ZumaKing)
+        ? MirAnimation.StoneStanding : MirAnimation.Standing;
+
     private void ApplyPacket(MirDirection dir, System.Drawing.Point loc)
     {
         Direction = dir;
         CellX = loc.X;
         CellY = loc.Y;
-        SetAnimation(Dead ? MirAnimation.Dead : MonsterImage is MonsterImage.ZumaGuardian or MonsterImage.ZumaFanatic or MonsterImage.ZumaKing
-            ? (MonsterExtra ? MirAnimation.Standing : MirAnimation.StoneStanding)
-            : MirAnimation.Standing);
+        SetAnimation(Dead ? MirAnimation.Dead : IdleAnimation);
     }
 
     private bool _debugLogged;

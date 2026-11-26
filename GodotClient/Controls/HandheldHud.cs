@@ -37,7 +37,7 @@ public partial class HandheldHud : Control
     internal static Rect2[] ActionSlotBounds() => ActionSlotBounds(new Vector2(640, 360));
     internal static Rect2[] ActionSlotBounds(Vector2 viewport)
     {
-        var area = new Rect2(viewport.X - 16 - 148, viewport.Y - 16 - 94, 148, 94);
+        var area = DirectActionBounds(viewport);
         return new[] {
             new Rect2(area.Position + new Vector2(108, 20), new Vector2(26, 28)),
             new Rect2(area.Position + new Vector2(108, 52), new Vector2(26, 28)),
@@ -47,11 +47,23 @@ public partial class HandheldHud : Control
             new Rect2(area.Position + new Vector2(74, 52), new Vector2(26, 28))
         };
     }
+    private static Rect2 DirectActionBounds(Vector2 viewport) => new(182, viewport.Y - 110, 148, 94);
+
+    internal static Rect2 TargetCardBounds(Vector2 viewport)
+    {
+        const int width = 232, height = 78, margin = 16;
+        float y = viewport.Y - margin - height;
+        // Narrow displays put the target above the actions instead of covering them.
+        if (viewport.X - margin - width < DirectActionBounds(viewport).End.X + 8)
+            y = DirectActionBounds(viewport).Position.Y - height - 8;
+        return new Rect2(viewport.X - margin - width, y, width, height);
+    }
+
     // Coordinates are internal viewport pixels (640x360 on TG5040), not desktop HUD units.
     public static Rect2[] LayoutForViewport(Vector2 v)
     {
         float m = 16;
-        var actions = new Rect2(v.X - m - 148, v.Y - m - 94, 148, 94);
+        var actions = DirectActionBounds(v);
         return new[] {
             new Rect2(m,18,125,9), new Rect2(m,35,99,7),
             new Rect2(v.X-m-82,15,82,82),
@@ -153,26 +165,52 @@ public partial class HandheldHud : Control
         for(int i=0;i<Math.Min(8,_buffIcons.Count);i++)
             Icon(new Rect2(31+i*15,buffY,12,12),MirSkin.GetTexture(LibraryFile.CBIcon,_buffIcons[i]));
         if(_buffIcons.Count>8)Label(new Vector2(153,buffY+10),$"+{_buffIcons.Count-8}",8);
-        var target=_game.HandheldHudTarget();
-        if(!string.IsNullOrWhiteSpace(target.Name))
-        {
-            string name=target.Name+(target.Locked ? " ⌖":"");
-            float w=_font.GetStringSize(name,fontSize:10).X;
-            Label(new Vector2((Size.X-w)/2,25),name,10);
-            if(target.Health.HasValue)Meter(new Rect2(Size.X/2-53,30,106,3),target.Health.Value,new Color(.74f,.37f,.29f));
-        }
+        DrawTargetCard(_game.HandheldHudTarget());
         DrawFixedActions();
         DrawDirectActions();
         DrawShoulderHint();
         if(Time.GetTicksMsec()<_toastUntil)
         {
             float w=_font.GetStringSize(_toast,fontSize:10).X;
-            Label(new Vector2((Size.X-w)/2,Size.Y-52),_toast,10);
+            Label(new Vector2((Size.X-w)/2,Size.Y-126),_toast,10);
         }
     }
     private static readonly string[] DirectLabels = { "X", "Y", "↑", "↓", "←", "→" };
     private static readonly string[] FixedKeys = { "L2tap", "L2hold", "R2tap", "R2hold", "L1+R1", "L2+R2" };
     private static readonly string[] FixedLabels = { "L2", "L2·", "R2", "R2·", "L1+R1", "L2+R2" };
+
+    private void DrawTargetCard(HandheldTargetInfo target)
+    {
+        if (string.IsNullOrWhiteSpace(target.Name)) return;
+        var card = TargetCardBounds(Size);
+        DrawRect(card, new Color(.06f,.08f,.09f,.88f));
+        DrawRect(card, Edge, false, 1);
+        var portrait = new Rect2(card.Position + new Vector2(7,7), new Vector2(54,64));
+        DrawRect(portrait, new Color(.025f,.035f,.04f,.9f));
+        DrawRect(portrait, Edge, false, 1);
+        if (target.Icon != null) Icon(new Rect2(portrait.Position + Vector2.One*3, portrait.Size-Vector2.One*6), target.Icon);
+        else Label(portrait.Position + new Vector2(8,36), "无图", 10, new Color("9ca3af"), 40);
+        float x = card.Position.X + 69, width = card.Size.X - 77;
+        Label(new Vector2(x,card.Position.Y+18), FitTargetText((target.Locked ? "锁定 · " : "")+target.Name,12,width),12,new Color("e2bf68"),width);
+        Label(new Vector2(x,card.Position.Y+35), FitTargetText(target.Detail,10,width),10,Text,width);
+        if (target.Health.HasValue)
+            Meter(new Rect2(x,card.Position.Y+42,width,5),target.Health.Value,new Color(.77f,.24f,.19f));
+        Label(new Vector2(x,card.Position.Y+64), FitTargetText(target.Stats,10,width),10,new Color("b6c1ad"),width);
+    }
+
+    private string FitTargetText(string text,int size,float width)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        int fontSize=MirSkin.ScaledSize(size);
+        if (_font.GetStringSize(text,fontSize:fontSize).X<=width) return text;
+        while (text.Length>0 && _font.GetStringSize(text+"…",fontSize:fontSize).X>width)
+        {
+            int take=text.Length-1;
+            if (take>0 && char.IsLowSurrogate(text[take]) && char.IsHighSurrogate(text[take-1])) take--;
+            text=text[..take];
+        }
+        return text+"…";
+    }
 
     private void DrawExperienceBar()
     {

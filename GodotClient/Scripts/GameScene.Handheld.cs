@@ -46,7 +46,7 @@ public partial class GameScene
     }
 
     private bool HandheldGameplayBlocked => AutoLoginArgs.Handheld &&
-        (HandheldWorldMapOpen || JournalOpen || HandheldActionBindingsOpen || HandheldHasModalWindow() || HandheldTextEditing);
+        (GmInspectionOpen || HandheldWorldMapOpen || JournalOpen || HandheldActionBindingsOpen || HandheldHasModalWindow() || HandheldTextEditing);
 
     private bool HandheldTextEditing => GetViewport()?.GuiGetFocusOwner() is Control control
         && control.IsVisibleInTree() && control is LineEdit or TextEdit;
@@ -103,6 +103,7 @@ public partial class GameScene
         EnsureHandheldActionConfiguration();
         SyncHandheldActionOwnership(now);
         if (!_handheldActionFocused) return;
+        if (GmInspectionOpen) return;
         if (HandheldNpcDialogueOpen) { ProcessHandheldNpcStick(now); return; }
         if (HandheldActionBindingsOpen) { ProcessHandheldBindings(now); return; }
         if (_handheldTrace && now >= _nextHandheldTraceMs)
@@ -316,6 +317,7 @@ public partial class GameScene
 
     private bool RouteHandheldInputKey(InputEventKey key, bool mapped, double now)
     {
+        if (GmInspectionOpen) return _gmInspection.HandleKey(key) || IsHandheldSemanticKey(key.Keycode) || IsHandheldSystemKey(key.Keycode);
         if (HandheldWorldMapOpen)
         {
             if (key.Keycode == Key.F15) RouteHandheldSelect(key, now);

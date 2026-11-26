@@ -17,6 +17,40 @@ public partial class ServerConnection : BaseConnection
 {
     private readonly string _checkSum;
     private bool _disconnectNotified;
+    private bool _gmInspectionProbed;
+    internal bool GmInspectionAllowed { get; private set; }
+    internal string GmInspectionDatabaseVersion { get; private set; }
+    internal S.GmInspectResult LastGmInspection { get; private set; }
+    internal ulong LastGmInspectionRequestAt { get; private set; }
+
+    internal void ProbeGmInspection()
+    {
+        if (_gmInspectionProbed || !Connected) return;
+        _gmInspectionProbed = true;
+        SendSelectLanguage(GmInspectProtocol.Probe);
+    }
+
+    internal void QueryGmInspection(int mapIndex, ulong now)
+    {
+        if (!Connected || !GmInspectionAllowed) return;
+        LastGmInspectionRequestAt = now;
+        Enqueue(new C.GmInspectRequest { MapIndex = mapIndex });
+    }
+
+    public void Process(S.GmInspectResult result)
+    {
+        if (!_gmInspectionProbed || !Connected) return;
+        GmInspectionAllowed = result.Allowed;
+        GmInspectionDatabaseVersion = result.Allowed ? result.SystemDatabaseVersion : null;
+        LastGmInspection = result.Allowed && result.MapIndex != GmInspectProtocol.ProbeMapIndex ? result : null;
+    }
+
+    private void ResetGmInspection()
+    {
+        _gmInspectionProbed = GmInspectionAllowed = false;
+        GmInspectionDatabaseVersion = null;
+        LastGmInspection = null;
+    }
     protected override TimeSpan TimeOutDelay => TimeSpan.FromSeconds(30);
     public ServerConnection(TcpClient client) : base(client)
     {
@@ -43,6 +77,7 @@ public partial class ServerConnection : BaseConnection
     public void NotifyDisconnected(bool closeTransport)
     {
         Connected = false;
+        ResetGmInspection();
         if (closeTransport)
         {
             try { Client?.Close(); }
@@ -474,7 +509,11 @@ public partial class ServerConnection : BaseConnection
     public void Process(S.GuildDayReset p) => GuildDayResetEvent?.Invoke(p);
     public void Process(S.SendCompanionFilters p) => SendCompanionFiltersEvent?.Invoke(p);
     public void Process(S.RankSearch p) => RankSearchEvent?.Invoke(p);
-    public void Process(S.GameLogout p) => GameLogoutEvent?.Invoke(p);
+    public void Process(S.GameLogout p)
+    {
+        ResetGmInspection();
+        GameLogoutEvent?.Invoke(p);
+    }
     public void Process(S.SelectLogout p) => SelectLogoutEvent?.Invoke(p);
     public void Process(S.StartObserver p) => StartObserverEvent?.Invoke(p);
     public void Process(S.DataObjectPlayer p) => DataObjectPlayerEvent?.Invoke(p);

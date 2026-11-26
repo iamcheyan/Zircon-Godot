@@ -24,12 +24,13 @@ namespace Library.Network
         {
             Packets = new List<Type>();
 
+            // Extensions opt in here in wire order; never insert into the legacy sort.
+            Type[] extensions = { typeof(ClientPackets.GmInspectRequest), typeof(ServerPackets.GmInspectResult) };
             Type[] list = Assembly.GetExecutingAssembly().GetTypes();
-
 
             foreach (Type type in list)
             {
-                if (type.BaseType != typeof(Packet)) continue;
+                if (type.BaseType != typeof(Packet) || Array.IndexOf(extensions, type) >= 0) continue;
                 Packets.Add(type);
             }
 
@@ -46,6 +47,7 @@ namespace Library.Network
 
                 return String.Compare(x1.Name, x2.Name, StringComparison.Ordinal);
             });
+            Packets.AddRange(extensions);
 
             #region Writes
 
@@ -118,7 +120,10 @@ namespace Library.Network
 
         }
 
-        public static Packet ReceivePacket(byte[] rawBytes, out byte[] extra)
+        public static Packet ReceivePacket(byte[] rawBytes, out byte[] extra) =>
+            ReceivePacket(rawBytes, out extra, receiveGmInspectResult: true);
+
+        internal static Packet ReceivePacket(byte[] rawBytes, out byte[] extra, bool receiveGmInspectResult)
         {
             extra = rawBytes;
 
@@ -149,8 +154,14 @@ namespace Library.Network
                 short id = reader.ReadInt16();
                 if (id >= 0 && id < Packets.Count)
                 {
-                    p = (Packet)Activator.CreateInstance(Packets[id]);
-                    p.PacketType = Packets[id];
+                    Type type = Packets[id];
+                    if (!receiveGmInspectResult && type == typeof(ServerPackets.GmInspectResult))
+                        throw new InvalidDataException("GM inspection results are server-to-client only.");
+                    if (type == typeof(ClientPackets.GmInspectRequest) && length != minimumPacketLength + sizeof(int))
+                        throw new InvalidDataException("Invalid GM inspection request length.");
+
+                    p = (Packet)Activator.CreateInstance(type);
+                    p.PacketType = type;
                     ReadObject(reader, p);
                 }
             }

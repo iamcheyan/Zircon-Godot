@@ -21,6 +21,12 @@ namespace Server.Envir
         private static int SessionCount;
 
         protected override TimeSpan TimeOutDelay => Config.TimeOut;
+        protected override bool ReceiveGmInspectResult => false;
+
+        private DateTime NextGmInspectProbe;
+        private DateTime NextGmInspectQuery;
+        private bool GmInspectOptedIn;
+        private static readonly TimeSpan GmInspectInterval = TimeSpan.FromMilliseconds(500);
 
         private DateTime PingTime;
         private bool PingSent;
@@ -254,6 +260,12 @@ namespace Server.Envir
         {
             switch ((p.Language ?? string.Empty).ToUpperInvariant())
             {
+                case GmInspectProtocol.Probe:
+                    if (SEnvir.Now < NextGmInspectProbe) return;
+                    NextGmInspectProbe = SEnvir.Now + GmInspectInterval;
+                    GmInspectOptedIn = true;
+                    Enqueue(CreateGmInspectResult(GmInspectProtocol.ProbeMapIndex));
+                    break;
                 case "ENGLISH":
                     Language = (StringMessages)ConfigReader.ConfigObjects[typeof(EnglishMessages)];
                     break;
@@ -399,9 +411,40 @@ namespace Server.Envir
         {
             if (Stage != GameStage.Select) return;
 
-
+            GmInspectOptedIn = false;
             SEnvir.StartGame(p, this);
         }
+
+        public void Process(C.GmInspectRequest p)
+        {
+            if (!GmInspectOptedIn || p.MapIndex < 0 || SEnvir.Now < NextGmInspectQuery) return;
+            NextGmInspectQuery = SEnvir.Now + GmInspectInterval;
+
+            S.GmInspectResult result = CreateGmInspectResult(p.MapIndex);
+            if (result.Allowed)
+                GmInspection.PopulateMap(result);
+            Enqueue(result);
+        }
+
+        private S.GmInspectResult CreateGmInspectResult(int mapIndex)
+        {
+            string reason = string.Empty;
+            if (Stage != GameStage.Game || Player == null || Disconnecting)
+                reason = "NotInGame";
+            else if (!Config.TestServer)
+                reason = "TestServerRequired";
+            else if (Account == null || Account.Connection != this || Player.Character?.Account != Account || !Account.IsAdmin(includeTemp: true))
+                reason = "AdminRequired";
+
+            return new S.GmInspectResult
+            {
+                MapIndex = mapIndex,
+                Allowed = reason.Length == 0,
+                Reason = reason,
+                SystemDatabaseVersion = reason.Length == 0 ? GmInspection.DatabaseVersion() : string.Empty,
+            };
+        }
+
         public void Process(C.TownRevive p)
         {
             if (Stage != GameStage.Game) return;

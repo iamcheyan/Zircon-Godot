@@ -114,6 +114,7 @@ public partial class GameScene
                 Toggle("damage", "显示伤害数字", ClientSettings.ShowDamageNumbers);
                 Add("auto-potion", "自动喝药设置", JournalSocialUnavailable ?? (AutoPotionBox == null ? "自动喝药窗口尚未就绪。" : "配置已有药品链接及触发条件。"));
                 Add("config", "完整游戏设置", _configDialog == null ? "设置窗口尚未就绪。" : "打开原有设置窗口，编辑其他选项。");
+                if (GmInspectionAllowed) Add("gm-inspection", "GM 巡检", "查看地图、传送落点和 NPC 配置，不改变世界或角色状态。");
                 break;
             case 4:
                 Add("help", "游戏帮助", _helpDialog == null ? "帮助窗口尚未就绪。" : "打开现有帮助窗口。");
@@ -156,6 +157,7 @@ public partial class GameScene
             (3, "damage") => JournalSetting(() => ClientSettings.ShowDamageNumbers = !ClientSettings.ShowDamageNumbers),
             (3, "auto-potion") => [new JournalAction("打开设置", () => JournalSocialUnavailable ?? JournalOpenUtilityWindow(AutoPotionBox, () => WindowManager.Open(AutoPotionBox, _uiLayer)))],
             (3, "config") => [new JournalAction("打开完整设置", () => JournalOpenUtilityWindow(_configDialog, OpenConfigDialog))],
+            (3, "gm-inspection") when GmInspectionAllowed => [new JournalAction("打开 GM 巡检", () => JournalRun(OpenGmInspection))],
             (2, "action-bindings") => [new JournalAction("编辑掌机按键", () => { OpenHandheldActionBindings(); return null; })],
             (4, "help") => [new JournalAction("打开帮助", () => JournalOpenUtilityWindow(_helpDialog, OpenHelpDialog))],
             (5, "logout") => [JournalConfirmUtility("返回角色选择？", () => JournalLogoutUnavailable ?? JournalRun(LeaveGame))],

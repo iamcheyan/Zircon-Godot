@@ -5304,7 +5304,7 @@ public partial class GameScene : Control
 
     private bool CanPlayerTurn()
     {
-        if (_observer || _player == null || _player.Dead || _player.DragonRepulsed)
+        if (GmInspectionOpen || _observer || _player == null || _player.Dead || _player.DragonRepulsed)
             return false;
         return !_playerPoison.HasFlag(PoisonType.Paralysis)
             && !_playerPoison.HasFlag(PoisonType.Containment);
@@ -9793,6 +9793,7 @@ public partial class GameScene : Control
 
     public override void _Process(double delta)
     {
+        ProcessGmInspection();
         ProcessHandheldInput(delta);
         // 高 DPI/窗口模式下，Godot 可能在 _Ready 之后才提交最终视口尺寸。
         // 若只在 _Ready/Control.Resized 布局，HUD 会保留旧的 (13,23) 等逻辑坐标，
@@ -9838,10 +9839,10 @@ public partial class GameScene : Control
                 _pendingMagicPacket = null;
             }
         }
-        bool blockHandheldGameplay = HandheldGameplayBlocked;
-        if (!blockHandheldGameplay) TryContinueMining();
-        if (!JournalOpen) ProcessPendingAutoPathMove();
-        if (!blockHandheldGameplay) ProcessGroundItemPickup();
+        bool blockGameplay = HandheldGameplayBlocked || GmInspectionOpen;
+        if (!blockGameplay) TryContinueMining();
+        if (!JournalOpen && !GmInspectionOpen) ProcessPendingAutoPathMove();
+        if (!blockGameplay) ProcessGroundItemPickup();
         UpdateViewRange();
         // Remote PlayerRenderer advances movement offsets in its own _Process;
         // refresh both the rendered node and its hit proxy in the same frame.
@@ -11759,6 +11760,12 @@ public partial class GameScene : Control
 
     public override void _Input(InputEvent @event)
     {
+        if (HandleGmInspectionInput(@event))
+        {
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
+        if (GmInspectionOpen && !AutoLoginArgs.Handheld) return;
         // Route both press/release before desktop/text shortcuts. Select uses a
         // real-time short/long-press discriminator; a release must never be lost.
         if (HandleHandheldInputEvent(@event))
@@ -12214,6 +12221,11 @@ public partial class GameScene : Control
     // 对齐旧版 ActiveScene 的“UI 优先、地图其次”分发顺序。
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (GmInspectionOpen)
+        {
+            GetViewport()?.SetInputAsHandled();
+            return;
+        }
         // Compact gameplay has semantic actions only. Default-HUD pointer clicks
         // retain UI-priority NPC, pickup and item-drop behavior; MouseWalker stays off.
         if (AutoLoginArgs.Handheld && @event is InputEventMouseButton

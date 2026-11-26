@@ -29,6 +29,7 @@ namespace Library.Network
         public TimeSpan Duration => Time.Now - TimeConnected;
 
         protected abstract TimeSpan TimeOutDelay { get; }
+        protected virtual bool ReceiveGmInspectResult => true;
         public DateTime TimeOutTime { get; set; }
 
         private bool _disconnecting;
@@ -110,7 +111,7 @@ namespace Library.Network
 
                 Packet p;
 
-                while ((p = Packet.ReceivePacket(_rawData, out _rawData)) != null)
+                while ((p = Packet.ReceivePacket(_rawData, out _rawData, ReceiveGmInspectResult)) != null)
                 {
                     ReceiveList.Enqueue(p);
                     TotalPacketsProcessed++;

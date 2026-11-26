@@ -4354,6 +4354,13 @@ namespace Server.Envir
             Log($"Map loaded: {scope}");
         }
 
+        internal static Map GetLoadedBaseMap(MapInfo info)
+        {
+            if (info == null) return null;
+            lock (MapLoadLock)
+                return Maps.TryGetValue(info, out Map map) && map.Cells != null ? map : null;
+        }
+
         public static Map GetMap(MapInfo info, InstanceInfo instance = null, byte instanceSequence = 0)
         {
             if (info == null) return null;

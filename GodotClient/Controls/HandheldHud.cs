@@ -25,6 +25,15 @@ public partial class HandheldHud : Control
     private static readonly Color Ink = new(.045f,.075f,.05f,.72f), Edge = new(.74f,.76f,.63f,.68f), Text = new(.94f,.93f,.85f);
 
     public static float ResourceFraction(int current, int maximum) => maximum <= 0 ? 0 : Math.Clamp(current/(float)maximum,0,1);
+    /// <summary>Experience bar sits directly under the mana bar, in the classic thin style.</summary>
+    internal static Rect2 ExperienceBounds(Vector2 viewport)
+    {
+        var mp = LayoutForViewport(viewport)[1];
+        return new Rect2(mp.Position + new Vector2(15, 10), new Vector2(125, 5));
+    }
+
+    internal static float ExperienceFraction(decimal experience, decimal maximum) =>
+        maximum <= 0 ? 1f : Math.Clamp((float)(experience / maximum), 0, 1);
     internal static Rect2[] ActionSlotBounds() => ActionSlotBounds(new Vector2(640, 360));
     internal static Rect2[] ActionSlotBounds(Vector2 viewport)
     {
@@ -132,6 +141,7 @@ public partial class HandheldHud : Control
         float health=ResourceFraction(_game.CurrentHealth,_game.PlayerStats[Stat.Health]);
         Meter(hp,health,new Color(.77f,.39f,.31f));
         Meter(mp,ResourceFraction(_game.CurrentMana,_game.PlayerStats[Stat.Mana]),new Color(.43f,.65f,.73f));
+        DrawExperienceBar();
         var drop=_layout[1].Position;
         DrawColoredPolygon(new[]{drop+new Vector2(4,-1),drop+new Vector2(0,5),drop+new Vector2(2,8),drop+new Vector2(6,8),drop+new Vector2(8,5)},new Color(.67f,.81f,.85f));
         float buffY=53;
@@ -163,6 +173,15 @@ public partial class HandheldHud : Control
     private static readonly string[] DirectLabels = { "X", "Y", "↑", "↓", "←", "→" };
     private static readonly string[] FixedKeys = { "L2tap", "L2hold", "R2tap", "R2hold", "L1+R1", "L2+R2" };
     private static readonly string[] FixedLabels = { "L2", "L2·", "R2", "R2·", "L1+R1", "L2+R2" };
+
+    private void DrawExperienceBar()
+    {
+        decimal max = _game.PlayerMaxExperience;
+        var bar = ExperienceBounds(Size);
+        Meter(bar, ExperienceFraction(_game.PlayerExperience, max), new Color(.86f, .73f, .34f));
+        string text = max <= 0 ? "MAX" : $"{_game.PlayerExperience / max * 100m:0.#}%  {_game.PlayerExperience:N0}/{max:N0}";
+        Label(new Vector2(bar.End.X + 5, bar.End.Y), text, 8, new Color(.92f, .88f, .68f), 240);
+    }
 
     private void DrawFixedActions()
     {

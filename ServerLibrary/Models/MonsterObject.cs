@@ -28,6 +28,7 @@ namespace Server.Models
         public MonsterInfo MonsterInfo;
 
         public SpawnInfo SpawnInfo;
+        internal Point? DistributedSpawnOrigin;
         public int DropSet;
 
         public int VengeanceStacks;
@@ -1156,7 +1157,13 @@ namespace Server.Models
                 MinionList.Clear();
             }
 
-            SpawnInfo = null;
+            // Death and other paths that already release the slot clear SpawnInfo.
+            // Despawning releases any remaining slot without firing MONSTERCLEAR.
+            if (SpawnInfo != null)
+            {
+                SpawnInfo.AliveCount--;
+                SpawnInfo = null;
+            }
 
             EXPOwner = null;
         }
@@ -1363,9 +1370,16 @@ namespace Server.Models
             returnLocation = Point.Empty;
 
             int roamingDistance = Stats[Stat.RoamDistance];
-            MapRegion region = SpawnInfo?.Info.Region;
+            if (roamingDistance <= 0 || SpawnInfo == null) return false;
 
-            if (roamingDistance <= 0 || region?.PointList == null || region.PointList.Count == 0)
+            if (DistributedSpawnOrigin is Point origin && CurrentMap == SpawnInfo.CurrentMap)
+            {
+                returnLocation = origin;
+                return Functions.Distance(CurrentLocation, origin) > roamingDistance;
+            }
+
+            MapRegion region = SpawnInfo.Info.Region;
+            if (region?.PointList == null || region.PointList.Count == 0)
                 return false;
 
             if (CurrentCell.Regions.Contains(region))

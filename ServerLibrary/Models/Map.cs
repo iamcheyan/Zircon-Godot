@@ -27,6 +27,13 @@ namespace Server.Models
 
         public Cell[,] Cells { get; private set; }
         public List<Cell> ValidCells { get; } = new List<Cell>();
+        private DistributedRespawnMap _distributedRespawns;
+        private readonly List<SpawnInfo> _distributedRules = new();
+
+        internal void RegisterDistributedRule(SpawnInfo rule) => _distributedRules.Add(rule);
+        private DistributedRespawnMap DistributedRespawns => _distributedRespawns ??= new DistributedRespawnMap(this);
+        internal int DistributedTarget(SpawnInfo rule) => DistributedRespawns.GetTarget(rule, _distributedRules);
+        internal bool TrySpawnDistributed(MonsterObject mob) => DistributedRespawns.TrySpawn(mob);
 
         public List<MapObject> Objects { get; } = new List<MapObject>();
         public List<PlayerObject> Players { get; } = new List<PlayerObject>();
@@ -417,17 +424,28 @@ namespace Server.Models
         public int AliveCount;
 
         public DateTime LastCheck;
+        internal bool UsesDistributedPlacement { get; }
 
         public SpawnInfo(RespawnInfo info, InstanceInfo instance, byte index)
         {
             Info = info;
             CurrentMap = SEnvir.GetMap(info.Region.Map, instance, index);
             LastCheck = SEnvir.Now;
+            UsesDistributedPlacement = Config.DistributeOrdinaryRespawns && instance == null && info.RespawnIndex == 0 && !info.EventSpawn &&
+                !info.Announce && info.Delay < 1000000 && info.Monster is { IsBoss: false, AI: >= 0 and not (30 or 69) } monster &&
+                monster.Flag is not (MonsterFlag.CastleDefense or MonsterFlag.CastleObjective or MonsterFlag.Blocker) &&
+                (info.Region.QuestTasks?.Count ?? 0) == 0 &&
+                SEnvir.MovementInfoList?.Binding.Any(move => move.NeedSpawn == info) != true;
+            if (UsesDistributedPlacement) CurrentMap?.RegisterDistributedRule(this);
         }
+
+        internal int ConfiguredTarget => Info.Monster.IsBoss || CurrentMap.Info.Dungeon == null
+            ? Math.Max(0, Info.Count)
+            : (int)Math.Ceiling(Math.Clamp(Info.Count * CurrentMap.Info.Dungeon.SpawnMultiplier, 0M, int.MaxValue));
 
         public void DoSpawn(bool eventSpawn)
         {
-            if (CurrentMap.RespawnIndex != Info.RespawnIndex) return;
+            if (CurrentMap == null || CurrentMap.RespawnIndex != Info.RespawnIndex) return;
 
             if (!eventSpawn)
             {
@@ -455,14 +473,9 @@ namespace Server.Models
                 }
             }
 
-            int spawnCount = Info.Count;
-
-            if (!Info.Monster.IsBoss && CurrentMap.Info.Dungeon != null)
-            {
-                decimal spawnMultiplier = CurrentMap.Info.Dungeon.SpawnMultiplier;
-                spawnCount = (int)Math.Ceiling(Math.Clamp(Info.Count * spawnMultiplier, 0M, int.MaxValue));
-            }
-
+            bool distribute = UsesDistributedPlacement && !eventSpawn;
+            int spawnCount = distribute ? CurrentMap.DistributedTarget(this) : ConfiguredTarget;
+            if (AliveCount >= spawnCount) return;
             for (int i = AliveCount; i < spawnCount; i++)
             {
                 MonsterObject mob = MonsterObject.GetMonster(Info.Monster);
@@ -483,9 +496,12 @@ namespace Server.Models
 
                 mob.SpawnInfo = this;
 
-                if (!mob.Spawn(Info.Region, CurrentMap.Instance, CurrentMap.InstanceSequence))
+                bool placed = distribute ? CurrentMap.TrySpawnDistributed(mob)
+                    : mob.Spawn(Info.Region, CurrentMap.Instance, CurrentMap.InstanceSequence);
+                if (!placed)
                 {
                     mob.SpawnInfo = null;
+                    if (distribute) break; // This map has no free eligible cells in this pass.
                     continue;
                 }
 

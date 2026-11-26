@@ -797,9 +797,9 @@ namespace Server.Models
             if (region.PointList.Count == 0) return false;
 
             for (int i = 0; i < 20; i++)
-                if (Spawn(map, region.PointList[SEnvir.Random.Next(region.PointList.Count)])) break;
+                if (Spawn(map, region.PointList[SEnvir.Random.Next(region.PointList.Count)])) return true;
 
-            return true;
+            return false;
         }
 
         public bool Spawn(MapInfo info, InstanceInfo instance, byte instanceSequence, Point location)

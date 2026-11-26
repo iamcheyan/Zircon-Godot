@@ -33,12 +33,16 @@ internal sealed class DistributedRespawnMap
         _map = map;
         if (map.ValidCells.Count == 0) return;
 
+        var fixedBossCells = new HashSet<Point>();
         var portalCells = new HashSet<Point>();
         var portalBuffer = new HashSet<Point>();
         var arrivals = new List<Cell>();
         foreach (var region in map.Info.Regions)
         {
             if (region.PointList == null) continue;
+            if (region.PointList.Count == 1 && region.Respawns?.Any(rule =>
+                rule.Count > 0 && !rule.EventSpawn && rule.RespawnIndex == map.RespawnIndex && rule.Monster?.IsBoss == true) == true)
+                fixedBossCells.Add(region.PointList[0]);
             bool arrival = (region.DestinationMovements?.Any(move => move.SourceRegion?.Map != null) ?? false)
                 || (region.BindSafeZones?.Count ?? 0) > 0;
             bool exit = (region.SourceMovements?.Any(move => move.DestinationRegion?.Map != null) ?? false);
@@ -101,7 +105,8 @@ internal sealed class DistributedRespawnMap
                 // Small linked rooms can fit wholly within the buffer; keep them playable,
                 // but still never spawn on an arrival, exit or a protected town cell.
                 if (cell.SafeZone is { RedZone: false } || portalCells.Contains(cell.Location) ||
-                    cell.Movements?.Count > 0 || (buffered && portalBuffer.Contains(cell.Location))) continue;
+                    fixedBossCells.Contains(cell.Location) || cell.Movements?.Count > 0 ||
+                    (buffered && portalBuffer.Contains(cell.Location))) continue;
                 var key = Key(cell.Location);
                 if (!_buckets.TryGetValue(key, out var bucket)) _buckets.Add(key, bucket = new Bucket());
                 bucket.Cells.Add(cell);

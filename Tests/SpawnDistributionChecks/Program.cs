@@ -15,7 +15,6 @@ const int BucketRows = 4;
 const int BucketCount = BucketColumns * BucketRows;
 const int BichonColumns = 16;
 const int BichonRows = 16;
-const int ExpectedMapCount = 282;
 const int RefillPasses = 2;
 
 if (args.Length == 1 && args[0] == "--synthetic-only")
@@ -26,7 +25,7 @@ if (args.Length == 1 && args[0] == "--synthetic-only")
 
 if (args.Length < 2)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project Tests/SpawnDistributionChecks -- <System.db directory> <map directory> [output.csv]");
+    Console.Error.WriteLine("Usage: dotnet run --project Tests/SpawnDistributionChecks -- <System.db directory> <map directory> [output.csv] [--require-full] [--expect-maps=N] [--legacy]");
     Console.Error.WriteLine("Run --synthetic-only to execute the deterministic legacy-placement demonstration without game data.");
     Environment.ExitCode = 2;
     return;
@@ -35,7 +34,9 @@ if (args.Length < 2)
 RunSyntheticLegacyRegression();
 var dbSource = Path.GetFullPath(args[0]);
 var mapRoot = Path.GetFullPath(args[1]);
-var outputPath = Path.GetFullPath(args.Length > 2 ? args[2] : "spawn-distribution.csv");
+var outputPath = Path.GetFullPath(args.Skip(2).FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? "spawn-distribution.csv");
+const string mapCountOption = "--expect-maps=";
+var expectedMaps = args.SingleOrDefault(arg => arg.StartsWith(mapCountOption, StringComparison.Ordinal));
 var sourceDbPath = Path.Combine(dbSource, "System.db");
 if (!File.Exists(sourceDbPath)) throw new FileNotFoundException("System.db not found", sourceDbPath);
 if (!Directory.Exists(mapRoot)) throw new DirectoryNotFoundException(mapRoot);
@@ -61,8 +62,9 @@ try
         .Select(x => x.Region.Map).ToHashSet();
     var mapInfos = SEnvir.MapInfoList.Binding.Where(configuredMapSet.Contains)
         .OrderBy(x => x.FileName, StringComparer.OrdinalIgnoreCase).ToArray();
-    if (mapInfos.Length != ExpectedMapCount)
-        throw new InvalidOperationException($"Expected {ExpectedMapCount} maps with configured respawn rules, found {mapInfos.Length} (database has {SEnvir.MapInfoList.Count} registered maps).");
+    if (mapInfos.Length == 0 || mapInfos.Length != configuredMapSet.Count ||
+        (expectedMaps != null && mapInfos.Length != int.Parse(expectedMaps.AsSpan(mapCountOption.Length))))
+        throw new InvalidOperationException($"Unexpected coverage: {mapInfos.Length} registered spawn maps, {configuredMapSet.Count} configured maps, {SEnvir.MapInfoList.Count} registered maps in total ({expectedMaps ?? "no explicit count"}).");
 
     var distributedProperty = typeof(SpawnInfo).GetProperty("UsesDistributedPlacement",
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -253,7 +255,11 @@ try
 
     Console.WriteLine($"CSV={outputPath}");
     Console.WriteLine($"System.db sha256={dbHash}; maps={loadedMaps}; rules={testedRules}; rulesWithShortfall={rulesWithShortfall}; BichonRuleRows={bichonRows}; UsesDistributedPlacement={(hasDistributionApi ? "available" : "not present; all current rules reported as legacy")}");
-    Environment.ExitCode = 0;
+    if (args.Contains("--require-full") && rulesWithShortfall != 0)
+    {
+        Console.Error.WriteLine($"FAIL: {rulesWithShortfall} eligible rules did not reach their configured targets.");
+        Environment.ExitCode = 1;
+    }
 }
 finally
 {

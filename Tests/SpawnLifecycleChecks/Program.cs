@@ -112,6 +112,18 @@ try
         tinyMap.Objects.OfType<MonsterObject>().Single().CurrentLocation == valid,
         "one eligible cell is assigned proportionally regardless of rule order or broken legacy point");
 
+    bytes[cellOffset + 14] = 3;
+    var bossMap = LoadMap("boss-anchor-fixture");
+    var fixedBoss = session.GetCollection<MonsterInfo>().CreateNewObject();
+    fixedBoss.IsBoss = true;
+    var bossGroup = SpawnGroup(Region(bossMap, valid), fixedBoss, 1);
+    var ordinaryGroup = SpawnGroup(Region(bossMap, blocked), monster, 2);
+    ordinaryGroup.DoSpawn(eventSpawn: false);
+    bossGroup.DoSpawn(eventSpawn: false);
+    Check(ordinaryGroup.AliveCount == 1 && bossGroup.AliveCount == 1 &&
+        bossMap.Objects.OfType<MonsterObject>().Select(m => m.CurrentLocation).Distinct().Count() == 2,
+        "ordinary spawns reserve the fixed boss tile even when the boss spawns afterward");
+
     void CheckGateExpiry<T>(int ai) where T : MonsterObject
     {
         var definition = session.GetCollection<MonsterInfo>().CreateNewObject();

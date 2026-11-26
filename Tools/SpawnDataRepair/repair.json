@@ -1,0 +1,34 @@
+{
+  "InputSha256": "511595c3f5709d21f6d771641ce3b5730a556da2e0b1cccfe05ca07b26dda865",
+  "MapSha256": {
+    "D604": "af961fe1da4ef57210ceb75774ff4bb6522b2adcab8eb0344fb8f564f61dcf7e",
+    "D605": "fa63ef0af95fe8f7b2ad7e31e551c2c0ac27ebc41adf9808a6cb062a193bc8ec",
+    "D8101": "8aea1eb641c0e976e29bff2fbc3926e7eca52d8d4c10778f9ba7d631448258ec",
+    "D8102": "c1ee202c539d6dbf80eda4dc3d26b340d1dacc887d2e93113801b33250d5d514",
+    "D8103": "eba80d88d70468429b139cff21a46d43b27431326d35f723db3e2e8f5410991d",
+    "D8104": "151a136b7b8c42c5af2efcce55a30d4c800368795471bf218f9eaa93f9bbaf67",
+    "D8201": "8aea1eb641c0e976e29bff2fbc3926e7eca52d8d4c10778f9ba7d631448258ec",
+    "D8202": "c1ee202c539d6dbf80eda4dc3d26b340d1dacc887d2e93113801b33250d5d514",
+    "D8203": "eba80d88d70468429b139cff21a46d43b27431326d35f723db3e2e8f5410991d",
+    "D8204": "151a136b7b8c42c5af2efcce55a30d4c800368795471bf218f9eaa93f9bbaf67",
+    "D9031": "fb40ec3542dd2eeaaa0ad2ee438b60f6fa0a5012e5a80a8deec7eea968e4d512",
+    "D9032": "8629172c6670058a74b14fa284a3df4f298b247dd63ed087269d58aa095c9c1e",
+    "d903": "9f50a2af3a103cfa8a24d62bb0cc38f88140c75a6041b8e4ee40bb2e14c90463"
+  },
+  "Ordinary": [
+    { "Map": "D604", "Eligible": 151, "Reserved": 0, "Bladesman": 4726, "Archer": 4728 },
+    { "Map": "D605", "Eligible": 180, "Reserved": 1, "Bladesman": 4731, "Archer": 4733 }
+  ],
+  "Lich": { "Map": "D605", "Rule": 4735, "X": 29, "Y": 28 },
+  "Ants": {
+    "X": 100, "Y": 100, "Range": 90, "Count": 1, "Delay": 120,
+    "Rules": {
+      "D8101": 6962, "D8102": 6963, "D8103": 6964, "D8104": 6965,
+      "D8201": 6966, "D8202": 6967, "D8203": 6968, "D8204": 6969
+    }
+  },
+  "ShipRooms": [
+    { "Map": "D9031", "Monster": "Otherworld Poison Demon", "X": 10, "Y": 10, "Range": 5, "Count": 1, "Delay": 20, "Inbound": 4739, "Outbound": 4740 },
+    { "Map": "D9032", "Monster": "Otherworld Ship Guard", "X": 15, "Y": 15, "Range": 15, "Count": 1, "Delay": 20, "Inbound": 4780, "Outbound": 4781 }
+  ]
+}
